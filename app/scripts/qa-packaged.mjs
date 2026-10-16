@@ -1,6 +1,7 @@
 // 打包版冒烟检查（M0 验收用；不属于 gate，手动/封版时运行）
-// 用法：node scripts/qa-packaged.mjs
-// 前置：先 npx electron-builder --win --dir 产出 release\win-unpacked
+// 用法：node scripts/qa-packaged.mjs [exe路径]
+//   不传参数：检查 release\win-unpacked\J.Co.exe（--dir 产物）
+//   传参数：检查指定 exe（如已安装版 %LOCALAPPDATA%\Programs\J.Co\J.Co.exe）
 import { existsSync } from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -8,7 +9,7 @@ import { _electron as electron } from 'playwright'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const APP = path.resolve(__dirname, '..')
-const EXE = path.join(APP, 'release', 'win-unpacked', 'J.Co.exe')
+const EXE = process.argv[2] ? path.resolve(process.argv[2]) : path.join(APP, 'release', 'win-unpacked', 'J.Co.exe')
 const SHOT = path.join(APP, 'release', 'smoke-packaged.png')
 
 if (!existsSync(EXE)) {
