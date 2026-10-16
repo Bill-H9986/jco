@@ -2,6 +2,9 @@
 # 完整打包（内置 DSH 运行时、首次启动引导）在 M3 完成。
 appId: com.jco.desktop
 productName: J.Co
+# 不重编译原生模块：DSH 内核依赖（koffi / node-pty 等）使用随包预编译二进制，
+# 与开发模式（已验证可用）保持完全一致；重编译需要 VS 工具链且无必要。
+npmRebuild: false
 directories:
   output: release
 files:
@@ -9,7 +12,13 @@ files:
   - preload.cjs
   - settings.json
   - kernel/**
+  - "!kernel/model-config.json"
+  - "!kernel/dynamic-model.patch.yml"
   - dist/**
+asarUnpack:
+  - "node_modules/@deepseek-ai/**"
+  - "node_modules/koffi/**"
+  - "node_modules/node-pty/**"
 extraResources:
   - from: ../设计原型
     to: 设计原型

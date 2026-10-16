@@ -9,7 +9,10 @@ const UI_DIR = path.join(__dirname, '..', '设计原型')
 const ENTRY = 'J.Co主界面-首页.html'
 
 // ---------- 应用级设置（主进程持有：主题偏好等；开机启动由系统记录） ----------
-const SETTINGS_PATH = path.join(__dirname, 'settings.json')
+// 打包版：设置写入用户数据目录（安装目录只读）；开发版：沿用工程内文件
+const SETTINGS_PATH = app.isPackaged
+  ? path.join(app.getPath('userData'), 'settings.json')
+  : path.join(__dirname, 'settings.json')
 function readSettings() {
   try { return JSON.parse(fs.readFileSync(SETTINGS_PATH, 'utf8')) } catch (e) { return {} }
 }
