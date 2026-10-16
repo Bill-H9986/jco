@@ -499,8 +499,9 @@ ipcMain.handle('publish:data:get', () => {
 })
 
 // 测试模式：用独立的临时数据目录，避免和正在使用的 J.Co 抢单实例锁
+// （名字加随机段：防 pid 复用时读到上一个测试实例残留的 profile——2026-10-16 全量 E2E 偶发"读到旧侧栏状态"的教训）
 if (process.argv.includes('--jco-test')) {
-  app.setPath('userData', path.join(app.getPath('temp'), 'jco-test-' + process.pid))
+  app.setPath('userData', path.join(app.getPath('temp'), 'jco-test-' + process.pid + '-' + Date.now().toString(36)))
 }
 
 function createWindow() {
