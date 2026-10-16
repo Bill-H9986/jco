@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.4.4](///compare/v0.4.3...v0.4.4) (2026-10-16)
+
+### Features
+
+* **m9:** 创作页全真摘标（队列单元①）——核实提词器/体检/提词/交接均真（纠正'提词器仍演示'的假设）；修一处兜底文案诚实化；提词器回归 1 条；双门过（-2 元素=摘标、0 样式差异）+ 门禁全绿（21 条 E2E）+ 装机 0.4.3 冒烟通过 4c29212
+
 ## [0.4.3](///compare/v0.4.2...v0.4.3) (2026-10-16)
 
 ## [0.4.2](///compare/v0.4.1...v0.4.2) (2026-10-16)
