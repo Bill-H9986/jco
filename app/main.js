@@ -459,6 +459,8 @@ ipcMain.handle('publish:status', () => {
 })
 
 // 发布会话（M2：AI 的"手"——浏览器 + 本机工具端点；内核插件按 sessionFile 动态取址）
+/** 发布会话文件（账号中心「去登录」直调会话工具面时读 endpoint/token 用；与下面构造同路径） */
+const PUBLISH_SESSION_FILE = publishEngine ? publishEngine.unpackedPath(path.join(__dirname, 'kernel', 'publish-session.json')) : ''
 const publishSessionManager = publishEngine
   ? new publishEngine.PublishSessionManager(
       {
@@ -494,6 +496,49 @@ ipcMain.handle('publish:session:stop', () => {
 ipcMain.handle('publish:session:status', () => {
   if (!publishSessionManager) return { active: false }
   return publishSessionManager.status()
+})
+
+// 账号中心「去登录」（M9 单元⑤）：启动该平台的发布会话（= AI 干活用的同一个浏览器）→
+// 用会话自己的工具面打开平台登录页——登录态从此进"发布会话 profile"，与 AI 干活完全同路
+// （此前的"系统浏览器打开"是登了个寂寞：扫的码不在 AI 用的浏览器里）。
+const PUBLISH_LOGIN_URLS = {
+  douyin: 'https://creator.douyin.com/',
+  shipinhao: 'https://channels.weixin.qq.com/',
+  xiaohongshu: 'https://creator.xiaohongshu.com/',
+  kuaishou: 'https://cp.kuaishou.com/',
+  bilibili: 'https://member.bilibili.com/',
+}
+ipcMain.handle('publish:session:login', async (_event, payload) => {
+  try {
+    if (!publishSessionManager) return { ok: false, error: '发布引擎还没有构建好' }
+    const platformId = String((payload && payload.platform) || '')
+    const url = PUBLISH_LOGIN_URLS[platformId]
+    if (!url) return { ok: false, error: '不认识的平台' }
+    const st = publishSessionManager.status()
+    if (!st.active || st.platform !== platformId) publishSessionManager.start(platformId)
+    let ready = false
+    for (let i = 0; i < 40; i++) {
+      const s = publishSessionManager.status()
+      if (s.ready && s.platform === platformId) {
+        ready = true
+        break
+      }
+      if (!s.active) break
+      await new Promise((resolveWait) => setTimeout(resolveWait, 1500))
+    }
+    if (!ready) return { ok: false, error: '浏览器还没起来，等几秒再点一次。' }
+    const session = JSON.parse(fs.readFileSync(PUBLISH_SESSION_FILE, 'utf8'))
+    const res = await fetch(session.endpoint + '/tool', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', authorization: 'Bearer ' + session.token },
+      body: JSON.stringify({ name: 'open_page', args: { url } }),
+    })
+    const data = await res.json().catch(() => null)
+    if (data && data.ok) return { ok: true }
+    return { ok: false, error: (data && data.error) || '打开登录页没成功' }
+  } catch (error) {
+    return { ok: false, error: String((error && error.message) || error) }
+  }
 })
 
 ipcMain.handle('publish:data:get', () => {

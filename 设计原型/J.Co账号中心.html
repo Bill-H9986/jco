@@ -305,7 +305,6 @@
     <main class="main">
       <div class="scroll">
         <div class="wrap">
-          <div class="demo-note"><span class="ti ti-info-circle"></span>演示版：这块还没接上真实数据（正在做）。做好后，这里就是真的。</div>
           <div class="agent-head">
             <span class="agent-logo">J</span>
             <span class="agent-name">和 J.Co</span>
@@ -329,7 +328,7 @@
   <!-- 添加账号弹层 -->
   <div class="overlay" id="overlay">
     <div class="sheet" role="dialog" aria-label="添加账号">
-      <h3 id="sheetTitle">添加抖音账号</h3>
+      <h3 id="sheetTitle">登录平台账号</h3>
       <div class="sub" id="sheetSub">跟着做，一共三步：</div>
       <div class="step">
         <span class="no">1</span>
@@ -355,23 +354,26 @@
   <div class="toast" id="toast" role="status"></div>
 
   <script>
-    /* ---------- 数据（原型假数据）：平台 + 矩阵账号 ---------- */
+    /* ---------- 数据（真）：平台元数据 + 本机登录登记（jco-login-v1，你亲手确认） ---------- */
     const PLATFORMS = [
-      { id: 'dy', name: '抖音', logo: 'dy', ch: '抖', accounts: [
-        { name: 'J.Co 招生号', status: 'ok', last: '2 小时前活跃' },
-        { name: 'J.Co 学历规划', status: 'ok', last: '昨天发过' }
-      ]},
-      { id: 'sph', name: '视频号', logo: 'sph', ch: '视', accounts: [
-        { name: 'J.Co 招生号', status: 'ok', last: '昨天发过' }
-      ]},
-      { id: 'xhs', name: '小红书', logo: 'xhs', ch: '红', accounts: [
-        { name: 'J.Co 学历规划', status: 'ok', last: '3 小时前活跃' }
-      ]},
-      { id: 'ks', name: '快手', logo: 'ks', ch: '快', accounts: [
-        { name: 'J.Co 招生号', status: 'relogin', last: '登录已失效，需要重新扫码' }
-      ]},
-      { id: 'bili', name: 'B站', logo: 'bili', ch: 'B', accounts: [] }
+      { id: 'dy', name: '抖音', logo: 'dy', ch: '抖', kern: 'douyin' },
+      { id: 'sph', name: '视频号', logo: 'sph', ch: '视', kern: 'shipinhao' },
+      { id: 'xhs', name: '小红书', logo: 'xhs', ch: '红', kern: 'xiaohongshu' },
+      { id: 'ks', name: '快手', logo: 'ks', ch: '快', kern: 'kuaishou' },
+      { id: 'bili', name: 'B站', logo: 'bili', ch: 'B', kern: 'bilibili' },
     ];
+    const LOGIN_KEY = 'jco-login-v1';
+    function loginLoad() {
+      try { return JSON.parse(localStorage.getItem(LOGIN_KEY) || '{}') || {}; } catch (e) { return {}; }
+    }
+    function loginSave(d) {
+      try { localStorage.setItem(LOGIN_KEY, JSON.stringify(d)); } catch (e) {}
+    }
+    function fmtAt(t) {
+      const d = new Date(t);
+      const p = (n) => String(n).padStart(2, '0');
+      return (d.getMonth() + 1) + '-' + d.getDate() + ' ' + p(d.getHours()) + ':' + p(d.getMinutes());
+    }
 
     const toastEl = document.getElementById('toast');
     function showToast(msg) {
@@ -381,126 +383,92 @@
       showToast.timer = setTimeout(() => toastEl.classList.remove('show'), 2800);
     }
 
-    /* ---------- 渲染 ---------- */
+    /* ---------- 渲染（全部读真数据） ---------- */
     function renderStats() {
-      let total = 0, ok = 0, warn = 0;
-      PLATFORMS.forEach((p) => p.accounts.forEach((a) => {
-        total++;
-        if (a.status === 'ok') ok++; else warn++;
-      }));
+      const login = loginLoad();
+      const ok = PLATFORMS.filter((p) => login[p.id] && login[p.id].ok).length;
       const row = document.getElementById('statsRow');
-      row.innerHTML = '<b>' + PLATFORMS.length + ' 个平台</b><span class="sep">·</span><b>' + total + ' 个账号</b>' +
-        '<span class="sep">|</span><span class="st ok">' + ok + ' 个状态正常</span>' +
-        (warn ? '<span class="st warn">' + warn + ' 个需要重新登录</span>' : '');
+      row.innerHTML = '<b>' + PLATFORMS.length + ' 个平台</b><span class="sep">·</span><b>已登录 ' + ok + ' 个</b>' +
+        (ok < PLATFORMS.length
+          ? '<span class="sep">|</span><span class="st warn">还有 ' + (PLATFORMS.length - ok) + ' 个没登录</span>'
+          : '<span class="sep">|</span><span class="st ok">都能干活了</span>');
     }
 
     function renderPlatforms() {
       const box = document.getElementById('pfList');
+      const login = loginLoad();
       box.innerHTML = '';
       PLATFORMS.forEach((p) => {
+        const rec = login[p.id];
+        const isOk = !!(rec && rec.ok);
         const card = document.createElement('div');
         card.className = 'pf-card';
-        let rows = '';
-        if (p.accounts.length === 0) {
-          rows = '<div class="pf-empty"><span class="ti ti-login"></span>还没有账号，点右上角「+ 添加账号」扫一次码就行</div>';
-        } else {
-          p.accounts.forEach((a, i) => {
-            const isOk = a.status === 'ok';
-            rows += '<div class="acct">' +
-              '<span class="a-ava">' + a.name.slice(0, 1) + '</span>' +
-              '<span class="a-main"><span class="a-name">' + a.name + '</span>' +
-              '<div class="a-meta">' + a.last + '</div></span>' +
-              '<span class="a-state ' + (isOk ? 'ok' : 'warn') + '">' + (isOk ? '登录正常' : '需要重新登录') + '</span>' +
-              '<span class="a-acts">' +
-              (isOk
-                ? '<button class="a-btn" data-act="relogin" data-p="' + p.id + '" data-i="' + i + '"><span class="ti ti-refresh"></span>重新登录</button>'
-                : '<button class="a-btn warn-btn" data-act="relogin" data-p="' + p.id + '" data-i="' + i + '"><span class="ti ti-login"></span>重新登录</button>') +
-              '<button class="a-btn" data-act="remove" data-p="' + p.id + '" data-i="' + i + '"><span class="ti ti-trash"></span>移除</button>' +
-              '</span></div>';
-          });
-        }
         card.innerHTML =
           '<div class="pf-head">' +
           '<span class="pf-logo ' + p.logo + '">' + p.ch + '</span>' +
           '<span><div class="pf-title">' + p.name + '</div>' +
-          '<div class="pf-count">' + (p.accounts.length ? p.accounts.length + ' 个账号' : '还没有账号') + '</div></span>' +
-          '<button class="pf-add" data-add="' + p.id + '">+ 添加账号</button>' +
-          '</div>' + rows;
+          '<div class="pf-count">' + (isOk ? '已登录' : '还没登录') + '</div></span>' +
+          '<button class="pf-add" data-act="login" data-p="' + p.id + '">' + (isOk ? '重新登录' : '去登录') + '</button>' +
+          '</div>' +
+          '<div class="acct">' +
+          '<span class="a-ava">' + p.ch + '</span>' +
+          '<span class="a-main"><span class="a-name">登录状态</span>' +
+          '<div class="a-meta">' +
+          (isOk
+            ? ('你确认于 ' + fmtAt(rec.at) + '；哪天失效，AI 干活时会如实告诉你')
+            : '点右边「去登录」：打开 J.Co 专属浏览器，扫码登录') +
+          '</div></span>' +
+          '<span class="a-state ' + (isOk ? 'ok' : 'warn') + '">' + (isOk ? '登录正常' : '未登录') + '</span>' +
+          '</div>';
         box.appendChild(card);
       });
-      // 绑定
-      box.querySelectorAll('[data-add]').forEach((b) => {
-        b.addEventListener('click', () => openSheet(b.getAttribute('data-add'), -1));
-      });
-      box.querySelectorAll('[data-act]').forEach((b) => {
-        b.addEventListener('click', () => {
-          const pid = b.getAttribute('data-p');
-          const i = parseInt(b.getAttribute('data-i'), 10);
-          if (b.getAttribute('data-act') === 'relogin') openSheet(pid, i);
-          else {
-            const p = PLATFORMS.find((x) => x.id === pid);
-            const name = p.accounts[i].name;
-            p.accounts.splice(i, 1);
-            renderAll();
-            showToast('已移除「' + name + '」。想用随时可以重新扫码加回来。');
-          }
-        });
+      box.querySelectorAll('[data-act="login"]').forEach((b) => {
+        b.addEventListener('click', () => openSheet(b.getAttribute('data-p')));
       });
     }
 
     function renderAll() { renderStats(); renderPlatforms(); }
 
-    /* ---------- 添加 / 重新登录（弹层演示） ---------- */
+    /* ---------- 登录弹层（真流程：专属浏览器 → 扫码 → 我登录好了） ---------- */
     const overlay = document.getElementById('overlay');
-    let sheetCtx = { pid: null, i: -1 };
+    let sheetCtx = { pid: null };
 
-    function openSheet(pid, i) {
-      sheetCtx = { pid, i };
+    function openSheet(pid) {
       const p = PLATFORMS.find((x) => x.id === pid);
-      document.getElementById('sheetTitle').textContent = (i >= 0 ? '重新登录' : '添加') + p.name + '账号';
+      if (!p) return;
+      sheetCtx = { pid };
+      const rec = loginLoad()[pid];
+      document.getElementById('sheetTitle').textContent = '登录' + p.name + (rec && rec.ok ? '（重新登录）' : '');
       overlay.classList.add('show');
     }
     function closeSheet() { overlay.classList.remove('show'); }
 
     document.getElementById('sheetCancel').addEventListener('click', closeSheet);
     overlay.addEventListener('click', (e) => { if (e.target === overlay) closeSheet(); });
-    const LOGIN_URLS = {
-      dy: 'https://creator.douyin.com/',
-      sph: 'https://channels.weixin.qq.com/',
-      xhs: 'https://creator.xiaohongshu.com/',
-      ks: 'https://cp.kuaishou.com/',
-      bili: 'https://member.bilibili.com/',
-    };
     document.getElementById('sheetOpen').addEventListener('click', () => {
       const p = PLATFORMS.find((x) => x.id === sheetCtx.pid);
       if (!p) return;
-      const url = LOGIN_URLS[p.id] || ('https://www.baidu.com/s?wd=' + encodeURIComponent(p.name + ' 创作者中心 登录'));
-      const sys = (typeof window.jco !== 'undefined' && window.jco && window.jco.sys) ? window.jco.sys : null;
-      if (sys && sys.openExternal) {
-        sys.openExternal(url).then(
-          (res) => showToast(res && res.ok ? '拿系统浏览器打开了。扫码登录后，回这里点「我登录好了」。' : ('没打开：' + ((res && res.error) || '未知错误'))),
-          () => showToast('没打开，再试一次。')
-        );
-        return;
-      }
-      window.open(url, '_blank');
+      const live = typeof window.jco !== 'undefined' && window.jco && window.jco.publish && window.jco.publish.session && window.jco.publish.session.login;
+      if (!live) { showToast('这个功能在桌面应用里可用（浏览器直开是演示模式）。'); return; }
+      showToast('正在打开 J.Co 专属浏览器……');
+      window.jco.publish.session.login(p.kern).then(
+        function (res) {
+          if (res && res.ok) showToast('浏览器已打开（AI 干活用的就是它）：扫码登录，完成后回来点「我登录好了」。');
+          else showToast('没打开：' + ((res && res.error) || '稍后再试'));
+        },
+        function () { showToast('没打开，稍后再试。'); },
+      );
     });
     document.getElementById('sheetOk').addEventListener('click', () => {
       const p = PLATFORMS.find((x) => x.id === sheetCtx.pid);
-      if (sheetCtx.i >= 0) {
-        p.accounts[sheetCtx.i].status = 'ok';
-        p.accounts[sheetCtx.i].last = '刚刚重新登录';
-        showToast('「' + p.accounts[sheetCtx.i].name + '」重新登录好了。');
-      } else {
-        const n = p.accounts.length + 1;
-        const name = p.accounts.some((a) => a.name === 'J.Co 招生号') ? 'J.Co 矩阵号 ' + n : 'J.Co 招生号';
-        p.accounts.push({ name, status: 'ok', last: '刚刚添加' });
-        showToast('账号添加好了。「' + name + '」现在可以干活了。');
-      }
+      if (!p) return;
+      const login = loginLoad();
+      login[p.id] = { ok: true, at: Date.now() };
+      loginSave(login);
       closeSheet();
       renderAll();
+      showToast('登记好了：「' + p.name + '」可以干活了；哪天失效，AI 会如实告诉你。');
     });
-
     document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeSheet(); });
 
     /* ---------- 侧栏（图标栏 + 按钮展开 + 固定展开） ---------- */
@@ -595,7 +563,7 @@
       });
       document.querySelectorAll('.convo').forEach(function (btn) {
         btn.addEventListener('click', function () {
-          showToast('（原型示意）正式版里会打开这段对话记录。');
+          showToast('这个功能在桌面应用里可用（浏览器直开是演示模式）。');
         });
       });
     })();

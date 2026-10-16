@@ -65,6 +65,8 @@ contextBridge.exposeInMainWorld('jco', {
       start: (platform) => ipcRenderer.invoke('publish:session:start', { platform: String(platform || '') }),
       stop: () => ipcRenderer.invoke('publish:session:stop'),
       status: () => ipcRenderer.invoke('publish:session:status'),
+      /** 账号中心「去登录」：启动该平台会话并打开登录页（AI 干活用的同一个浏览器） */
+      login: (platform) => ipcRenderer.invoke('publish:session:login', { platform: String(platform || '') }),
     },
     /** 运营数据（战报 / 评论）：读本机数据文件（AI 提交后由会话服务写入） */
     data: {
