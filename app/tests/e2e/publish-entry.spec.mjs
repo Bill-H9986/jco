@@ -63,6 +63,8 @@ test('首页：卡片文案真化（无假数）+「说一句话」走唯一管�
     await win.waitForTimeout(3000)
     const text = await win.evaluate(() => document.body.innerText)
     expect(text.includes('2 条视频已就绪')).toBe(false)
+    expect(text.includes('抖音和视频号')).toBe(false) // 入口区文案统一：不再有多平台旧承诺
+    expect(text.includes('大约 2 分钟')).toBe(false) // 不再有时长承诺
     expect(text).toContain('把做好的视频发出去')
     // 批 3：派活已走唯一管道（无 handoff 残留、走 tasks.dispatch）
     const homeSrc = await win.evaluate(() => [...document.scripts].map((s) => s.textContent || '').join('\n'))
