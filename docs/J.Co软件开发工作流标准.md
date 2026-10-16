@@ -174,7 +174,7 @@ type ∈ `feat` / `fix` / `docs` / `refactor` / `test` / `chore` / `perf`
 
 每个新开发会话 / 新成员开工前：
 
-1. 读 `README.md` → 读本标准 → 读当前里程碑设计包；
+1. 读 `AGENTS.md`（项目根 · 编码准则：三硬约束 + 编码四原则）→ 读 `README.md` → 读本标准 → 读当前里程碑设计包；
 2. 第一件事：跑一次全量门禁，确认基线是绿的；
 3. 然后才能动手写任何代码。
 
@@ -209,6 +209,7 @@ type ∈ `feat` / `fix` / `docs` / `refactor` / `test` / `chore` / `perf`
 | CHANGELOG 制度 | Keep a Changelog | keepachangelog.com |
 | Hotfix 流程 | 持续交付实践 | Humble & Farley《Continuous Delivery》, 2010 |
 | 无责复盘 | Blameless Postmortem | Etsy / Google SRE 实践 |
+| 编码四原则（编码前思考 / 简洁优先 / 精准修改 / 目标驱动） | LLM 编程守则（源自 Andrej Karpathy 的观察） | multica-ai/andrej-karpathy-skills（MIT） |
 | 交付效率度量（可选） | DORA 四指标 | 《Accelerate》, 2018 / dora.dev |
 
 ---
