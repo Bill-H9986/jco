@@ -248,6 +248,7 @@
         <button class="side-toggle" aria-label="固定展开侧栏" title="点一下固定展开，再点收起"><span class="ti ti-layout-sidebar-left-expand"></span></button>
       </div>
       <div class="search"><span class="ti ti-search"></span><input placeholder="搜索"></div>
+      <div class="newchat" id="newChatSlot"></div>
       <nav class="nav">
         <button class="nav-item"><span class="ti ti-message-plus"></span>总管</button>
         <button class="group-label" type="button"><span class="ti ti-layout-grid"></span>工作台<span class="ti ti-chevron-down"></span></button>
@@ -1063,7 +1064,9 @@
       var data = null;
       try { data = JSON.parse(localStorage.getItem('jco-chats-v1') || 'null'); } catch (e) {}
       var box = document.querySelector('.convos');
-      if (!box || !data || !Array.isArray(data.chats) || data.chats.length === 0) return;
+      if (!box) return
+      // M7：数据缺失也渲染——「新会话」按钮常驻，不依赖"总管页先初始化"
+      if (!data || !Array.isArray(data.chats)) { data = { activeId: null, chats: [] } };
       var here = decodeURIComponent(location.pathname.split('/').pop());
       function go(req) {
         try { sessionStorage.setItem('jco-open-chat', req); } catch (e) {}
@@ -1168,7 +1171,14 @@
         add.className = 'convo new-btn';
         add.innerHTML = '<span class="ti ti-plus"></span>新会话';
         add.addEventListener('click', function (e) { e.stopPropagation(); go('new'); });
-        box.appendChild(add);
+        // 「新会话」按钮位：顶部搜索框下方（M7 全站统一；找不到容器时回退列表内）
+        var slot = document.getElementById('newChatSlot');
+        if (slot) {
+          slot.innerHTML = '';
+          slot.appendChild(add);
+        } else {
+          box.appendChild(add);
+        }
         data.chats.slice(0, 8).forEach(function (c) {
           var b = document.createElement('button');
           b.className = 'convo' + (c.id === data.activeId ? ' active' : '');
