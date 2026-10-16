@@ -616,7 +616,7 @@ function notifyAutoResult(task, record) {
     if (!Notification.isSupported()) return
     new Notification({
       title: record.ok ? '「' + task.name + '」跑完了' : '「' + task.name + '」这轮没跑成',
-      body: String(record.summary || '').slice(0, 120),
+      body: clipSafe(String(record.summary || ''), 120),
     }).show()
   } catch (error) {
     /* 通知失败无碍 */
@@ -628,7 +628,7 @@ function notifyTaskResult(rec) {
     if (!Notification.isSupported()) return
     new Notification({
       title: rec.state === 'done' ? '「' + rec.name + '」跑完了' : '「' + rec.name + '」没跑成',
-      body: String(rec.summary || '').slice(0, 120),
+      body: clipSafe(String(rec.summary || ''), 120),
     }).show()
   } catch (error) {
     /* 通知失败无碍 */
@@ -754,15 +754,25 @@ const DISPATCH_DISCIPLINE = [
   '但"发布、删除、发送回复"这类不可逆动作，除非派活内容里明确说明"用户已确认、直接做"，否则一律停下等用户来确认。',
   '做完把结果说清楚：干了什么、结果如何、接下来等用户做什么。）',
 ].join('\n')
+/** 安全截断（按字符而非 UTF-16 单元，emoji 不截半）——对抗审查 R3 */
+const clipSafe = (s, n) => Array.from(String(s == null ? '' : s)).slice(0, n).join('')
 async function runDispatchedTask(id, prompt) {
   const rec = taskSessions.get(id)
   try {
     await ensurePublishReady()
     const bridge = await getBridge()
+    // 过程行（对抗审查 R1）：运行中任务视图的实时反馈（人话短语，不携带工具参数）
+    const { liveLineOf } = await import(pathToFileURL(path.join(__dirname, 'kernel', 'activity.mjs')).href)
     let streamedText = ''
     const result = await bridge.ask(prompt, (delta) => { streamedText += delta }, {
       sessionId: 'jco-chat-task-' + id,
       onActivity: (act) => {
+        try {
+          const line = liveLineOf(act)
+          if (line && Array.isArray(rec.live) && rec.live.length < 30) rec.live.push({ t: Date.now(), text: line })
+        } catch (error) {
+          /* 过程行失败不影响任务 */
+        }
         BrowserWindow.getAllWindows().forEach((win) => {
           try {
             win.webContents.send('kernel:activity', { ...act, taskId: id, taskName: rec.name, staff: rec.staff || '' })
@@ -774,19 +784,21 @@ async function runDispatchedTask(id, prompt) {
     })
     rec.endedAt = Date.now()
     rec.state = result.ok ? 'done' : 'failed'
-    rec.summary = String((result.ok ? result.text : result.error) || streamedText || '').slice(0, 300)
+    rec.summary = clipSafe(String((result.ok ? result.text : result.error) || streamedText || ''), 300)
     rec.messages = [
       { role: 'user', text: prompt, t: rec.startedAt },
       { role: 'assistant', text: String((result.ok ? result.text || streamedText : '没跑成：' + (result.error || '未知错误')) || ''), t: rec.endedAt },
     ]
+    rec.live = []
   } catch (error) {
     rec.endedAt = Date.now()
     rec.state = 'failed'
-    rec.summary = '调度出错：' + String((error && error.message) || error).slice(0, 200)
+    rec.summary = '调度出错：' + clipSafe(String((error && error.message) || error), 200)
     rec.messages = [
       { role: 'user', text: prompt, t: rec.startedAt },
       { role: 'assistant', text: rec.summary, t: rec.endedAt },
     ]
+    rec.live = []
   }
   saveTaskSession(id)
   notifyTaskResult(rec)
@@ -800,12 +812,19 @@ async function runDispatchedTask(id, prompt) {
 }
 ipcMain.handle('tasks:dispatch', (_event, payload) => {
   try {
-    const name = String((payload && payload.name) || '').trim().slice(0, 60)
-    const prompt = String((payload && payload.prompt) || '').trim().slice(0, 4000)
+    const name = clipSafe(String((payload && payload.name) || '').trim(), 60)
+    const prompt = clipSafe(String((payload && payload.prompt) || '').trim(), 4000)
     const staff = String((payload && payload.staff) || '').slice(0, 20)
     if (name === '' || prompt === '') return { ok: false, error: '没给任务名或内容' }
     const id = 't' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6)
-    taskSessions.set(id, { id, name, staff, state: 'running', startedAt: Date.now(), endedAt: 0, summary: '', messages: [] })
+    // 上限保护（对抗审查 R4）：>50 条时清最旧的已完成记录（台账文件保留，内存只留活跃 + 最近）
+    if (taskSessions.size > 50) {
+      const finished = Array.from(taskSessions.values())
+        .filter((r) => r.state !== 'running')
+        .sort((a, b) => (a.startedAt || 0) - (b.startedAt || 0))
+      while (taskSessions.size > 50 && finished.length > 0) taskSessions.delete(finished.shift().id)
+    }
+    taskSessions.set(id, { id, name, staff, state: 'running', startedAt: Date.now(), endedAt: 0, summary: '', messages: [], live: [] })
     saveTaskSession(id)
     void runDispatchedTask(id, prompt + '\n' + DISPATCH_DISCIPLINE)
     BrowserWindow.getAllWindows().forEach((win) => {

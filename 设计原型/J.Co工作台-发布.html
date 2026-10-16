@@ -777,7 +777,7 @@
           var target = currentPlatform();
           var title = String(((document.getElementById('titleInp') || {}).value || '')).trim();
           var tags = String(((document.getElementById('tagInp') || {}).value || '')).trim();
-          var name = '发到「' + (target ? target.name : '抖音') + '」' + (title ? '：' + title.slice(0, 14) : '');
+          var name = '发到「' + (target ? target.name : '抖音') + '」' + (title ? '：' + Array.from(title).slice(0, 14).join('') : '');
           var task = '帮我发一条视频到' + (target ? target.name : '抖音') + '：标题「' + title + '」，话题：' + tags + '。' +
             videoLine() + coverLine() +
             '全部就绪后停在发布前等我确认。千万不要点「发布」。';

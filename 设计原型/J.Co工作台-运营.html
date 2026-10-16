@@ -682,31 +682,38 @@
         $('leadsHint').textContent = '从评论识别到 ' + hits.length + ' 个意向，先跟进这些';
       }
 
+      var opsBusy = false;
       function startOps(kind) {
+        if (opsBusy) return;
         var engine = (typeof window.jco !== 'undefined' && window.jco && window.jco.tasks && window.jco.tasks.dispatch) ? window.jco : null;
         if (!engine) { showToast('这个功能在桌面应用里可用（浏览器直开是演示模式）。'); return; }
+        opsBusy = true;
         var name = kind === 'report' ? '取今日战报' : '取待回评论';
         var task = kind === 'report'
           ? '帮我取今天的战报：打开抖音创作者中心的数据页，看清近 7 天的播放量、新增粉丝、评论数，然后用 jco_save_report 把数字存好（metrics 里放 views / fans / comments，note 里写一句你的解读），存好后跟我说一句。记住只读，不动任何东西。'
           : '帮我取抖音的待回评论：打开评论管理页，挑最重要的几条（最多 5 条），每条拟一句得体的回复（不承诺效果、引导到私信），然后用 jco_save_comments 存好（每条含 id / author / text / draft），我回运营页过目。记住：不要替我回复。';
         engine.tasks.dispatch({ name: name, prompt: task, staff: 'ops' }).then(function (res) {
-          if (!res || !res.ok) { showToast((res && res.error) || '派活失败，稍后再试一次。'); return; }
+          if (!res || !res.ok) { opsBusy = false; showToast((res && res.error) || '派活失败，稍后再试一次。'); return; }
           try { sessionStorage.setItem('jco-open-task', res.taskId); } catch (e) {}
           location.href = 'J.Co总管.html';
         }).catch(function (err) {
+          opsBusy = false;
           showToast('派活失败：' + ((err && err.message) || '稍后再试一次'));
         });
       }
 
       function sendReply(c, text) {
+        if (opsBusy) return;
         var engine = (typeof window.jco !== 'undefined' && window.jco && window.jco.tasks && window.jco.tasks.dispatch) ? window.jco : null;
         if (!engine) { showToast('这个功能在桌面应用里可用（浏览器直开是演示模式）。'); return; }
+        opsBusy = true;
         var task = '帮我回复抖音评论：找到作者「' + String(c.author || '') + '」的那条评论（内容「' + String(c.text || '').slice(0, 30) + '」，id ' + String(c.id || '') + '），回复：「' + String(text) + '」。这条回复用户已在运营页确认过，直接发送。用发布工具操作，发完告诉我。只回这一条，别动别的。';
         engine.tasks.dispatch({ name: '回复评论：' + String(c.author || ''), prompt: task, staff: 'ops' }).then(function (res) {
-          if (!res || !res.ok) { showToast((res && res.error) || '派活失败，稍后再试一次。'); return; }
+          if (!res || !res.ok) { opsBusy = false; showToast((res && res.error) || '派活失败，稍后再试一次。'); return; }
           try { sessionStorage.setItem('jco-open-task', res.taskId); } catch (e) {}
           location.href = 'J.Co总管.html';
         }).catch(function (err) {
+          opsBusy = false;
           showToast('派活失败：' + ((err && err.message) || '稍后再试一次'));
         });
       }

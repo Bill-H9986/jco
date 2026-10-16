@@ -41,3 +41,31 @@ export function activityOf(notification) {
   if (event.type === 'turn/end') return { kind: 'turn', phase: 'end' }
   return null
 }
+
+/**
+ * 运行中任务的"过程行"文本（M7 批 1a–5 对抗审查 R1：任务视图实时反馈）。
+ * 输入活动事件（activityOf 的产物），输出一句人话；不适用的事件返回 null。
+ * 纪律：不携带任何工具参数；未知工具用工具名兜底（不假装知道它在干什么之外的细节）。
+ */
+const TOOL_TEXT = {
+  jco_open_page: '打开页面',
+  jco_snapshot: '看清页面上的元素',
+  jco_click: '点按一处',
+  jco_type_text: '输入文字',
+  jco_upload_file: '上传文件',
+  jco_scroll: '翻找位置',
+  jco_screenshot: '截图确认效果',
+  jco_wait: '等页面就绪',
+  jco_save_report: '把战报存到本机',
+  jco_save_comments: '把评论存到本机',
+}
+export function liveLineOf(activity) {
+  if (!activity || typeof activity !== 'object') return null
+  if (activity.kind === 'tool' && activity.phase === 'call') {
+    const tool = String(activity.tool || '')
+    const phrase = TOOL_TEXT[tool] || (tool ? '操作 ' + tool : '操作')
+    return '正在' + phrase
+  }
+  if (activity.kind === 'turn' && activity.phase === 'start') return '开始干活'
+  return null
+}

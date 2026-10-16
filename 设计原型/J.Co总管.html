@@ -730,9 +730,21 @@
           mark.textContent = '任务视图 · ' + t.name + '（' + (t.state === 'running' ? '在跑' : (t.state === 'done' ? '跑完了' : '没跑成')) + '；点左侧任一对话可返回）';
           stream.appendChild(mark);
           if (t.state === 'running') {
-            var liveNote = node('<div class="daymark"></div>');
-            liveNote.textContent = 'AI 正在干活…（跑完就能在这里看到它干了什么）';
-            stream.appendChild(liveNote);
+            var liveBox = document.createElement('div');
+            liveBox.style.cssText = 'padding:2px 18px 10px;font-size:12.5px;color:var(--text-3);line-height:1.9;';
+            var liveLines = (t.live && t.live.length) ? t.live.slice(-12) : [];
+            if (liveLines.length === 0) {
+              var waitRow = document.createElement('div');
+              waitRow.textContent = 'AI 正在干活…（跑完就能在这里看到它干了什么）';
+              liveBox.appendChild(waitRow);
+            } else {
+              liveLines.forEach(function (l) {
+                var row = document.createElement('div');
+                row.textContent = '· ' + String((l && l.text) || '');
+                liveBox.appendChild(row);
+              });
+            }
+            stream.appendChild(liveBox);
           }
           var actionsHTML = '<div class="msg-actions"><button aria-label="复制"><span class="ti ti-copy"></span></button><button aria-label="赞"><span class="ti ti-thumb-up"></span></button><button aria-label="踩"><span class="ti ti-thumb-down"></span></button><button aria-label="转发"><span class="ti ti-share-3"></span></button></div>';
           (t.messages || []).forEach(function (m) {

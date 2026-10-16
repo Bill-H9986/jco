@@ -300,7 +300,7 @@
       if (engine) {
         // 桌面应用：派活走唯一任务管道（跳总管自动打开任务视图，看 AI 怎么干）
         send.disabled = true;
-        engine.tasks.dispatch({ name: text.slice(0, 20), prompt: text, staff: '' }).then(function (res) {
+        engine.tasks.dispatch({ name: Array.from(text).slice(0, 20).join(''), prompt: text, staff: '' }).then(function (res) {
           if (!res || !res.ok) { send.disabled = false; showToast((res && res.error) || '派活失败，稍后再试一次。'); return; }
           try { sessionStorage.setItem('jco-open-task', res.taskId); } catch (e) {}
           location.href = 'J.Co总管.html';

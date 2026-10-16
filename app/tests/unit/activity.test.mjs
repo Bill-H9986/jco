@@ -2,7 +2,7 @@
 // 内核通知 → 归一化活动事件（tool/call、tool/result、turn/start、turn/end）。
 // 红线：不转发工具参数（arguments 绝不进产物）。
 import { describe, expect, it } from 'vitest'
-import { activityOf } from '../../kernel/activity.mjs'
+import { activityOf, liveLineOf } from '../../kernel/activity.mjs'
 
 const evt = (type, data) => ({
   method: 'session.event',
@@ -69,5 +69,24 @@ describe('活动事件解析（M5 员工实时状态）', () => {
       callId: '',
       tool: '',
     })
+  })
+})
+
+describe('过程行文本 liveLineOf（M7 对抗审查 R1：任务视图实时反馈）', () => {
+  it('已知工具 → 人话短语', () => {
+    expect(liveLineOf({ kind: 'tool', phase: 'call', callId: 'c1', tool: 'jco_open_page' })).toBe('正在打开页面')
+    expect(liveLineOf({ kind: 'tool', phase: 'call', callId: 'c1', tool: 'jco_save_comments' })).toBe(
+      '正在把评论存到本机',
+    )
+  })
+  it('未知工具 → 工具名兜底（不假装知道更多）', () => {
+    expect(liveLineOf({ kind: 'tool', phase: 'call', callId: 'c1', tool: 'other_tool' })).toBe('正在操作 other_tool')
+  })
+  it('turn/start → 开始干活；其它事件 → null（不产生噪音行）', () => {
+    expect(liveLineOf({ kind: 'turn', phase: 'start' })).toBe('开始干活')
+    expect(liveLineOf({ kind: 'turn', phase: 'end' })).toBeNull()
+    expect(liveLineOf({ kind: 'tool', phase: 'result', callId: 'c1', isError: false })).toBeNull()
+    expect(liveLineOf(null)).toBeNull()
+    expect(liveLineOf({})).toBeNull()
   })
 })
