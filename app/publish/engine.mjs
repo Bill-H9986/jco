@@ -139,6 +139,10 @@ async function main() {
       channel: 'msedge',
       headless: false,
       viewport: null,
+      // 降低自动化特征（减少平台风控对工具环境的误判；社区标准做法）。
+      // 注意：这不是"绕过风控"——真遇到验证码/风控仍然如实暂停并提示，绝不硬闯。
+      ignoreDefaultArgs: ['--enable-automation'],
+      args: ['--disable-blink-features=AutomationControlled'],
     })
   } catch (error) {
     const message = String(error?.message || error)
