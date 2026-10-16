@@ -16,6 +16,7 @@ const steps = [
     args: ['biome', 'check', 'src', 'tests', 'scripts', 'publish', 'kernel/publish-tools'],
   },
   { name: '单元测试 (Vitest)', cmd: 'npx', args: ['vitest', 'run'] },
+  { name: '全站一致性审计 (Frontend Audit)', cmd: 'node', args: ['scripts/audit-frontend.mjs'] },
   { name: '端到端回归 (Playwright)', cmd: 'npx', args: ['playwright', 'test'] },
 ]
 

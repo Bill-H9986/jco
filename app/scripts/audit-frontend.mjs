@@ -1,0 +1,135 @@
+#!/usr/bin/env node
+/**
+ * 全站一致性审计（M7 收编 · 进 gate）
+ *
+ * 防的就是"只改一页、忘掉全站"的蠢问题（2026-10-16 教训：新会话按钮只改了总管页）。
+ * 双检查：
+ *   A. 组件矩阵：15 个页面 × 公共组件/功能块 逐项核对——任何一页缺项即失败；
+ *   B. 产品目录干净：设计原型/ 只允许页面（*.html）与 assets/——验证副本/临时文件一律放开发工作区。
+ *
+ * 豁免（写明白理由，不静默放过）：
+ *  - J.Co设计系统.html：设计物料样张，不是应用页；
+ *  - 助手浮球：设计分层——干活页有、总览/管理页（总管/首页/账号中心/设置）没有。
+ */
+import { readdirSync, readFileSync, statSync } from 'node:fs'
+import path from 'node:path'
+import { fileURLToPath } from 'node:url'
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
+const ROOT = path.resolve(__dirname, '..', '..') // J.Co 工程根
+const UI = path.join(ROOT, '设计原型')
+
+const PAGES = [
+  'J.Co总管.html',
+  'J.Co主界面-首页.html',
+  'J.Co工作台-选题.html',
+  'J.Co工作台-素材.html',
+  'J.Co工作台-创作.html',
+  'J.Co工作台-做视频.html',
+  'J.Co工作台-后期.html',
+  'J.Co工作台-发布.html',
+  'J.Co工作台-运营.html',
+  'J.Co自动任务.html',
+  'J.Co技能库.html',
+  'J.Co管家团队.html',
+  'J.Co账号中心.html',
+  'J.Co设置.html',
+  'J.Co设计系统.html',
+]
+const MATERIAL_PAGE = 'J.Co设计系统.html' // 物料样张豁免
+const COPILOT_ALLOWED_MISSING = new Set([
+  'J.Co总管.html', // 聊天本体
+  'J.Co主界面-首页.html', // 总览
+  'J.Co账号中心.html', // 管理
+  'J.Co设置.html', // 管理
+  MATERIAL_PAGE,
+])
+// 按页豁免（写明白理由，不静默放过）：
+// 总管页的会话数据由页面自身初始化（chatsLoad），按钮不依赖外部数据 → 无需"常驻"补丁
+const PER_PAGE_EXEMPT = {
+  'J.Co总管.html': ['新会话按钮常驻（数据缺失也渲染）'],
+}
+
+// [键, 说明, 正则, 期望出现]
+const CHECKS = [
+  ['搜索框', /<div class="search">/],
+  ['新会话容器（顶部）', /id="newChatSlot"/],
+  ['新会话挂载顶部容器（JS）', /getElementById\('newChatSlot'\)/],
+  ['新会话按钮常驻（数据缺失也渲染）', /数据缺失也渲染/],
+  ['固定展开按钮', /class="side-toggle"/],
+  ['对话列表容器', /<div class="convos/],
+  ['侧栏底部（用户区）', /class="side-foot"/],
+  ['侧栏固定逻辑（JS）', /side-pinned/],
+  ['分组折叠（JS）', /sidebar-folded-groups/],
+  ['跨页开新会话（JS）', /jco-open-chat/],
+  ['会话菜单（JS）', /function showMenu\(|function jcoShowConvMenu\(/],
+  ['会话分享', /分享对话/],
+  ['会话重命名', /convo-rename/],
+  ['提示条函数', /function (showToast|toast)\(/],
+]
+
+let failed = false
+const missingPerPage = []
+
+// —— A. 组件矩阵 ——
+for (const page of PAGES) {
+  const src = readFileSync(path.join(UI, page), 'utf8')
+  const missing = []
+  for (const [label, re] of CHECKS) {
+    if (!re.test(src) && !(PER_PAGE_EXEMPT[page] || []).includes(label)) missing.push(label)
+  }
+  if (page !== MATERIAL_PAGE && !/class="copilot-btn"/.test(src) && !COPILOT_ALLOWED_MISSING.has(page))
+    missing.push('助手浮球')
+  // 内联不得重复定义共享样式（防止旧样式覆盖共享件）
+  for (const [label, re] of [
+    ['内联 .convo 样式（应走共享）', /\n {2}\.convo\s*\{|\n\.convo\s*\{/],
+    ['内联 .search 样式（应走共享）', /\n {2}\.search\s*\{|\n\.search\s*\{/],
+    ['内联 .newchat 样式（应走共享）', /\.newchat\s*\{/],
+  ]) {
+    if (re.test(src)) missing.push(label)
+  }
+  if (missing.length > 0) {
+    // 物料页只豁免"应用组件"，样式重复定义仍要报
+    const real = page === MATERIAL_PAGE ? missing.filter((m) => m.includes('内联')) : missing
+    if (real.length > 0) {
+      failed = true
+      missingPerPage.push('  ❌ ' + page + ' 缺少：' + real.join('、'))
+    }
+  }
+}
+
+// —— B. 产品目录干净 ——
+const junk = []
+for (const name of readdirSync(UI)) {
+  const full = path.join(UI, name)
+  const isDir = statSync(full).isDirectory()
+  if (isDir) {
+    if (name !== 'assets') junk.push(name + '/（应只在 assets 下）')
+    continue
+  }
+  if (name.startsWith('.') || !name.endsWith('.html')) junk.push(name)
+}
+if (junk.length > 0) {
+  failed = true
+}
+
+console.log('===== 全站一致性审计（机器门）=====')
+console.log('页面矩阵：' + PAGES.length + ' 页 × ' + (CHECKS.length + 4) + ' 项检查')
+if (missingPerPage.length > 0) {
+  console.log('组件分叉：')
+  for (const line of missingPerPage) console.log(line)
+} else {
+  console.log(
+    '  ✅ 组件矩阵无分叉（豁免：设计系统物料页；助手浮球按设计分层：' +
+      [...COPILOT_ALLOWED_MISSING].length +
+      ' 页不上）',
+  )
+}
+if (junk.length > 0) {
+  console.log('  ❌ 产品目录不干净（设计原型/ 只许 *.html 与 assets/）：')
+  for (const j of junk) console.log('     · ' + j)
+} else {
+  console.log('  ✅ 产品目录干净（设计原型/ 仅页面 + assets/）')
+}
+console.log(failed ? '❌ 审计未通过' : '✅ 审计通过')
+process.exit(failed ? 1 : 0)
