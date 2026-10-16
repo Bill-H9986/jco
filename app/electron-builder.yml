@@ -19,6 +19,9 @@ asarUnpack:
   - "node_modules/@deepseek-ai/**"
   - "node_modules/koffi/**"
   - "node_modules/node-pty/**"
+  - "publish/**"
+  - "node_modules/playwright/**"
+  - "node_modules/playwright-core/**"
 extraResources:
   - from: ../设计原型
     to: 设计原型

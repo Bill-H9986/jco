@@ -362,6 +362,57 @@ ipcMain.handle('kernel:video', async (_event, payload) => {
   }
 })
 
+// ---------- 发布引擎（M2：通用引擎 + 平台适配层；抖音首发适配） ----------
+let publishEngine = null
+try {
+  publishEngine = require('./dist/publish-engine.js')
+} catch (error) {
+  console.warn('[publish] 发布引擎未构建（先运行 npm run build）：' + String((error && error.message) || error))
+}
+
+const publishManager = publishEngine
+  ? new publishEngine.PublishTaskManager(
+      {
+        enginePath: publishEngine.unpackedPath(path.join(__dirname, 'publish', 'engine.mjs')),
+        platformsDir: publishEngine.unpackedPath(path.join(__dirname, 'publish', 'platforms')),
+        execPath: process.execPath,
+        profileRoot: path.join(app.getPath('userData'), 'publish'),
+      },
+      (event) => {
+        BrowserWindow.getAllWindows().forEach((win) => {
+          try {
+            win.webContents.send('publish:event', event)
+          } catch (error) {
+            /* 窗口已关闭则忽略 */
+          }
+        })
+      },
+    )
+  : null
+
+ipcMain.handle('publish:start', (_event, payload) => {
+  if (!publishManager) return { ok: false, error: '发布引擎还没有构建好，需要重新构建一次' }
+  try {
+    return publishManager.start(payload)
+  } catch (error) {
+    return { ok: false, error: String((error && error.message) || error) }
+  }
+})
+
+ipcMain.handle('publish:stop', (_event, payload) => {
+  if (!publishManager) return { ok: false, error: '发布引擎还没有构建好，需要重新构建一次' }
+  try {
+    return publishManager.stop(payload && payload.taskId)
+  } catch (error) {
+    return { ok: false, error: String((error && error.message) || error) }
+  }
+})
+
+ipcMain.handle('publish:status', () => {
+  if (!publishManager) return { state: 'idle' }
+  return publishManager.status()
+})
+
 // 测试模式：用独立的临时数据目录，避免和正在使用的 J.Co 抢单实例锁
 if (process.argv.includes('--jco-test')) {
   app.setPath('userData', path.join(app.getPath('temp'), 'jco-test-' + process.pid))

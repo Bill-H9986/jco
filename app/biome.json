@@ -4,6 +4,7 @@
       "src/**",
       "tests/**",
       "scripts/**",
+      "publish/**",
       "!tests/report",
       "!playwright-report",
       "!test-results"

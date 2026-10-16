@@ -1,0 +1,9 @@
+{
+  "_note": "抖音平台规则卡（硬规则）——文案生成与界面提示读取本文件；数值待真机校准后更新",
+  "titleMax": 55,
+  "topicsMax": 5,
+  "video": {
+    "maxGB": 4,
+    "formats": ["mp4", "mov", "webm"]
+  }
+}

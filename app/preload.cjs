@@ -39,6 +39,27 @@ contextBridge.exposeInMainWorld('jco', {
       aspect: String((payload && payload.aspect) || '9:16'),
     }),
   },
+  /** 发布引擎（M2 通用引擎 + 平台适配层）：平台差异由引擎内适配包承担，这里只传事实 */
+  publish: {
+    start: (payload) => ipcRenderer.invoke('publish:start', {
+      platform: String((payload && payload.platform) || ''),
+      videoPath: String((payload && payload.videoPath) || ''),
+      title: String((payload && payload.title) || ''),
+      topics: Array.isArray(payload && payload.topics) ? payload.topics.map(String) : [],
+    }),
+    stop: (taskId) => ipcRenderer.invoke('publish:stop', { taskId: String(taskId || '') }),
+    status: () => ipcRenderer.invoke('publish:status'),
+    onEvent: (callback) => {
+      if (typeof callback !== 'function') return
+      ipcRenderer.on('publish:event', (_event, ev) => {
+        try {
+          callback(ev)
+        } catch (error) {
+          /* 页面回调异常不扩散 */
+        }
+      })
+    },
+  },
   /** 系统级开关：主题（真切换）/ 开机启动（系统登录项）/ 清缓存（真清理） */
   sys: {
     theme: (mode) => ipcRenderer.invoke('sys:theme', String(mode || 'system')),
