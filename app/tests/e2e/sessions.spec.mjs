@@ -174,3 +174,76 @@ test('总管页：老版本聊天数据兼容（带员工标签会话 + 旧单�
     await app.close()
   }
 })
+
+test('总管页：会话 ⋯ 菜单——重命名与删除（二次确认）真生效', async () => {
+  const app = await electron.launch({ executablePath: ELECTRON_BIN, args: [APP_DIR, '--jco-test'] })
+  try {
+    const win = await app.firstWindow()
+    const errors = []
+    win.on('pageerror', (e) => errors.push(String(e.message).slice(0, 200)))
+    await win.waitForTimeout(2500)
+    // 预置两条会话（甲为当前）；清侧栏固定展开偏好
+    await win.evaluate(() => {
+      try {
+        localStorage.setItem(
+          'jco-chats-v1',
+          JSON.stringify({
+            activeId: 'ca',
+            chats: [
+              {
+                id: 'ca',
+                title: '会话甲',
+                updatedAt: Date.now(),
+                messages: [{ role: 'user', text: '甲的内容', t: Date.now() }],
+              },
+              // 注：非当前会话若是空的会被"空会话只留一个"清理删掉（既定行为），故给乙一条消息
+              {
+                id: 'cb',
+                title: '会话乙',
+                updatedAt: Date.now(),
+                messages: [{ role: 'user', text: '乙的内容', t: Date.now() }],
+              },
+            ],
+          }),
+        )
+        localStorage.removeItem('jco-side-pinned')
+      } catch {}
+    })
+    await win.evaluate(() => {
+      window.location.href = 'J.Co总管.html'
+    })
+    await win.waitForTimeout(1500)
+    await win.locator('.side-toggle').click()
+    await win.waitForTimeout(400)
+
+    // 重命名：⋯ → 重命名 → 输入 → 回车
+    const jiaConvo = win.locator('.convos:not(#taskList) .convo', { hasText: '会话甲' })
+    await jiaConvo.locator('.convo-more').click()
+    await win.locator('.convo-menu button', { hasText: '重命名' }).click()
+    const renameInput = win.locator('.convos .convo-rename')
+    await renameInput.fill('改过的名字')
+    await renameInput.press('Enter')
+    await win.waitForTimeout(300)
+    const names1 = (await win.locator('.convos:not(#taskList) .convo .name').allInnerTexts()).join('｜')
+    expect(names1).toContain('改过的名字')
+    const stored1 = await win.evaluate(() => JSON.parse(localStorage.getItem('jco-chats-v1') || '{}'))
+    expect((stored1.chats || []).find((c) => c.id === 'ca').title).toBe('改过的名字')
+
+    // 删除（二次确认）：第一次点击变为"再点一次，真删除"，第二次才删
+    const renamed = win.locator('.convos:not(#taskList) .convo', { hasText: '改过的名字' })
+    await renamed.locator('.convo-more').click()
+    const delBtn = win.locator('.convo-menu button.danger') // 文本点击后会变，用稳定选择器
+    await delBtn.click()
+    await expect(delBtn).toContainText('再点一次')
+    await delBtn.click()
+    await win.waitForTimeout(300)
+    const names2 = (await win.locator('.convos:not(#taskList) .convo .name').allInnerTexts()).join('｜')
+    expect(names2).not.toContain('改过的名字')
+    expect(names2).toContain('会话乙')
+    const stored2 = await win.evaluate(() => JSON.parse(localStorage.getItem('jco-chats-v1') || '{}'))
+    expect((stored2.chats || []).some((c) => c.id === 'ca')).toBe(false)
+    expect(errors, `JS 错误：\n${errors.join('\n')}`).toEqual([])
+  } finally {
+    await app.close()
+  }
+})
