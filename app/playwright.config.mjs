@@ -4,6 +4,8 @@ import { defineConfig } from '@playwright/test'
 // 注意：应用有单实例锁，测试必须串行（workers: 1），并以 --jco-test 参数启动。
 export default defineConfig({
   testDir: './tests/e2e',
+  globalSetup: './tests/e2e/global-setup.mjs',
+  globalTeardown: './tests/e2e/global-teardown.mjs',
   timeout: 120_000,
   expect: { timeout: 15_000 },
   retries: 0,
