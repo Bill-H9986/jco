@@ -671,6 +671,7 @@
       setGenBusy(false);
       if (res && res.ok && res.text) {
         paint({ lines: cleanLines(res.text) });
+        saveScript(topicText(), cleanLines(res.text), isXhs);
         showToast(isXhs ? '小红书版写好了，点着还能改。' : '新一版写好了，点着还能改。');
         jcoLogAdd('create', topicText().slice(0, 40), isXhs ? '小红书版写好了' : '口播稿写好了');
         jcoNotifyDone('稿子写好了', topicText().slice(0, 30));
@@ -761,17 +762,21 @@
 
     /* ---------- 主题由用户定：换主题 / 自己出题 ---------- */
     const TOPICS = [
-      { name: '《成人高考报名其实就 3 步，看完不踩坑》', src: '这条主题是<b>你选的</b>（来自「选题」） · 结构学自 <em>@学历规划王老师</em> 的爆款' },
-      { name: '《32 岁宝妈 6 个月拿下大专文凭，她只做了 3 件事》', src: '这条主题是<b>你选的</b>（来自「选题」） · 结构学自 <em>@在职学历张老师</em> 的爆款' },
+      { name: '《成人高考报名其实就 3 步，看完不踩坑》', src: '这条主题来自「选题」· 挑一个直接开写' },
+      { name: '《32 岁宝妈 6 个月拿下大专文凭，她只做了 3 件事》', src: '这条主题来自「选题」· 挑一个直接开写' },
     ];
     let topicIndex = 0;
 
     function changeTopic() {
+      if (JCO_KERNEL) {
+        showToast('去「选题」挑一个，带回来直接开写。');
+        location.href = 'J.Co工作台-选题.html';
+        return;
+      }
       topicIndex = (topicIndex + 1) % TOPICS.length;
       document.getElementById('topicName').textContent = TOPICS[topicIndex].name;
       document.getElementById('topicSrc').innerHTML = TOPICS[topicIndex].src;
       paperTitle.textContent = TOPICS[topicIndex].name.replace(/[《》]/g, '');
-      if (JCO_KERNEL) { generateScript('normal'); return; }
       showToast('换成你在「选题」里选的另一条。不满意就再换，或者干脆自己出题。');
     }
 
@@ -802,7 +807,47 @@
       });
     });
 
-    paint(VERSIONS[0]);
+    /* ---------- M8 收尾：接住「选题」带过来的主题；稿子真持久化；没有就空态 ---------- */
+    function saveScript(topic, lines, xhs) {
+      try { localStorage.setItem('jco-script-v1', JSON.stringify({ topic: topic, lines: lines, xhs: !!xhs, t: Date.now() })); } catch (e) {}
+    }
+    function restoreScript() {
+      try { return JSON.parse(localStorage.getItem('jco-script-v1') || 'null'); } catch (e) { return null; }
+    }
+    function setTopic(topic, srcHtml) {
+      document.getElementById('topicName').textContent = '《' + topic + '》';
+      document.getElementById('topicSrc').innerHTML = srcHtml;
+      paperTitle.textContent = topic;
+    }
+    function emptyScript() {
+      scriptEl.innerHTML = '';
+      const p = document.createElement('p');
+      p.className = 'empty-script';
+      p.textContent = '还没有稿子。选好主题后，点下面「重新生成一版」，我就开写。';
+      scriptEl.appendChild(p);
+    }
+    (function boot() {
+      if (!JCO_KERNEL) { paint(VERSIONS[0]); return; } // 浏览器直开：保留演示预览
+      let picked = null;
+      try { picked = sessionStorage.getItem('jco-pick-topic'); if (picked) sessionStorage.removeItem('jco-pick-topic'); } catch (e) {}
+      const last = restoreScript();
+      if (picked) {
+        setTopic(picked, '主题来自「选题」· 点【重新生成一版】我就开写');
+        if (last && last.lines && last.topic === picked) { xhsMode = !!last.xhs; paint({ lines: last.lines }); }
+        else { emptyScript(); showToast('主题带过来了，点【重新生成一版】我就开写。'); }
+        return;
+      }
+      if (last && last.lines && last.lines.length) {
+        xhsMode = !!last.xhs;
+        setTopic(last.topic || '上次的稿子', '上次写的稿子（点着还能改）');
+        paint({ lines: last.lines });
+        return;
+      }
+      document.getElementById('topicName').textContent = '（还没选主题）';
+      document.getElementById('topicSrc').innerHTML = '先去「<b>选题</b>」挑一个，或点「自己出题」说一句';
+      paperTitle.textContent = '还没有主题';
+      emptyScript();
+    })();
     document.querySelectorAll('.anim').forEach((el, i) => {
       setTimeout(() => el.classList.add('in'), 60 + i * 90);
     });

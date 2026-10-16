@@ -37,51 +37,6 @@
 
 .sec-head .hint { font-size: 13px; color: var(--text-3); }
 
-/* 对标账号横排 */
-  .acc-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
-
-.acc {
-    background: var(--card); border-radius: 20px; box-shadow: var(--shadow-card);
-    padding: 14px 15px; border: none; text-align: left; cursor: pointer;
-    font-family: inherit; display: flex; flex-direction: column; gap: 6px;
-    transition: transform 0.16s var(--ease), box-shadow 0.16s var(--ease);
-  }
-
-.acc:hover { transform: translateY(-2px); box-shadow: var(--shadow); }
-
-.acc:active { transform: scale(0.985); }
-
-.acc:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-
-.acc .top { display: flex; align-items: center; gap: 9px; }
-
-.acc .pfp {
-    width: 32px; height: 32px; border-radius: 50%; flex: none;
-    background: var(--tint); color: var(--text-2);
-    display: flex; align-items: center; justify-content: center;
-    font-size: 13px; font-weight: 600;
-  }
-
-.acc .nm { font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-
-.acc .meta { font-size: 12px; color: var(--text-3); }
-
-.acc .news { font-size: 12px; margin-top: 2px; }
-
-.acc .news.hot { color: var(--red); font-weight: 600; }
-
-.acc .news.quiet { color: var(--text-3); }
-
-.acc.add {
-    align-items: center; justify-content: center; gap: 8px;
-    background: transparent; border: 1.5px dashed var(--line); box-shadow: none;
-    color: var(--text-2); font-size: 14px; font-weight: 500;
-  }
-
-.acc.add:hover { background: var(--hover); border-color: var(--text-3); }
-
-.acc.add .ti { font-size: 18px; }
-
 /* 爆款卡 */
   .hits { display: flex; flex-direction: column; gap: 12px; }
 
@@ -214,7 +169,7 @@
 
 .anim.in { opacity: 1; transform: none; transition: opacity 0.42s var(--ease), transform 0.42s var(--ease); }
 
-/* 账号与对标 弹层 */
+/* 弹层（贴一条爆款） */
   .overlay {
     position: fixed; inset: 0; z-index: 50;
     background: rgba(20, 20, 24, 0.32);
@@ -266,7 +221,7 @@
   .me .ava, .mm-head .ava, .msg.ai .ava, .card .go, .send, .ghost, .ghost-btn, .btn-sm, .act,
   .cp-act, .cp-send, .agent-chip, .badge, .b-role, .s-badge, .stage, .r-dot,
   .dot, .prog .track, .prog .fill, .prow .pbar, .prow .pf2, .toast,
-  .pf .pfck, .seg button, .go-btn, .copilot-btn, .acc .pfp, .use-btn,
+  .pf .pfck, .seg button, .go-btn, .copilot-btn, .use-btn,
   .tag, .star, .check, .ai-state .dot, .regen, .agent-tabs, .agent-tabs button,
   .tool, .model-pill, .send-big, .draft .dprog, .draft .dprog .dfill,
   .draft .open, .ib-count, .ib-nav, .step .dot, .track, .fill, .shot .swap,
@@ -278,9 +233,9 @@
     ::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.4); border-radius: 999px; }
   }
 
-@media (max-width: 1100px) { .acc-row { grid-template-columns: repeat(2, 1fr); } .radar { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 1100px) { .radar { grid-template-columns: repeat(2, 1fr); } }
 
-@media (max-width: 860px) { .sidebar { display: none; } .wrap { padding: 24px 18px 60px; } .radar { grid-template-columns: 1fr; } .acc-row { grid-template-columns: 1fr; } }
+@media (max-width: 860px) { .sidebar { display: none; } .wrap { padding: 24px 18px 60px; } .radar { grid-template-columns: 1fr; } }
   </style>
 <script>
   /* 提前恢复侧栏展开状态，避免页面加载时闪一下 */
@@ -338,42 +293,37 @@
     <main class="main">
       <div class="scroll">
         <div class="wrap">
-          <div class="demo-note"><span class="ti ti-info-circle"></span>演示版：这块还没接上真实数据（正在做）。做好后，这里就是真的。</div>
           <div class="head">
             <div>
               <h1>选题</h1>
-              <div class="sub">盯住你的对标账号：他们爆什么，你学什么。</div>
+              <div class="sub">三条路找题：AI 出题、评论里挖题、你贴爆款我拆结构。</div>
             </div>
-            <button class="ghost" onclick="openSheet()"><span class="ti ti-id"></span>账号与对标</button>
+            <button class="ghost" onclick="inspoOpen()"><span class="ti ti-flame"></span>贴一条爆款</button>
           </div>
 
           <div class="brief">
-            <span class="ti ti-flame"></span>
-            <span>你盯的 <b>4 个</b>对标账号，昨天冒出 <b>3 条爆款</b>，已经帮你拆解好了。</span>
+            <span class="ti ti-bulb"></span>
+            <span>选题我按你的赛道备好了：点「<b>换一批</b>」让我现想几条热点方向；或者把你想拍的写到底部条里。</span>
             <span class="spacer"></span>
-            <button class="ghost" id="refresh" style="height:32px;padding:0 13px;font-size:13px;"><span class="ti ti-refresh"></span>刷新</button>
+            <button class="ghost" id="refresh" style="height:32px;padding:0 13px;font-size:13px;"><span class="ti ti-refresh"></span>换一批</button>
           </div>
 
-          <div class="sec-head">
-            <h2>我的对标账号</h2>
-            <span class="hint">AI 每天盯更新，发现爆款就叫你</span>
-          </div>
-          <div class="acc-row" id="accRow"></div>
 
           <div class="sec-head">
-            <h2>他们最近在爆什么</h2>
-            <span class="hint">学它的结构，讲你的内容</span>
+            <h2>爆款拆解</h2>
+            <span class="hint">你贴一条爆款（链接或文案），我拆它的结构、套出你的版本</span>
           </div>
           <div class="hits" id="hits"></div>
 
           <div class="minor">
             <div class="sec-head">
-              <h2>其他灵感</h2>
-              <span class="hint">偶尔看看，不用每天盯</span>
+              <h2>灵感雷达</h2>
+              <span class="hint">AI 想的题、评论里挖的题，点 ☆ 收藏，点卡片拿去开写</span>
             </div>
             <nav class="tabs" id="tabs">
-              <button class="tab active" data-f="all">全网热点</button>
+              <button class="tab active" data-f="hot">AI 热点</button>
               <button class="tab" data-f="ai">AI 推荐</button>
+              <button class="tab" data-f="cmt">评论挖题</button>
               <button class="tab" data-f="fav">我的收藏</button>
             </nav>
             <div class="radar" id="radar"></div>
@@ -391,27 +341,15 @@
     </main>
   </div>
 
-  <!-- 账号与对标 弹层 -->
-  <div class="overlay" id="overlay" onclick="if(event.target===this)closeSheet()">
-    <div class="sheet" role="dialog" aria-label="账号与对标">
-      <h3>账号与对标</h3>
-      <div class="sub">左边是你自己，右边是你盯的人。都设置一次，长期有效。</div>
-
-      <div class="field"><label>你是做什么的</label><input value="成人学历提升 · 招生机构"></div>
-      <div class="field"><label>给谁看（你的学员是谁）</label><input value="25-35 岁想提升学历的上班族和宝妈"></div>
-
-      <div class="divider"></div>
-
-      <div class="sub" style="font-size:14px;color:var(--text-1);font-weight:600;">正在盯的对标账号（4 个）</div>
-      <div class="field"><label>@学历规划王老师 · 抖音 · 86 万粉</label></div>
-      <div class="field"><label>@专升本日记 · 小红书 · 12 万粉</label></div>
-      <div class="field"><label>@在职学历张老师 · 视频号 · 23 万粉</label></div>
-      <div class="field"><label>@成考避坑指南 · 抖音 · 41 万粉</label></div>
-      <div class="field"><label>再加一个（贴账号名或主页链接）</label><input placeholder="比如：@老王说学历 或 复制主页链接"></div>
-
+  <!-- 贴一条爆款 弹层（拆结构 → 套你的版本；不爬取、不搬运） -->
+  <div class="overlay" id="inspoOverlay" onclick="if(event.target===this)inspoClose()">
+    <div class="sheet" role="dialog" aria-label="贴一条爆款">
+      <h3>贴一条爆款</h3>
+      <div class="sub">把你在别处看到的一条爆款贴进来（标题/文案/口播稿都行），我拆它的结构，套出你自己的版本。不爬取、不搬运。</div>
+      <div class="field"><label>爆款内容（粘贴文案最好；只贴标题也行）</label><textarea id="inspoText" rows="4" placeholder="比如：成人高考报名流程全攻略，看这一条就够了。别被网上那些流程吓到……"></textarea></div>
       <div class="foot">
-        <button class="ghost" onclick="closeSheet()">先不设置</button>
-        <button class="use-btn" onclick="saveSheet()">保存</button>
+        <button class="ghost" onclick="inspoClose()">先不贴</button>
+        <button class="use-btn" id="inspoGoBtn" onclick="inspoGo()">拆给我看</button>
       </div>
     </div>
   </div>
@@ -441,61 +379,11 @@
   <div class="toast" id="toast" role="status"></div>
 
   <script>
-    /* ---------- 数据（原型假数据，示例业务：成人学历提升） ---------- */
-    const ACCOUNTS = [
-      { name: '@学历规划王老师', platform: '抖音', fans: '86 万粉', news: '昨天 +1 条爆款', hot: true },
-      { name: '@专升本日记', platform: '小红书', fans: '12 万粉', news: '昨天没更新', hot: false },
-      { name: '@在职学历张老师', platform: '视频号', fans: '23 万粉', news: '昨天 +2 条爆款', hot: true },
-      { name: '@成考避坑指南', platform: '抖音', fans: '41 万粉', news: '昨天 +0 条', hot: false },
-    ];
-
-    const HITS = [
-      {
-        author: '@学历规划王老师', platform: '抖音', plays: '82.4 万', likes: '1.2 万',
-        title: '成人高考报名流程全攻略，看这一条就够了',
-        dur: '1:47',
-        why: '把 7 步烧脑流程压成"你只需要做 3 件事"，评论区一半人在说"终于搞懂了"',
-        structure: '开头 15 秒先亮结果 → 中间"只需要 3 步" → 结尾点名人群（"在职的注意了"）',
-        myTitle: '成人高考报名其实就 3 步，看完不踩坑',
-        hook: '"别被网上那些流程吓到，其实就三步，两分钟讲完。"',
-        who: '嫌麻烦、一直在观望的在职人群',
-      },
-      {
-        author: '@在职学历张老师', platform: '视频号', plays: '45.1 万', likes: '6,800',
-        title: '32 岁宝妈的逆袭：半年拿下大专文凭',
-        dur: '2:12',
-        why: '真实学员故事 + 具体时间线（"每天只学 40 分钟"），让"没时间的人"看到希望',
-        structure: '痛点开场（"觉得晚了？"）→ 学员原话出镜 → 给时间表 → 引导私信',
-        myTitle: '32 岁宝妈，6 个月拿下大专文凭，她只做了 3 件事',
-        hook: '"白天带娃、晚上学习，她第一次考试就过了两科。怎么做到的？"',
-        who: '25-35 岁、想提升但怕没时间的宝妈',
-      },
-      {
-        author: '@成考避坑指南', platform: '抖音', plays: '38.7 万', likes: '4,300',
-        title: '注意！这 3 种"包过"都是坑',
-        dur: '1:05',
-        why: '"反常识+揭露"开局，前 3 秒就让人停下；结尾给判断标准，收藏率高',
-        structure: '喊停（"先别交钱"）→ 逐个揭坑 → 给一条判断标准 → 评论区互动',
-        myTitle: '别被"包过"骗了：学历提升最常见的 4 个坑',
-        hook: '"有人说交钱就能拿证，这靠谱吗？今天把话说透。"',
-        who: '担心被骗、正在对比机构的学员',
-      },
-    ];
-
-    const RADAR = [
-      { kind: 'hot', kindName: '全网热点', heat: '↑↑', title: '2026 成人高考时间表出炉' },
-      { kind: 'hot', kindName: '全网热点', heat: '↑', title: '学历提升补贴政策最新解读' },
-      { kind: 'hot', kindName: '全网热点', heat: '↑', title: '报名季 10 个高频问题合集' },
-      { kind: 'ai', kindName: 'AI 推荐', heat: '↑', title: '学员上岸晒证书合集' },
-      { kind: 'ai', kindName: 'AI 推荐', heat: '↑', title: '初中起点也能升到本科？' },
-      { kind: 'ai', kindName: 'AI 推荐', heat: '↑', title: '上班族每天 30 分钟学习安排' },
-    ];
-
-    const accRow = document.getElementById('accRow');
-    const hitsEl = document.getElementById('hits');
-    const radarEl = document.getElementById('radar');
+    /* ============================================================
+       M8 选题环（真化）：三条真能力 = AI 出题（热点/想题） + 评论里挖题 + 你贴爆款我拆结构。
+       数据全部持久化在本机（jco-inspo-v1 / jco-radar-v1 / jco-favs-v1）；不爬取、不搬运。
+       ============================================================ */
     const toastEl = document.getElementById('toast');
-    const favs = new Set();
 
     function showToast(msg) {
       toastEl.textContent = msg;
@@ -504,9 +392,10 @@
       showToast.timer = setTimeout(() => toastEl.classList.remove('show'), 2800);
     }
 
-    /* ---------- 真内核模式（桌面应用里启用；浏览器直开保持演示） ---------- */
+    /* ---------- 真内核模式（桌面应用里启用；浏览器直开保留空态提示） ---------- */
     const JCO_KERNEL = (typeof window.jco !== 'undefined' && window.jco && window.jco.kernel) ? window.jco.kernel : null;
-    /* ---------- J.Co 本地状态层：活动日志 ---------- */
+
+    /* ---------- J.Co 本地状态层 ---------- */
     function jcoLogAdd(kind, title, detail) {
       try {
         var data = JSON.parse(localStorage.getItem('jco-log-v1') || '{"items":[]}');
@@ -515,6 +404,10 @@
         localStorage.setItem('jco-log-v1', JSON.stringify(data));
       } catch (e) {}
     }
+    function loadJSON(key, fallback) {
+      try { var v = JSON.parse(localStorage.getItem(key) || 'null'); return v == null ? fallback : v; } catch (e) { return fallback; }
+    }
+    function saveJSON(key, val) { try { localStorage.setItem(key, JSON.stringify(val)); } catch (e) {} }
     function cleanLines(text) {
       return String(text).split('\n').map((l) => l
         .replace(/^#{1,6}\s*/, '')
@@ -522,302 +415,326 @@
         .replace(/^\d{1,2}[.、)]\s+/, '')
         .trim()).filter((l) => l !== '');
     }
+    function todayWord() {
+      var d = new Date();
+      return (d.getMonth() + 1) + '月' + d.getDate() + '日';
+    }
 
-    /** 展开一张爆款卡时：真拆解 → 生成"你的版本"（标题/开头/受众） */
-    let hitBusy = false;
-    async function regenerateVersion(el, h) {
-      if (!JCO_KERNEL || hitBusy) return;
-      hitBusy = true;
-      const st = el.querySelector('.st'), mt = el.querySelector('.mt'), hk = el.querySelector('.hk'), wh = el.querySelector('.wh');
-      const oldVals = { st: st.textContent, mt: mt.textContent, hk: hk.textContent, wh: wh.textContent };
-      mt.textContent = '正在拆解……';
-      hk.textContent = '正在拆解……';
-      wh.textContent = '正在拆解……';
-      const input = [
-        '这是我对标的一条爆款（我做的赛道：成人学历提升招生，成人高考/自考）：',
-        '标题：《' + h.title + '》（' + h.author + ' · ' + h.platform + '，播放 ' + h.plays + '）',
-        '为什么火：' + h.why,
-        '它的结构：' + h.structure,
-        '',
-        '请像内行一样给我三行，每行分别以「标题：」「开头：」「受众：」开头（不要多余解释）：',
-        '标题：一个我可以直接用的新标题（说法不同，但同样抓人）',
-        '开头：一句我视频开头的原话（写法要不一样）',
-        '受众：这条最适合讲给谁听（一句话）',
+    /* ---------- 真数据（全部本机持久化） ---------- */
+    let inspos = loadJSON('jco-inspo-v1', []);   // 你贴的爆款 + 拆解
+    let radar = loadJSON('jco-radar-v1', []);    // 雷达题（hot/ai/cmt）
+    let favs = loadJSON('jco-favs-v1', []);      // 收藏的题目
+    function saveInspos() { saveJSON('jco-inspo-v1', inspos.slice(0, 10)); }
+    function saveRadar() { saveJSON('jco-radar-v1', radar.slice(0, 60)); }
+    function saveFavs() { saveJSON('jco-favs-v1', favs.slice(0, 100)); }
+
+    const TOPIC_SYSTEM = '你是短视频选题策划，服务成人学历提升招生赛道（成人高考/自考/开放大学）。要求：实用、能直接拍、不夸大承诺、不碰"包过"这类违规说法。只输出要求的行，不要解释。';
+
+    /* ---------- 拿去开写（交接给「创作」页） / 开始做视频（交接给「创作」页-做视频） ---------- */
+    function goWrite(title) {
+      try { sessionStorage.setItem('jco-pick-topic', String(title || '')); } catch (e) {}
+      location.href = 'J.Co工作台-创作.html';
+    }
+    function goMake(title) {
+      try { sessionStorage.setItem('jco-make-topic', String(title || '')); } catch (e) {}
+      location.href = 'J.Co工作台-做视频.html';
+    }
+
+    /* ---------- 爆款拆解：贴入 → AI 拆全（为什么火/结构/我的版本） ---------- */
+    let inspoBusy = false;
+    function inspoOpen() {
+      document.getElementById('inspoOverlay').classList.add('show');
+      var t = document.getElementById('inspoText');
+      if (t) t.focus();
+    }
+    function inspoClose() { document.getElementById('inspoOverlay').classList.remove('show'); }
+    async function inspoGo() {
+      var box = document.getElementById('inspoText');
+      var v = (box && box.value || '').trim();
+      if (!v) { showToast('先贴一条爆款内容（标题或文案都行）'); return; }
+      if (inspoBusy) return;
+      if (!JCO_KERNEL) { showToast('这个功能在桌面应用里可用（浏览器直开是演示模式）。'); return; }
+      inspoBusy = true;
+      var btn = document.getElementById('inspoGoBtn');
+      if (btn) { btn.disabled = true; btn.textContent = '正在拆……'; }
+      var input = [
+        '这是我看到的一条爆款（我的赛道：成人学历提升招生）：',
+        '---',
+        v.slice(0, 1500),
+        '---',
+        '请拆解并套出我自己的版本，严格按下面 5 行输出（不要多余解释）：',
+        '为什么火：……（一句，说透它的爆点）',
+        '它的结构：……（一句，拆它的节奏/套路）',
+        '我的标题：……（我可以直接用的新标题）',
+        '我的开头：……（一句我视频开头的原话）',
+        '讲给谁听：……（一句话）',
       ].join('\n');
-      const res = await JCO_KERNEL.task({
-        system: '你是短视频选题拆解教练，服务成人学历提升赛道（招生）。只输出要求的行，不要解释。',
-        input: input,
+      var res = await Promise.race([
+        JCO_KERNEL.task({ system: '你是短视频爆款拆解教练。只输出要求的 5 行。', input: input }),
+        new Promise(function (r) { setTimeout(function () { r({ ok: false, error: '这次拆太久了（超过 100 秒），再试一次。' }); }, 100000); }),
+      ]);
+      inspoBusy = false;
+      if (btn) { btn.disabled = false; btn.textContent = '拆给我看'; }
+      if (!res || !res.ok || !res.text) { showToast('没拆成：' + ((res && res.error) || '未知错误')); return; }
+      var item = { t: Date.now(), text: v.slice(0, 200), why: '', structure: '', myTitle: '', hook: '', who: '' };
+      cleanLines(res.text).forEach(function (l) {
+        if (l.indexOf('为什么火：') === 0) item.why = l.slice(5).trim();
+        else if (l.indexOf('它的结构：') === 0) item.structure = l.slice(5).trim();
+        else if (l.indexOf('我的标题：') === 0) item.myTitle = l.slice(5).trim();
+        else if (l.indexOf('我的开头：') === 0) item.hook = l.slice(5).trim();
+        else if (l.indexOf('讲给谁听：') === 0) item.who = l.slice(5).trim();
       });
-      hitBusy = false;
-      if (res && res.ok && res.text) {
-        const lines = cleanLines(res.text);
-        let got = 0;
-        lines.forEach((l) => {
-          if (l.indexOf('标题：') === 0) { mt.textContent = l.slice(3).trim(); got++; }
-          else if (l.indexOf('开头：') === 0) { hk.textContent = l.slice(3).trim(); got++; }
-          else if (l.indexOf('受众：') === 0) { wh.textContent = l.slice(3).trim(); got++; }
-        });
-        if (got === 0) mt.textContent = lines[0] || oldVals.mt;
-        showToast('拆好了：你的版本在下面。');
-        jcoLogAdd('topic', '拆解爆款', (mt.textContent || '').slice(0, 40));
-      } else {
-        st.textContent = oldVals.st;
-        mt.textContent = oldVals.mt;
-        hk.textContent = oldVals.hk;
-        wh.textContent = oldVals.wh;
-        showToast('没拆成：' + ((res && res.error) || '未知错误'));
-      }
+      if (!item.why && !item.myTitle) item.why = cleanLines(res.text)[0] || '';
+      inspos.unshift(item);
+      saveInspos();
+      inspoClose();
+      if (box) box.value = '';
+      renderInspo();
+      jcoLogAdd('topic', '拆解爆款', (item.myTitle || item.text).slice(0, 40));
+      showToast('拆好了：你的版本在下面这张卡里。');
     }
 
-    function renderAccounts() {
-      accRow.innerHTML = '';
-      ACCOUNTS.forEach((a, i) => {
-        const el = document.createElement('button');
-        el.className = 'acc anim';
-        el.innerHTML = `
-          <div class="top"><div class="pfp"></div><span class="nm"></span></div>
-          <div class="meta"></div>
-          <div class="news ${a.hot ? 'hot' : 'quiet'}"></div>`;
-        el.querySelector('.pfp').textContent = a.name.replace('@', '').slice(0, 1);
-        el.querySelector('.nm').textContent = a.name;
-        el.querySelector('.meta').textContent = a.platform + ' · ' + a.fans;
-        el.querySelector('.news').textContent = a.news;
-        el.addEventListener('click', () => showToast('（原型示意）正式版会打开「' + a.name + '」的作品列表，按热度排序。'));
-        accRow.appendChild(el);
-        setTimeout(() => el.classList.add('in'), 30 + i * 60);
-      });
-      const add = document.createElement('button');
-      add.className = 'acc add anim';
-      add.innerHTML = '<span class="ti ti-plus"></span>加对标账号';
-      add.addEventListener('click', openSheet);
-      accRow.appendChild(add);
-      setTimeout(() => add.classList.add('in'), 30 + ACCOUNTS.length * 60);
-    }
-
-    function renderHits(order) {
-      const list = order ? [...HITS].sort(() => Math.random() - 0.5) : HITS;
+    function renderInspo() {
+      var hitsEl = document.getElementById('hits');
       hitsEl.innerHTML = '';
-      list.forEach((h, i) => {
-        const el = document.createElement('div');
+      if (inspos.length === 0) {
+        var empty = document.createElement('div');
+        empty.className = 'empty';
+        empty.textContent = '还没贴过爆款。看到好的，点右上角「贴一条爆款」，我拆它的结构、套出你的版本。';
+        hitsEl.appendChild(empty);
+        return;
+      }
+      inspos.forEach(function (h, i) {
+        var el = document.createElement('div');
         el.className = 'hit anim';
-        el.innerHTML = `
-          <div class="row1">
-            <div class="thumb"><span class="ti ti-player-play"></span><span class="dur"></span></div>
-            <div class="meta">
-              <div class="src"><span class="fire ti ti-flame"></span><span class="who"></span></div>
-              <div class="title"></div>
-              <div class="stat">播放 <b class="plays"></b> · 点赞 <b class="likes"></b></div>
-            </div>
-            <div class="ops"><button class="use-btn">学它做一条</button></div>
-          </div>
-          <div class="detail">
-            <div class="why-fire"><span class="ti ti-flame"></span><div>为什么火：<b class="why"></b></div></div>
-            <div class="learn">
-              <div class="head-cell">学它什么</div>
-              <div class="k">它的结构</div><div class="v q st"></div>
-              <div class="head-cell">你的版本</div>
-              <div class="k">换个标题</div><div class="v mt"></div>
-              <div class="k">开头这样说</div><div class="v q hk"></div>
-              <div class="k">讲给谁听</div><div class="v wh"></div>
-            </div>
-            <div class="go-row">
-              <button class="ghost see">看原视频<span class="ti ti-external-link"></span></button>
-              <button class="go-btn">开始做视频<span class="ti ti-arrow-right"></span></button>
-            </div>
-          </div>`;
-        el.querySelector('.dur').textContent = h.dur;
-        el.querySelector('.who').textContent = h.author + ' · ' + h.platform;
-        el.querySelector('.title').textContent = h.title;
-        el.querySelector('.plays').textContent = h.plays;
-        el.querySelector('.likes').textContent = h.likes;
-        el.querySelector('.why').textContent = h.why;
-        el.querySelector('.st').textContent = h.structure;
-        el.querySelector('.mt').textContent = h.myTitle;
-        el.querySelector('.hk').textContent = h.hook;
-        el.querySelector('.wh').textContent = h.who;
-
-        const useBtn = el.querySelector('.use-btn');
-        useBtn.addEventListener('click', () => {
-          const opening = !el.classList.contains('open');
-          document.querySelectorAll('.hit').forEach((x) => {
-            x.classList.remove('open');
-            const b = x.querySelector('.use-btn');
-            b.classList.remove('used');
-            b.textContent = '学它做一条';
-          });
-          if (opening) {
-            el.classList.add('open');
-            useBtn.classList.add('used');
-            useBtn.textContent = '已展开';
-            if (JCO_KERNEL) regenerateVersion(el, h);
-          }
+        el.innerHTML =
+          '<div class="row1">' +
+            '<div class="thumb"><span class="ti ti-flame"></span></div>' +
+            '<div class="meta">' +
+              '<div class="src"><span class="fire ti ti-flame"></span><span class="who"></span></div>' +
+              '<div class="title"></div>' +
+              '<div class="stat">你的版本：<b class="mt-line"></b></div>' +
+            '</div>' +
+            '<div class="ops"><button class="use-btn">看拆解</button></div>' +
+          '</div>' +
+          '<div class="detail">' +
+            '<div class="why-fire"><span class="ti ti-flame"></span><div>为什么火：<b class="why"></b></div></div>' +
+            '<div class="learn">' +
+              '<div class="head-cell">学它什么</div>' +
+              '<div class="k">它的结构</div><div class="v q st"></div>' +
+              '<div class="head-cell">你的版本</div>' +
+              '<div class="k">换个标题</div><div class="v mt"></div>' +
+              '<div class="k">开头这样说</div><div class="v q hk"></div>' +
+              '<div class="k">讲给谁听</div><div class="v wh"></div>' +
+            '</div>' +
+            '<div class="go-row">' +
+              '<button class="ghost write-btn">拿去开写<span class="ti ti-arrow-right"></span></button>' +
+              '<button class="go-btn">开始做视频<span class="ti ti-arrow-right"></span></button>' +
+            '</div>' +
+          '</div>';
+        el.querySelector('.who').textContent = '你贴的爆款 · ' + (h.text || '').slice(0, 24);
+        el.querySelector('.title').textContent = (h.text || '').slice(0, 40) || '（贴入的爆款）';
+        el.querySelector('.mt-line').textContent = h.myTitle || '待拆解';
+        el.querySelector('.why').textContent = h.why || '—';
+        el.querySelector('.st').textContent = h.structure || '—';
+        el.querySelector('.mt').textContent = h.myTitle || '—';
+        el.querySelector('.hk').textContent = h.hook || '—';
+        el.querySelector('.wh').textContent = h.who || '—';
+        var useBtn = el.querySelector('.use-btn');
+        useBtn.addEventListener('click', function () {
+          var opening = !el.classList.contains('open');
+          if (opening) { el.classList.add('open'); useBtn.textContent = '收起'; }
+          else { el.classList.remove('open'); useBtn.textContent = '看拆解'; }
         });
-        el.querySelector('.see').addEventListener('click', () => {
-          showToast('（原型示意）正式版里点这里打开原视频，对照着看它是怎么拍的。');
-        });
-        el.querySelector('.go-btn').addEventListener('click', () => {
-          if (JCO_KERNEL) {
-            try { sessionStorage.setItem('jco-make-topic', el.querySelector('.mt').textContent.trim() || h.title); } catch (e) {}
-            location.href = 'J.Co工作台-做视频.html';
-            return;
-          }
-          showToast('（原型示意）正式版会带着"你的版本"直接进入「创作」环节。');
-        });
+        el.querySelector('.write-btn').addEventListener('click', function () { goWrite(h.myTitle || el.querySelector('.title').textContent); });
+        el.querySelector('.go-btn').addEventListener('click', function () { goMake(h.myTitle || el.querySelector('.title').textContent); });
         hitsEl.appendChild(el);
-        setTimeout(() => el.classList.add('in'), 40 + i * 70);
+        setTimeout(function () { el.classList.add('in'); }, 40 + i * 70);
       });
     }
 
+    /* ---------- 灵感雷达（AI 热点 / AI 推荐 / 评论挖题 / 我的收藏） ---------- */
+    function isFav(title) { return favs.indexOf(title) !== -1; }
     function renderRadar(filter) {
+      var radarEl = document.getElementById('radar');
       radarEl.innerHTML = '';
-      if (filter === 'fav' && favs.size === 0) {
-        radarEl.innerHTML = '<div class="empty">还没有收藏。看到喜欢的，点 ☆ 存起来，别弄丢了。</div>';
+      if (filter === 'cmt') { commentTopics(); return; }
+      var list = filter === 'fav' ? radar.filter(function (r) { return isFav(r.title); })
+        : radar.filter(function (r) { return r.kind === filter; });
+      if (list.length === 0) {
+        var empty = document.createElement('div');
+        empty.className = 'empty';
+        empty.textContent = filter === 'fav' ? '还没有收藏。看到喜欢的，点 ☆ 存起来，别弄丢了。'
+          : filter === 'ai' ? '还没有。在下面写一句你想拍什么，点「让 AI 定方向」。'
+          : '还没有。点上面的「换一批」，我按今天的风向出几条。';
+        radarEl.appendChild(empty);
         return;
       }
-      const list = filter === 'all' ? RADAR
-        : filter === 'fav' ? RADAR.filter((r) => favs.has(r.title))
-        : RADAR.filter((r) => r.kind === filter);
-      list.forEach((r, i) => {
-        const el = document.createElement('div');
+      list.forEach(function (r, i) {
+        var el = document.createElement('div');
         el.className = 'r-card anim';
-        el.innerHTML = `
-          <div class="t"></div>
-          <div class="foot">
-            <span class="tag ${r.kind}">${r.kindName}</span>
-            <span class="heat">${r.heat}</span>
-            <button class="star ti ti-star" aria-label="收藏"></button>
-          </div>`;
+        el.innerHTML =
+          '<div class="t"></div>' +
+          '<div class="foot">' +
+            '<span class="tag ' + r.kind + '">' + r.kindName + '</span>' +
+            '<span class="heat">' + r.heat + '</span>' +
+            '<button class="star ti ti-star" aria-label="收藏"></button>' +
+          '</div>';
         el.querySelector('.t').textContent = r.title;
-        const star = el.querySelector('.star');
-        if (favs.has(r.title)) star.classList.add('on');
-        star.addEventListener('click', () => {
-          if (favs.has(r.title)) { favs.delete(r.title); star.classList.remove('on'); showToast('已取消收藏'); }
-          else { favs.add(r.title); star.classList.add('on'); showToast('已收藏，切到「我的收藏」随时能找到'); }
+        var star = el.querySelector('.star');
+        if (isFav(r.title)) star.classList.add('on');
+        star.addEventListener('click', function (e) {
+          e.stopPropagation();
+          var idx = favs.indexOf(r.title);
+          if (idx !== -1) { favs.splice(idx, 1); star.classList.remove('on'); showToast('已取消收藏'); }
+          else { favs.unshift(r.title); star.classList.add('on'); showToast('已收藏，切到「我的收藏」随时能找到'); }
+          saveFavs();
         });
+        el.addEventListener('click', function () { goWrite(r.title); });
+        el.style.cursor = 'pointer';
         radarEl.appendChild(el);
-        setTimeout(() => el.classList.add('in'), 30 + i * 45);
+        setTimeout(function () { el.classList.add('in'); }, 30 + i * 45);
       });
     }
 
-    document.getElementById('refresh').addEventListener('click', async () => {
-      if (!JCO_KERNEL) {
-        renderHits(true);
-        showToast('刚又扫了一遍对标账号，看看新冒出来的');
-        return;
+    /* ---------- 评论里挖题：读运营数据（评论）→ AI 变选题 ---------- */
+    let commentBusy = false;
+    async function commentTopics() {
+      var radarEl = document.getElementById('radar');
+      var have = radar.filter(function (r) { return r.kind === 'cmt'; });
+      if (have.length > 0) { radarHaveShow(radarEl, have); return; }
+      if (commentBusy) return;
+      if (!JCO_KERNEL) { radarEl.innerHTML = '<div class="empty">这个功能在桌面应用里可用（浏览器直开是演示模式）。</div>'; return; }
+      commentBusy = true;
+      radarEl.innerHTML = '<div class="empty">正在翻你的评论，把问得最多的问题变成题……</div>';
+      try {
+        var live = window.jco && window.jco.publish && window.jco.publish.data;
+        var data = live ? await live.get() : null;
+        var items = (data && data.comments && data.comments.items) || [];
+        if (items.length === 0) {
+          radarEl.innerHTML = '<div class="empty">还没有评论数据——去「运营」页点一次「取评论」，这里就有题了。</div>';
+          return;
+        }
+        var texts = items.slice(0, 20).map(function (c) { return '「' + String(c.text || '').slice(0, 60) + '」'; }).join('\n');
+        var res = await Promise.race([
+          JCO_KERNEL.task({
+            system: TOPIC_SYSTEM,
+            input: '下面是观众在我视频下的评论和问题：\n' + texts + '\n\n把它们变成 3~5 条我该做的选题。每行一条，格式：题目|为什么（一句）',
+          }),
+          new Promise(function (r) { setTimeout(function () { r({ ok: false, error: '这次想太久了（超过 100 秒），再试一次。' }); }, 100000); }),
+        ]);
+        if (!res || !res.ok || !res.text) {
+          radarEl.innerHTML = '<div class="empty">没挖出来：' + ((res && res.error) || '未知错误') + '。再点一次试试。</div>';
+          return;
+        }
+        var got = 0;
+        cleanLines(res.text).forEach(function (l) {
+          var parts = l.split('|');
+          var title = (parts[0] || '').trim();
+          if (title.length < 4) return;
+          radar.unshift({ kind: 'cmt', kindName: '来自评论', heat: '刚挖到', title: title, why: (parts[1] || '').trim() });
+          got++;
+        });
+        if (got === 0) { radarEl.innerHTML = '<div class="empty">没挖到合适的题，再点一次试试。</div>'; return; }
+        saveRadar();
+        jcoLogAdd('topic', '评论挖题', got + ' 条来自评论');
+        renderRadar('cmt');
+      } finally {
+        commentBusy = false;
       }
-      showToast('正在看平台风向……');
-      const today = new Date().toLocaleDateString('zh-CN', { month: 'long', day: 'numeric' });
-      const res = await JCO_KERNEL.task({
-        system: '你是短视频热点雷达，服务成人学历提升赛道（成人高考/自考）。只输出选题标题行，不要序号、不要解释。',
-        input: '今天是 ' + today + '。给 3 条最近该蹭的热点/节点选题，每行一条标题（带一点钩子）。',
+    }
+    function radarHaveShow(radarEl, list) {
+      radarEl.innerHTML = '';
+      list.forEach(function (r, i) {
+        var el = document.createElement('div');
+        el.className = 'r-card anim';
+        el.innerHTML =
+          '<div class="t"></div>' +
+          '<div class="foot">' +
+            '<span class="tag cmt">' + r.kindName + '</span>' +
+            '<span class="heat">' + r.heat + '</span>' +
+            '<button class="star ti ti-star" aria-label="收藏"></button>' +
+          '</div>';
+        el.querySelector('.t').textContent = r.title;
+        var star = el.querySelector('.star');
+        if (isFav(r.title)) star.classList.add('on');
+        star.addEventListener('click', function (e) {
+          e.stopPropagation();
+          var idx = favs.indexOf(r.title);
+          if (idx !== -1) { favs.splice(idx, 1); star.classList.remove('on'); showToast('已取消收藏'); }
+          else { favs.unshift(r.title); star.classList.add('on'); showToast('已收藏'); }
+          saveFavs();
+        });
+        el.addEventListener('click', function () { goWrite(r.title); });
+        el.style.cursor = 'pointer';
+        radarEl.appendChild(el);
+        setTimeout(function () { el.classList.add('in'); }, 30 + i * 45);
+      });
+    }
+
+    /* ---------- 「换一批」：AI 热点（真生成，存进雷达） ---------- */
+    document.getElementById('refresh').addEventListener('click', async function () {
+      if (!JCO_KERNEL) { showToast('这个功能在桌面应用里可用（浏览器直开是演示模式）。'); return; }
+      showToast('正在看今天的风向……');
+      var res = await JCO_KERNEL.task({
+        system: TOPIC_SYSTEM,
+        input: '今天是 ' + todayWord() + '。给 3 条最近该蹭的热点/节点选题，每行一条标题（带一点钩子）。',
       });
       if (res && res.ok && res.text) {
-        const titles = cleanLines(res.text).filter((l) => l.length > 3).slice(0, 3);
+        var titles = cleanLines(res.text).filter(function (l) { return l.length > 3; }).slice(0, 3);
         if (titles.length === 0) { showToast('没扫到，再点一次试试。'); return; }
-        titles.reverse().forEach((t) => RADAR.unshift({ kind: 'hot', kindName: 'AI 热点', heat: '新', title: t }));
-        document.querySelectorAll('.tab').forEach((x) => x.classList.remove('active'));
-        const hotTab = Array.from(document.querySelectorAll('.tab')).find((x) => x.dataset.f === 'all');
+        titles.reverse().forEach(function (t) { radar.unshift({ kind: 'hot', kindName: 'AI 热点', heat: '新', title: t }); });
+        saveRadar();
+        document.querySelectorAll('.tab').forEach(function (x) { x.classList.remove('active'); });
+        var hotTab = Array.from(document.querySelectorAll('.tab')).find(function (x) { return x.dataset.f === 'hot'; });
         if (hotTab) hotTab.classList.add('active');
-        renderRadar('all');
-        jcoLogAdd('topic', 'AI 热点雷达', titles.length + ' 条新方向');
-        showToast('扫到 ' + titles.length + ' 条新方向，在列表最前面。');
+        renderRadar('hot');
+        jcoLogAdd('topic', 'AI 热点', titles.length + ' 条新方向');
+        showToast('出了 ' + titles.length + ' 条，在下面列表里——点卡片就开写，点 ☆ 收藏。');
       } else {
         showToast('没扫成：' + ((res && res.error) || '未知错误'));
       }
     });
 
-    document.querySelectorAll('.tab').forEach((tab) => {
-      tab.addEventListener('click', () => {
-        document.querySelectorAll('.tab').forEach((t) => t.classList.remove('active'));
+    /* ---------- tabs ---------- */
+    document.querySelectorAll('.tab').forEach(function (tab) {
+      tab.addEventListener('click', function () {
+        document.querySelectorAll('.tab').forEach(function (t) { t.classList.remove('active'); });
         tab.classList.add('active');
         renderRadar(tab.dataset.f);
       });
     });
 
+    /* ---------- 底部条：我有想拍的 → AI 定方向（真生成，存进雷达） ---------- */
     async function selfGo() {
-      const v = document.getElementById('selfInp').value.trim();
+      var v = document.getElementById('selfInp').value.trim();
       if (!v) { showToast('先写下你想拍什么，比如：讲讲我们学员的就业情况'); return; }
-      if (JCO_KERNEL) {
-        showToast('想选题中……');
-        const input = [
-          '我想拍的方向：' + v,
-          '为成人学历提升招生（成人高考/自考）短视频，给我 3 个具体的选题标题，直接给标题，每个一行，不要序号、不要解释。',
-        ].join('\n');
-        const res = await JCO_KERNEL.task({ system: '你是短视频选题策划，服务成人学历提升赛道。只输出 3 行选题标题，不要解释。', input: input });
-        if (res && res.ok && res.text) {
-          const titles = cleanLines(res.text).filter((l) => l.length > 3).slice(0, 3);
-          if (titles.length === 0) { showToast('没想出来，换个说法再试一次。'); return; }
-          titles.forEach((t) => RADAR.unshift({ kind: 'ai', kindName: 'AI 现想的', heat: '刚出炉', title: t }));
-          document.querySelectorAll('.tab').forEach((x) => x.classList.remove('active'));
-          const aiTab = Array.from(document.querySelectorAll('.tab')).find((x) => x.dataset.f === 'ai');
-          if (aiTab) aiTab.classList.add('active');
-          renderRadar('ai');
-          document.getElementById('selfInp').value = '';
-          showToast('想好了 ' + titles.length + ' 条，在下面「AI 推荐」里，点 ☆ 可以收藏。');
-          jcoLogAdd('topic', 'AI 想选题', titles.length + ' 条已入雷达');
-        } else {
-          showToast('没想出来：' + ((res && res.error) || '未知错误'));
-        }
-        return;
+      if (!JCO_KERNEL) { showToast('这个功能在桌面应用里可用（浏览器直开是演示模式）。'); return; }
+      showToast('想选题中……');
+      var res = await JCO_KERNEL.task({
+        system: TOPIC_SYSTEM,
+        input: '我想拍的方向：' + v + '\n给我 3 个具体的选题标题，直接给标题，每个一行，不要序号、不要解释。',
+      });
+      if (res && res.ok && res.text) {
+        var titles = cleanLines(res.text).filter(function (l) { return l.length > 3; }).slice(0, 3);
+        if (titles.length === 0) { showToast('没想出来，换个说法再试一次。'); return; }
+        titles.forEach(function (t) { radar.unshift({ kind: 'ai', kindName: 'AI 现想的', heat: '刚出炉', title: t }); });
+        saveRadar();
+        document.querySelectorAll('.tab').forEach(function (x) { x.classList.remove('active'); });
+        var aiTab = Array.from(document.querySelectorAll('.tab')).find(function (x) { return x.dataset.f === 'ai'; });
+        if (aiTab) aiTab.classList.add('active');
+        renderRadar('ai');
+        document.getElementById('selfInp').value = '';
+        showToast('想好了 ' + titles.length + ' 条，在下面「AI 推荐」里，点卡片就开写。');
+        jcoLogAdd('topic', 'AI 想选题', titles.length + ' 条已入雷达');
+      } else {
+        showToast('没想出来：' + ((res && res.error) || '未知错误'));
       }
-      showToast('（原型示意）正式版会把「' + v + '」变成拍摄方向卡。');
     }
 
-    function openSheet() { document.getElementById('overlay').classList.add('show'); }
-    function closeSheet() { document.getElementById('overlay').classList.remove('show'); }
-    function saveSheet() {
-      const sheet = document.querySelector('#overlay .sheet');
-      if (!sheet) return;
-      const inputs = sheet.querySelectorAll('input');
-      const newAcc = inputs.length >= 3 ? inputs[2].value.trim() : '';
-      let saved = {};
-      try { saved = JSON.parse(localStorage.getItem('jco-accounts-v1') || '{}'); } catch (e) {}
-      saved.profile = {
-        org: inputs[0] ? inputs[0].value.trim() : '',
-        audience: inputs[1] ? inputs[1].value.trim() : '',
-      };
-      saved.extra = saved.extra || [];
-      if (newAcc && saved.extra.indexOf(newAcc) === -1) {
-        saved.extra.push(newAcc);
-        const anchor = inputs[2] ? inputs[2].closest('.field') : null;
-        if (anchor && anchor.parentNode) {
-          const row = document.createElement('div');
-          row.className = 'field';
-          row.innerHTML = '<label></label>';
-          row.querySelector('label').textContent = newAcc + ' · 就位（AI 会盯）';
-          anchor.parentNode.insertBefore(row, anchor);
-        }
-        inputs[2].value = '';
-      }
-      try { localStorage.setItem('jco-accounts-v1', JSON.stringify(saved)); } catch (e) {}
-      closeSheet();
-      showToast(newAcc ? '加好了：以后 AI 会盯「' + newAcc + '」。' : '记下了。AI 会按这个帮你干活。');
-    }
-
-    renderAccounts();
-    renderHits(false);
-    renderRadar('all');
-
-    // 恢复上次保存的对标账号与定位（真存真显示）
-    (function restoreAccounts() {
-      try {
-        const saved = JSON.parse(localStorage.getItem('jco-accounts-v1') || '{}');
-        const sheet = document.querySelector('#overlay .sheet');
-        if (!sheet) return;
-        const inputs = sheet.querySelectorAll('input');
-        if (inputs[0] && saved.profile && saved.profile.org) inputs[0].value = saved.profile.org;
-        if (inputs[1] && saved.profile && saved.profile.audience) inputs[1].value = saved.profile.audience;
-        if (!saved.extra || saved.extra.length === 0) return;
-        const anchor = inputs[2] ? inputs[2].closest('.field') : null;
-        saved.extra.slice().reverse().forEach((a) => {
-          const row = document.createElement('div');
-          row.className = 'field';
-          row.innerHTML = '<label></label>';
-          row.querySelector('label').textContent = a + ' · 就位（AI 会盯）';
-          if (anchor && anchor.parentNode) anchor.parentNode.insertBefore(row, anchor);
-        });
-      } catch (e) {}
-    })();
+    /* ---------- 初始化 ---------- */
+    renderInspo();
+    renderRadar('hot');
   </script>
   <script>
     /* ---------- 侧栏导航（原型可点通） ---------- */
