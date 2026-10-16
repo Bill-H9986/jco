@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.4.10](///compare/v0.4.9...v0.4.10) (2026-10-16)
+
+### Features
+
+* **m7:** 任务会话桥批 3（M9 单元⑥）——首页「说一句话我就动」迁入唯一任务管道：删页面侧最后一处 jco-handoff 写入（生产代码仅剩总管页消费端，批 4 删），输入一句话即 tasks:dispatch → 跳总管任务视图看 AI 干活；E2E 断言加强 + 真机全链路通过 + 双门 0 差异 + 门禁全绿（26 条）+ 装机 0.4.10 冒烟通过 cd2cf4e
+
 ## [0.4.9](///compare/v0.4.8...v0.4.9) (2026-10-16)
 
 ### Features
