@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.4.8](///compare/v0.4.7...v0.4.8) (2026-10-16)
+
+### Features
+
+* **m7:** 任务会话桥批 1b（M9 单元⑥）——发布页「让 AI 发到平台」迁入唯一任务管道：点击即 tasks:dispatch（删预热轮询与 jco-handoff，grep 归零）→ 跳总管自动打开任务视图（jco-open-task）；总管页补「运行中：AI 正在干活…」提示行 + kernel:task 结束事件即时刷新（preload 加 onTask）；派活完成弹系统通知；E2E +1（跳转消费端）+ 真机点击全链路通过 + 双门 0 差异 + 门禁全绿（26 条）+ 装机 0.4.8 冒烟通过 24ee506
+
 ## [0.4.7](///compare/v0.4.6...v0.4.7) (2026-10-16)
 
 ### Features
