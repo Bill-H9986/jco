@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.4.9](///compare/v0.4.8...v0.4.9) (2026-10-16)
+
+### Features
+
+* **m7:** 任务会话桥批 2（M9 单元⑥）——运营页三入口（马上跑=取战报/取评论/发出去=回复评论）全迁唯一任务管道：删预热轮询与 jco-handoff（grep 归零）、点击即 tasks:dispatch → 跳总管自动打开任务视图；「发出去」明确"用户已在运营页确认过，直接发送"；派活纪律措辞收紧（不可逆动作需明确授权，否则停下）；E2E 断言加强 + 真机点击全链路通过 + 双门 0 差异 + 门禁全绿（26 条）+ 装机 0.4.9 冒烟通过 e6ca97d
+
 ## [0.4.8](///compare/v0.4.7...v0.4.8) (2026-10-16)
 
 ### Features
