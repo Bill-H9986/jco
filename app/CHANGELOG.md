@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.4.2](///compare/v0.4.1...v0.4.2) (2026-10-16)
+
+### Features
+
+* **m8:** 选题环真化——拆假立真：删「盯4个对标账号」假叙事（假账号/假爆款/假弹层，-190 元素）；三条真能力（AI 出题·评论挖题·你贴爆款我拆）+ 雷达/收藏/稿子全持久化 + 点题开写交接；创作页收尾（接题/真稿恢复/无题空态）；E2E 20 条全绿，真机实测拆解与热点全通 4ae4141
+
 ## [0.4.1](///compare/v0.4.0...v0.4.1) (2026-10-16)
 
 ### Bug Fixes
