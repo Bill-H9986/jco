@@ -353,6 +353,42 @@
       btn.innerHTML = text + ' <span class="ti ti-chevron-right"></span>';
       btn.onclick = go;
     })();
+
+    /* ---------- 首页卡片真化（M4+）：真模式下 desc 按本机真数据改写 ---------- */
+    (function cardsLive() {
+      var jco = (typeof window.jco !== 'undefined' && window.jco) ? window.jco : null;
+      if (!jco || !jco.publish || !jco.publish.data) return; // 浏览器直开：保留演示文案
+      var doneShots = 0;
+      try {
+        var ds = JSON.parse(localStorage.getItem('jco-drafts-v1') || '{"items":[]}');
+        (ds.items || []).forEach(function (d) {
+          var vids = (d && d.videos) || {};
+          Object.keys(vids).forEach(function (k) {
+            if (vids[k] && vids[k].status === 'done') doneShots += 1;
+          });
+        });
+      } catch (e) {}
+      function cardOf(title) {
+        for (var i = 0; i < CARDS.length; i++) { if (CARDS[i].title === title) return CARDS[i]; }
+        return null;
+      }
+      jco.publish.data.get().then(function (data) {
+        var publishCard = cardOf('去发布');
+        if (publishCard) publishCard.desc = doneShots > 0 ? (doneShots + ' 条成片已备好，去发') : '把做好的视频发出去';
+        var cmtCard = cardOf('回评论');
+        var n = data && data.comments && data.comments.items ? data.comments.items.length : 0;
+        if (cmtCard) cmtCard.desc = n > 0 ? (n + ' 条评论等你过目') : '看看评论区有什么';
+        var viewsCard = cardOf('看数据');
+        if (viewsCard) viewsCard.desc = data && data.report ? '今天的数据已经取回来了' : '让 AI 去取今天的播放数据';
+        var active = document.querySelector('.tab.active');
+        render(active ? active.dataset.filter : 'all');
+      }).catch(function () {
+        var publishCard = cardOf('去发布');
+        if (publishCard) publishCard.desc = doneShots > 0 ? (doneShots + ' 条成片已备好，去发') : '把做好的视频发出去';
+        var active = document.querySelector('.tab.active');
+        render(active ? active.dataset.filter : 'all');
+      });
+    })();
   </script>
   <script>
     /* ---------- 原型按钮行为补全 ---------- */

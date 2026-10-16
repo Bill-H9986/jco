@@ -48,3 +48,19 @@ test('运营页：AI 运营入口就位（马上跑 / 取评论）', async () =>
     await app.close()
   }
 })
+
+test('首页：卡片文案真化（真模式不再出现「2 条视频已就绪」假数）', async () => {
+  const app = await electron.launch({ executablePath: ELECTRON_BIN, args: [APP_DIR, '--jco-test'] })
+  try {
+    const win = await app.firstWindow()
+    const errors = []
+    win.on('pageerror', (e) => errors.push(String(e.message).slice(0, 200)))
+    await win.waitForTimeout(3000)
+    const text = await win.evaluate(() => document.body.innerText)
+    expect(text.includes('2 条视频已就绪')).toBe(false)
+    expect(text).toContain('把做好的视频发出去')
+    expect(errors, `JS 错误：\n${errors.join('\n')}`).toEqual([])
+  } finally {
+    await app.close()
+  }
+})
