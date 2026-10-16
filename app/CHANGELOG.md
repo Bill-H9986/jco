@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.4.12](///compare/v0.4.11...v0.4.12) (2026-10-16)
+
+### Bug Fixes
+
+* **m7:** 任务会话桥批 5（M9 单元⑥·老会话兼容+收编）——修复批 1a 引入的真 bug：总管页 renderConvoList 的 .convos 选择器与 [#task](///issues/task)List 错位（0.4.7–0.4.11 会话列表只显示静态示例、不看真实数据），改 :not([#task](///issues/task)List) + 会话切换清任务视图钩子；活动日志收编：preload 层任务结束自动写全站动态（kind:task）+ 首页「件活」统计 + 空文案兜底；E2E +1（老数据迁移与并存）+ 真机全通 + 双门 0 差异 + 门禁全绿（27 条）+ 装机 0.4.12 冒烟通过 c653d5d, references #taskList #taskList
+
 ## [0.4.11](///compare/v0.4.10...v0.4.11) (2026-10-16)
 
 ### Features
