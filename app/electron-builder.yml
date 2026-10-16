@@ -1,0 +1,20 @@
+# electron-builder 配置（M0 骨架版）
+# 完整打包（内置 DSH 运行时、首次启动引导）在 M3 完成。
+appId: com.jco.desktop
+productName: J.Co
+directories:
+  output: release
+files:
+  - main.js
+  - preload.cjs
+  - settings.json
+  - kernel/**
+  - dist/**
+extraResources:
+  - from: ../设计原型
+    to: 设计原型
+win:
+  target: nsis
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true

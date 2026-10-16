@@ -1,6 +1,13 @@
 # 依赖（体积大，可随时重装）
 app/node_modules/
 
+# 构建与测试产物（可随时重生成，不进版本库）
+app/dist/
+app/release/
+app/playwright-report/
+app/test-results/
+app/tests/report/
+
 # 本地备份存档（体积大；其中也含运行时配置）
 备份/
 *.zip

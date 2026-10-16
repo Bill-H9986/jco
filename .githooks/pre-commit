@@ -1,0 +1,8 @@
+#!/bin/sh
+# J.Co 提交前快检（完整门禁用 npm run gate）
+# 经 git config core.hooksPath=.githooks 生效（见《J.Co软件开发工作流标准》第七章）
+set -e
+ROOT="$(git rev-parse --show-toplevel)"
+cd "$ROOT/app"
+npx tsc --noEmit -p tsconfig.json
+npx biome check src tests scripts
