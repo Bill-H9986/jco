@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.4.1](///compare/v0.4.0...v0.4.1) (2026-10-16)
+
+### Bug Fixes
+
+* **m7:** 「新会话」按钮全站统一——13 页移到顶部搜索框下（常驻不依赖数据/收起态图标方块/共享样式收编）；验证副本清出产品目录（流程改为工作区）；全站一致性审计（15 页矩阵：产品页真分叉=0）+《要求对照总账》；14 页双门+18 条 E2E 全绿 37934f7
+
 ## [0.4.0](///compare/v0.3.0...v0.4.0) (2026-10-16)
 
 ### Features
