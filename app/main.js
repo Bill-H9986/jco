@@ -684,6 +684,151 @@ ipcMain.handle('tasks:run', (_event, payload) => {
   return started ? { ok: true } : { ok: false, error: '这个任务正在跑，跑完再看' }
 })
 
+// ---------- 任务会话桥（M7 批 1a：派活任务的后端与台账；发布页接入在批 1b） ----------
+const TASK_SESSIONS_DIR = kernelUnpackedPath(path.join(__dirname, 'kernel', 'task-sessions'))
+const taskSessions = new Map() // id → { id, name, staff, state, startedAt, endedAt, summary, messages }
+function saveTaskSession(id) {
+  try {
+    fs.mkdirSync(TASK_SESSIONS_DIR, { recursive: true })
+    fs.writeFileSync(path.join(TASK_SESSIONS_DIR, id + '.json'), JSON.stringify(taskSessions.get(id)), 'utf8')
+  } catch (error) {
+    /* 落盘失败不影响执行 */
+  }
+}
+function loadTaskSessions() {
+  try {
+    fs.mkdirSync(TASK_SESSIONS_DIR, { recursive: true })
+    const files = fs
+      .readdirSync(TASK_SESSIONS_DIR)
+      .filter((f) => f.endsWith('.json'))
+      .map((f) => {
+        try {
+          return { f, t: fs.statSync(path.join(TASK_SESSIONS_DIR, f)).mtimeMs }
+        } catch (error) {
+          return { f, t: 0 }
+        }
+      })
+      .sort((a, b) => b.t - a.t)
+    // 只保留最近 30 个任务文件（旧的清掉）
+    for (const item of files.slice(30)) {
+      try {
+        fs.rmSync(path.join(TASK_SESSIONS_DIR, item.f), { force: true })
+      } catch (error) {
+        /* 忽略 */
+      }
+    }
+    for (const item of files.slice(0, 30)) {
+      try {
+        const rec = JSON.parse(fs.readFileSync(path.join(TASK_SESSIONS_DIR, item.f), 'utf8'))
+        if (rec && typeof rec.id === 'string') {
+          // 重启后遗留的"运行中"任务：如实标为中断（不装成功）
+          if (rec.state === 'running') {
+            rec.state = 'failed'
+            rec.summary = rec.summary || '应用重启，这轮没跑完'
+          }
+          taskSessions.set(rec.id, rec)
+        }
+      } catch (error) {
+        /* 坏文件跳过 */
+      }
+    }
+  } catch (error) {
+    /* 目录不可用时任务仍在内存里工作 */
+  }
+}
+/** 派活任务的纪律尾注（与自动任务同源；措辞按"用户派活"场景） */
+const DISPATCH_DISCIPLINE = [
+  '（任务纪律：这是用户派给你的活。准备工作照做；',
+  '但任何"点发布""发送回复"之类不可逆的动作一律停下——准备好后等用户来确认。',
+  '做完把结果说清楚：干了什么、结果如何、接下来等用户做什么。）',
+].join('\n')
+async function runDispatchedTask(id, prompt) {
+  const rec = taskSessions.get(id)
+  try {
+    await ensurePublishReady()
+    const bridge = await getBridge()
+    let streamedText = ''
+    const result = await bridge.ask(prompt, (delta) => { streamedText += delta }, {
+      sessionId: 'jco-chat-task-' + id,
+      onActivity: (act) => {
+        BrowserWindow.getAllWindows().forEach((win) => {
+          try {
+            win.webContents.send('kernel:activity', { ...act, taskId: id, taskName: rec.name, staff: rec.staff || '' })
+          } catch (error) {
+            /* 窗口已关闭则忽略 */
+          }
+        })
+      },
+    })
+    rec.endedAt = Date.now()
+    rec.state = result.ok ? 'done' : 'failed'
+    rec.summary = String((result.ok ? result.text : result.error) || streamedText || '').slice(0, 300)
+    rec.messages = [
+      { role: 'user', text: prompt, t: rec.startedAt },
+      { role: 'assistant', text: String((result.ok ? result.text || streamedText : '没跑成：' + (result.error || '未知错误')) || ''), t: rec.endedAt },
+    ]
+  } catch (error) {
+    rec.endedAt = Date.now()
+    rec.state = 'failed'
+    rec.summary = '调度出错：' + String((error && error.message) || error).slice(0, 200)
+    rec.messages = [
+      { role: 'user', text: prompt, t: rec.startedAt },
+      { role: 'assistant', text: rec.summary, t: rec.endedAt },
+    ]
+  }
+  saveTaskSession(id)
+  BrowserWindow.getAllWindows().forEach((win) => {
+    try {
+      win.webContents.send('kernel:task', { taskId: id, phase: rec.state === 'done' ? 'done' : 'fail', state: rec.state, summary: rec.summary, name: rec.name })
+    } catch (error) {
+      /* 窗口已关闭则忽略 */
+    }
+  })
+}
+ipcMain.handle('tasks:dispatch', (_event, payload) => {
+  try {
+    const name = String((payload && payload.name) || '').trim().slice(0, 60)
+    const prompt = String((payload && payload.prompt) || '').trim().slice(0, 4000)
+    const staff = String((payload && payload.staff) || '').slice(0, 20)
+    if (name === '' || prompt === '') return { ok: false, error: '没给任务名或内容' }
+    const id = 't' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6)
+    taskSessions.set(id, { id, name, staff, state: 'running', startedAt: Date.now(), endedAt: 0, summary: '', messages: [] })
+    saveTaskSession(id)
+    void runDispatchedTask(id, prompt + '\n' + DISPATCH_DISCIPLINE)
+    BrowserWindow.getAllWindows().forEach((win) => {
+      try {
+        win.webContents.send('kernel:task', { taskId: id, phase: 'start', state: 'running', name })
+      } catch (error) {
+        /* 忽略 */
+      }
+    })
+    return { ok: true, taskId: id }
+  } catch (error) {
+    return { ok: false, error: String((error && error.message) || error) }
+  }
+})
+ipcMain.handle('tasks:sessions', () => {
+  const list = Array.from(taskSessions.values())
+    .sort((a, b) => (b.startedAt || 0) - (a.startedAt || 0))
+    .slice(0, 20)
+    .map((r) => ({
+      id: r.id,
+      name: r.name,
+      staff: r.staff,
+      state: r.state,
+      startedAt: r.startedAt,
+      endedAt: r.endedAt,
+      summary: String(r.summary || '').slice(0, 120),
+    }))
+  return { tasks: list }
+})
+ipcMain.handle('tasks:session:get', (_event, payload) => {
+  const id = payload && typeof payload.id === 'string' ? payload.id : ''
+  const rec = taskSessions.get(id)
+  if (!rec) return { ok: false, error: '任务不存在' }
+  return { ok: true, task: { ...rec, messages: Array.isArray(rec.messages) ? rec.messages.slice(-30) : [] } }
+})
+
 // 测试模式：用独立的临时数据目录，避免和正在使用的 J.Co 抢单实例锁
 // （名字加随机段：防 pid 复用时读到上一个测试实例残留的 profile——2026-10-16 全量 E2E 偶发"读到旧侧栏状态"的教训）
 if (process.argv.includes('--jco-test')) {
@@ -765,6 +910,8 @@ if (!gotLock) {
       .catch(() => {})
     // 自动任务调度器（M6）：每分钟心跳；启动即补跑检查
     startAutoScheduler().catch(() => {})
+    // 任务会话（M7 桥）：加载历史任务台账（重启后任务列表/回看不丢）
+    loadTaskSessions()
     app.on('activate', () => {
       if (BrowserWindow.getAllWindows().length === 0) createWindow()
     })

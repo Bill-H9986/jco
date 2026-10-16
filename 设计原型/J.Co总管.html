@@ -320,6 +320,8 @@
           <button class="nav-item"><span class="ti ti-users-group"></span>管家团队</button>
         <button class="nav-item"><span class="ti ti-key"></span>账号中心</button>
         </nav>
+        <button class="group-label" type="button"><span class="ti ti-clock-hour-3"></span>任务<span class="ti ti-chevron-down"></span></button>
+        <div class="convos" id="taskList"></div>
         <button class="group-label" type="button"><span class="ti ti-messages"></span>对话<span class="ti ti-chevron-down"></span></button>
         <div class="convos">
           <button class="convo active"><span class="name">暑期招生 · 今日发布</span></button>
@@ -676,6 +678,79 @@
         if (req === 'new') { newChat(); return; }
         switchChat(req);
       }, 60);
+    })();
+
+    /* ---------- 任务分区（M7 任务会话桥·批 1a）：派活任务列表 + 只读回看 ---------- */
+    (function jcoTaskList() {
+      var live = (typeof window.jco !== 'undefined' && window.jco && window.jco.tasks && window.jco.tasks.sessions);
+      if (!live) return; // 浏览器直开：不显示
+      var listEl = document.getElementById('taskList');
+      if (!listEl) return;
+      var tasks = [];
+      var viewingId = null;
+      function stateGlyph(s) { return s === 'running' ? '…' : (s === 'done' ? '✓' : '✗'); }
+      function renderTasks() {
+        listEl.innerHTML = '';
+        if (tasks.length === 0) {
+          var empty = document.createElement('div');
+          empty.style.cssText = 'padding:6px 10px;font-size:12.5px;color:var(--text-3);';
+          empty.textContent = '还没有派出去的任务';
+          listEl.appendChild(empty);
+          return;
+        }
+        tasks.slice(0, 10).forEach(function (t) {
+          var b = document.createElement('button');
+          b.className = 'convo' + (t.id === viewingId ? ' active' : '');
+          var nm = document.createElement('span');
+          nm.className = 'name';
+          nm.textContent = t.name + ' ' + stateGlyph(t.state);
+          b.appendChild(nm);
+          b.addEventListener('click', function (e) { e.stopPropagation(); openTaskView(t.id); });
+          listEl.appendChild(b);
+        });
+      }
+      function refreshTasks(cb) {
+        window.jco.tasks.sessions().then(function (r) {
+          tasks = (r && r.tasks) || [];
+          renderTasks();
+          if (typeof cb === 'function') cb();
+        }).catch(function () {});
+      }
+      function openTaskView(id) {
+        window.jco.tasks.session(id).then(function (r) {
+          if (!r || !r.ok || !r.task) { showToast('读不到这个任务'); return; }
+          var t = r.task;
+          viewingId = id;
+          renderTasks();
+          stream.innerHTML = '';
+          var mark = node('<div class="daymark"></div>');
+          mark.textContent = '任务视图 · ' + t.name + '（' + (t.state === 'running' ? '在跑' : (t.state === 'done' ? '跑完了' : '没跑成')) + '；点左侧任一对话可返回）';
+          stream.appendChild(mark);
+          var actionsHTML = '<div class="msg-actions"><button aria-label="复制"><span class="ti ti-copy"></span></button><button aria-label="赞"><span class="ti ti-thumb-up"></span></button><button aria-label="踩"><span class="ti ti-thumb-down"></span></button><button aria-label="转发"><span class="ti ti-share-3"></span></button></div>';
+          (t.messages || []).forEach(function (m) {
+            var el;
+            if (m.role === 'user') {
+              el = node('<div class="msg user"><div class="bubble"></div></div>');
+              el.querySelector('.bubble').textContent = m.text;
+            } else {
+              el = node('<div class="msg ai"><div class="ava">J</div><div class="body"><div class="name">J.Co</div><div class="bubble">' + mdToHtml(String(m.text || '')) + '</div>' + actionsHTML + '</div></div>');
+            }
+            stream.appendChild(el);
+          });
+          bottom();
+        }).catch(function () {});
+      }
+      // 实时：Activity 事件带 taskId（派活任务广播）→ 刷新列表；正在看该任务 → 重渲染视图
+      JCO_KERNEL.onActivity(function (act) {
+        if (!act || !act.taskId) return;
+        refreshTasks(function () {
+          if (viewingId === act.taskId) openTaskView(act.taskId);
+        });
+      });
+      // 点左侧「对话」区的任一会话 = 回到会话视图（清任务视图标记）
+      var convoBox = document.querySelector('.convos:not(#taskList)');
+      if (convoBox) convoBox.addEventListener('click', function () { viewingId = null; renderTasks(); });
+      refreshTasks();
     })();
 
     /** 真模式：右侧「等你拍板」+「今天的安排」用本地真实状态渲染 */

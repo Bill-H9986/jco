@@ -115,6 +115,15 @@ contextBridge.exposeInMainWorld('jco', {
     runs: () => ipcRenderer.invoke('tasks:runs:get'),
     /** 「马上跑」：并入唯一执行管道（TaskRunner），与到点同路 */
     run: (id) => ipcRenderer.invoke('tasks:run', { id: String(id || '') }),
+    /** 任务会话桥（M7）：派活 → 任务会话；列表与回看 */
+    dispatch: (payload) =>
+      ipcRenderer.invoke('tasks:dispatch', {
+        name: String((payload && payload.name) || ''),
+        prompt: String((payload && payload.prompt) || ''),
+        staff: String((payload && payload.staff) || ''),
+      }),
+    sessions: () => ipcRenderer.invoke('tasks:sessions'),
+    session: (id) => ipcRenderer.invoke('tasks:session:get', { id: String(id || '') }),
   },
   /** 系统级开关：主题（真切换）/ 开机启动（系统登录项）/ 清缓存（真清理） */
   sys: {

@@ -28,3 +28,5 @@ app/kernel/auto-runs.json
 *.log
 Thumbs.db
 .DS_Store
+# 任务会话台账（运行时生成：任务桥写入，不入库）
+app/kernel/task-sessions/

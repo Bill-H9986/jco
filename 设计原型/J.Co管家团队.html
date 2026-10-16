@@ -703,7 +703,7 @@
 
         kernel.onActivity(function (act) {
           if (!act || typeof act !== 'object') return;
-          var key = staffOfSession(act.session) || 'any';
+          var key = (act.staff && STAFF_HREF[act.staff]) ? act.staff : (staffOfSession(act.session) || 'any');
           if (act.kind === 'turn') {
             if (act.phase === 'end') leave(key);
             else if (act.phase === 'start' && key !== 'any') enter(key, '正在准备…');
