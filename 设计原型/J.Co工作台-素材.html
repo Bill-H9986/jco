@@ -211,7 +211,6 @@
     <main class="main">
       <div class="scroll">
         <div class="wrap">
-          <div class="demo-note"><span class="ti ti-info-circle"></span>演示版：这块还没接上真实数据（正在做）。做好后，这里就是真的。</div>
           <div class="head">
             <div>
               <h1>素材</h1>
@@ -222,12 +221,12 @@
 
           <div class="brief">
             <span class="ti ti-photo"></span>
-            <span>素材箱里 <b>28 件</b>料，这周新收了 <b>12 件</b>，其中 <span class="ok">3 件自动去了水印</span>。</span>
+            <span id="boxLine">正在看本机素材……</span>
           </div>
 
           <div class="sec-head">
             <h2>素材箱</h2>
-            <span class="hint">做视频时点「加素材」，从这直接拿</span>
+            <span class="hint">导入的素材本机随取随用；缺画面就点下面「AI 帮你找」出拍摄方案</span>
           </div>
           <nav class="tabs" id="tabs">
             <button class="tab active" data-f="all">全部</button>
@@ -282,21 +281,8 @@
   <div class="toast" id="toast" role="status"></div>
 
   <script>
-    /* ---------- 数据（原型假数据，示例业务：成人学历提升） ---------- */
-    const MATERIALS = [
-      { cat: 'mine', type: 'video', name: '学员采访片段·小李', src: '我的拍摄 · 47 秒', badge: '0:47', wm: false },
-      { cat: 'mine', type: 'video', name: '学员采访片段·王姐', src: '我的拍摄 · 1 分 12 秒', badge: '1:12', wm: false },
-      { cat: 'mine', type: 'video', name: '校区教室实拍', src: '我的拍摄 · 35 秒', badge: '0:35', wm: false },
-      { cat: 'mine', type: 'photo', name: '毕业证书特写', src: '我的拍摄 · 图片', badge: '', wm: false },
-      { cat: 'mine', type: 'video', name: '老师讲课花絮', src: '我的拍摄 · 22 秒', badge: '0:22', wm: false },
-      { cat: 'web', type: 'video', name: '城市清晨空镜', src: '网图网片 · 18 秒', badge: '0:18', wm: true },
-      { cat: 'web', type: 'video', name: '办公室学习场景', src: '网图网片 · 25 秒', badge: '0:25', wm: true },
-      { cat: 'web', type: 'photo', name: '备考桌上书本', src: '网图网片 · 图片', badge: '', wm: false },
-      { cat: 'web', type: 'photo', name: '证书阶梯背景', src: '网图网片 · 图片', badge: '', wm: true },
-      { cat: 'idea', type: 'star', name: '《报名流程全攻略》结构参考', src: '灵感收藏 · 来自 @学历规划王老师', badge: '', wm: false },
-      { cat: 'idea', type: 'star', name: '《宝妈逆袭》开场钩子', src: '灵感收藏 · 来自 @在职学历张老师', badge: '', wm: false },
-      { cat: 'idea', type: 'star', name: '《3 种包过都是坑》标题参考', src: '灵感收藏 · 来自 @成考避坑指南', badge: '', wm: false },
-    ];
+    /* 素材箱（真）：初始为空；你导入的素材、AI 找的画面方案，全部真存本机（jco-materials-v1） */
+    const MATERIALS = [];
 
     const gridEl = document.getElementById('grid');
     const toastEl = document.getElementById('toast');
@@ -335,8 +321,7 @@
     }
     function jcoMaterialsSave() {
       try {
-        var imported = MATERIALS.filter(function (m) { return m.imported; });
-        localStorage.setItem('jco-materials-v1', JSON.stringify({ items: imported.slice(0, 100) }));
+        localStorage.setItem('jco-materials-v1', JSON.stringify({ items: MATERIALS.slice(0, 100) }));
       } catch (e) {}
     }
     function jcoMaterialsLoad() {
@@ -345,7 +330,7 @@
     function importFiles() {
       var sys = (typeof window.jco !== 'undefined' && window.jco && window.jco.sys) ? window.jco.sys : null;
       if (!sys || !sys.pickFiles) {
-        showToast('（原型示意）正式版从电脑里选文件导入，手机上的也能传过来。');
+        showToast('这个功能在桌面应用里可用（浏览器直开是演示模式）。');
         return;
       }
       sys.pickFiles().then(function (res) {
@@ -405,7 +390,22 @@
       if (box) box.addEventListener('click', function (e) { if (e.target === box) closePreview(); });
     })();
 
+    function renderBoxLine() {
+      const el = document.getElementById('boxLine');
+      if (!el) return;
+      const n = MATERIALS.filter((m) => m.cat === 'mine').length;
+      const ideas = MATERIALS.filter((m) => m.cat === 'idea').length;
+      if (n === 0 && ideas === 0) {
+        el.innerHTML = '素材箱还空着——点右上「<b>导入素材</b>」把手机/电脑里的料收进来。';
+        return;
+      }
+      const parts = [];
+      if (n > 0) parts.push('你导入的素材 <b>' + n + ' 件</b>');
+      if (ideas > 0) parts.push('AI 找的画面方案 <b>' + ideas + ' 条</b>');
+      el.innerHTML = '素材箱里：' + parts.join(' · ') + '。';
+    }
     function render(filter) {
+      renderBoxLine();
       gridEl.innerHTML = '';
       const list = filter === 'all' ? MATERIALS : MATERIALS.filter((m) => m.cat === filter);
       if (list.length === 0) {
@@ -432,7 +432,7 @@
         }
         el.addEventListener('click', () => {
           if (m.path) { openPreview(m); return; }
-          showToast('（原型示意）做视频时带上「' + m.name + '」。双击可以预览。');
+          showToast('「' + m.name + '」：' + (m.src || '这条先记着'));
         });
         gridEl.appendChild(el);
         setTimeout(() => el.classList.add('in'), 30 + i * 40);
@@ -468,6 +468,7 @@
           }).filter((x) => x.name !== '');
           if (rows.length === 0) { showToast('没配上，换个说法再试一次。'); return; }
           rows.forEach((r) => MATERIALS.unshift({ cat: 'idea', type: 'star', name: r.name, src: 'AI 找的 · ' + r.tip, badge: 'AI' }));
+          jcoMaterialsSave();
           document.querySelectorAll('.tab').forEach((t) => t.classList.remove('active'));
           const allTab = Array.from(document.querySelectorAll('.tab')).find((t) => t.dataset.f === 'all');
           if (allTab) allTab.classList.add('active');
@@ -480,7 +481,7 @@
         }
         return;
       }
-      showToast('（原型示意）正式版会从素材箱和网图里，给你配好「' + v + '」的画面。');
+      showToast('这个功能在桌面应用里可用（浏览器直开是演示模式）。');
     }
 
     // 恢复上次导入的素材（真模式：导入过的不丢）

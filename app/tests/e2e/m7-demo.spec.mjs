@@ -16,8 +16,7 @@ test('演示标记：5 个未真化页面挂标、已真化页面无标', async 
     win.on('pageerror', (e) => errors.push(String(e.message).slice(0, 200)))
     await win.waitForTimeout(2500)
     const demoPages = [
-      // 选题页 M8 摘标、创作页 M9 摘标；剩 3 页待真化
-      'J.Co工作台-素材.html',
+      // 选题/创作/素材均已摘标；剩 2 页待真化
       'J.Co工作台-后期.html',
       'J.Co账号中心.html',
     ]
@@ -29,7 +28,13 @@ test('演示标记：5 个未真化页面挂标、已真化页面无标', async 
       await expect(win.locator('.demo-note')).toContainText('演示版')
     }
     // 反向：已真化页不许出现标记
-    for (const p of ['J.Co自动任务.html', 'J.Co管家团队.html', 'J.Co工作台-选题.html', 'J.Co工作台-创作.html']) {
+    for (const p of [
+      'J.Co自动任务.html',
+      'J.Co管家团队.html',
+      'J.Co工作台-选题.html',
+      'J.Co工作台-创作.html',
+      'J.Co工作台-素材.html',
+    ]) {
       await win.evaluate((x) => {
         window.location.href = x
       }, p)
