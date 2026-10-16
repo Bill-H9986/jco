@@ -25,7 +25,7 @@ test('总管页：连点「新会话」不堆积（空会话 ≤ 1）', async ()
     await win.locator('.side-toggle').click()
     await win.waitForTimeout(400)
 
-    const newBtn = win.locator('.convos .convo.new-btn')
+    const newBtn = win.locator('#newChatSlot .convo.new-btn')
     await newBtn.waitFor()
     await newBtn.click()
     await win.waitForTimeout(120)
