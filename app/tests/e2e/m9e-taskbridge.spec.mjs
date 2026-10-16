@@ -72,3 +72,54 @@ test('任务会话桥：总管「任务」分区显示 / 点开看完整过程 /
     } catch {}
   }
 })
+
+test('任务会话桥：jco-open-task 落地自动打开任务视图（发布页派活跳转的消费端）', async () => {
+  const TASK_FILE2 = path.join(APP_DIR, 'kernel', 'task-sessions', 'f123.json')
+  fs.mkdirSync(path.dirname(TASK_FILE2), { recursive: true })
+  fs.writeFileSync(
+    TASK_FILE2,
+    JSON.stringify({
+      id: 'f123',
+      name: '发到「抖音」测试',
+      staff: 'publish',
+      state: 'running',
+      startedAt: Date.now() - 5000,
+      endedAt: 0,
+      summary: '',
+      messages: [{ role: 'user', text: '帮我发一条视频到抖音', t: Date.now() - 5000 }],
+    }),
+    'utf8',
+  )
+  const app = await electron.launch({ executablePath: ELECTRON_BIN, args: [APP_DIR, '--jco-test'] })
+  try {
+    const win = await app.firstWindow()
+    const errors = []
+    win.on('pageerror', (e) => errors.push(String(e.message).slice(0, 200)))
+    await win.waitForTimeout(2500)
+    // 模拟发布页跳转前：在发布页写入 jco-open-task（真实跳转动作）
+    await win.evaluate(() => {
+      window.location.href = 'J.Co工作台-发布.html'
+    })
+    await win.waitForTimeout(1000)
+    await win.evaluate(() => {
+      sessionStorage.setItem('jco-open-task', 'f123')
+    })
+    await win.evaluate(() => {
+      window.location.href = 'J.Co总管.html'
+    })
+    await win.waitForTimeout(2000)
+    // 任务视图自动打开；预置的 running 台账在启动时被如实标为中断（批 1a 语义），故显示"没跑成"
+    const daymarks = win.locator('#chat .stream .daymark')
+    await expect(daymarks).toHaveCount(1)
+    await expect(daymarks.first()).toContainText('任务视图 · 发到「抖音」测试（没跑成')
+    // 消费后 jco-open-task 已清（不会重复打开）
+    const left = await win.evaluate(() => sessionStorage.getItem('jco-open-task'))
+    expect(left).toBe(null)
+    expect(errors, `JS 错误：\n${errors.join('\n')}`).toEqual([])
+  } finally {
+    await app.close()
+    try {
+      fs.rmSync(TASK_FILE2, { force: true })
+    } catch {}
+  }
+})

@@ -726,6 +726,11 @@
           var mark = node('<div class="daymark"></div>');
           mark.textContent = '任务视图 · ' + t.name + '（' + (t.state === 'running' ? '在跑' : (t.state === 'done' ? '跑完了' : '没跑成')) + '；点左侧任一对话可返回）';
           stream.appendChild(mark);
+          if (t.state === 'running') {
+            var liveNote = node('<div class="daymark"></div>');
+            liveNote.textContent = 'AI 正在干活…（跑完就能在这里看到它干了什么）';
+            stream.appendChild(liveNote);
+          }
           var actionsHTML = '<div class="msg-actions"><button aria-label="复制"><span class="ti ti-copy"></span></button><button aria-label="赞"><span class="ti ti-thumb-up"></span></button><button aria-label="踩"><span class="ti ti-thumb-down"></span></button><button aria-label="转发"><span class="ti ti-share-3"></span></button></div>';
           (t.messages || []).forEach(function (m) {
             var el;
@@ -747,10 +752,34 @@
           if (viewingId === act.taskId) openTaskView(act.taskId);
         });
       });
+      // 任务结束事件（kernel:task）：状态变化即时刷新（不等下一条活动事件）
+      if (JCO_KERNEL.onTask) {
+        JCO_KERNEL.onTask(function (ev) {
+          if (!ev || !ev.taskId) return;
+          refreshTasks(function () {
+            if (viewingId === ev.taskId) openTaskView(ev.taskId);
+          });
+        });
+      }
       // 点左侧「对话」区的任一会话 = 回到会话视图（清任务视图标记）
       var convoBox = document.querySelector('.convos:not(#taskList)');
       if (convoBox) convoBox.addEventListener('click', function () { viewingId = null; renderTasks(); });
+      // 派活跳转（批 1b）：别的页放 jco-open-task → 落地后自动打开该任务视图
+      function consumeOpenTask() {
+        var want = '';
+        try { want = sessionStorage.getItem('jco-open-task') || ''; if (want) sessionStorage.removeItem('jco-open-task'); } catch (e) {}
+        if (!want) return;
+        var tries = 0;
+        (function attempt() {
+          tries++;
+          window.jco.tasks.session(want).then(function (r) {
+            if (r && r.ok && r.task) openTaskView(want);
+            else if (tries < 12) setTimeout(attempt, 500);
+          }).catch(function () { if (tries < 12) setTimeout(attempt, 500); });
+        })();
+      }
       refreshTasks();
+      consumeOpenTask();
     })();
 
     /** 真模式：右侧「等你拍板」+「今天的安排」用本地真实状态渲染 */

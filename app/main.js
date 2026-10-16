@@ -622,6 +622,18 @@ function notifyAutoResult(task, record) {
     /* 通知失败无碍 */
   }
 }
+function notifyTaskResult(rec) {
+  try {
+    if (process.argv.includes('--jco-test')) return // 测试模式不弹通知
+    if (!Notification.isSupported()) return
+    new Notification({
+      title: rec.state === 'done' ? '「' + rec.name + '」跑完了' : '「' + rec.name + '」没跑成',
+      body: String(rec.summary || '').slice(0, 120),
+    }).show()
+  } catch (error) {
+    /* 通知失败无碍 */
+  }
+}
 let autoScheduler = null
 async function startAutoScheduler() {
   try {
@@ -777,6 +789,7 @@ async function runDispatchedTask(id, prompt) {
     ]
   }
   saveTaskSession(id)
+  notifyTaskResult(rec)
   BrowserWindow.getAllWindows().forEach((win) => {
     try {
       win.webContents.send('kernel:task', { taskId: id, phase: rec.state === 'done' ? 'done' : 'fail', state: rec.state, summary: rec.summary, name: rec.name })

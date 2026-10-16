@@ -30,6 +30,17 @@ contextBridge.exposeInMainWorld('jco', {
         }
       })
     },
+    /** 任务会话桥（M7 批 1b）：派活任务状态变化（start/done/fail）订阅 */
+    onTask: (callback) => {
+      if (typeof callback !== 'function') return
+      ipcRenderer.on('kernel:task', (_event, ev) => {
+        try {
+          callback(ev)
+        } catch (error) {
+          /* 页面回调异常不扩散 */
+        }
+      })
+    },
     /** 内核状态（是否已就绪） */
     status: () => ipcRenderer.invoke('kernel:status'),
     /** 真探测一个 OpenAI 兼容接口：GET {url}/models，返回 { ok, models } 或 { ok:false, error } */

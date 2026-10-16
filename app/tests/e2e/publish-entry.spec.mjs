@@ -1,4 +1,5 @@
-// 发布页 AI 入口（M2）：入口按钮与状态文案就位（不点击——点击会真实启动发布会话）
+// 发布页 AI 入口（M7 批 1b：派活走任务管道）：入口按钮与状态文案就位
+// （不点击——点击会真派活、真调模型；点击链路的消费端见 m9e-taskbridge，真机链路由 qa 脚本验证）
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { expect, test } from '@playwright/test'
@@ -23,7 +24,7 @@ test('发布页：让 AI 发到抖音入口就位（存在性与文案）', asyn
     const btn = win.locator('#aiDyBtn')
     await expect(btn).toBeVisible()
     await expect(btn).toContainText('让 AI 发到「抖音」')
-    await expect(win.locator('#aiDyState')).toHaveText(/未启动|桌面应用内可用/)
+    await expect(win.locator('#aiDyState')).toHaveText(/待命|桌面应用内可用/)
     expect(errors, `JS 错误：\n${errors.join('\n')}`).toEqual([])
   } finally {
     await app.close()

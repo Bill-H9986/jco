@@ -700,14 +700,13 @@
 
     $('pubBtn').addEventListener('click', startPublish);
 
-    /* ---------- 让 AI 发到抖音（M2：启动发布会话 → 带着任务去总管开干） ---------- */
+    /* ---------- 让 AI 发到「平台」（任务会话桥批 1b：派活走唯一管道 tasks:dispatch → 跳总管自动打开任务视图） ---------- */
     (function () {
       var btn = document.getElementById('aiDyBtn');
       var stateEl = document.getElementById('aiDyState');
       if (!btn || !stateEl) return;
-      var live = (typeof window.jco !== 'undefined' && window.jco && window.jco.publish && window.jco.publish.session);
+      var live = (typeof window.jco !== 'undefined' && window.jco && window.jco.tasks && window.jco.tasks.dispatch);
       var busy = false;
-      var AI_IDS = { dy: 'douyin', sph: 'shipinhao', xhs: 'xiaohongshu', bili: 'bilibili', ks: 'kuaishou' };
       function setState(t, ok) { stateEl.textContent = t; stateEl.classList.toggle('ok', !!ok); }
       function currentPlatform() {
         for (var i = 0; i < PLATFORMS.length; i++) { if (PLATFORMS[i].on) return PLATFORMS[i]; }
@@ -723,7 +722,7 @@
         var wrap = document.getElementById('platforms');
         if (wrap) wrap.addEventListener('click', function () { setTimeout(refreshAiGo, 60); });
       })();
-      setState(live ? '未启动' : '桌面应用内可用');
+      setState(live ? '待命' : '桌面应用内可用');
 
       /* 数据层接线：从草稿里找"最近出的一段成片"（做视频页落盘的真实路径） */
       function lastVideoPath() {
@@ -773,28 +772,22 @@
         if (busy) return;
         busy = true;
         btn.disabled = true;
-        setState('正在启动发布会话…');
+        setState('正在派给 AI…');
         try {
           var target = currentPlatform();
-          var platformId = target && AI_IDS[target.id] ? AI_IDS[target.id] : 'douyin';
-          var res = await window.jco.publish.session.start(platformId);
-          if (!res || !res.ok) { setState('启动失败'); showToast((res && res.error) || '发布会话启动不了，稍后再试一次。'); return; }
-          var ready = false;
-          for (var i = 0; i < 20; i++) {
-            await new Promise(function (r) { setTimeout(r, 1500); });
-            var st = await window.jco.publish.session.status();
-            if (st && st.ready) { ready = true; break; }
-            if (!st || !st.active) break;
-          }
-          if (!ready) { setState('还没就绪'); showToast('浏览器还没起来，稍等几秒再点一次。'); return; }
-          setState('已就绪 ✓', true);
-          var title = (document.getElementById('titleInp') || {}).value || '';
-          var tags = (document.getElementById('tagInp') || {}).value || '';
-          var task = '帮我发一条视频到' + (target ? target.name : '抖音') + '：标题「' + String(title).trim() + '」，话题：' + String(tags).trim() + '。' +
+          var title = String(((document.getElementById('titleInp') || {}).value || '')).trim();
+          var tags = String(((document.getElementById('tagInp') || {}).value || '')).trim();
+          var name = '发到「' + (target ? target.name : '抖音') + '」' + (title ? '：' + title.slice(0, 14) : '');
+          var task = '帮我发一条视频到' + (target ? target.name : '抖音') + '：标题「' + title + '」，话题：' + tags + '。' +
             videoLine() + coverLine() +
             '全部就绪后停在发布前等我确认。千万不要点「发布」。';
-          try { sessionStorage.setItem('jco-handoff', task); sessionStorage.setItem('jco-handoff-staff', 'publish'); } catch (e) {}
+          var res = await window.jco.tasks.dispatch({ name: name, prompt: task, staff: 'publish' });
+          if (!res || !res.ok) { setState('没派出去'); showToast((res && res.error) || '派活失败，稍后再试一次。'); return; }
+          try { sessionStorage.setItem('jco-open-task', res.taskId); } catch (e) {}
           location.href = 'J.Co总管.html';
+        } catch (err) {
+          setState('没派出去');
+          showToast('派活失败：' + ((err && err.message) || '稍后再试一次'));
         } finally {
           busy = false;
           btn.disabled = false;
