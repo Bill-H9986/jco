@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.4.15](///compare/v0.4.14...v0.4.15) (2026-10-16)
+
+### Features
+
+* **m7:** R7 落地——系统通知点击直达任务视图（notifyTaskResult 绑 click + showMainWindow + 总管页 __jcoOpenTaskById 钩子；其它页走 jco-open-task 跳转消费）；E2E 钩子断言 + 双门 0 差异 + preflight 0 违规 + 门禁全绿（27 条）+ 装机 0.4.15 冒烟通过；《盘点与统一方案》终核完成，本轮后仅剩待用户项 10a9d48
+
 ## [0.4.14](///compare/v0.4.13...v0.4.14) (2026-10-16)
 
 ### Features
