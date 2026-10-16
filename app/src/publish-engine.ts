@@ -309,3 +309,114 @@ export class PublishTaskManager {
     this.emit({ platform: record.platform, state: event.state, detail: event.detail })
   }
 }
+
+// ---------- 发布会话管理（M2：AI 的"手"的宿主——浏览器 + 本机工具端点） ----------
+
+export interface SessionHostConfig {
+  /** 会话服务脚本绝对路径（打包版需经 unpackedPath 映射） */
+  serverPath: string
+  /** node/electron 可执行文件 */
+  execPath: string
+  /** 浏览器登录态目录（本机持久，按平台隔离） */
+  profileDir: string
+  /** 会话端点文件（插件按此文件动态取址） */
+  sessionFile: string
+  /** 诊断截图目录 */
+  shotsDir: string
+  /** 工具允许访问的域名白名单 */
+  allowedDomains: string[]
+}
+
+export interface SessionEvent {
+  type: string
+  detail?: string
+}
+
+export class PublishSessionManager {
+  private child: ChildProcessWithoutNullStreams | null = null
+
+  constructor(
+    private readonly host: SessionHostConfig,
+    private readonly emit: (event: SessionEvent) => void,
+  ) {}
+
+  status(): { active: boolean } {
+    return { active: this.child !== null }
+  }
+
+  start(): { ok: boolean; already?: boolean; error?: string } {
+    if (this.child) return { ok: true, already: true }
+    try {
+      const child = spawn(
+        this.host.execPath,
+        [
+          this.host.serverPath,
+          '--profile-dir',
+          this.host.profileDir,
+          '--session-file',
+          this.host.sessionFile,
+          '--shots-dir',
+          this.host.shotsDir,
+          '--allowed-domains',
+          this.host.allowedDomains.join(','),
+        ],
+        {
+          env: { ...process.env, ELECTRON_RUN_AS_NODE: '1' },
+          stdio: ['pipe', 'pipe', 'pipe'],
+          windowsHide: true,
+        },
+      )
+      this.child = child
+      let buffer = ''
+      child.stdout.setEncoding('utf8')
+      child.stdout.on('data', (chunk: string) => {
+        buffer += chunk
+        let index = buffer.indexOf('\n')
+        while (index >= 0) {
+          const line = buffer.slice(0, index)
+          buffer = buffer.slice(index + 1)
+          try {
+            const parsed = JSON.parse(line) as { event?: string; message?: string; endpoint?: string }
+            if (parsed && typeof parsed.event === 'string') {
+              this.emit({ type: parsed.event, detail: parsed.message || parsed.endpoint })
+            }
+          } catch {
+            /* 非 JSON 行忽略 */
+          }
+          index = buffer.indexOf('\n')
+        }
+      })
+      child.stderr.setEncoding('utf8')
+      child.stderr.on('data', () => {
+        /* 诊断日志暂不转发 */
+      })
+      child.on('close', () => {
+        if (this.child === child) this.child = null
+        this.emit({ type: 'closed' })
+      })
+      return { ok: true }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error)
+      return { ok: false, error: message }
+    }
+  }
+
+  stop(): { ok: boolean } {
+    const child = this.child
+    if (!child) return { ok: true }
+    try {
+      child.stdin.write('stop\n')
+    } catch {
+      /* 写入失败则走强杀兜底 */
+    }
+    // 3 秒兜底强杀（清理动作同样有最终期限）
+    setTimeout(() => {
+      try {
+        child.kill()
+      } catch {
+        /* 已退出则无操作 */
+      }
+    }, 3000)
+    return { ok: true }
+  }
+}

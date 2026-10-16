@@ -49,6 +49,12 @@ contextBridge.exposeInMainWorld('jco', {
     }),
     stop: (taskId) => ipcRenderer.invoke('publish:stop', { taskId: String(taskId || '') }),
     status: () => ipcRenderer.invoke('publish:status'),
+    /** 发布会话（AI 的"手"的宿主）：启动/停止常驻浏览器会话（本机、按需） */
+    session: {
+      start: () => ipcRenderer.invoke('publish:session:start'),
+      stop: () => ipcRenderer.invoke('publish:session:stop'),
+      status: () => ipcRenderer.invoke('publish:session:status'),
+    },
     onEvent: (callback) => {
       if (typeof callback !== 'function') return
       ipcRenderer.on('publish:event', (_event, ev) => {

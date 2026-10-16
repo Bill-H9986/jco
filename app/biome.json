@@ -5,6 +5,7 @@
       "tests/**",
       "scripts/**",
       "publish/**",
+      "kernel/publish-tools/**",
       "!tests/report",
       "!playwright-report",
       "!test-results"

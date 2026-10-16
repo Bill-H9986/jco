@@ -10,7 +10,11 @@ const APP = path.resolve(__dirname, '..')
 
 const steps = [
   { name: '类型检查 + 编译 (TypeScript)', cmd: 'npx', args: ['tsc', '-p', 'tsconfig.json'] },
-  { name: '代码规范 (Biome)', cmd: 'npx', args: ['biome', 'check', 'src', 'tests', 'scripts', 'publish'] },
+  {
+    name: '代码规范 (Biome)',
+    cmd: 'npx',
+    args: ['biome', 'check', 'src', 'tests', 'scripts', 'publish', 'kernel/publish-tools'],
+  },
   { name: '单元测试 (Vitest)', cmd: 'npx', args: ['vitest', 'run'] },
   { name: '端到端回归 (Playwright)', cmd: 'npx', args: ['playwright', 'test'] },
 ]

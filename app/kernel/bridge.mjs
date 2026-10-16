@@ -14,7 +14,7 @@
  */
 import { DeepSeekHarness } from '@deepseek-ai/dsh-sdk-client'
 import { readFileSync, writeFileSync } from 'node:fs'
-import { fileURLToPath } from 'node:url'
+import { fileURLToPath, pathToFileURL } from 'node:url'
 import { dirname, join } from 'node:path'
 
 const HERE = dirname(fileURLToPath(import.meta.url))
@@ -24,6 +24,27 @@ const CONFIG_PATH = join(HERE, 'model-config.json')
 const PATCH_PATH = join(HERE, 'dynamic-model.patch.yml')
 /** 固定携带：对话链路的工具面收口（禁掉 shell/文件/网页等干活工具） */
 const CHAT_PATCH_PATH = join(HERE, 'jco-chat.patch.yml')
+const PUBLISH_TOOLS_PATCH_PATH = join(HERE, 'publish-tools.patch.yml')
+
+/** 生成发布工具 patch：内核侧"瘦代理"插件（8 个浏览器工具；sessionFile 动态取址，不随会话启停重启内核） */
+function writePublishToolsPatch() {
+  const pluginUrl = pathToFileURL(join(HERE, 'publish-tools', 'index.mjs')).href
+  const sessionFile = join(HERE, 'publish-session.json').replace(/\\/g, '/')
+  writeFileSync(
+    PUBLISH_TOOLS_PATCH_PATH,
+    [
+      '# J.Co 发布工具（内核侧瘦代理）——由 J.Co 自动生成，勿手改',
+      '- insert:',
+      '    - id: jco-publish-tools',
+      `      name: '${pluginUrl}'`,
+      '      config:',
+      `        sessionFile: '${sessionFile}'`,
+      '',
+    ].join('\n'),
+    'utf8',
+  )
+}
+writePublishToolsPatch()
 
 /** 内置 Agnes（全模态平台）的固定端点与默认模型 */
 export const AGNES_BUILTIN = {
@@ -314,7 +335,9 @@ async function ensure() {
       // 低思考等级只对 DeepSeek 默认路由设置（Agnes/自定义接口的模型不一定声明该参数，
       // 传了会被拒绝：实测 "does not support reasoning effort"）
       ...(route.provider === 'deepseek-official' ? { reasoningEffort: 'low' } : {}),
-      patches: route.patch ? [CHAT_PATCH_PATH, PATCH_PATH] : [CHAT_PATCH_PATH],
+      patches: route.patch
+        ? [CHAT_PATCH_PATH, PUBLISH_TOOLS_PATCH_PATH, PATCH_PATH]
+        : [CHAT_PATCH_PATH, PUBLISH_TOOLS_PATCH_PATH],
       initializeTimeoutMs: 60000,
       env: {
         ...process.env,

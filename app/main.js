@@ -413,6 +413,44 @@ ipcMain.handle('publish:status', () => {
   return publishManager.status()
 })
 
+// 发布会话（M2：AI 的"手"——浏览器 + 本机工具端点；内核插件按 sessionFile 动态取址）
+const publishSessionManager = publishEngine
+  ? new publishEngine.PublishSessionManager(
+      {
+        serverPath: publishEngine.unpackedPath(path.join(__dirname, 'publish', 'session-server.mjs')),
+        execPath: process.execPath,
+        profileDir: path.join(app.getPath('userData'), 'publish', 'douyin', 'profile'),
+        sessionFile: path.join(__dirname, 'kernel', 'publish-session.json'),
+        shotsDir: path.join(app.getPath('userData'), 'publish', 'shots'),
+        allowedDomains: ['douyin.com'],
+      },
+      (event) => {
+        BrowserWindow.getAllWindows().forEach((win) => {
+          try {
+            win.webContents.send('publish:session:event', event)
+          } catch (error) {
+            /* 窗口已关闭则忽略 */
+          }
+        })
+      },
+    )
+  : null
+
+ipcMain.handle('publish:session:start', () => {
+  if (!publishSessionManager) return { ok: false, error: '发布引擎还没有构建好，需要重新构建一次' }
+  return publishSessionManager.start()
+})
+
+ipcMain.handle('publish:session:stop', () => {
+  if (!publishSessionManager) return { ok: true }
+  return publishSessionManager.stop()
+})
+
+ipcMain.handle('publish:session:status', () => {
+  if (!publishSessionManager) return { active: false }
+  return publishSessionManager.status()
+})
+
 // 测试模式：用独立的临时数据目录，避免和正在使用的 J.Co 抢单实例锁
 if (process.argv.includes('--jco-test')) {
   app.setPath('userData', path.join(app.getPath('temp'), 'jco-test-' + process.pid))
