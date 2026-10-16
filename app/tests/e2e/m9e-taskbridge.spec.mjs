@@ -1,5 +1,6 @@
 // M9 单元⑥（批 1a）：任务会话桥回归——任务分区列表 / 任务视图回看 / 空参拒绝。
 import fs from 'node:fs'
+import os from 'node:os'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { expect, test } from '@playwright/test'
@@ -8,7 +9,9 @@ import { _electron as electron } from 'playwright'
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const APP_DIR = path.resolve(__dirname, '..', '..')
 const ELECTRON_BIN = path.join(APP_DIR, 'node_modules', 'electron', 'dist', 'electron.exe')
-const TASK_FILE = path.join(APP_DIR, 'kernel', 'task-sessions', 'e2etask1.json')
+// 2026-10-17 起：--jco-test 的 kernel 运行数据隔离在临时目录（见 main.js kernelDataPath）
+const TEST_KERNEL_DIR = path.join(os.tmpdir(), 'jco-test-kernel-data')
+const TASK_FILE = path.join(TEST_KERNEL_DIR, 'task-sessions', 'e2etask1.json')
 
 test('任务会话桥：总管「任务」分区显示 / 点开看完整过程 / 切回对话 / 空参拒绝', async () => {
   // 预置一条已完成的任务台账（模拟"派活任务跑完"）
@@ -77,7 +80,7 @@ test('任务会话桥：总管「任务」分区显示 / 点开看完整过程 /
 })
 
 test('任务会话桥：jco-open-task 落地自动打开任务视图（发布页派活跳转的消费端）', async () => {
-  const TASK_FILE2 = path.join(APP_DIR, 'kernel', 'task-sessions', 'f123.json')
+  const TASK_FILE2 = path.join(TEST_KERNEL_DIR, 'task-sessions', 'f123.json')
   fs.mkdirSync(path.dirname(TASK_FILE2), { recursive: true })
   fs.writeFileSync(
     TASK_FILE2,

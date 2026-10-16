@@ -1,5 +1,6 @@
 // M5 技能库联动（A6/A7）：做视频页技能排跟随技能库启停；技能库 16 项合一。
 import fs from 'node:fs'
+import os from 'node:os'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { expect, test } from '@playwright/test'
@@ -50,8 +51,9 @@ test('做视频页：技能排默认 8 个；停用「一镜到底」变 7 个�
 })
 
 test('技能库页：16 项合一（12 + 4）；启停真存回存储', async () => {
-  // 先删内核侧副本，验证页面进页自动同步（skills:sync → kernel/skills.json）
-  const skillsFile = path.join(APP_DIR, 'kernel', 'skills.json')
+  // 先删内核侧副本，验证页面进页自动同步（skills:sync → kernel 数据文件；
+  // 2026-10-17 起 --jco-test 的 kernel 运行数据隔离在临时目录，见 main.js kernelDataPath）
+  const skillsFile = path.join(os.tmpdir(), 'jco-test-kernel-data', 'skills.json')
   try {
     fs.rmSync(skillsFile, { force: true })
   } catch {

@@ -1,5 +1,6 @@
 // E2E 全局数据护栏 · 恢复端（见 global-setup.mjs 说明）
 import fs from 'node:fs'
+import os from 'node:os'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
@@ -24,5 +25,7 @@ export default async function globalTeardown() {
     if (fs.existsSync(snap)) fs.cpSync(snap, dst, { recursive: true })
   }
   fs.rmSync(SNAPSHOT, { recursive: true, force: true })
+  // 顺带清空隔离的测试数据目录（--jco-test 的 kernel 数据；残留兜底）
+  fs.rmSync(path.join(os.tmpdir(), 'jco-test-kernel-data'), { recursive: true, force: true })
   console.log('[e2e-guard] kernel 运行数据已恢复')
 }

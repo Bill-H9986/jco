@@ -293,10 +293,18 @@ function kernelUnpackedPath(p) {
   const marker = 'app.asar' + path.sep
   return p.includes(marker) ? p.replace(marker, 'app.asar.unpacked' + path.sep) : p
 }
-const SKILLS_FILE = kernelUnpackedPath(path.join(__dirname, 'kernel', 'skills.json'))
+// 测试模式（--jco-test）：kernel 运行数据（技能库 / 自动任务 / 任务台账）重定向到独立临时目录——
+// 测试永不触碰开发目录的运行时文件（2026-10-17 正本清源；此前靠 E2E 全局护栏兜底恢复）。
+// 固定目录名（测试串行单实例）；E2E / qa 脚本用 os.tmpdir() 下的同一路径预置与读取。
+const JCO_TEST_MODE = process.argv.includes('--jco-test')
+const TEST_KERNEL_DATA_DIR = path.join(app.getPath('temp'), 'jco-test-kernel-data')
+function kernelDataPath(name) {
+  return JCO_TEST_MODE ? path.join(TEST_KERNEL_DATA_DIR, name) : kernelUnpackedPath(path.join(__dirname, 'kernel', name))
+}
+const SKILLS_FILE = kernelDataPath('skills.json')
 /** 自动任务（M6）：任务表（页面同步，调度器只读）与执行记录（调度器写，页面只读） */
-const AUTO_TASKS_FILE = kernelUnpackedPath(path.join(__dirname, 'kernel', 'auto-tasks.json'))
-const AUTO_RUNS_FILE = kernelUnpackedPath(path.join(__dirname, 'kernel', 'auto-runs.json'))
+const AUTO_TASKS_FILE = kernelDataPath('auto-tasks.json')
+const AUTO_RUNS_FILE = kernelDataPath('auto-runs.json')
 /** 自动任务纪律尾注（逐字，与《M6 接口契约》一致）：不可逆动作一律停下等用户 */
 const AUTO_DISCIPLINE = [
   '（自动任务纪律：这是定时触发的任务，用户正在别处忙。准备工作照做；',
@@ -711,7 +719,7 @@ ipcMain.handle('tasks:run', (_event, payload) => {
 })
 
 // ---------- 任务会话桥（M7 批 1a：派活任务的后端与台账；发布页接入在批 1b） ----------
-const TASK_SESSIONS_DIR = kernelUnpackedPath(path.join(__dirname, 'kernel', 'task-sessions'))
+const TASK_SESSIONS_DIR = kernelDataPath('task-sessions')
 const taskSessions = new Map() // id → { id, name, staff, state, startedAt, endedAt, summary, messages }
 function saveTaskSession(id) {
   try {

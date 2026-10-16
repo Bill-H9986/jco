@@ -1,5 +1,6 @@
 // M6 自动任务环（A3/A4/A5/A6）：任务页结构化+迁移+同步落盘+执行记录；团队页自动任务汇报。
 import fs from 'node:fs'
+import os from 'node:os'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { expect, test } from '@playwright/test'
@@ -8,8 +9,10 @@ import { _electron as electron } from 'playwright'
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const APP_DIR = path.resolve(__dirname, '..', '..')
 const ELECTRON_BIN = path.join(APP_DIR, 'node_modules', 'electron', 'dist', 'electron.exe')
-const TASKS_FILE = path.join(APP_DIR, 'kernel', 'auto-tasks.json')
-const RUNS_FILE = path.join(APP_DIR, 'kernel', 'auto-runs.json')
+// 2026-10-17 起：--jco-test 的 kernel 运行数据隔离在临时目录（见 main.js kernelDataPath）
+const TEST_KERNEL_DIR = path.join(os.tmpdir(), 'jco-test-kernel-data')
+const TASKS_FILE = path.join(TEST_KERNEL_DIR, 'auto-tasks.json')
+const RUNS_FILE = path.join(TEST_KERNEL_DIR, 'auto-runs.json')
 
 test('自动任务页：旧数据迁移（对标雷达→今日战报）+ 结构化新建 + 同步落盘', async () => {
   try {
