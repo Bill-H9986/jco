@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.4.6](///compare/v0.4.5...v0.4.6) (2026-10-16)
+
+### Features
+
+* **m9:** 素材页真化（队列单元③）——删 12 张假素材卡（含'来自@老师'爬取叙事）；横幅接真统计；「AI 帮你找」真跑通（4 条具体拍摄方案入箱并持久化）；导入/预览/分类/方案卡说明全真核验；摘演示标（剩后期/账号中心）；E2E 1 条 + 真机 + 双门 0 样式差异 + 门禁全绿（23 条）+ 装机 0.4.5 冒烟通过；心跳间隔按指示 45→20 分钟 a002ba3
+
 ## [0.4.5](///compare/v0.4.4...v0.4.5) (2026-10-16)
 
 ### Features
