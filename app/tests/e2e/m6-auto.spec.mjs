@@ -152,7 +152,7 @@ test('团队页：自动任务干活时汇报区显示任务名（员工卡不�
     await sendActivity({
       kind: 'tool',
       phase: 'call',
-      session: 'jco-chat-auto-t2',
+      session: 'jco-chat-task-t2',
       tool: 'jco_save_comments',
       auto: true,
       taskName: '评论自动跟进',
@@ -165,7 +165,7 @@ test('团队页：自动任务干活时汇报区显示任务名（员工卡不�
     await sendActivity({
       kind: 'turn',
       phase: 'end',
-      session: 'jco-chat-auto-t2',
+      session: 'jco-chat-task-t2',
       auto: true,
       taskName: '评论自动跟进',
       t: Date.now(),

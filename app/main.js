@@ -598,7 +598,7 @@ async function runAutoTask(task) {
   const bridge = await getBridge()
   const prompt = '现在就跑一遍「' + task.name + '」：' + String(task.desc || '') + '。\n' + AUTO_DISCIPLINE
   const result = await bridge.ask(prompt, null, {
-    sessionId: 'jco-chat-auto-' + task.id,
+      sessionId: 'jco-chat-task-' + task.id,
     onActivity: (act) => {
       BrowserWindow.getAllWindows().forEach((win) => {
         try {

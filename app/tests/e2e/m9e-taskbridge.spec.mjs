@@ -64,6 +64,9 @@ test('任务会话桥：总管「任务」分区显示 / 点开看完整过程 /
     // 空参拒绝
     const bad = await win.evaluate(() => window.jco.tasks.dispatch({}))
     expect(bad.ok).toBe(false)
+    // 旧物清零（批 4）：总管页内不再引用 jco-handoff
+    const pageSrc = await win.evaluate(() => [...document.scripts].map((s) => s.textContent || '').join('\n'))
+    expect(pageSrc.includes('jco-handoff')).toBe(false)
     expect(errors, `JS 错误：\n${errors.join('\n')}`).toEqual([])
   } finally {
     await app.close()
