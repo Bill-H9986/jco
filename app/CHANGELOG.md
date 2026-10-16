@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.4.7](///compare/v0.4.6...v0.4.7) (2026-10-16)
+
+### Features
+
+* **m7:** 任务会话桥批 1a（M9 单元⑥）——唯一任务管道落地：tasks:dispatch/sessions/session（任务台账持久化 kernel/task-sessions/ + 重启残留自动收尾 + 派活纪律尾注）；总管页新增「任务」分区（点开看完整过程、随事件实时刷新）；团队页派活点亮对应员工卡；E2E 1 条 + 真机派活通过 + 双门 0 样式差异 + 门禁全绿（25 条）+ 装机 0.4.7 冒烟通过 ee2859b
+* **m9:** 账号中心真化（队列单元⑤）——「去登录」改为真链路：启动 J.Co 专属浏览器（发布会话）并用会话工具面打开平台登录页（登录态从此进 AI 干活同款浏览器；此前用系统浏览器=登了个寂寞）；登录状态=用户亲手确认的本机登记且持久化；删全部假账号数据；后期页按红线登记'待方向拍板'并跳过；E2E 1 条 + 真机 login 链路通过 + 双门 0 样式差异 + 门禁全绿（24 条）+ 装机 0.4.6 7837fe4
+
 ## [0.4.6](///compare/v0.4.5...v0.4.6) (2026-10-16)
 
 ### Features
