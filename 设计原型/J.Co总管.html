@@ -1,0 +1,1234 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>J.Co · 总管</title>
+<script>
+  /* 提前恢复侧栏展开状态，避免页面加载时闪一下 */
+  try { if (localStorage.getItem('jco-side-pinned') === '1') document.documentElement.classList.add('side-pinned'); } catch (e) {}
+</script>
+  <link rel="stylesheet" href="./assets/jco-ui.css">
+  <style>
+/* ============ 主区（聊天 + 待办面板） ============ */
+  .main { flex: 1; display: flex; min-width: 0; }
+
+.chat-col { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+
+.chat-head {
+    flex: none; display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+    padding: 22px 36px 0;
+  }
+
+.agent-logo {
+    width: 30px; height: 30px; border-radius: 8px;
+    background: var(--text-1); color: var(--bg);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; font-weight: 600; flex: none;
+  }
+
+.agent-name { font-size: 16px; font-weight: 600; }
+
+.agent-chip {
+    height: 32px; padding: 0 16px; border-radius: 999px;
+    background: var(--card); color: var(--text-1);
+    font-size: 14px; font-weight: 600;
+    display: inline-flex; align-items: center;
+    box-shadow: var(--shadow-card);
+  }
+
+.agent-hint { font-size: 14px; color: var(--text-2); }
+
+.chat { flex: 1; overflow-y: auto; display: flex; flex-direction: column; }
+
+.stream {
+    max-width: none; width: 100%; margin: 0 auto; padding: 22px 32px 10px;
+    display: flex; flex-direction: column; gap: 26px;
+  }
+
+.daymark { display: flex; align-items: center; gap: 12px; color: var(--text-3); font-size: 12px; }
+
+.daymark::before, .daymark::after { content: ""; flex: 1; height: 1px; background: var(--line); }
+
+.postlist { display: flex; flex-direction: column; gap: 8px; margin-top: 11px; }
+
+.postlist .pt-row { display: flex; align-items: center; gap: 9px; font-size: 14px; }
+
+.postlist .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green); flex: none; }
+
+.msg { display: flex; }
+
+.msg.user { justify-content: flex-end; }
+
+.msg.user .bubble {
+    background: var(--tint); color: var(--text-1);
+    border-radius: 20px; padding: 12px 16px;
+    font-size: 16px; line-height: 1.6; max-width: 70%;
+  }
+
+.msg.ai { gap: 13px; }
+
+.msg.ai .ava {
+    flex: none; width: 34px; height: 34px; border-radius: 50%;
+    background: var(--text-1); color: var(--bg);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; font-weight: 600; margin-top: 2px;
+  }
+
+.msg.ai .body { min-width: 0; max-width: 84%; }
+
+.msg.ai .name { font-size: 13px; color: var(--text-3); margin-bottom: 7px; }
+
+.msg.ai + .msg.ai .name { display: none; }
+
+.msg.ai .bubble {
+    background: var(--card); color: var(--text-1);
+    border-radius: 20px; padding: 13px 17px;
+    font-size: 16px; line-height: 1.65;
+    box-shadow: var(--shadow);
+  }
+
+.msg.ai .bubble b { font-weight: 600; }
+
+.msg-actions { display: flex; gap: 4px; margin-top: 8px; }
+
+.msg-actions button {
+    display: flex; align-items: center; justify-content: center;
+    width: 30px; height: 30px; border: none; border-radius: 8px;
+    background: transparent; color: var(--text-3); font-size: 16px; cursor: pointer;
+    transition: background 0.15s ease, color 0.15s ease;
+  }
+
+.msg-actions button:hover { background: var(--hover); color: var(--text-1); }
+
+.msg-actions button:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+
+.acts { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 13px; }
+
+.act {
+    font-family: inherit; font-size: 14px; font-weight: 500;
+    height: 36px; padding: 0 16px; cursor: pointer;
+    border: 0.5px solid var(--line); border-radius: 999px;
+    background: transparent; color: var(--text-1);
+    transition: background 0.15s ease, transform 0.1s ease;
+  }
+
+.act:hover { background: var(--hover); }
+
+.act:active { transform: scale(0.97); }
+
+.act:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.act.primary { background: var(--accent); border-color: var(--accent); color: #ffffff; }
+
+.act.primary:hover { background: var(--accent-strong); border-color: var(--accent-strong); }
+
+.prog { margin-top: 11px; }
+
+.prog .track { height: 4px; border-radius: 999px; background: rgba(120, 120, 128, 0.2); overflow: hidden; }
+
+.prog .fill { height: 100%; width: 100%; border-radius: 999px; background: var(--accent); transform-origin: left; transform: scaleX(0.06); transition: transform 0.4s linear; }
+
+.prog .label { margin-top: 8px; font-size: 13px; color: var(--text-3); }
+
+.typing { display: inline-flex; gap: 5px; padding: 6px 2px; }
+
+.typing i { width: 7px; height: 7px; border-radius: 50%; background: var(--text-3); animation: blink 1.15s infinite; }
+
+.typing i:nth-child(2) { animation-delay: 0.18s; }
+
+.typing i:nth-child(3) { animation-delay: 0.36s; }
+
+@keyframes blink { 0%, 60%, 100% { opacity: 0.25; } 30% { opacity: 1; } }
+
+.cur { display: inline-block; width: 7px; height: 15px; margin-left: 3px; vertical-align: -2px; border-radius: 4px; background: var(--accent); animation: blink 1s infinite; }
+
+.err { color: var(--red); }
+
+.anim { opacity: 0; transform: translateY(10px); }
+
+.anim.in { opacity: 1; transform: none; transition: opacity 0.4s var(--ease), transform 0.4s var(--ease); }
+
+/* 底部输入台 */
+  .composer { flex: none; padding: 8px 32px 14px; }
+
+.box {
+    max-width: none; margin: 0 auto;
+    background: var(--card); border-radius: 28px;
+    box-shadow: var(--shadow);
+    padding: 15px 18px 11px;
+    transition: box-shadow 0.2s ease;
+  }
+
+.box:focus-within { box-shadow: 0 0 0 3px rgba(0, 128, 255, 0.12), var(--shadow); }
+
+.box textarea {
+    width: 100%; border: none; background: transparent; resize: none;
+    font-family: inherit; font-size: 16px; line-height: 1.5; color: var(--text-1);
+    outline: none; max-height: 120px;
+  }
+
+.box textarea:focus-visible { outline: none; }
+
+.box textarea::placeholder { color: var(--text-3); }
+
+.box-bar { display: flex; align-items: center; justify-content: space-between; margin-top: 12px; }
+
+.box-bar .right { display: flex; align-items: center; gap: 10px; }
+
+.disclaimer { margin-top: 8px; text-align: center; font-size: 12px; color: var(--text-3); }
+
+/* ============ 右侧待办面板（右上角） ============ */
+  .board {
+    position: fixed; top: 14px; right: 14px; bottom: auto; max-height: 66dvh; width: 320px; z-index: 55;
+    background: var(--card); border-radius: 22px;
+    box-shadow: var(--shadow-modal);
+    transform: translateX(calc(100% + 30px));
+    transition: transform 0.26s var(--ease);
+    overflow-y: auto;
+  }
+
+.board.open { transform: none; }
+
+.board-inner { display: flex; flex-direction: column; gap: 14px; padding: 20px 22px 16px; }
+
+.board-head { display: flex; align-items: center; justify-content: space-between; font-size: 14px; font-weight: 600; color: var(--text-1); }
+
+.board-close {
+    border: none; background: transparent; color: var(--text-3);
+    width: 28px; height: 28px; border-radius: 8px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; font-size: 15px;
+    transition: background 0.15s ease, color 0.15s ease;
+  }
+
+.board-close:hover { background: var(--hover); color: var(--text-1); }
+
+.board-close:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+.board-toggle { margin-left: auto; }
+
+.err-box { border-top: 1px solid rgba(215, 0, 21, 0.3); padding-top: 9px; }
+
+.err-title { display: flex; align-items: center; gap: 7px; color: var(--red); font-weight: 600; font-size: 13px; }
+
+.err-title .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--red); flex: none; }
+
+.err-desc { margin-top: 6px; color: var(--text-2); font-size: 13px; line-height: 1.7; }
+
+.board-card {
+    background: var(--card); border-radius: 20px; box-shadow: var(--shadow-card);
+    padding: 15px 16px 13px;
+  }
+
+.board-card h3 {
+    font-size: 13px; font-weight: 600; color: var(--text-1);
+    display: flex; align-items: center; gap: 7px; margin-bottom: 11px;
+  }
+
+.board-card h3 .ti { font-size: 14px; color: var(--text-3); }
+
+.b-todo {
+    display: flex; align-items: flex-start; gap: 9px;
+    padding: 9px 8px; margin: 0 -8px; border-radius: 12px;
+    text-decoration: none; color: var(--text-1);
+    font-size: 13px; line-height: 1.55;
+    transition: background 0.15s ease;
+  }
+
+.b-todo:hover { background: var(--hover); }
+
+.b-todo:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+
+.b-todo .ti { flex: none; font-size: 14px; color: var(--accent); margin-top: 2px; }
+
+.b-todo b { font-weight: 600; }
+
+.b-todo .go { color: var(--accent); font-size: 12px; }
+
+.b-line { display: flex; gap: 9px; padding: 6px 0; font-size: 12px; line-height: 1.55; color: var(--text-2); }
+
+.b-line .ti { flex: none; font-size: 14px; margin-top: 2px; }
+
+.b-line.done .ti { color: var(--green); }
+
+.b-line.doing .ti { color: var(--accent); }
+
+.b-line.plan .ti { color: var(--text-3); }
+
+.b-line .when { font-weight: 600; color: var(--text-1); }
+
+@media (max-width: 860px) {
+    .sidebar { display: none; }
+    .chat-head, .composer { padding-left: 20px; padding-right: 20px; }
+    .stream { padding-left: 20px; padding-right: 20px; }
+  }
+
+/* DSH 规范：正圆与胶囊保持圆弧（其余圆角走超椭圆） */
+  .me .ava, .mm-head .ava, .msg.ai .ava, .postlist .dot, .typing i, .send, .cp-send,
+  .agent-chip, .badge, .act, .ghost-btn, .ghost, .go-btn, .cp-act,
+  .seg button, .pf .pfck, .prog .track, .prog .fill, .prow .pbar, .prow .pf2,
+  .toast { corner-shape: round; }
+
+@media (prefers-color-scheme: dark) {
+    ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.24); border-radius: 999px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.4); border-radius: 999px; }
+  }
+
+/* ===== 收编标准件：ghost-btn（总管同款次按钮） ===== */
+.ghost-btn {
+    display: inline-flex; align-items: center; gap: 7px;
+    height: 34px; padding: 0 14px; border: none; border-radius: 999px;
+    background: var(--btn-2nd); color: var(--text-1);
+    font-family: inherit; font-size: 13px; cursor: pointer;
+    transition: background 0.15s ease, transform 0.1s ease;
+  }
+
+.ghost-btn:hover { background: var(--btn-2nd-hover); }
+
+.ghost-btn:active { transform: scale(0.97); }
+
+.ghost-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.ghost-btn .ti { font-size: 14px; color: var(--text-2); }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="sidebar-inner">
+        <div class="side-top">
+          <div class="wordmark">J.Co</div>
+          <button class="side-toggle" aria-label="固定展开侧栏" title="点一下固定展开，再点收起"><span class="ti ti-layout-sidebar-left-expand"></span></button>
+        </div>
+        <div class="search"><span class="ti ti-search"></span><input placeholder="搜索"></div>
+        <nav class="nav">
+          <button class="nav-item active"><span class="ti ti-message-plus"></span>总管</button>
+          <button class="group-label" type="button"><span class="ti ti-layout-grid"></span>工作台<span class="ti ti-chevron-down"></span></button>
+          <button class="nav-item"><span class="ti ti-bulb"></span>选题</button>
+          <button class="nav-item"><span class="ti ti-photo"></span>素材</button>
+          <button class="nav-item"><span class="ti ti-file-text"></span>文案</button>
+          <button class="nav-item"><span class="ti ti-video"></span>创作</button>
+          <button class="nav-item"><span class="ti ti-wand"></span>后期</button>
+          <button class="nav-item"><span class="ti ti-upload"></span>发布</button>
+          <button class="nav-item"><span class="ti ti-chart-bar"></span>运营</button>
+          <button class="group-label" type="button"><span class="ti ti-tool"></span>工具<span class="ti ti-chevron-down"></span></button>
+          <button class="nav-item"><span class="ti ti-clock-play"></span>自动任务</button>
+          <button class="nav-item"><span class="ti ti-sparkles"></span>技能库</button>
+          <button class="nav-item"><span class="ti ti-users-group"></span>管家团队</button>
+        <button class="nav-item"><span class="ti ti-key"></span>账号中心</button>
+        </nav>
+        <button class="group-label" type="button"><span class="ti ti-messages"></span>对话<span class="ti ti-chevron-down"></span></button>
+        <div class="convos">
+          <button class="convo active"><span class="name">暑期招生 · 今日发布</span></button>
+          <button class="convo"><span class="name">评论跟进（5 条）</span></button>
+          <button class="convo"><span class="name">上周数据复盘</span></button>
+          <button class="convo"><span class="name">引流名单 · 待跟进</span></button>
+          <button class="convo"><span class="name">视频脚本草稿</span></button>
+          <button class="convo"><span class="name">技能库询价</span></button>
+        </div>
+        <div class="side-foot">
+          <div class="me" id="meBtn" role="button" tabindex="0" aria-haspopup="menu" aria-expanded="false"><div class="ava">J</div><span>Jay</span></div>
+          <button class="icon-btn" aria-label="通知"><span class="ti ti-bell"></span></button>
+        </div>
+      </div>
+      <div class="me-menu" id="meMenu" hidden role="menu" aria-label="账号菜单">
+        <div class="mm-head"><div class="ava">J</div><div class="mm-who"><b>Jay</b><span>软件账号 · 仅本机</span></div></div>
+        <div class="mm-sep"></div>
+        <button class="mm-item" id="mmSettings" role="menuitem"><span class="ti ti-settings"></span>设置</button>
+        <button class="mm-item" id="mmLogout" role="menuitem"><span class="ti ti-logout"></span>退出登录</button>
+      </div>
+    </aside>
+
+    <main class="main">
+      <section class="chat-col">
+        <header class="chat-head">
+          <span class="agent-logo">J</span>
+          <span class="agent-name">和 J.Co</span>
+          <span class="agent-chip">总管</span>
+          <span class="agent-hint">聊一句就干，写什么发什么你说了算</span>
+          <button class="ghost-btn board-toggle" id="boardToggle" type="button" aria-label="待办与安排"><span class="ti ti-flag"></span>待办</button>
+        </header>
+
+        <div class="chat" id="chat">
+          <div class="stream" id="stream"></div>
+        </div>
+
+        <div class="composer">
+          <div class="box">
+            <textarea id="inp" rows="1" placeholder="跟总管说一句，比如：把昨晚剪好的那条发到抖音和视频号"></textarea>
+            <div class="box-bar">
+              <button class="ghost-btn"><span class="ti ti-paperclip"></span>选择素材</button>
+              <div class="right">
+                <button class="ghost-btn" id="modePill">全自动<span class="ti ti-chevron-down chev"></span></button>
+                <button class="send" id="send" disabled aria-label="发送"><span class="ti ti-arrow-up"></span></button>
+              </div>
+            </div>
+          </div>
+          <div class="disclaimer">内容由 AI 生成，请核实后使用</div>
+        </div>
+      </section>
+
+      <aside class="board" id="board">
+        <div class="board-inner">
+          <div class="board-head"><span>待办与安排</span><button class="board-close" id="boardClose" type="button" aria-label="收起面板"><span class="ti ti-chevron-right"></span></button></div>
+        <div class="board-card">
+          <h3><span class="ti ti-flag"></span>等你拍板</h3>
+          <a class="b-todo" href="J.Co工作台-后期.html"><span class="ti ti-player-play"></span><span><b>2 条视频</b>剪好了，等你过目 <span class="go">去「后期」→</span></span></a>
+          <a class="b-todo" href="J.Co工作台-运营.html"><span class="ti ti-message-dots"></span><span><b>8 条评论</b>拟好了稿，等你放行 <span class="go">去「运营」→</span></span></a>
+          <a class="b-todo" href="J.Co工作台-发布.html"><span class="ti ti-upload"></span><span><b>19:30 的发布</b>排好了，等你确认 <span class="go">去「发布」→</span></span></a>
+        </div>
+        <div class="board-card">
+          <h3><span class="ti ti-clock-hour-3"></span>今天的安排</h3>
+          <div class="b-line done"><span class="ti ti-check"></span><span><span class="when">08:30</span> 算好昨晚的账：5.2 万播放那条最猛</span></div>
+          <div class="b-line done"><span class="ti ti-check"></span><span><span class="when">09:12</span> 盯完对标，新爆款已拆解入库</span></div>
+          <div class="b-line doing"><span class="ti ti-refresh"></span><span><span class="when">上午</span> 文案在写口播稿，改到第 2 稿</span></div>
+          <div class="b-line doing"><span class="ti ti-refresh"></span><span><span class="when">上午</span> 创作在出分镜图，已完成 4/8 张</span></div>
+          <div class="b-line plan"><span class="ti ti-clock"></span><span><span class="when">19:30</span> 到点替你发布，发完把结果端给你</span></div>
+        </div>
+        </div>
+      </aside>
+    </main>
+  </div>
+
+  <div class="toast" id="toast" role="status"></div>
+
+  <script>
+    const stream = document.getElementById('stream');
+    const chat = document.getElementById('chat');
+    const inp = document.getElementById('inp');
+    const send = document.getElementById('send');
+    let busy = false;
+
+    /* ---------- 真内核模式（桌面应用里自动启用；浏览器直开保持演示模式） ---------- */
+    const JCO_KERNEL = (typeof window.jco !== 'undefined' && window.jco && window.jco.kernel) ? window.jco.kernel : null;
+    let liveBubble = null;   // 正在流式写入的气泡
+    let liveText = '';       // 本轮已收增量
+    let liveStreamed = false;
+
+    if (JCO_KERNEL) {
+      JCO_KERNEL.onDelta((d) => {
+        if (!liveBubble) return;
+        if (!liveStreamed) { liveBubble.innerHTML = ''; liveStreamed = true; }
+        liveText += d;
+        liveBubble.innerHTML = mdToHtml(liveText) + '<span class="cur"></span>';
+        bottom();
+      });
+    }
+
+    function mdToHtml(text) {
+      return String(text)
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        .replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>')
+        .replace(/\n/g, '<br>');
+    }
+
+    /* ---------- J.Co 本地状态层：活动日志 / 对话历史 / 面板真数据 ---------- */
+    const KIND_ICON = { chat: 'ti-messages', create: 'ti-file-text', shot: 'ti-video', topic: 'ti-bulb', material: 'ti-photo', publish: 'ti-upload' };
+    function jcoLogAdd(kind, title, detail) {
+      try {
+        var data = JSON.parse(localStorage.getItem('jco-log-v1') || '{"items":[]}');
+        data.items.unshift({ t: Date.now(), kind: kind, title: String(title || '').slice(0, 80), detail: String(detail || '').slice(0, 160) });
+        if (data.items.length > 200) data.items.length = 200;
+        localStorage.setItem('jco-log-v1', JSON.stringify(data));
+      } catch (e) {}
+    }
+    function jcoLogRead() {
+      try { return (JSON.parse(localStorage.getItem('jco-log-v1') || '{"items":[]}').items) || []; } catch (e) { return []; }
+    }
+    /* ---------- 多会话：每个会话独立记录 + 独立内核上下文；可新建、可切换 ---------- */
+    const CHATS_KEY = 'jco-chats-v1';
+    function chatsLoad() {
+      try {
+        var d = JSON.parse(localStorage.getItem(CHATS_KEY) || 'null');
+        if (d && Array.isArray(d.chats) && d.chats.length > 0) return d;
+      } catch (e) {}
+      // 从旧版单会话迁移
+      var migrated = [];
+      try {
+        var legacy = JSON.parse(localStorage.getItem('jco-chat-v1') || 'null');
+        if (legacy && Array.isArray(legacy.items) && legacy.items.length > 0) {
+          migrated = legacy.items.map(function (m) { return { role: m.role, text: String(m.text || '').slice(0, 2000), t: Date.now() }; });
+        }
+      } catch (e) {}
+      var first = { id: 'c' + Date.now().toString(36), title: migrated.length ? '之前的对话' : '新会话', updatedAt: Date.now(), messages: migrated };
+      return { activeId: first.id, chats: [first] };
+    }
+    var chatData = chatsLoad();
+    /* 清理多余的空会话：列表里最多留一个"空"的（防止"新会话"越堆越多） */
+    (function cleanupEmptyChats() {
+      var before = chatData.chats.length;
+      chatData.chats = chatData.chats.filter(function (c) {
+        return c.messages.length > 0 || c.id === chatData.activeId;
+      });
+      if (chatData.chats.length === 0) {
+        var c0 = { id: 'c' + Date.now().toString(36), title: '新会话', updatedAt: Date.now(), messages: [] };
+        chatData.chats.push(c0);
+        chatData.activeId = c0.id;
+      }
+      if (!chatData.chats.some(function (c) { return c.id === chatData.activeId })) chatData.activeId = chatData.chats[0].id;
+      if (chatData.chats.length !== before) { try { localStorage.setItem(CHATS_KEY, JSON.stringify(chatData)); } catch (e) {} }
+    })();
+    function chatsSave() {
+      try { localStorage.setItem(CHATS_KEY, JSON.stringify(chatData)); } catch (e) {}
+    }
+    function activeChat() {
+      var c = chatData.chats.find(function (x) { return x.id === chatData.activeId; });
+      if (!c) {
+        c = { id: 'c' + Date.now().toString(36), title: '新会话', updatedAt: Date.now(), messages: [] };
+        chatData.chats.unshift(c);
+        chatData.activeId = c.id;
+        chatsSave();
+      }
+      return c;
+    }
+    function chatPush(role, text) {
+      var c = activeChat();
+      c.messages.push({ role: role, text: String(text || '').slice(0, 2000), t: Date.now() });
+      if (c.messages.length > 120) c.messages = c.messages.slice(-120);
+      c.updatedAt = Date.now();
+      if (role === 'user' && (!c.title || c.title === '新会话')) {
+        c.title = String(text || '').slice(0, 14) || '新会话';
+      }
+      chatsSave();
+    }
+    function renderActiveChat() {
+      stream.innerHTML = '';
+      var c = activeChat();
+      stream.appendChild(node(`<div class="daymark">今天</div>`));
+      if (c.messages.length === 0) {
+        addAI('在的。今天起我是真在跑了：你说一句，我真回答。试试？', false);
+      } else {
+        // 历史消息：不带入场动画、批量插入、最多渲染最近 80 条（防长会话卡顿）
+        var list = c.messages.slice(-80);
+        if (c.messages.length > list.length) {
+          var more = document.createElement('div');
+          more.className = 'daymark';
+          more.textContent = '更早的 ' + (c.messages.length - list.length) + ' 条已省略';
+          stream.appendChild(more);
+        }
+        var actionsHTML = '<div class="msg-actions"><button aria-label="复制"><span class="ti ti-copy"></span></button><button aria-label="赞"><span class="ti ti-thumb-up"></span></button><button aria-label="踩"><span class="ti ti-thumb-down"></span></button><button aria-label="转发"><span class="ti ti-share-3"></span></button></div>';
+        var frag = document.createDocumentFragment();
+        list.forEach(function (m) {
+          var el;
+          if (m.role === 'user') {
+            el = node('<div class="msg user"><div class="bubble"></div></div>');
+            el.querySelector('.bubble').textContent = m.text;
+          } else {
+            el = node('<div class="msg ai"><div class="ava">J</div><div class="body"><div class="name">J.Co</div><div class="bubble">' + mdToHtml(m.text) + '</div>' + actionsHTML + '</div></div>');
+          }
+          frag.appendChild(el);
+        });
+        stream.appendChild(frag);
+      }
+      refreshBoard();
+      renderConvoList();
+    }
+    function switchChat(id) {
+      if (!chatData.chats.some(function (x) { return x.id === id; })) return;
+      chatData.activeId = id;
+      chatsSave();
+      renderActiveChat();
+    }
+    function newChat() {
+      var empty = chatData.chats.find(function (c) { return c.messages.length === 0 });
+      if (empty) { if (empty.id !== chatData.activeId) switchChat(empty.id); return; }
+      var c = { id: 'c' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5), title: '新会话', updatedAt: Date.now(), messages: [] };
+      chatData.chats.unshift(c);
+      chatData.activeId = c.id;
+      chatsSave();
+      renderActiveChat();
+      var inpEl = document.getElementById('inp');
+      if (inpEl) inpEl.focus();
+    }
+
+    /* 会话操作：分享 / 重命名 / 删除（总管版：用 switchChat / chatsSave / showToast） */
+    var jcoConvMenuEl = null;
+    function jcoCloseConvMenu() { if (jcoConvMenuEl) { jcoConvMenuEl.remove(); jcoConvMenuEl = null; } }
+    document.addEventListener('click', jcoCloseConvMenu);
+    function jcoShareChat(chat) {
+      var lines = ['【和 J.Co 的对话 · ' + (chat.title || '新会话') + '】'];
+      (chat.messages || []).forEach(function (m) {
+        lines.push((m.role === 'user' ? '我：' : 'J.Co：') + String(m.text || ''));
+      });
+      var text = lines.join('\n');
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(
+          function () { showToast('对话已复制，去粘贴分享吧'); },
+          function () { showToast('没复制成，手动选中复制一下'); }
+        );
+      } else { showToast('这台环境不支持直接复制'); }
+    }
+    function jcoShowConvMenu(anchor, chat) {
+      jcoCloseConvMenu();
+      var menu = document.createElement('div');
+      menu.className = 'convo-menu';
+      menu.addEventListener('click', function (e) { e.stopPropagation(); });
+      function item(icon, label, cls, fn) {
+        var b = document.createElement('button');
+        b.type = 'button';
+        b.className = cls || '';
+        b.innerHTML = '<span class="ti ' + icon + '"></span>' + label;
+        b.addEventListener('click', fn);
+        menu.appendChild(b);
+        return b;
+      }
+      item('ti-share-3', '分享对话', '', function () { jcoCloseConvMenu(); jcoShareChat(chat); });
+      item('ti-file-text', '重命名', '', function () {
+        jcoCloseConvMenu();
+        var row = anchor.closest('.convo');
+        var nameEl = row ? row.querySelector('.name') : null;
+        if (!nameEl) return;
+        var input = document.createElement('input');
+        input.className = 'convo-rename';
+        input.value = chat.title || '新会话';
+        nameEl.replaceWith(input);
+        input.focus(); input.select();
+        var done = false;
+        function commit(saveIt) {
+          if (done) return; done = true;
+          var v = input.value.trim().slice(0, 20);
+          if (saveIt && v) chat.title = v;
+          nameEl.textContent = chat.title || '新会话';
+          input.replaceWith(nameEl);
+          if (saveIt && v) { chatsSave(); showToast('改好名字了'); }
+        }
+        input.addEventListener('keydown', function (e) {
+          if (e.key === 'Enter') { e.preventDefault(); commit(true); }
+          if (e.key === 'Escape') { commit(false); }
+        });
+        input.addEventListener('blur', function () { commit(true); });
+        input.addEventListener('click', function (e) { e.stopPropagation(); });
+      });
+      var del = item('ti-trash', '删除对话', 'danger', function () {
+        if (del.getAttribute('data-armed') !== '1') {
+          del.setAttribute('data-armed', '1');
+          del.innerHTML = '<span class="ti ti-trash"></span>再点一次，真删除';
+          return;
+        }
+        jcoCloseConvMenu();
+        var wasActive = chatData.activeId === chat.id;
+        chatData.chats = chatData.chats.filter(function (x) { return x.id !== chat.id; });
+        if (chatData.chats.length === 0) {
+          chatData.chats.push({ id: 'c' + Date.now().toString(36), title: '新会话', updatedAt: Date.now(), messages: [] });
+        }
+        if (wasActive) chatData.activeId = chatData.chats[0].id;
+        chatsSave();
+        showToast('已删除「' + (chat.title || '新会话') + '」');
+        if (wasActive) { switchChat(chatData.activeId); } else { renderConvoList(); }
+      });
+      document.body.appendChild(menu);
+      var r = anchor.getBoundingClientRect();
+      var mw = menu.offsetWidth || 160, mh = menu.offsetHeight || 130;
+      var left = Math.min(r.right + 8, window.innerWidth - mw - 10);
+      var top = Math.min(r.bottom + 4, window.innerHeight - mh - 10);
+      if (top < 8) top = 8;
+      menu.style.left = left + 'px';
+      menu.style.top = top + 'px';
+      jcoConvMenuEl = menu;
+    }
+    function renderConvoList() {
+      if (!JCO_KERNEL) return; // 浏览器直开：保留演示列表
+      var box = document.querySelector('.convos');
+      if (!box) return;
+      box.innerHTML = '';
+      var add = document.createElement('button');
+      add.className = 'convo new-btn';
+      add.innerHTML = '<span class="ti ti-plus"></span>新会话';
+      add.addEventListener('click', function (e) { e.stopPropagation(); newChat(); });
+      box.appendChild(add);
+      chatData.chats.slice(0, 12).forEach(function (c) {
+        var b = document.createElement('button');
+        b.className = 'convo' + (c.id === chatData.activeId ? ' active' : '');
+        var nm = document.createElement('span');
+        nm.className = 'name';
+        nm.textContent = c.title || '新会话';
+        b.appendChild(nm);
+        var more = document.createElement('span');
+        more.className = 'convo-more';
+        more.setAttribute('role', 'button');
+        more.setAttribute('tabindex', '0');
+        more.setAttribute('aria-label', '更多操作');
+        more.textContent = '⋯';
+        more.addEventListener('click', function (e) { e.stopPropagation(); jcoShowConvMenu(more, c); });
+        more.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); jcoShowConvMenu(more, c); } });
+        b.appendChild(more);
+        b.addEventListener('click', function (e) { e.stopPropagation(); switchChat(c.id); });
+        box.appendChild(b);
+      });
+    }
+    /* 其它页面点对话带过来的请求：'new' 或会话 id */
+    (function consumeOpenChat() {
+      var req = null;
+      try { req = sessionStorage.getItem('jco-open-chat'); if (req) sessionStorage.removeItem('jco-open-chat'); } catch (e) {}
+      if (!req) return;
+      setTimeout(function () {
+        if (req === 'new') { newChat(); return; }
+        switchChat(req);
+      }, 60);
+    })();
+
+    /** 真模式：右侧「等你拍板」+「今天的安排」用本地真实状态渲染 */
+    function refreshBoard() {
+      if (!JCO_KERNEL) return;
+      var cards = document.querySelectorAll('.board .board-card');
+      if (cards.length < 2) return;
+      var todoCard = cards[0];
+      var lineCard = cards[1];
+      // 等你拍板
+      todoCard.querySelectorAll('.b-todo').forEach(function (el) { el.remove(); });
+      var rows = [];
+      var reviewDrafts = 0;
+      try {
+        var ds = JSON.parse(localStorage.getItem('jco-drafts-v1') || '{"items":[]}');
+        reviewDrafts = (ds.items || []).filter(function (d) { return d.status === 'review'; }).length;
+      } catch (e) {}
+      if (reviewDrafts > 0) rows.push({ href: 'J.Co工作台-做视频.html', icon: 'ti-player-play', b: reviewDrafts + ' 条分镜', rest: '等你过目', to: '去「创作」→' });
+      var pubCount = 0;
+      try {
+        var ps = JSON.parse(localStorage.getItem('jco-publish-v1') || '{"items":[]}');
+        pubCount = (ps.items || []).length;
+      } catch (e) {}
+      if (pubCount > 0) rows.push({ href: 'J.Co工作台-发布.html', icon: 'ti-upload', b: pubCount + ' 条发布记录', rest: '在这存着', to: '去「发布」→' });
+      if (rows.length === 0) {
+        var empty = document.createElement('div');
+        empty.className = 'b-todo';
+        empty.innerHTML = '<span class="ti ti-flag"></span><span>目前没有等你拍板的事，安心做内容。</span>';
+        todoCard.appendChild(empty);
+      } else {
+        rows.forEach(function (r) {
+          var a = document.createElement('a');
+          a.className = 'b-todo';
+          a.href = r.href;
+          a.innerHTML = '<span class="ti ' + r.icon + '"></span><span><b>' + r.b + '</b>' + r.rest + ' <span class="go">' + r.to + '</span></span>';
+          todoCard.appendChild(a);
+        });
+      }
+      // 今天的安排 → 真活动日志
+      lineCard.querySelectorAll('.b-line').forEach(function (el) { el.remove(); });
+      var log = jcoLogRead().slice(0, 6);
+      if (log.length === 0) {
+        var el0 = document.createElement('div');
+        el0.className = 'b-line plan';
+        el0.innerHTML = '<span class="ti ti-clock"></span><span><span class="when">现在</span> 还没有干活记录，说句话就开张</span>';
+        lineCard.appendChild(el0);
+      } else {
+        log.forEach(function (x, i) {
+          var el = document.createElement('div');
+          el.className = 'b-line ' + (i === 0 ? 'doing' : 'done');
+          var d = new Date(x.t);
+          var hh = String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+          el.innerHTML = '<span class="ti ' + (i === 0 ? 'ti-refresh' : (KIND_ICON[x.kind] || 'ti-check')) + '"></span><span><span class="when"></span> </span>';
+          el.querySelector('.when').textContent = hh;
+          el.lastElementChild.appendChild(document.createTextNode(x.title + (x.detail ? '（' + x.detail + '）' : '')));
+          lineCard.appendChild(el);
+        });
+      }
+    }
+
+    function addAILive() {
+      const el = node(`<div class="msg ai anim"><div class="ava">J</div><div class="body"><div class="name">J.Co</div><div class="bubble"><span class="typing"><i></i><i></i><i></i></span></div><div class="msg-actions">
+          <button aria-label="复制"><span class="ti ti-copy"></span></button>
+          <button aria-label="赞"><span class="ti ti-thumb-up"></span></button>
+          <button aria-label="踩"><span class="ti ti-thumb-down"></span></button>
+          <button aria-label="转发"><span class="ti ti-share-3"></span></button>
+        </div></div></div>`);
+      stream.appendChild(el);
+      requestAnimationFrame(() => el.classList.add('in'));
+      bottom();
+      return el;
+    }
+
+    async function askKernel(text) {
+      chatPush('user', text);
+      renderConvoList();
+      const el = addAILive();
+      const bubble = el.querySelector('.bubble');
+      liveBubble = bubble;
+      liveText = '';
+      liveStreamed = false;
+      let res = null;
+      try {
+        res = await Promise.race([
+          JCO_KERNEL.ask(text, activeChat().id),
+          new Promise((resolveTimeout) => setTimeout(() => resolveTimeout({ ok: false, error: '等太久了（超过 100 秒）。内核可能卡住了，再发一次试试。' }), 100000)),
+        ]);
+      } catch (e) {
+        res = { ok: false, error: String((e && e.message) || e) };
+      }
+      liveBubble = null;
+      if (res && res.ok) {
+        bubble.innerHTML = mdToHtml(res.text || liveText || '（这轮没有内容）');
+      } else {
+        bubble.innerHTML = '<div class="err-box"><div class="err-title"><span class="dot"></span>本轮没答上来</div><div class="err-desc">' + mdToHtml((res && res.error) || '未知错误') + '</div></div>';
+      }
+      busy = false;
+      bottom();
+      chatPush('ai', (res && res.ok) ? (res.text || liveText || '（这轮没有内容）') : ('没答上来：' + ((res && res.error) || '未知错误')));
+      renderConvoList();
+      jcoLogAdd('chat', String(text).slice(0, 40), (res && res.ok) ? '聊了一轮' : '这轮没答上来');
+      refreshBoard();
+    }
+
+    const bottom = () => { chat.scrollTop = chat.scrollHeight; };
+    const node = (html) => {
+      const d = document.createElement('div');
+      d.innerHTML = html.trim();
+      return d.firstElementChild;
+    };
+    const toastEl = document.getElementById('toast');
+    function showToast(msg) {
+      toastEl.textContent = msg;
+      toastEl.classList.add('show');
+      clearTimeout(showToast.timer);
+      showToast.timer = setTimeout(() => toastEl.classList.remove('show'), 2800);
+    }
+
+    function addUser(text) {
+      const el = node(`<div class="msg user anim"><div class="bubble"></div></div>`);
+      el.querySelector('.bubble').textContent = text;
+      stream.appendChild(el);
+      requestAnimationFrame(() => el.classList.add('in'));
+      bottom();
+    }
+
+    function addAI(html, typingFirst = true) {
+      return new Promise((resolve) => {
+        let el;
+        const actionsHTML = `<div class="msg-actions">
+          <button aria-label="复制"><span class="ti ti-copy"></span></button>
+          <button aria-label="赞"><span class="ti ti-thumb-up"></span></button>
+          <button aria-label="踩"><span class="ti ti-thumb-down"></span></button>
+          <button aria-label="转发"><span class="ti ti-share-3"></span></button>
+        </div>`;
+        if (typingFirst) {
+          el = node(`<div class="msg ai anim"><div class="ava">J</div><div class="body"><div class="name">J.Co</div><div class="bubble"><span class="typing"><i></i><i></i><i></i></span></div></div></div>`);
+          stream.appendChild(el);
+          requestAnimationFrame(() => el.classList.add('in'));
+          bottom();
+          setTimeout(() => {
+            el.querySelector('.bubble').innerHTML = html;
+            el.querySelector('.body').insertAdjacentHTML('beforeend', actionsHTML);
+            bottom();
+            resolve(el);
+          }, 750);
+        } else {
+          el = node(`<div class="msg ai anim"><div class="ava">J</div><div class="body"><div class="name">J.Co</div><div class="bubble">${html}</div>${actionsHTML}</div></div>`);
+          stream.appendChild(el);
+          requestAnimationFrame(() => el.classList.add('in'));
+          resolve(el);
+        }
+      });
+    }
+
+    function runProgress(el, label, doneHtml) {
+      const prog = node(`<div class="prog"><div class="track"><div class="fill"></div></div><div class="label">${label}</div></div>`);
+      el.querySelector('.bubble').appendChild(prog);
+      const fill = prog.querySelector('.fill');
+      let p = 6;
+      const timer = setInterval(() => {
+        p = Math.min(p + 8, 100);
+        fill.style.transform = 'scaleX(' + p / 100 + ')';
+        if (p >= 100) {
+          clearInterval(timer);
+          setTimeout(() => {
+            el.querySelector('.bubble').innerHTML = doneHtml;
+            bottom();
+          }, 420);
+        }
+      }, 300);
+    }
+
+    const REPLY = {
+      video: `好，按你的「暑期招生」系列风格来，大约 2 分钟出片。做好我叫你。`,
+      publish: `要发的是这两条：<br>1、《暑期招生特辑②》<br>2、《学员故事③》<br>标题和话题都填好了，抖音、视频号都登录着，直接发吗？<div class="acts"><button class="act primary" onclick="pick('马上发')">马上发</button><button class="act" onclick="pick('我先看看')">我先看看</button></div>`,
+      data: `昨晚的账（3 条视频）：<br>播放 <b>+32%</b>，晚上 7 点那条最好。建议今天上午再发 1 条。<div class="acts"><button class="act" onclick="pick('看完整数据')">看完整数据</button></div>`,
+      comment: `评论箱 8 条：2 条问价格，我拟了私信引导话术；6 条夸的，我拟了回复。<div class="acts"><button class="act primary" onclick="pick('看我拟的回复')">看我拟的回复</button><button class="act" onclick="pick('一键全回')">一键全回</button></div>`,
+    };
+
+    function pick(text) {
+      addUser(text);
+      if (JCO_KERNEL) { busy = true; askKernel(text); return; }
+      addAI(`收到，这一步马上接着干。正式版里我直接执行，你只看结果。`);
+    }
+
+    function quick(kind, btn) {
+      if (busy) return;
+      if (JCO_KERNEL) {
+        addUser(btn.textContent);
+        busy = true;
+        askKernel(btn.textContent);
+        return;
+      }
+      busy = true;
+      addUser(btn.textContent);
+      setTimeout(() => {
+        addAI(REPLY[kind]).then((el) => {
+          if (kind === 'video') {
+            runProgress(el, '正在写脚本，配音，剪辑合成', `做好了，这版你看看行不行：<br><b>《暑期招生特辑④ · 3 个真实学员故事》</b><div class="acts"><button class="act primary" onclick="pick('去发布')">去发布</button><button class="act" onclick="pick('重新做一版')">重新做一版</button></div>`);
+          }
+          busy = false;
+        });
+      }, 360);
+    }
+
+    function sendUser() {
+      const text = inp.value.trim();
+      if (!text || busy) return;
+      inp.value = '';
+      inputChanged();
+      addUser(text);
+      busy = true;
+      if (JCO_KERNEL) { askKernel(text); return; }
+      setTimeout(() => {
+        addAI(`收到。「${text}」<br>原型阶段我先记住这句话，正式版我会直接去干，干完把结果端给你。`).then(() => { busy = false; });
+      }, 280);
+    }
+
+    function inputChanged() { send.disabled = inp.value.trim().length === 0; }
+    inp.addEventListener('input', () => {
+      inputChanged();
+      inp.style.height = 'auto';
+      inp.style.height = Math.min(inp.scrollHeight, 120) + 'px';
+    });
+    inp.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendUser(); }
+    });
+    send.addEventListener('click', sendUser);
+
+    /* 开场：昨天的干活实录 + 今天的问候 */
+    (async () => {
+      if (JCO_KERNEL) {
+        var handoff = null;
+        try { handoff = sessionStorage.getItem('jco-handoff'); if (handoff) sessionStorage.removeItem('jco-handoff'); } catch (e) {}
+        // 渲染当前会话（新建 / 切换由 consumeOpenChat 与左侧会话列表负责）
+        renderActiveChat();
+        if (handoff) {
+          addUser(handoff);
+          busy = true;
+          askKernel(handoff);
+        }
+        return;
+      }
+      stream.appendChild(node(`<div class="daymark">昨天</div>`));
+      addUser('把昨晚剪好的那条发到抖音和视频号');
+      await addAI('好，这就去。标题、话题都替你填好了，两边的封面也自动配上了。', false);
+      await addAI(`发出去了：<div class="postlist">
+          <div class="pt-row"><span class="dot"></span>抖音 · 已发布 19:30</div>
+          <div class="pt-row"><span class="dot"></span>视频号 · 已发布 19:31</div>
+        </div>`, false);
+      await addAI('这条今天跑到 5.2 万播放了，还在涨。评论区我盯着，有问价格的叫你。', false);
+      stream.appendChild(node(`<div class="daymark">今天</div>`));
+      await addAI('在的。今天的事我都理好了：2 条视频等你发布，8 条评论等你点头。想先干哪件？', false).then((el) => {
+        el.querySelector('.bubble').insertAdjacentHTML('beforeend', `<div class="acts">
+          <button class="act primary" onclick="quick('video', this)">创作</button>
+          <button class="act" onclick="quick('publish', this)">去发布 (2)</button>
+          <button class="act" onclick="quick('data', this)">看数据</button>
+          <button class="act" onclick="quick('comment', this)">回评论 (8)</button>
+        </div>`);
+      });
+    })();
+
+    /* 消息操作按钮 */
+    document.addEventListener('click', function (e) {
+      var btn = e.target.closest('.msg-actions button');
+      if (!btn) return;
+      var label = btn.getAttribute('aria-label') || '';
+      if (label === '复制') {
+        var msg = btn.closest('.msg');
+        var bubble = msg ? msg.querySelector('.bubble') : null;
+        var text = bubble ? bubble.innerText : '';
+        if (text && navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(text).then(
+            function () { showToast('复制好了，去粘贴吧。'); },
+            function () { showToast('没复制成，手动选中复制一下。'); }
+          );
+          return;
+        }
+        showToast('（原型示意）正式版会把这句复制下来。');
+      }
+      else if (label === '赞' || label === '踩') {
+        try {
+          var fb = JSON.parse(localStorage.getItem('jco-feedback-v1') || '{"items":[]}');
+          var msgFb = btn.closest('.msg');
+          var bubbleFb = msgFb ? msgFb.querySelector('.bubble') : null;
+          fb.items.unshift({ t: Date.now(), vote: label, text: bubbleFb ? bubbleFb.innerText.slice(0, 200) : '' });
+          if (fb.items.length > 100) fb.items.length = 100;
+          localStorage.setItem('jco-feedback-v1', JSON.stringify(fb));
+        } catch (err) {}
+        showToast('记下了：我会按你的口味调整说法。');
+      }
+      else if (label === '转发') {
+        var msgFw = btn.closest('.msg');
+        var bubbleFw = msgFw ? msgFw.querySelector('.bubble') : null;
+        var textFw = bubbleFw ? bubbleFw.innerText : '';
+        if (textFw && navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(textFw).then(
+            function () { showToast('复制好了，你想贴给谁就发给谁。'); },
+            function () { showToast('没复制成，手动选中复制一下。'); }
+          );
+          return;
+        }
+        showToast('没复制成，手动选中复制一下。');
+      }
+    });
+
+    /* 底部工具按钮 */
+    document.querySelectorAll('.composer .ghost-btn').forEach(function (btn) {
+      var t = btn.textContent.trim();
+      btn.addEventListener('click', function () {
+        if (t.indexOf('素材') !== -1) { location.href = 'J.Co工作台-素材.html'; }
+      });
+    });
+
+    /* ---------- 干活方式（全自动 / 每步问我）：真存、真显示 ---------- */
+    (function modeSwitch() {
+      function getMode() { try { return localStorage.getItem('jco-mode-v1') || 'auto'; } catch (e) { return 'auto'; } }
+      const LABEL = { auto: '全自动', ask: '每步问我' };
+      const btn = document.getElementById('modePill');
+      if (!btn) return;
+      function paint() {
+        const chev = btn.querySelector('.ti');
+        btn.textContent = LABEL[getMode()];
+        if (chev) btn.appendChild(chev);
+      }
+      paint();
+      btn.addEventListener('click', function (e) {
+        e.stopPropagation();
+        if (document.querySelector('.mode-pop')) { document.querySelector('.mode-pop').remove(); return; }
+        const pop = document.createElement('div');
+        pop.className = 'mode-pop';
+        const r = btn.getBoundingClientRect();
+        pop.style.position = 'fixed';
+        pop.style.right = (window.innerWidth - r.right) + 'px';
+        pop.style.bottom = (window.innerHeight - r.top + 8) + 'px';
+        pop.innerHTML = '<button data-m="auto">全自动<small>AI 一路干完再给你看</small></button><button data-m="ask">每步问我<small>动手前先问一句</small></button>';
+        document.body.appendChild(pop);
+        pop.querySelectorAll('button').forEach(function (b) {
+          if (b.dataset.m === getMode()) b.classList.add('on');
+          b.addEventListener('click', function (ev) {
+            ev.stopPropagation();
+            try { localStorage.setItem('jco-mode-v1', b.dataset.m); } catch (err) {}
+            paint();
+            pop.remove();
+            showToast('已切换：' + LABEL[b.dataset.m]);
+          });
+        });
+      });
+      document.addEventListener('click', function () {
+        const p = document.querySelector('.mode-pop');
+        if (p) p.remove();
+      });
+    })();
+
+    /* ---------- 侧栏（图标栏 + 按钮展开 + 固定展开） ---------- */
+    (function () {
+      var sidebar = document.querySelector('.sidebar');
+      var pinBtn = document.querySelector('.side-toggle');
+      if (!sidebar) return;
+      function setPinned(v) {
+        document.documentElement.classList.toggle('side-pinned', v);
+        if (pinBtn) pinBtn.querySelector('.ti').className = 'ti ' + (v ? 'ti-layout-sidebar-left-collapse' : 'ti-layout-sidebar-left-expand');
+        try { localStorage.setItem('jco-side-pinned', v ? '1' : '0'); } catch (err) {}
+      }
+      if (pinBtn) pinBtn.addEventListener('click', function () {
+        setPinned(!document.documentElement.classList.contains('side-pinned'));
+      });
+      try {
+        if (localStorage.getItem('jco-side-pinned') === '1') setPinned(true);
+      } catch (err) {}
+    })();
+
+    /* ---------- 侧栏分组折叠 ---------- */
+    (function () {
+      var KEY = 'jco-sidebar-folded-groups';
+      function loadFolded() {
+        try { return (localStorage.getItem(KEY) || '').split(',').filter(Boolean); } catch (e) { return []; }
+      }
+      function saveFolded(list) {
+        try { localStorage.setItem(KEY, list.join(',')); } catch (e) {}
+      }
+      function applyFold(label, hide) {
+        label.classList.toggle('folded', hide);
+        var el = label.nextElementSibling;
+        while (el && !el.classList.contains('group-label')) {
+          if (el.classList.contains('nav-item') || el.classList.contains('convos')) {
+            el.style.display = hide ? 'none' : '';
+          }
+          el = el.nextElementSibling;
+        }
+      }
+      var folded = loadFolded();
+      document.querySelectorAll('.group-label').forEach(function (label) {
+        var name = label.textContent.trim();
+        if (folded.indexOf(name) !== -1) applyFold(label, true);
+        label.addEventListener('click', function () {
+          var hide = !label.classList.contains('folded');
+          applyFold(label, hide);
+          var list = loadFolded();
+          if (hide) { if (list.indexOf(name) === -1) list.push(name); }
+          else { list = list.filter(function (x) { return x !== name; }); }
+          saveFolded(list);
+        });
+      });
+    })();
+
+    /* ---------- 侧栏导航 ---------- */
+    (function () {
+      var here = decodeURIComponent(location.pathname.split('/').pop());
+      var PAGES = {
+        '总管': 'J.Co总管.html',
+        '选题': 'J.Co工作台-选题.html',
+        '素材': 'J.Co工作台-素材.html',
+        '文案': 'J.Co工作台-创作.html',
+        '创作': 'J.Co工作台-做视频.html',
+        '后期': 'J.Co工作台-后期.html',
+        '发布': 'J.Co工作台-发布.html',
+        '运营': 'J.Co工作台-运营.html',
+        '管家团队': 'J.Co管家团队.html',
+        '账号中心': 'J.Co账号中心.html',
+        '设置': 'J.Co设置.html',
+        '自动任务': 'J.Co自动任务.html',
+        '技能库': 'J.Co技能库.html'
+      };
+      document.querySelectorAll('.nav-item').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          var label = btn.textContent.trim();
+          var target = PAGES[label];
+          if (target) {
+            if (target !== here) location.href = target;
+            return;
+          }
+          showToast('「' + label + '」还没开工，已经记进下一步清单（先把现有的七个环节用顺）。');
+        });
+      });
+      var bell = document.querySelector('.side-foot .icon-btn');
+      if (bell) bell.addEventListener('click', function (e) {
+        e.stopPropagation();
+        jcoToggleNotif(bell);
+      });
+      var wm = document.querySelector('.wordmark');
+      if (wm) wm.addEventListener('click', function () {
+        if ('J.Co主界面-首页.html' !== here) location.href = 'J.Co主界面-首页.html';
+      });
+      document.querySelectorAll('.convo').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          showToast('（原型示意）正式版里会打开这段对话记录。');
+        });
+      });
+    })();
+  
+    /* ---------- 账号菜单（点头像弹出：设置 / 退出登录） ---------- */
+    (function () {
+      var meBtn = document.getElementById('meBtn');
+      var menu = document.getElementById('meMenu');
+      if (!meBtn || !menu) return;
+      function setOpen(open) {
+        menu.hidden = !open;
+        meBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+      }
+      meBtn.addEventListener('click', function () { setOpen(menu.hidden); });
+      meBtn.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setOpen(menu.hidden); }
+        if (e.key === 'Escape') setOpen(false);
+      });
+      document.addEventListener('click', function (e) {
+        if (!menu.hidden && !menu.contains(e.target) && !meBtn.contains(e.target)) setOpen(false);
+      });
+      document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && !menu.hidden) setOpen(false);
+      });
+      document.getElementById('mmSettings').addEventListener('click', function () {
+        setOpen(false);
+        var here = decodeURIComponent(location.pathname.split('/').pop());
+        if (here !== 'J.Co设置.html') location.href = 'J.Co设置.html';
+      });
+      document.getElementById('mmLogout').addEventListener('click', function () {
+        setOpen(false);
+        showToast('这台电脑上不用单独登录：关掉窗口就是退出，素材和草稿都留着。');
+      });
+    })();
+  
+    /* ---------- 通知面板：最近的活动记录（真数据） ---------- */
+    function jcoToggleNotif(anchor) {
+      var old = document.querySelector('.notif-pop');
+      if (old) { old.remove(); return; }
+      var items = [];
+      try { items = (JSON.parse(localStorage.getItem('jco-log-v1') || '{"items":[]}').items) || []; } catch (e) {}
+      var pop = document.createElement('div');
+      pop.className = 'notif-pop';
+      var r = anchor.getBoundingClientRect();
+      pop.style.position = 'fixed';
+      pop.style.left = Math.min(r.right + 10, window.innerWidth - 296) + 'px';
+      pop.style.bottom = Math.max(12, window.innerHeight - r.bottom) + 'px';
+      var head = document.createElement('div');
+      head.className = 'np-head';
+      head.textContent = '最近动态';
+      pop.appendChild(head);
+      if (items.length === 0) {
+        var empty = document.createElement('div');
+        empty.className = 'np-empty';
+        empty.textContent = '还没有记录。干一句活，这里就开始记。';
+        pop.appendChild(empty);
+      } else {
+        items.slice(0, 8).forEach(function (x) {
+          var row = document.createElement('div');
+          row.className = 'np-row';
+          var d = new Date(x.t);
+          var hh = String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+          var time = document.createElement('span');
+          time.className = 'np-time';
+          time.textContent = hh;
+          var txt = document.createElement('span');
+          txt.className = 'np-txt';
+          txt.textContent = x.title + (x.detail ? '（' + x.detail + '）' : '');
+          row.appendChild(time);
+          row.appendChild(txt);
+          pop.appendChild(row);
+        });
+      }
+      var foot = document.createElement('a');
+      foot.className = 'np-foot';
+      foot.href = 'J.Co总管.html';
+      foot.textContent = '去总管看全部 →';
+      pop.appendChild(foot);
+      document.body.appendChild(pop);
+      var closer = function (ev) {
+        if (!pop.contains(ev.target)) {
+          pop.remove();
+          document.removeEventListener('click', closer, true);
+        }
+      };
+      setTimeout(function () { document.addEventListener('click', closer, true); }, 0);
+    }
+  
+  </script>
+  <script>
+  /* 右上角"待办与安排"悬浮面板：默认收起，点开关滑入；点外面/Esc 收起；Ctrl+Shift+B 切换；记忆状态 */
+  (function () {
+    var board = document.getElementById('board');
+    var toggle = document.getElementById('boardToggle');
+    var close = document.getElementById('boardClose');
+    if (!board || !toggle) return;
+    var KEY = 'jco-board-open';
+    function setOpen(v) {
+      board.classList.toggle('open', v);
+      toggle.setAttribute('aria-expanded', v ? 'true' : 'false');
+      try { localStorage.setItem(KEY, v ? '1' : '0'); } catch (e) {}
+    }
+    toggle.addEventListener('click', function (e) { e.stopPropagation(); setOpen(!board.classList.contains('open')); });
+    if (close) close.addEventListener('click', function () { setOpen(false); });
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && board.classList.contains('open')) setOpen(false);
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'B' || e.key === 'b')) { e.preventDefault(); setOpen(!board.classList.contains('open')); }
+    });
+    document.addEventListener('click', function (e) {
+      if (!board.classList.contains('open')) return;
+      if (board.contains(e.target) || toggle.contains(e.target)) return;
+      setOpen(false);
+    });
+    try { if (localStorage.getItem(KEY) === '1') setOpen(true); } catch (e) {}
+  })();
+  </script>
+  
+</body>
+</html>

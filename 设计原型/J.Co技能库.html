@@ -1,0 +1,948 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>J.Co · 技能库</title>
+  <link rel="stylesheet" href="./assets/jco-ui.css">
+  <style>
+/* ============ 主区 ============ */
+  .main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+
+.scroll { flex: 1; overflow-y: auto; }
+
+.wrap { max-width: none; margin: 0 auto; padding: 36px 32px 70px; }
+
+.agent-head { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 22px; }
+
+.agent-logo {
+    width: 30px; height: 30px; border-radius: 8px;
+    background: var(--text-1); color: var(--bg);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; font-weight: 600; flex: none;
+  }
+
+.agent-name { font-size: 16px; font-weight: 600; }
+
+.agent-chip {
+    height: 32px; padding: 0 16px; border-radius: 999px;
+    background: var(--card); color: var(--text-1);
+    font-size: 14px; font-weight: 600;
+    display: inline-flex; align-items: center;
+    box-shadow: var(--shadow-card);
+  }
+
+.agent-hint { font-size: 16px; color: var(--text-2); }
+
+.sec-head { display: flex; align-items: baseline; gap: 10px; margin: 28px 0 12px; }
+
+.sec-head h2 { font-size: 16px; font-weight: 600; letter-spacing: -0.01em; }
+
+.sec-head .hint { font-size: 13px; color: var(--text-3); margin-left: auto; }
+
+/* 总管卡 */
+  .boss {
+    display: flex; gap: 16px;
+    background: #404046; color: #ffffff;
+    border-radius: 20px;
+    box-shadow: var(--shadow-float);
+    padding: 22px 24px;
+  }
+
+@media (prefers-color-scheme: dark) {
+    .boss { background: #343438; }
+  }
+
+.b-ava {
+    flex: none; width: 54px; height: 54px; border-radius: 20px;
+    background: #f5f5f7; color: #404046;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 24px; font-weight: 600;
+  }
+
+.b-main { flex: 1; min-width: 0; }
+
+.b-name { font-size: 16px; font-weight: 600; display: flex; align-items: center; gap: 10px; }
+
+.b-role {
+    font-size: 12px; font-weight: 600; letter-spacing: 0.02em;
+    background: rgba(255, 255, 255, 0.14); color: #ffffff;
+    border-radius: 999px; padding: 3.5px 11px;
+  }
+
+.b-say { margin-top: 8px; font-size: 13px; color: rgba(245, 245, 247, 0.72); line-height: 1.7; }
+
+.b-say b { color: #ffffff; font-weight: 600; }
+
+.b-ask { margin-top: 15px; display: flex; gap: 10px; }
+
+.b-ask input {
+    flex: 1; min-width: 0;
+    border: 1px solid rgba(255, 255, 255, 0.14); border-radius: 12px;
+    background: rgba(255, 255, 255, 0.08); color: #ffffff;
+    font-family: inherit; font-size: 13px; padding: 11px 14px; outline: none;
+    transition: border-color 0.15s ease, background 0.15s ease;
+  }
+
+.b-ask input::placeholder { color: rgba(245, 245, 247, 0.45); }
+
+.b-ask input:focus { border-color: var(--accent); background: rgba(255, 255, 255, 0.1); }
+
+.b-ask input:focus-visible { outline: none; }
+
+.b-ask .btn-sm { flex: none; height: 40px; padding: 0 20px; }
+
+/* 等你拍板 */
+  .todos { display: flex; flex-direction: column; gap: 8px; }
+
+.todo {
+    display: flex; align-items: center; gap: 13px;
+    background: var(--card); border-radius: 20px; box-shadow: var(--shadow-card);
+    padding: 13px 18px; text-decoration: none; color: var(--text-1);
+    transition: transform 0.15s ease;
+  }
+
+.todo:hover { transform: translateY(-1px); }
+
+.todo:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.t-ico {
+    flex: none; width: 34px; height: 34px; border-radius: 8px;
+    background: rgba(0, 128, 255, 0.12); color: var(--accent);
+    display: flex; align-items: center; justify-content: center; font-size: 16px;
+  }
+
+.t-txt { flex: 1; min-width: 0; font-size: 14px; }
+
+.t-txt b { font-weight: 600; }
+
+.t-txt span { color: var(--text-2); }
+
+.t-go { flex: none; font-size: 13px; font-weight: 500; color: var(--accent); display: flex; align-items: center; gap: 4px; }
+
+.t-go .ti { font-size: 14px; }
+
+/* 员工卡 */
+  .staffs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+
+.staff {
+    display: flex; flex-direction: column;
+    background: var(--card); border-radius: 20px; box-shadow: var(--shadow-card);
+    padding: 16px; text-decoration: none; color: var(--text-1);
+    transition: transform 0.15s ease;
+  }
+
+.staff:hover { transform: translateY(-2px); }
+
+.staff:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.s-head { display: flex; align-items: center; gap: 9px; }
+
+.s-ico {
+    flex: none; width: 32px; height: 32px; border-radius: 8px;
+    background: var(--tint); color: var(--text-1);
+    display: flex; align-items: center; justify-content: center; font-size: 16px;
+  }
+
+.s-name { font-size: 14px; font-weight: 600; }
+
+.s-badge { margin-left: auto; display: inline-flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 600; border-radius: 999px; padding: 3.5px 11px; }
+
+.s-badge::before { content: ""; width: 6px; height: 6px; border-radius: 50%; }
+
+.s-badge.busy { background: var(--green-tint); color: var(--green); }
+
+.s-badge.busy::before { background: var(--green); animation: pulse 1.8s ease infinite; }
+
+.s-badge.wait { background: rgba(0, 128, 255, 0.12); color: var(--accent); }
+
+.s-badge.wait::before { background: var(--accent); }
+
+.s-badge.free { background: var(--tint); color: var(--text-3); }
+
+.s-badge.free::before { background: var(--text-3); }
+
+.s-badge.sched { background: rgba(120, 120, 128, 0.14); color: var(--text-2); }
+
+.s-badge.sched::before { background: var(--text-2); }
+
+@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+.s-live { margin-top: 10px; font-size: 13px; color: var(--text-2); line-height: 1.65; }
+
+.s-foot { margin-top: auto; padding-top: 14px; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+
+.s-time { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; color: var(--text-3); }
+
+.s-time .ti { font-size: 13px; }
+
+.s-prog { margin-top: 12px; display: flex; align-items: center; gap: 9px; }
+
+.s-pbar { flex: 1; height: 5px; border-radius: 999px; background: rgba(120, 120, 128, 0.18); overflow: hidden; }
+
+.s-pfill { height: 100%; border-radius: 999px; background: var(--accent); }
+
+.s-ptxt { flex: none; font-size: 12px; font-weight: 600; color: var(--text-2); font-variant-numeric: tabular-nums; }
+
+/* 状态总览 */
+  .roster { display: inline-flex; align-items: center; gap: 12px; }
+
+.r-item { display: inline-flex; align-items: center; gap: 5px; }
+
+.r-dot { width: 7px; height: 7px; border-radius: 50%; display: inline-block; }
+
+.r-dot.busy { background: var(--green); }
+
+.r-dot.wait { background: var(--accent); }
+
+.r-dot.free { background: var(--text-3); }
+
+.r-dot.sched { background: rgba(120, 120, 128, 0.55); }
+
+.s-go { flex: none; font-size: 13px; font-weight: 500; color: var(--accent); display: flex; align-items: center; gap: 4px; }
+
+.s-go .ti { font-size: 14px; }
+
+/* DSH 规范：正圆与胶囊保持圆弧（其余圆角走超椭圆） */
+  .me .ava, .mm-head .ava, .msg.ai .ava, .card .go, .send, .ghost, .ghost-btn, .btn-sm, .act,
+  .cp-act, .cp-send, .agent-chip, .badge, .b-role, .s-badge, .stage, .r-dot,
+  .dot, .prog .track, .prog .fill, .prow .pbar, .prow .pf2, .toast,
+  .pf .pfck, .seg button, .go-btn, .copilot-btn, .acc .pfp, .use-btn,
+  .tag, .star, .check, .ai-state .dot, .regen, .agent-tabs, .agent-tabs button,
+  .tool, .model-pill, .send-big, .draft .dprog, .draft .dprog .dfill,
+  .draft .open, .ib-count, .ib-nav, .step .dot, .track, .fill, .shot .swap,
+  .export-btn, .play-btn, .playhead::after, .lava, .planrow .ps, .s-pbar,
+  .s-pfill, .s-badge::before { corner-shape: round; }
+
+@media (prefers-color-scheme: dark) {
+    ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.24); border-radius: 999px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.4); border-radius: 999px; }
+  }
+
+@media (max-width: 1080px) { .staffs { grid-template-columns: repeat(2, 1fr); } }
+
+@media (max-width: 860px) {
+    .sidebar { display: none; }
+    .wrap { padding: 24px 18px 60px; }
+    .staffs { grid-template-columns: 1fr; }
+    .boss { flex-direction: column; }
+    .b-ask { flex-wrap: wrap; }
+  }
+  </style>
+<script>
+  /* 提前恢复侧栏展开状态，避免页面加载时闪一下 */
+  try { if (localStorage.getItem('jco-side-pinned') === '1') document.documentElement.classList.add('side-pinned'); } catch (e) {}
+</script>
+<style>
+  .brief {
+    display: flex; align-items: flex-start; gap: 10px;
+    background: var(--tint); border-radius: 14px; padding: 13px 16px;
+    font-size: 13px; line-height: 1.7; color: var(--text-2); margin-top: 16px;
+  }
+  .brief .ti { color: var(--text-3); font-size: 15px; margin-top: 2px; }
+  .tasks { display: flex; flex-direction: column; gap: 10px; margin-top: 4px; }
+  .task {
+    display: flex; align-items: flex-start; gap: 14px;
+    background: var(--card); border-radius: 18px; box-shadow: var(--shadow-card);
+    padding: 16px 18px;
+  }
+  .tk-ico {
+    flex: none; width: 38px; height: 38px; border-radius: 12px;
+    background: var(--tint); color: var(--text-2);
+    display: flex; align-items: center; justify-content: center; font-size: 18px;
+  }
+  .tk-main { flex: 1; min-width: 0; }
+  .tk-name { font-size: 14px; font-weight: 600; color: var(--text-1); display: flex; align-items: center; gap: 8px; }
+  .tk-badge { font-size: 11px; font-weight: 500; color: var(--text-3); background: var(--tint); border-radius: 999px; padding: 2px 8px; }
+  .tk-badge.on { color: var(--green); background: var(--green-tint); }
+  .tk-desc { font-size: 13px; color: var(--text-2); margin-top: 4px; line-height: 1.6; }
+  .tk-when { font-size: 12px; color: var(--text-3); margin-top: 6px; display: flex; align-items: center; gap: 5px; }
+  .tk-actions { flex: none; display: flex; align-items: center; gap: 10px; }
+  .new-row { margin-top: 18px; }
+  .overlay {
+    position: fixed; inset: 0; z-index: 50;
+    background: rgba(20, 20, 24, 0.32);
+    display: none; align-items: center; justify-content: center; padding: 30px;
+  }
+  .overlay.show { display: flex; }
+  .sheet {
+    width: 100%; max-width: 480px; background: var(--card); border-radius: 28px;
+    box-shadow: var(--shadow-modal); padding: 24px 26px 20px;
+  }
+  .sheet h3 { font-size: 16px; font-weight: 600; }
+  .sheet .sub { font-size: 13px; color: var(--text-2); margin-top: 6px; line-height: 1.6; }
+  .field { display: block; margin-top: 16px; }
+  .field > span { display: block; font-size: 13px; color: var(--text-2); margin-bottom: 7px; }
+  .field input, .field textarea {
+    width: 100%; border: 1px solid var(--line); border-radius: 12px;
+    background: var(--bg); color: var(--text-1); font-family: inherit; font-size: 14px;
+    padding: 10px 12px; outline: none; resize: none;
+  }
+  .field input:focus-visible, .field textarea:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .sheet .foot { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
+  .skills { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 12px; margin-top: 16px; }
+  .skl {
+    display: flex; flex-direction: column; gap: 8px;
+    background: var(--card); border-radius: 18px; box-shadow: var(--shadow-card);
+    padding: 18px;
+  }
+  .sk-ico { width: 38px; height: 38px; border-radius: 12px; background: var(--tint); color: var(--accent); display: flex; align-items: center; justify-content: center; font-size: 18px; }
+  .sk-name { font-size: 14px; font-weight: 600; }
+  .sk-desc { font-size: 13px; color: var(--text-2); line-height: 1.65; flex: 1; }
+  .sk-foot { display: flex; align-items: center; justify-content: space-between; margin-top: 4px; }
+  .sk-tag { font-size: 12px; color: var(--text-3); background: var(--tint); border-radius: 999px; padding: 2px 9px; }
+</style>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="sidebar-inner">
+      <div class="side-top">
+        <div class="wordmark">J.Co</div>
+        <button class="side-toggle" aria-label="固定展开侧栏" title="点一下固定展开，再点收起"><span class="ti ti-layout-sidebar-left-expand"></span></button>
+      </div>
+      <div class="search"><span class="ti ti-search"></span><input placeholder="搜索"></div>
+      <nav class="nav">
+        <button class="nav-item"><span class="ti ti-message-plus"></span>总管</button>
+        <button class="group-label" type="button"><span class="ti ti-layout-grid"></span>工作台<span class="ti ti-chevron-down"></span></button>
+        <button class="nav-item"><span class="ti ti-bulb"></span>选题</button>
+        <button class="nav-item"><span class="ti ti-photo"></span>素材</button>
+        <button class="nav-item"><span class="ti ti-file-text"></span>文案</button>
+        <button class="nav-item"><span class="ti ti-video"></span>创作</button>
+        <button class="nav-item"><span class="ti ti-wand"></span>后期</button>
+        <button class="nav-item"><span class="ti ti-upload"></span>发布</button>
+        <button class="nav-item"><span class="ti ti-chart-bar"></span>运营</button>
+        <button class="group-label" type="button"><span class="ti ti-tool"></span>工具<span class="ti ti-chevron-down"></span></button>
+        <button class="nav-item"><span class="ti ti-clock-play"></span>自动任务</button>
+        <button class="nav-item active"><span class="ti ti-sparkles"></span>技能库</button>
+        <button class="nav-item"><span class="ti ti-users-group"></span>管家团队</button>
+        <button class="nav-item"><span class="ti ti-key"></span>账号中心</button>
+      </nav>
+      <button class="group-label" type="button"><span class="ti ti-messages"></span>对话<span class="ti ti-chevron-down"></span></button>
+      <div class="convos">
+        <button class="convo"><span class="name">暑期招生 · 今日发布</span></button>
+        <button class="convo"><span class="name">评论跟进（5 条）</span></button>
+        <button class="convo"><span class="name">上周数据复盘</span></button>
+        <button class="convo"><span class="name">引流名单 · 待跟进</span></button>
+        <button class="convo"><span class="name">视频脚本草稿</span></button>
+        <button class="convo"><span class="name">技能库询价</span></button>
+      </div>
+      <div class="side-foot">
+        <div class="me" id="meBtn" role="button" tabindex="0" aria-haspopup="menu" aria-expanded="false"><div class="ava">J</div><span>Jay</span></div>
+        <button class="icon-btn" aria-label="通知"><span class="ti ti-bell"></span></button>
+      </div>
+          </div>
+      <div class="me-menu" id="meMenu" hidden role="menu" aria-label="账号菜单">
+        <div class="mm-head"><div class="ava">J</div><div class="mm-who"><b>Jay</b><span>软件账号 · 仅本机</span></div></div>
+        <div class="mm-sep"></div>
+        <button class="mm-item" id="mmSettings" role="menuitem"><span class="ti ti-settings"></span>设置</button>
+        <button class="mm-item" id="mmLogout" role="menuitem"><span class="ti ti-logout"></span>退出登录</button>
+      </div>
+    </aside>
+
+    
+    <main class="main">
+      <div class="scroll">
+        <div class="wrap">
+          <div class="agent-head">
+            <span class="agent-logo">J</span>
+            <span class="agent-name">和 J.Co</span>
+            <span class="agent-chip">技能库</span>
+            <span class="agent-hint">把一次的活儿，变成随时能叫的手艺</span>
+          </div>
+
+          <div class="sec-head" style="margin-top: 20px"><h2>全部本领</h2><span class="hint" id="skCount"></span></div>
+          <div class="tabs" id="skTabs">
+            <button class="tab active" data-v="all" type="button">全部</button>
+            <button class="tab" data-v="video" type="button">视频</button>
+            <button class="tab" data-v="graphic" type="button">图文</button>
+            <button class="tab" data-v="social" type="button">互动</button>
+            <button class="tab" data-v="data" type="button">数据</button>
+          </div>
+          <div class="skills" id="skillGrid"></div>
+
+          <div class="brief">
+            <span class="ti ti-info-circle"></span>
+            <span>启用的技能会出现在「创作」页的技能格里；停用只影响入口，不会动你已经做好的东西。</span>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- 右下角·总管助手 -->
+  <button class="copilot-btn" id="copilotBtn" aria-label="打开总管助手"><span class="ti ti-message-dots"></span></button>
+  <div class="copilot" id="copilot" hidden>
+    <div class="cp-head">
+      <span class="cp-ava">J</span>
+      <span class="cp-title">总管</span>
+      <span class="cp-sub">问点啥都行</span>
+      <button class="cp-fold" id="cpFold" aria-label="收起助手"><span class="ti ti-chevron-down"></span></button>
+    </div>
+    <div class="cp-body" id="cpBody">
+      <div class="cp-msg ai">在的。想问点什么？比如这条视频的实时数据。</div>
+      <div class="cp-acts">
+        <button class="cp-act" data-q="这条视频数据怎么样？">这条视频数据怎么样？</button>
+        <button class="cp-act" data-q="今天还剩什么事？">今天还剩什么事？</button>
+        <button class="cp-act" data-q="评论有什么动静？">评论有什么动静？</button>
+      </div>
+    </div>
+    <div class="cp-inp">
+      <textarea id="cpInp" rows="1" placeholder="问总管，比如：这条视频现在多少播放"></textarea>
+      <button class="cp-send" id="cpSend" aria-label="发送"><span class="ti ti-arrow-up"></span></button>
+    </div>
+  </div>
+  <div class="toast" id="toast" role="status"></div>
+
+  <script>
+    const $ = (id) => document.getElementById(id);
+    const toastEl = $('toast');
+
+    function showToast(msg) {
+      toastEl.textContent = msg;
+      toastEl.classList.add('show');
+      clearTimeout(showToast.timer);
+      showToast.timer = setTimeout(() => toastEl.classList.remove('show'), 2800);
+    }
+
+  </script>
+  <script>
+    /* ---------- 侧栏导航（原型可点通） ---------- */
+    (function () {
+      var here = decodeURIComponent(location.pathname.split('/').pop());
+      var PAGES = {
+        '总管': 'J.Co总管.html',
+        '选题': 'J.Co工作台-选题.html',
+        '素材': 'J.Co工作台-素材.html',
+        '文案': 'J.Co工作台-创作.html',
+        '创作': 'J.Co工作台-做视频.html',
+        '后期': 'J.Co工作台-后期.html',
+        '发布': 'J.Co工作台-发布.html',
+        '运营': 'J.Co工作台-运营.html',
+        '管家团队': 'J.Co管家团队.html',
+        '账号中心': 'J.Co账号中心.html',
+        '设置': 'J.Co设置.html',
+        '自动任务': 'J.Co自动任务.html',
+        '技能库': 'J.Co技能库.html'
+      };
+      document.querySelectorAll('.nav-item').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          var label = btn.textContent.trim();
+          var target = PAGES[label];
+          if (target) {
+            if (target !== here) location.href = target;
+            return;
+          }
+          showToast('「' + label + '」还没开工，已经记进下一步清单（先把现有的七个环节用顺）。');
+        });
+      });
+      var bell = document.querySelector('.side-foot .icon-btn');
+      if (bell) bell.addEventListener('click', function (e) {
+        e.stopPropagation();
+        jcoToggleNotif(bell);
+      });
+      /* ---------- 右下角·总管助手 ---------- */
+      (function () {
+        var btn = document.getElementById('copilotBtn');
+        var panel = document.getElementById('copilot');
+        var fold = document.getElementById('cpFold');
+        var body = document.getElementById('cpBody');
+        var inp = document.getElementById('cpInp');
+        var sendBtn = document.getElementById('cpSend');
+        if (!btn || !panel) return;
+        btn.addEventListener('click', function () { panel.hidden = !panel.hidden; });
+        if (fold) fold.addEventListener('click', function () { panel.hidden = true; });
+        var FIXED = {
+          '这条视频数据怎么样？': '《成人高考报名其实就 3 步》实时数据：播放 <b>5.2 万</b>（还在涨）、点赞 3,180、评论 57、带来咨询 6 条。比你的平均表现高 <b>8 倍</b>。',
+          '今天还剩什么事？': '还有 3 件在你手上：2 条视频等你过目、8 条评论等你放行、19:30 的发布等你确认。都排好了，你点头就行。',
+          '评论有什么动静？': '新评论 6 条：2 条问价格（我拟好引导话术了），3 条夸的，1 条问「初中能不能报」。建议你亲自回，这种最容易成。'
+        };
+        function appendMe(t) {
+          var el = document.createElement('div');
+          el.className = 'cp-msg me';
+          el.textContent = t;
+          body.appendChild(el);
+          body.scrollTop = body.scrollHeight;
+        }
+        function appendAI(html) {
+          var el = document.createElement('div');
+          el.className = 'cp-msg ai';
+          el.innerHTML = html;
+          body.appendChild(el);
+          body.scrollTop = body.scrollHeight;
+        }
+        function ask(q) {
+          if (!q) return;
+          appendMe(q);
+          var cpKernel = (typeof window.jco !== 'undefined' && window.jco && window.jco.kernel);
+          if (cpKernel) {
+            appendAI('…');
+            var cpMsgs = body.querySelectorAll('.cp-msg.ai');
+            var cpEl = cpMsgs[cpMsgs.length - 1];
+            window.jco.kernel.ask(q).then(function (res) {
+              var cpText = (res && res.ok && res.text) ? res.text : ('没答上来：' + ((res && res.error) || '未知错误'));
+              cpEl.textContent = cpText;
+              cpEl.style.whiteSpace = 'pre-wrap';
+              body.scrollTop = body.scrollHeight;
+            });
+            return;
+          }
+          setTimeout(function () {
+            appendAI(FIXED[q] || ('收到「' + q + '」。正式版里我马上去查，查完把明细端给你。'));
+          }, 420);
+        }
+        document.querySelectorAll('.cp-act').forEach(function (b) {
+          b.addEventListener('click', function () { ask(b.getAttribute('data-q')); });
+        });
+        function fire() {
+          var v = inp.value.trim();
+          if (!v) return;
+          inp.value = '';
+          inp.style.height = 'auto';
+          ask(v);
+        }
+        sendBtn.addEventListener('click', fire);
+        inp.addEventListener('keydown', function (e) {
+          if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); fire(); }
+        });
+        inp.addEventListener('input', function () {
+          inp.style.height = 'auto';
+          inp.style.height = Math.min(inp.scrollHeight, 90) + 'px';
+        });
+      })();
+      /* ---------- 真模式：员工卡 / 拍板 / 汇报 全部用真实活动日志渲染 ---------- */
+      (function staffLive() {
+        var hasKernel = (typeof window.jco !== 'undefined' && window.jco && window.jco.kernel);
+        if (!hasKernel) return; // 浏览器直开：保留静态演示
+        var log = [];
+        try { log = (JSON.parse(localStorage.getItem('jco-log-v1') || '{"items":[]}').items) || []; } catch (e) {}
+        var dayStart = new Date(); dayStart.setHours(0, 0, 0, 0);
+        var today = log.filter(function (x) { return x.t >= dayStart.getTime(); });
+        var byKind = {};
+        today.forEach(function (x) { (byKind[x.kind] = byKind[x.kind] || []).push(x); });
+
+        // 员工卡
+        var map = {
+          'J.Co工作台-选题.html': { kind: 'topic', idle: '今天还没接到选题的活' },
+          'J.Co工作台-素材.html': { kind: 'material', idle: '素材箱安静着，随时能接活' },
+          'J.Co工作台-创作.html': { kind: 'create', idle: '今天还没写稿，去创作页出一篇' },
+          'J.Co工作台-做视频.html': { kind: 'shot', idle: '今天还没出分镜，去排一条' },
+          'J.Co工作台-发布.html': { kind: 'publish', idle: '还没有发布记录' },
+          'J.Co工作台-后期.html': { kind: null, idle: '剪辑工具还没接上，暂时无活' },
+          'J.Co工作台-运营.html': { kind: null, idle: '平台数据还没接上，暂时无活' },
+        };
+        document.querySelectorAll('.staff').forEach(function (card) {
+          var conf = map[card.getAttribute('href')];
+          if (!conf) return;
+          var items = conf.kind ? (byKind[conf.kind] || []) : [];
+          var liveEl = card.querySelector('.s-live');
+          var badgeEl = card.querySelector('.s-badge');
+          var timeEl = card.querySelector('.s-time');
+          if (!liveEl || !badgeEl) return;
+          if (items.length > 0) {
+            var last = items[0];
+            liveEl.textContent = '今天干了 ' + items.length + ' 件：' + last.title + (last.detail ? '（' + last.detail + '）' : '');
+            badgeEl.className = 's-badge busy';
+            badgeEl.textContent = '有产出';
+            var d = new Date(last.t);
+            if (timeEl) timeEl.innerHTML = '<span class="ti ti-clock-hour-3"></span>' + String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+          } else {
+            liveEl.textContent = conf.idle;
+            badgeEl.className = 's-badge free';
+            badgeEl.textContent = '空闲';
+          }
+        });
+
+        // 等你拍板（真实状态）
+        var todosBox = document.querySelector('.todos');
+        if (todosBox) {
+          var reviewDrafts = 0;
+          try {
+            var ds = JSON.parse(localStorage.getItem('jco-drafts-v1') || '{"items":[]}');
+            reviewDrafts = (ds.items || []).filter(function (d) { return d.status === 'review'; }).length;
+          } catch (e) {}
+          var pubCount = 0;
+          try {
+            var ps = JSON.parse(localStorage.getItem('jco-publish-v1') || '{"items":[]}');
+            pubCount = (ps.items || []).length;
+          } catch (e) {}
+          todosBox.innerHTML = '';
+          var rows = [];
+          if (reviewDrafts > 0) rows.push({ href: 'J.Co工作台-做视频.html', ico: 'ti-player-play', b: reviewDrafts + ' 条分镜', rest: '等你过目', to: '去「创作」' });
+          if (pubCount > 0) rows.push({ href: 'J.Co工作台-发布.html', ico: 'ti-upload', b: pubCount + ' 条发布记录', rest: '在这存着', to: '去「发布」' });
+          if (rows.length === 0) {
+            var empty = document.createElement('a');
+            empty.className = 'todo';
+            empty.setAttribute('href', 'J.Co总管.html');
+            empty.innerHTML = '<span class="t-ico ti ti-flag"></span><span class="t-txt">目前没有等你拍板的事<span>，说句话就开张</span></span><span class="t-go">去「总管」<span class="ti ti-arrow-right"></span></span>';
+            todosBox.appendChild(empty);
+          } else {
+            rows.forEach(function (r) {
+              var a = document.createElement('a');
+              a.className = 'todo';
+              a.setAttribute('href', r.href);
+              a.innerHTML = '<span class="t-ico ti ' + r.ico + '"></span><span class="t-txt"><b>' + r.b + '</b>' + r.rest + '</span><span class="t-go">' + r.to + '<span class="ti ti-arrow-right"></span></span>';
+              todosBox.appendChild(a);
+            });
+          }
+        }
+
+        // 总管汇报
+        var say = document.querySelector('.b-say');
+        if (say) {
+          if (today.length > 0) {
+            say.innerHTML = '7 个员工今天合计干了 <b>' + today.length + ' 件活</b>，都记着呢。往下看各自工位，拿不准的直接说给我。';
+          } else {
+            say.innerHTML = '今天我这儿还安静着。你从任何一页开一句活，我就盯着干。';
+          }
+        }
+      })();
+
+      /* ---------- 侧栏（图标栏 + 悬停展开 + 固定展开） ---------- */
+      (function () {
+        var sidebar = document.querySelector('.sidebar');
+        var pinBtn = document.querySelector('.side-toggle');
+        if (!sidebar) return;
+        function setPinned(v) {
+          document.documentElement.classList.toggle('side-pinned', v);
+          if (pinBtn) pinBtn.querySelector('.ti').className = 'ti ' + (v ? 'ti-layout-sidebar-left-collapse' : 'ti-layout-sidebar-left-expand');
+          try { localStorage.setItem('jco-side-pinned', v ? '1' : '0'); } catch (err) {}
+        }
+        if (pinBtn) pinBtn.addEventListener('click', function () {
+          setPinned(!document.documentElement.classList.contains('side-pinned'));
+        });
+        try {
+          if (localStorage.getItem('jco-side-pinned') === '1') setPinned(true);
+        } catch (err) {}
+      })();
+      /* ---------- 侧栏分组折叠 ---------- */
+      (function () {
+        var KEY = 'jco-sidebar-folded-groups';
+        function loadFolded() {
+          try { return (localStorage.getItem(KEY) || '').split(',').filter(Boolean); } catch (e) { return []; }
+        }
+        function saveFolded(list) {
+          try { localStorage.setItem(KEY, list.join(',')); } catch (e) {}
+        }
+        function applyFold(label, hide) {
+          label.classList.toggle('folded', hide);
+          var el = label.nextElementSibling;
+          while (el && !el.classList.contains('group-label')) {
+            if (el.classList.contains('nav-item') || el.classList.contains('convos')) {
+              el.style.display = hide ? 'none' : '';
+            }
+            el = el.nextElementSibling;
+          }
+        }
+        var folded = loadFolded();
+        document.querySelectorAll('.group-label').forEach(function (label) {
+          var name = label.textContent.trim();
+          if (folded.indexOf(name) !== -1) applyFold(label, true);
+          label.addEventListener('click', function () {
+            var hide = !label.classList.contains('folded');
+            applyFold(label, hide);
+            var list = loadFolded();
+            if (hide) { if (list.indexOf(name) === -1) list.push(name); }
+            else { list = list.filter(function (x) { return x !== name; }); }
+            saveFolded(list);
+          });
+        });
+      })();
+      var wm = document.querySelector('.wordmark');
+      if (wm) wm.addEventListener('click', function () {
+        if ('J.Co主界面-首页.html' !== here) location.href = 'J.Co主界面-首页.html';
+      });
+      document.querySelectorAll('.convo').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          location.href = 'J.Co总管.html';
+        });
+      });
+    })();
+  
+    /* ---------- 账号菜单（点头像弹出：设置 / 退出登录） ---------- */
+    (function () {
+      var meBtn = document.getElementById('meBtn');
+      var menu = document.getElementById('meMenu');
+      if (!meBtn || !menu) return;
+      function setOpen(open) {
+        menu.hidden = !open;
+        meBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+      }
+      meBtn.addEventListener('click', function () { setOpen(menu.hidden); });
+      meBtn.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setOpen(menu.hidden); }
+        if (e.key === 'Escape') setOpen(false);
+      });
+      document.addEventListener('click', function (e) {
+        if (!menu.hidden && !menu.contains(e.target) && !meBtn.contains(e.target)) setOpen(false);
+      });
+      document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && !menu.hidden) setOpen(false);
+      });
+      document.getElementById('mmSettings').addEventListener('click', function () {
+        setOpen(false);
+        var here = decodeURIComponent(location.pathname.split('/').pop());
+        if (here !== 'J.Co设置.html') location.href = 'J.Co设置.html';
+      });
+      document.getElementById('mmLogout').addEventListener('click', function () {
+        setOpen(false);
+        showToast('这台电脑上不用单独登录：关掉窗口就是退出，素材和草稿都留着。');
+      });
+    })();
+  
+    /* ---------- 通知面板：最近的活动记录（真数据） ---------- */
+    function jcoToggleNotif(anchor) {
+      var old = document.querySelector('.notif-pop');
+      if (old) { old.remove(); return; }
+      var items = [];
+      try { items = (JSON.parse(localStorage.getItem('jco-log-v1') || '{"items":[]}').items) || []; } catch (e) {}
+      var pop = document.createElement('div');
+      pop.className = 'notif-pop';
+      var r = anchor.getBoundingClientRect();
+      pop.style.position = 'fixed';
+      pop.style.left = Math.min(r.right + 10, window.innerWidth - 296) + 'px';
+      pop.style.bottom = Math.max(12, window.innerHeight - r.bottom) + 'px';
+      var head = document.createElement('div');
+      head.className = 'np-head';
+      head.textContent = '最近动态';
+      pop.appendChild(head);
+      if (items.length === 0) {
+        var empty = document.createElement('div');
+        empty.className = 'np-empty';
+        empty.textContent = '还没有记录。干一句活，这里就开始记。';
+        pop.appendChild(empty);
+      } else {
+        items.slice(0, 8).forEach(function (x) {
+          var row = document.createElement('div');
+          row.className = 'np-row';
+          var d = new Date(x.t);
+          var hh = String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+          var time = document.createElement('span');
+          time.className = 'np-time';
+          time.textContent = hh;
+          var txt = document.createElement('span');
+          txt.className = 'np-txt';
+          txt.textContent = x.title + (x.detail ? '（' + x.detail + '）' : '');
+          row.appendChild(time);
+          row.appendChild(txt);
+          pop.appendChild(row);
+        });
+      }
+      var foot = document.createElement('a');
+      foot.className = 'np-foot';
+      foot.href = 'J.Co总管.html';
+      foot.textContent = '去总管看全部 →';
+      pop.appendChild(foot);
+      document.body.appendChild(pop);
+      var closer = function (ev) {
+        if (!pop.contains(ev.target)) {
+          pop.remove();
+          document.removeEventListener('click', closer, true);
+        }
+      };
+      setTimeout(function () { document.addEventListener('click', closer, true); }, 0);
+    }
+  
+  
+    /* ---------- 对话列表（真会话）：点击续聊；每项可分享 / 重命名 / 删除；＋ 新会话 ---------- */
+    (function jcoConvos() {
+      var hasKernel = (typeof window.jco !== 'undefined' && window.jco && window.jco.kernel);
+      if (!hasKernel) return; // 浏览器直开：保留演示列表
+      var data = null;
+      try { data = JSON.parse(localStorage.getItem('jco-chats-v1') || 'null'); } catch (e) {}
+      var box = document.querySelector('.convos');
+      if (!box || !data || !Array.isArray(data.chats) || data.chats.length === 0) return;
+      var here = decodeURIComponent(location.pathname.split('/').pop());
+      function go(req) {
+        try { sessionStorage.setItem('jco-open-chat', req); } catch (e) {}
+        if (here !== 'J.Co总管.html') location.href = 'J.Co总管.html';
+      }
+      function saveChats() { try { localStorage.setItem('jco-chats-v1', JSON.stringify(data)); } catch (e) {} }
+
+      /* 会话操作：分享 / 重命名 / 删除（含两步防误删） */
+      var openMenu = null;
+      function closeMenu() { if (openMenu) { openMenu.remove(); openMenu = null; } }
+      document.addEventListener('click', closeMenu);
+      function toastIt(msg) {
+        var t = document.getElementById('toast');
+        if (!t) return;
+        t.textContent = msg; t.classList.add('show');
+        clearTimeout(toastIt._t); toastIt._t = setTimeout(function () { t.classList.remove('show'); }, 2600);
+      }
+      function shareChat(chat) {
+        var lines = ['【和 J.Co 的对话 · ' + (chat.title || '新会话') + '】'];
+        (chat.messages || []).forEach(function (m) {
+          lines.push((m.role === 'user' ? '我：' : 'J.Co：') + String(m.text || ''));
+        });
+        var text = lines.join('\n');
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(text).then(
+            function () { toastIt('对话已复制，去粘贴分享吧'); },
+            function () { toastIt('没复制成，手动选中复制一下'); }
+          );
+        } else { toastIt('这台环境不支持直接复制'); }
+      }
+      function showMenu(anchor, chat) {
+        closeMenu();
+        var menu = document.createElement('div');
+        menu.className = 'convo-menu';
+        menu.addEventListener('click', function (e) { e.stopPropagation(); });
+        function item(icon, label, cls, fn) {
+          var b = document.createElement('button');
+          b.type = 'button';
+          b.className = cls || '';
+          b.innerHTML = '<span class="ti ' + icon + '"></span>' + label;
+          b.addEventListener('click', fn);
+          menu.appendChild(b);
+          return b;
+        }
+        item('ti-share-3', '分享对话', '', function () { closeMenu(); shareChat(chat); });
+        item('ti-file-text', '重命名', '', function () {
+          closeMenu();
+          var row = anchor.closest('.convo');
+          var nameEl = row ? row.querySelector('.name') : null;
+          if (!nameEl) return;
+          var input = document.createElement('input');
+          input.className = 'convo-rename';
+          input.value = chat.title || '新会话';
+          nameEl.replaceWith(input);
+          input.focus(); input.select();
+          var done = false;
+          function commit(saveIt) {
+            if (done) return; done = true;
+            var v = input.value.trim().slice(0, 20);
+            if (saveIt && v) chat.title = v;
+            nameEl.textContent = chat.title || '新会话';
+            input.replaceWith(nameEl);
+            if (saveIt && v) { saveChats(); toastIt('改好名字了'); }
+          }
+          input.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter') { e.preventDefault(); commit(true); }
+            if (e.key === 'Escape') { commit(false); }
+          });
+          input.addEventListener('blur', function () { commit(true); });
+          input.addEventListener('click', function (e) { e.stopPropagation(); });
+        });
+        var del = item('ti-trash', '删除对话', 'danger', function () {
+          if (del.getAttribute('data-armed') !== '1') {
+            del.setAttribute('data-armed', '1');
+            del.innerHTML = '<span class="ti ti-trash"></span>再点一次，真删除';
+            return;
+          }
+          closeMenu();
+          var wasActive = data.activeId === chat.id;
+          data.chats = data.chats.filter(function (x) { return x.id !== chat.id; });
+          if (data.chats.length === 0) {
+            data.chats.push({ id: 'c' + Date.now().toString(36), title: '新会话', updatedAt: Date.now(), messages: [] });
+          }
+          if (wasActive) data.activeId = data.chats[0].id;
+          saveChats();
+          toastIt('已删除「' + (chat.title || '新会话') + '」');
+          render();
+        });
+        document.body.appendChild(menu);
+        var r = anchor.getBoundingClientRect();
+        var mw = menu.offsetWidth || 160, mh = menu.offsetHeight || 130;
+        var left = Math.min(r.right + 8, window.innerWidth - mw - 10);
+        var top = Math.min(r.bottom + 4, window.innerHeight - mh - 10);
+        if (top < 8) top = 8;
+        menu.style.left = left + 'px';
+        menu.style.top = top + 'px';
+        openMenu = menu;
+      }
+      function render() {
+        box.innerHTML = '';
+        var add = document.createElement('button');
+        add.className = 'convo new-btn';
+        add.innerHTML = '<span class="ti ti-plus"></span>新会话';
+        add.addEventListener('click', function (e) { e.stopPropagation(); go('new'); });
+        box.appendChild(add);
+        data.chats.slice(0, 8).forEach(function (c) {
+          var b = document.createElement('button');
+          b.className = 'convo' + (c.id === data.activeId ? ' active' : '');
+          var nm = document.createElement('span');
+          nm.className = 'name';
+          nm.textContent = c.title || '新会话';
+          b.appendChild(nm);
+          var more = document.createElement('span');
+          more.className = 'convo-more';
+          more.setAttribute('role', 'button');
+          more.setAttribute('tabindex', '0');
+          more.setAttribute('aria-label', '更多操作');
+          more.textContent = '⋯';
+          more.addEventListener('click', function (e) { e.stopPropagation(); showMenu(more, c); });
+          more.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); showMenu(more, c); } });
+          b.appendChild(more);
+          b.addEventListener('click', function (e) { e.stopPropagation(); go(c.id); });
+          box.appendChild(b);
+        });
+      }
+      render();
+    })();
+  
+  </script>
+<script>
+  (function () {
+    var KEY = 'jco-skills-v1'
+    var DEFAULTS = [
+      { id: 's1', name: '爆款复刻', desc: '拆爆款的结构、换成你的内容，照着跑', kind: 'video', icon: 'ti-flame', on: true },
+      { id: 's2', name: '数字人口播', desc: '一段音色样本，数字人替你出镜说话', kind: 'video', icon: 'ti-microphone', on: true },
+      { id: 's3', name: '智能换背景', desc: '口播素材换任意场景背景，不用绿幕', kind: 'video', icon: 'ti-photo', on: true },
+      { id: 's4', name: '一镜到底', desc: '一个长镜头讲完故事，几乎不用剪', kind: 'video', icon: 'ti-video', on: false },
+      { id: 's5', name: '长视频拆条', desc: '一条长视频拆成 5 条短视频', kind: 'video', icon: 'ti-copy', on: false },
+      { id: 's6', name: '学员故事收集', desc: '从素材库找对口的画面，成一条故事片', kind: 'video', icon: 'ti-users-group', on: false },
+      { id: 's7', name: '封面设计', desc: '一次出三套封面方案，挑一套就用', kind: 'graphic', icon: 'ti-photo-video', on: true },
+      { id: 's8', name: '标题工厂', desc: '一组内容，三种风格的标题候选', kind: 'graphic', icon: 'ti-file-text', on: true },
+      { id: 's9', name: '评论回复官', desc: '评论先拟稿，你点头才发出去', kind: 'social', icon: 'ti-message-dots', on: true },
+      { id: 's10', name: '私信引导', desc: '问价的评论，自动给一段私信话术', kind: 'social', icon: 'ti-at', on: false },
+      { id: 's11', name: '话题雷达', desc: '热点话题和对标话题，发之前看一眼', kind: 'data', icon: 'ti-search', on: true },
+      { id: 's12', name: '周报生成器', desc: '每周数据汇成一页纸，发给谁都能看', kind: 'data', icon: 'ti-chart-bar', on: true }
+    ]
+    var KIND_LABEL = { video: '视频', graphic: '图文', social: '互动', data: '数据' }
+    function load() { try { var d = JSON.parse(localStorage.getItem(KEY) || 'null'); if (d && Array.isArray(d.items)) return d.items } catch (e) {} return DEFAULTS.slice() }
+    function save(items) { try { localStorage.setItem(KEY, JSON.stringify({ items: items })) } catch (e) {} }
+    var tostEl = document.getElementById('toast')
+    function toast(msg) { if (!tostEl) return; tostEl.textContent = msg; tostEl.classList.add('show'); clearTimeout(toast._t); toast._t = setTimeout(function () { tostEl.classList.remove('show') }, 2600) }
+    var items = load()
+    var grid = document.getElementById('skillGrid')
+    var countEl = document.getElementById('skCount')
+    var filter = 'all'
+    function render() {
+      grid.innerHTML = ''
+      var shown = items.filter(function (s) { return filter === 'all' || s.kind === filter })
+      shown.forEach(function (s) {
+        var el = document.createElement('div')
+        el.className = 'skl'
+        el.innerHTML = '<div class="sk-ico ti ' + s.icon + '"></div><div class="sk-name"></div><div class="sk-desc"></div><div class="sk-foot"><span class="sk-tag">' + KIND_LABEL[s.kind] + '</span><button class="ghost-btn sk-toggle" type="button"></button></div>'
+        el.querySelector('.sk-name').textContent = s.name
+        el.querySelector('.sk-desc').textContent = s.desc
+        var btn = el.querySelector('.sk-toggle')
+        function paint() {
+          btn.textContent = s.on ? '已启用' : '启用'
+          btn.style.color = s.on ? 'var(--green)' : ''
+        }
+        paint()
+        btn.addEventListener('click', function () {
+          s.on = !s.on
+          paint()
+          save(items)
+          toast(s.on ? '「' + s.name + '」启用了，去创作页就能叫它' : '「' + s.name + '」先收起来了')
+        })
+        grid.appendChild(el)
+      })
+      var onCount = items.filter(function (s) { return s.on }).length
+      countEl.textContent = '已启用 ' + onCount + ' 个 / 共 ' + items.length + ' 个'
+    }
+    render()
+    document.querySelectorAll('#skTabs .tab').forEach(function (b) {
+      b.addEventListener('click', function () {
+        filter = b.getAttribute('data-v')
+        document.querySelectorAll('#skTabs .tab').forEach(function (x) { x.classList.toggle('active', x === b) })
+        render()
+      })
+    })
+  })();
+</script>
+  
+</body>
+</html>

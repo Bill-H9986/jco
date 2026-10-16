@@ -1,0 +1,1080 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>J.Co · 发布</title>
+  <link rel="stylesheet" href="./assets/jco-ui.css">
+  <style>
+/* ============ 主区 ============ */
+  .main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+
+.scroll { flex: 1; overflow-y: auto; }
+
+.wrap { max-width: none; margin: 0 auto; padding: 36px 32px 70px; }
+
+.agent-head { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 20px; }
+
+.agent-logo {
+    width: 30px; height: 30px; border-radius: 8px;
+    background: var(--text-1); color: var(--bg);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; font-weight: 600; flex: none;
+  }
+
+.agent-name { font-size: 16px; font-weight: 600; }
+
+.agent-chip {
+    height: 32px; padding: 0 16px; border-radius: 999px;
+    background: var(--card); color: var(--text-1);
+    font-size: 14px; font-weight: 600;
+    display: inline-flex; align-items: center;
+    box-shadow: var(--shadow-card);
+  }
+
+.agent-hint { font-size: 16px; color: var(--text-2); }
+
+.step-head { display: flex; align-items: baseline; gap: 10px; margin: 24px 0 12px; }
+
+.step-head .no { font-size: 13px; font-weight: 600; color: var(--accent); }
+
+.step-head h2 { font-size: 16px; font-weight: 600; letter-spacing: -0.01em; }
+
+.step-head .hint { font-size: 13px; color: var(--text-3); margin-left: auto; }
+
+/* 成片卡 */
+  .work {
+    display: flex; align-items: center; gap: 14px;
+    background: var(--card); border-radius: 20px; box-shadow: var(--shadow-card);
+    padding: 14px 16px;
+  }
+
+.work .thumb {
+    flex: none; width: 66px; height: 42px; border-radius: 12px;
+    background: rgba(64, 120, 255, 0.14);
+    color: var(--text-2);
+    display: flex; align-items: center; justify-content: center; font-size: 18px;
+  }
+
+.work .info { flex: 1; min-width: 0; }
+
+.work .wt { font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.work .wm { margin-top: 4px; font-size: 12px; color: var(--text-3); }
+
+.badge {
+    flex: none; font-size: 12px; font-weight: 600;
+    border-radius: 999px; padding: 4px 12px;
+    color: var(--green); background: rgba(36, 138, 61, 0.12);
+  }
+
+/* 平台勾选 */
+  .platforms { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+
+.pf {
+    display: flex; align-items: center; gap: 12px;
+    background: var(--card); border-radius: 20px; box-shadow: var(--shadow-card);
+    border: 1px solid transparent;
+    padding: 13px 15px; font-family: inherit; text-align: left; cursor: pointer;
+    transition: border-color 0.15s ease, transform 0.15s ease;
+  }
+
+.pf:hover { transform: translateY(-2px); }
+
+.pf:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.pf.on { border-color: var(--accent); }
+
+.pf.off { opacity: 0.62; }
+
+.pf-logo {
+    flex: none; width: 38px; height: 38px; border-radius: 12px;
+    color: #ffffff; font-size: 14px; font-weight: 600;
+    display: flex; align-items: center; justify-content: center;
+  }
+
+.pf-logo.dy { background: #2b2b30; }
+
+.pf-logo.sph { background: #1f9d55; }
+
+.pf-logo.xhs { background: #e8493a; }
+
+.pf-logo.bili { background: #4a9bd8; }
+
+.pf-logo.ks { background: #ef7a2f; }
+
+.pf .pfi { flex: 1; min-width: 0; }
+
+.pf .pfn { font-size: 14px; font-weight: 600; }
+
+.pf .pfs { display: block; margin-top: 3px; font-size: 12px; color: var(--text-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.pf .pfck {
+    flex: none; width: 22px; height: 22px; border-radius: 50%;
+    border: 0.5px solid var(--line); display: flex; align-items: center; justify-content: center;
+    font-size: 12px; color: transparent;
+    transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+  }
+
+.pf.on .pfck { background: var(--accent); border-color: var(--accent); color: #ffffff; }
+
+/* 标题 / 时间 */
+  .field-card {
+    background: var(--card); border-radius: 20px; box-shadow: var(--shadow-card);
+    padding: 16px 18px; display: flex; flex-direction: column; gap: 13px;
+  }
+
+.frow { display: flex; align-items: center; gap: 14px; }
+
+.frow.align-top { align-items: flex-start; }
+
+.ai-ctl { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+
+.ai-hint { font-size: 12px; color: var(--text-3); }
+
+.ai-out { display: flex; flex-direction: column; gap: 6px; flex: 1; min-width: 0; }
+
+.ai-chip { display: flex; gap: 8px; align-items: baseline; padding: 8px 10px; border: 0.5px solid var(--line); border-radius: 12px; background: var(--card); color: var(--text-1); font-family: inherit; font-size: 12px; line-height: 1.55; text-align: left; cursor: pointer; transition: border-color 0.15s ease, background 0.15s ease; }
+
+.ai-chip:hover { border-color: var(--accent); background: rgba(0, 128, 255, 0.05); }
+
+.ai-chip:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+
+.ai-chip i { flex: none; font-style: normal; font-weight: 600; color: var(--text-3); font-size: 12px; }
+
+.cover-ctl { display: flex; align-items: center; gap: 12px; }
+
+.cover-box { width: 64px; height: 84px; border-radius: 12px; background: var(--tint); display: flex; align-items: center; justify-content: center; color: var(--text-3); overflow: hidden; font-size: 20px; flex: none; }
+
+.cover-box img { width: 100%; height: 100%; object-fit: cover; }
+
+.frow .flabel { flex: none; width: 64px; font-size: 13px; color: var(--text-2); }
+
+.frow input {
+    flex: 1; min-width: 0; border: 0.5px solid var(--line); border-radius: 12px;
+    background: var(--bg); color: var(--text-1);
+    font-family: inherit; font-size: 14px; padding: 10px 13px; outline: none;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  }
+
+.frow input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(0, 128, 255, 0.12); }
+
+.frow input:focus-visible { outline: none; }
+
+.hintline { font-size: 12px; color: var(--text-3); }
+
+.go-row { display: flex; align-items: center; gap: 14px; margin-top: 22px; }
+
+.go-row .eta { font-size: 13px; color: var(--text-3); }
+
+/* 发布执行卡 */
+  .exec {
+    display: none; margin-top: 22px;
+    background: var(--card); border-radius: 20px; box-shadow: var(--shadow);
+    padding: 20px 24px;
+  }
+
+.exec.show { display: block; }
+
+.exec h3 { font-size: 16px; font-weight: 600; margin-bottom: 6px; }
+
+.exec .esub { font-size: 13px; color: var(--text-2); margin-bottom: 16px; }
+
+.prow {
+    display: flex; align-items: center; gap: 12px;
+    padding: 11px 0; border-top: 0.5px solid var(--line);
+  }
+
+.prow .pname { flex: none; width: 76px; font-size: 14px; font-weight: 600; }
+
+.prow .pstate { flex: 1; min-width: 0; font-size: 13px; color: var(--text-2); display: flex; align-items: center; gap: 9px; }
+
+.prow .pstate .ti { font-size: 16px; flex: none; }
+
+.prow.queued .pstate .ti { color: var(--text-3); }
+
+.prow.running .pstate .ti { color: var(--accent); }
+
+.prow.done .pstate .ti { color: var(--green); }
+
+.prow .pbar { flex: none; width: 130px; height: 4px; border-radius: 999px; background: rgba(120, 120, 128, 0.2); overflow: hidden; display: none; }
+
+.prow.running .pbar { display: block; }
+
+.prow .pbar .pf2 { height: 100%; width: 100%; border-radius: 999px; background: var(--accent); transform-origin: left; transform: scaleX(0); transition: transform 0.3s linear; }
+
+.exec .donebar { display: none; margin-top: 16px; padding-top: 14px; border-top: 0.5px solid var(--line); align-items: center; gap: 12px; }
+
+.exec .donebar.show { display: flex; }
+
+.exec .donebar .dtxt { flex: 1; font-size: 14px; font-weight: 600; color: var(--green); }
+
+/* DSH 规范：正圆与胶囊保持圆弧（其余圆角走超椭圆） */
+  .me .ava, .mm-head .ava, .msg.ai .ava, .postlist .dot, .typing i, .send, .cp-send,
+  .agent-chip, .badge, .act, .ghost-btn, .ghost, .go-btn, .cp-act,
+  .seg button, .pf .pfck, .prog .track, .prog .fill, .prow .pbar, .prow .pf2,
+  .toast { corner-shape: round; }
+
+@media (prefers-color-scheme: dark) {
+    ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.24); border-radius: 999px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.4); border-radius: 999px; }
+  }
+
+@media (max-width: 1080px) { .platforms { grid-template-columns: repeat(2, 1fr); } }
+
+@media (max-width: 860px) {
+    .sidebar { display: none; }
+    .wrap { padding: 24px 18px 60px; }
+    .platforms { grid-template-columns: 1fr; }
+  }
+  </style>
+<script>
+  /* 提前恢复侧栏展开状态，避免页面加载时闪一下 */
+  try { if (localStorage.getItem('jco-side-pinned') === '1') document.documentElement.classList.add('side-pinned'); } catch (e) {}
+</script>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="sidebar-inner">
+      <div class="side-top">
+        <div class="wordmark">J.Co</div>
+        <button class="side-toggle" aria-label="固定展开侧栏" title="点一下固定展开，再点收起"><span class="ti ti-layout-sidebar-left-expand"></span></button>
+      </div>
+      <div class="search"><span class="ti ti-search"></span><input placeholder="搜索"></div>
+      <nav class="nav">
+        <button class="nav-item"><span class="ti ti-message-plus"></span>总管</button>
+        <button class="group-label" type="button"><span class="ti ti-layout-grid"></span>工作台<span class="ti ti-chevron-down"></span></button>
+        <button class="nav-item"><span class="ti ti-bulb"></span>选题</button>
+        <button class="nav-item"><span class="ti ti-photo"></span>素材</button>
+        <button class="nav-item"><span class="ti ti-file-text"></span>文案</button>
+        <button class="nav-item"><span class="ti ti-video"></span>创作</button>
+        <button class="nav-item"><span class="ti ti-wand"></span>后期</button>
+        <button class="nav-item active"><span class="ti ti-upload"></span>发布</button>
+        <button class="nav-item"><span class="ti ti-chart-bar"></span>运营</button>
+        <button class="group-label" type="button"><span class="ti ti-tool"></span>工具<span class="ti ti-chevron-down"></span></button>
+        <button class="nav-item"><span class="ti ti-clock-play"></span>自动任务</button>
+        <button class="nav-item"><span class="ti ti-sparkles"></span>技能库</button>
+        <button class="nav-item"><span class="ti ti-users-group"></span>管家团队</button>
+        <button class="nav-item"><span class="ti ti-key"></span>账号中心</button>
+      </nav>
+      <button class="group-label" type="button"><span class="ti ti-messages"></span>对话<span class="ti ti-chevron-down"></span></button>
+      <div class="convos">
+        <button class="convo"><span class="name">暑期招生 · 今日发布</span></button>
+        <button class="convo"><span class="name">评论跟进（5 条）</span></button>
+        <button class="convo"><span class="name">上周数据复盘</span></button>
+        <button class="convo"><span class="name">引流名单 · 待跟进</span></button>
+        <button class="convo"><span class="name">视频脚本草稿</span></button>
+        <button class="convo"><span class="name">技能库询价</span></button>
+      </div>
+      <div class="side-foot">
+        <div class="me" id="meBtn" role="button" tabindex="0" aria-haspopup="menu" aria-expanded="false"><div class="ava">J</div><span>Jay</span></div>
+        <button class="icon-btn" aria-label="通知"><span class="ti ti-bell"></span></button>
+      </div>
+          </div>
+      <div class="me-menu" id="meMenu" hidden role="menu" aria-label="账号菜单">
+        <div class="mm-head"><div class="ava">J</div><div class="mm-who"><b>Jay</b><span>软件账号 · 仅本机</span></div></div>
+        <div class="mm-sep"></div>
+        <button class="mm-item" id="mmSettings" role="menuitem"><span class="ti ti-settings"></span>设置</button>
+        <button class="mm-item" id="mmLogout" role="menuitem"><span class="ti ti-logout"></span>退出登录</button>
+      </div>
+    </aside>
+
+    <main class="main">
+      <div class="scroll">
+        <div class="wrap">
+          <div class="agent-head">
+            <span class="agent-logo">J</span>
+            <span class="agent-name">和 J.Co</span>
+            <span class="agent-chip">发布</span>
+            <span class="agent-hint">一次填好，各平台一起发</span>
+          </div>
+
+          <div class="step-head"><span class="no">第一步</span><h2>发布哪条成片</h2><span class="hint">从「已通过」的草稿里选</span></div>
+          <div class="work">
+            <span class="thumb ti ti-player-play"></span>
+            <span class="info">
+              <span class="wt">《成人高考报名其实就 3 步，看完不踩坑》</span>
+              <span class="wm">9:16 竖屏 · 1 分 20 秒 · 刚在「后期」定的稿</span>
+            </span>
+            <span class="badge">已通过</span>
+          </div>
+
+          <div class="step-head"><span class="no">第二步</span><h2>发到哪些平台</h2><span class="hint">AI 会用你的浏览器，一个个帮你发</span></div>
+          <div class="platforms" id="platforms"></div>
+
+          <div class="step-head"><span class="no">第三步</span><h2>标题、封面和介绍</h2><span class="hint">AI 按视频内容替你想，不满意随时改</span></div>
+          <div class="field-card">
+            <div class="frow">
+              <span class="flabel">AI 设计</span>
+              <div class="ai-ctl">
+                <button class="ghost" id="aiDesign">帮我配好这一版</button>
+                <span class="ai-hint" id="aiHint">参考热点与同行做法：标题 3 选 1 · 话题 · 介绍 · 封面</span>
+              </div>
+            </div>
+            <div class="frow align-top" id="aiResults" hidden>
+              <span class="flabel">候选</span>
+              <div class="ai-out" id="aiOut"></div>
+            </div>
+            <div class="frow">
+              <span class="flabel">封面</span>
+              <div class="cover-ctl">
+                <div class="cover-box" id="coverBox"><span class="ti ti-photo"></span></div>
+                <button class="ghost" id="coverGen">生成封面图</button>
+                <span class="ai-hint" id="coverHint">AI 按内容排版出图（约 10~30 秒）</span>
+              </div>
+            </div>
+            <div class="frow">
+              <span class="flabel">标题</span>
+              <input id="titleInp" value="成人高考报名其实就 3 步，看完不踩坑">
+            </div>
+            <div class="frow">
+              <span class="flabel">话题</span>
+              <input id="tagInp" value="#成人学历提升 #成人高考 #学历规划">
+            </div>
+            <div class="frow">
+              <span class="flabel">介绍</span>
+              <input id="descInp" placeholder="点「帮我配好这一版」，或自己写两句">
+            </div>
+            <div class="frow">
+              <span class="flabel">时间</span>
+              <div class="seg" id="segTime">
+                <button data-v="now">立即发布</button>
+                <button class="on" data-v="1930">今天 19:30</button>
+                <button data-v="0800">明早 8:00</button>
+              </div>
+            </div>
+            <div class="hintline" id="timeHint">你的粉丝晚上 7 到 9 点最活跃（来自「运营」的数据），推荐 19:30</div>
+          </div>
+
+          <div class="go-row">
+            <button class="go-btn" id="pubBtn">开始发布<span class="ti ti-arrow-right"></span></button>
+            <span class="eta" id="pubEta"></span>
+          </div>
+
+          <div class="exec" id="exec">
+            <h3>正在为你发布</h3>
+            <div class="esub">用你的浏览器，一个个平台来；只在这台电脑上操作，登录态不搬家</div>
+            <div id="execRows"></div>
+            <div class="donebar" id="doneBar">
+              <span class="dtxt">全部发完了 ✓</span>
+              <button class="ghost" onclick="location.href='J.Co工作台-运营.html'">去「运营」看数据<span class="ti ti-arrow-right"></span></button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- 右下角·总管助手 -->
+  <button class="copilot-btn" id="copilotBtn" aria-label="打开总管助手"><span class="ti ti-message-dots"></span></button>
+  <div class="copilot" id="copilot" hidden>
+    <div class="cp-head">
+      <span class="cp-ava">J</span>
+      <span class="cp-title">总管</span>
+      <span class="cp-sub">问点啥都行</span>
+      <button class="cp-fold" id="cpFold" aria-label="收起助手"><span class="ti ti-chevron-down"></span></button>
+    </div>
+    <div class="cp-body" id="cpBody">
+      <div class="cp-msg ai">在的。想问点什么？比如这条视频的实时数据。</div>
+      <div class="cp-acts">
+        <button class="cp-act" data-q="这条视频数据怎么样？">这条视频数据怎么样？</button>
+        <button class="cp-act" data-q="今天还剩什么事？">今天还剩什么事？</button>
+        <button class="cp-act" data-q="评论有什么动静？">评论有什么动静？</button>
+      </div>
+    </div>
+    <div class="cp-inp">
+      <textarea id="cpInp" rows="1" placeholder="问总管，比如：这条视频现在多少播放"></textarea>
+      <button class="cp-send" id="cpSend" aria-label="发送"><span class="ti ti-arrow-up"></span></button>
+    </div>
+  </div>
+  <div class="toast" id="toast" role="status"></div>
+
+  <script>
+    const $ = (id) => document.getElementById(id);
+    const toastEl = $('toast');
+    const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+    let publishing = false;
+    const JCO_KERNEL = (typeof window.jco !== 'undefined' && window.jco && window.jco.kernel) ? window.jco.kernel : null;
+
+    /* ---------- AI 设计：标题 / 话题 / 介绍 / 封面（按视频内容，参考热点与同行做法） ---------- */
+    function parseLooseJson(text) {
+      let t = String(text || '').trim();
+      t = t.replace(/^```(?:json)?/i, '').replace(/```$/, '').trim();
+      const s = t.indexOf('{');
+      const e = t.lastIndexOf('}');
+      if (s >= 0 && e > s) t = t.slice(s, e + 1);
+      try { return JSON.parse(t) } catch (err) { return null }
+    }
+    let aiBusy = false;
+    async function aiDesignAll() {
+      if (!JCO_KERNEL || aiBusy) {
+        showToast('（原型示意）正式版会按视频内容自动配好标题、话题和封面。');
+        return;
+      }
+      aiBusy = true;
+      const btn = $('aiDesign');
+      btn.disabled = true;
+      btn.textContent = '正在设计……';
+      // 素材：当前标题 + 最近草稿的分镜台词
+      const topic = $('titleInp').value.trim() || '成人学历提升短视频';
+      let shots = [];
+      try {
+        const ds = JSON.parse(localStorage.getItem('jco-drafts-v1') || '{"items":[]}');
+        const d = (ds.items || []).find((x) => x.shots && x.shots.length) || null;
+        if (d) shots = d.shots.slice(0, 6).map((x) => x.line).filter(Boolean);
+      } catch (err) {}
+      const input = [
+        '视频主题：《' + topic + '》',
+        shots.length ? ('分镜台词节选：' + shots.join(' / ')) : '',
+        '我的账号：成人学历提升招生（成人高考/自考/开放大学），发布在抖音、视频号、小红书。',
+        '',
+        '请按教育类爆款的通行做法设计（钩子式标题、分层话题；合规不夸大，不承诺包过/保录取，留官方口径），严格输出 JSON（不要 markdown 代码块）：',
+        '{"titles":["标题1（钩子型）","标题2（干货/数字型）","标题3（共鸣/故事型）"],"tags":"#大流量标签 #精准垂类标签 #节点热点标签（8 个左右，空格分隔）","desc":"2~3 句发布介绍：一句价值点 + 一句关键信息 + 一句互动引导，结尾留合规句（以官方公告为准）","cover":"封面主视觉描述：6~10 字大标题字 + 一句副文案 + 画面构图（适合竖屏封面）"}',
+      ].filter(Boolean).join('\n');
+      const res = await JCO_KERNEL.task({ system: '你是短视频发布运营专家，服务成人学历提升赛道。只输出 JSON。', input: input });
+      btn.disabled = false;
+      btn.textContent = '帮我配好这一版';
+      aiBusy = false;
+      const data = res && res.ok ? parseLooseJson(res.text) : null;
+      if (!data) {
+        showToast('没设计成：' + ((res && res.error) || '格式没解析出来') + '，再点一次试试。');
+        return;
+      }
+      renderAiResults(data);
+      showToast('配好了：标题三选一、话题和介绍点一下就换上。');
+    }
+    function renderAiResults(d) {
+      const box = $('aiOut');
+      box.innerHTML = '';
+      $('aiResults').hidden = false;
+      function addChip(label, value, apply) {
+        const b = document.createElement('button');
+        b.className = 'ai-chip';
+        const i = document.createElement('i');
+        i.textContent = label;
+        const span = document.createElement('span');
+        span.textContent = value;
+        b.appendChild(i);
+        b.appendChild(span);
+        b.addEventListener('click', apply);
+        box.appendChild(b);
+      }
+      (d.titles || []).slice(0, 3).forEach((t, idx) => {
+        addChip('标题 ' + (idx + 1), String(t), () => { $('titleInp').value = String(t); showToast('标题换上候选 ' + (idx + 1) + ' 了。'); });
+      });
+      if (d.tags) addChip('话题', String(d.tags), () => { $('tagInp').value = String(d.tags); showToast('话题填好了。'); });
+      if (d.desc) addChip('介绍', String(d.desc), () => { $('descInp').value = String(d.desc); showToast('介绍填好了。'); });
+      if (d.cover) {
+        window.__coverPrompt = String(d.cover);
+        addChip('封面', String(d.cover) + '（点「生成封面图」出图）', () => { showToast('点旁边的「生成封面图」就出图。'); });
+      }
+    }
+    $('aiDesign').addEventListener('click', aiDesignAll);
+    $('coverGen').addEventListener('click', async () => {
+      if (!JCO_KERNEL) {
+        showToast('（原型示意）正式版会按内容生成封面图。');
+        return;
+      }
+      const prompt = (window.__coverPrompt || ('短视频封面：' + $('titleInp').value)) + '，竖屏 9:16 封面图，大号醒目标题字排版，干净有质感，专业教育类风格';
+      showToast('正在画封面……（约 10~30 秒）');
+      const r = await JCO_KERNEL.draw({ prompt: prompt });
+      if (r && r.ok && (r.dataUrl || r.url)) {
+        let src = r.dataUrl || r.url;
+        let savedPath = '';
+        try {
+          const sys = window.jco && window.jco.sys;
+          if (sys && sys.saveAsset) {
+            const saved = await sys.saveAsset(r.dataUrl ? { kind: 'cover', dataUrl: r.dataUrl } : { kind: 'cover', url: r.url });
+            if (saved && saved.ok && saved.path) {
+              savedPath = saved.path;
+              src = 'file:///' + String(saved.path).replace(/\\/g, '/');
+            }
+          }
+        } catch (err) {}
+        const box = $('coverBox');
+        box.innerHTML = '';
+        const img = document.createElement('img');
+        img.src = src;
+        img.alt = '封面';
+        box.appendChild(img);
+        try {
+          const lg = JSON.parse(localStorage.getItem('jco-log-v1') || '{"items":[]}');
+          lg.items.unshift({ t: Date.now(), kind: 'publish', title: '封面图生成', detail: savedPath || '已生成' });
+          if (lg.items.length > 200) lg.items.length = 200;
+          localStorage.setItem('jco-log-v1', JSON.stringify(lg));
+        } catch (err) {}
+        try {
+          const sys = window.jco && window.jco.sys;
+          if (sys && sys.notify && localStorage.getItem('jco-notify-done') !== '0') sys.notify({ title: '封面画好了', body: '回发布页看一眼' });
+        } catch (err) {}
+        showToast('封面出来了，看看行不行。');
+      } else {
+        showToast('没画成：' + ((r && r.error) || '未知错误'));
+      }
+    });
+
+    // 从「做视频」带过来的成片：预填标题（交接消费）
+    (function consumeDraft() {
+      let t = null;
+      try { t = sessionStorage.getItem('jco-publish-draft'); if (t) sessionStorage.removeItem('jco-publish-draft'); } catch (e) {}
+      if (!t) return;
+      try {
+        const d = JSON.parse(t);
+        if (d && d.title) {
+          const inp = document.getElementById('titleInp');
+          if (inp) inp.value = d.title;
+          showToast('这条成片带过来了，检查一下就能发。');
+        }
+      } catch (e) {}
+    })();
+
+    function showToast(msg) {
+      toastEl.textContent = msg;
+      toastEl.classList.add('show');
+      clearTimeout(showToast.timer);
+      showToast.timer = setTimeout(() => toastEl.classList.remove('show'), 2800);
+    }
+
+    /* ---------- 平台 ---------- */
+    const PLATFORMS = [
+      { id: 'dy', name: '抖音', logo: 'dy', ch: '抖', logged: true, acc: 'J.Co 招生号', on: true },
+      { id: 'sph', name: '视频号', logo: 'sph', ch: '视', logged: true, acc: 'J.Co 招生号', on: true },
+      { id: 'xhs', name: '小红书', logo: 'xhs', ch: '红', logged: true, acc: 'J.Co 学历规划', on: true },
+      { id: 'bili', name: 'B站', logo: 'bili', ch: 'B', logged: false, acc: '未登录', on: false },
+      { id: 'ks', name: '快手', logo: 'ks', ch: '快', logged: true, acc: 'J.Co 招生号', on: false },
+    ];
+
+    function renderPlatforms() {
+      const el = $('platforms');
+      el.innerHTML = '';
+      PLATFORMS.forEach((p) => {
+        const b = document.createElement('button');
+        b.className = 'pf' + (p.on ? ' on' : '') + (p.logged ? '' : ' off');
+        b.innerHTML = `
+          <span class="pf-logo ${p.logo}">${p.ch}</span>
+          <span class="pfi"><span class="pfn">${p.name}</span><span class="pfs">${p.logged ? '已登录 · ' + p.acc : p.acc}</span></span>
+          <span class="pfck ti ti-check"></span>`;
+        b.addEventListener('click', () => {
+          if (!p.logged) {
+            const URLs = {
+              dy: 'https://creator.douyin.com/',
+              sph: 'https://channels.weixin.qq.com/',
+              xhs: 'https://creator.xiaohongshu.com/',
+              ks: 'https://cp.kuaishou.com/',
+              bili: 'https://member.bilibili.com/',
+            };
+            const url = URLs[p.id] || ('https://www.baidu.com/s?wd=' + encodeURIComponent(p.name + ' 创作者中心 登录'));
+            const sys = (typeof window.jco !== 'undefined' && window.jco && window.jco.sys) ? window.jco.sys : null;
+            if (sys && sys.openExternal) {
+              sys.openExternal(url).then(
+                (res) => showToast(res && res.ok ? '拿系统浏览器打开了。在那边登录一次，长期有效；回来点一下这个平台就行。' : ('没打开：' + ((res && res.error) || '未知错误'))),
+                () => showToast('没打开，再试一次。')
+              );
+              return;
+            }
+            window.open(url, '_blank');
+            return;
+          }
+          p.on = !p.on;
+          renderPlatforms();
+          updateEta();
+        });
+        el.appendChild(b);
+      });
+    }
+
+    function selected() { return PLATFORMS.filter((p) => p.on && p.logged); }
+
+    function updateEta() {
+      const n = selected().length;
+      $('pubEta').textContent = n === 0 ? '至少勾一个平台' : '发布到 ' + n + ' 个平台 · 约 ' + (n * 2) + ' 秒';
+      $('pubBtn').disabled = n === 0;
+      $('pubBtn').firstChild.textContent = n === 0 ? '开始发布' : '开始发布（' + n + ' 个平台）';
+    }
+
+    /* 时间选择 */
+    let when = '1930';
+    const TIME_HINTS = {
+      now: '立即发。好内容不等人，也行。',
+      1930: '你的粉丝晚上 7 到 9 点最活跃（来自「运营」的数据），推荐 19:30',
+      0800: '早上通勤时段刷手机的人多，8:00 发布适合知识类内容',
+    };
+    document.querySelectorAll('#segTime button').forEach((b) => {
+      b.addEventListener('click', () => {
+        document.querySelectorAll('#segTime button').forEach((x) => x.classList.remove('on'));
+        b.classList.add('on');
+        when = b.dataset.v;
+        $('timeHint').textContent = TIME_HINTS[when];
+      });
+    });
+
+    /* ---------- 发布执行（实时记录） ---------- */
+    function renderExec(list) {
+      const box = $('execRows');
+      box.innerHTML = '';
+      list.forEach((p) => {
+        const row = document.createElement('div');
+        row.className = 'prow queued';
+        row.id = 'row-' + p.id;
+        row.innerHTML = `
+          <span class="pname">${p.name}</span>
+          <span class="pstate"><span class="ti ti-clock"></span><span class="ptxt">排队中</span></span>
+          <span class="pbar"><span class="pf2"></span></span>`;
+        box.appendChild(row);
+      });
+      $('doneBar').classList.remove('show');
+      $('exec').classList.add('show');
+      $('exec').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    function setRow(id, state, txt, pct) {
+      const row = $('row-' + id);
+      if (!row) return;
+      row.className = 'prow ' + state;
+      const icon = state === 'done' ? 'ti-check' : state === 'running' ? 'ti-refresh' : 'ti-clock';
+      row.querySelector('.pstate').innerHTML = `<span class="ti ${icon}"></span><span class="ptxt"></span>`;
+      row.querySelector('.ptxt').textContent = txt;
+      if (pct !== undefined) row.querySelector('.pf2').style.transform = 'scaleX(' + pct / 100 + ')';
+    }
+
+    async function startPublish() {
+      if (publishing) return;
+      const list = selected();
+      if (list.length === 0) { showToast('至少勾一个平台'); return; }
+      publishing = true;
+      renderExec(list);
+      const whenTxt = when === 'now' ? '刚刚' : (when === '1930' ? '今天 19:30' : '明早 8:00');
+      for (const p of list) {
+        setRow(p.id, 'running', '正在上传视频…', 8);
+        await sleep(500);
+        setRow(p.id, 'running', '正在上传视频…', 60);
+        await sleep(700);
+        setRow(p.id, 'running', '正在填标题和话题…', 88);
+        await sleep(700);
+        var liveMode = (typeof window.jco !== 'undefined' && window.jco && window.jco.kernel);
+        setRow(p.id, 'done', liveMode
+          ? ('预演完成 · ' + whenTxt + '（接平台账号后此处为真实发布）')
+          : ((when === 'now' ? '已发布 · ' : '已排定 · ') + whenTxt), 100);
+      }
+      $('doneBar').classList.add('show');
+      var liveToast = (typeof window.jco !== 'undefined' && window.jco && window.jco.kernel);
+      showToast(liveToast
+        ? (list.length + ' 个平台预演完成。这是流程预演：接上平台账号后，这一步就是真实发布。')
+        : (list.length + ' 个平台都' + (when === 'now' ? '发完了' : '排好了') + '。'));
+      // 发布记录入库（预演阶段：如实记为"预演"，接真发布后同一入口记录真实结果）
+      try {
+        var ps = JSON.parse(localStorage.getItem('jco-publish-v1') || '{"items":[]}');
+        ps.items.unshift({
+          t: Date.now(),
+          when: when === 'now' ? '刚刚' : whenTxt,
+          count: list.length,
+          platforms: list.map(function (x) { return x.name; }).join('、'),
+        });
+        if (ps.items.length > 30) ps.items.length = 30;
+        localStorage.setItem('jco-publish-v1', JSON.stringify(ps));
+      } catch (e) {}
+      try {
+        var lg = JSON.parse(localStorage.getItem('jco-log-v1') || '{"items":[]}');
+        lg.items.unshift({ t: Date.now(), kind: 'publish', title: '发布预演 · ' + list.length + ' 个平台', detail: list.map(function (x) { return x.name; }).join('、') });
+        if (lg.items.length > 200) lg.items.length = 200;
+        localStorage.setItem('jco-log-v1', JSON.stringify(lg));
+      } catch (e) {}
+      publishing = false;
+    }
+
+    $('pubBtn').addEventListener('click', startPublish);
+
+    renderPlatforms();
+    updateEta();
+  </script>
+  <script>
+    /* ---------- 侧栏导航（原型可点通） ---------- */
+    (function () {
+      var here = decodeURIComponent(location.pathname.split('/').pop());
+      var PAGES = {
+        '总管': 'J.Co总管.html',
+        '选题': 'J.Co工作台-选题.html',
+        '素材': 'J.Co工作台-素材.html',
+        '文案': 'J.Co工作台-创作.html',
+        '创作': 'J.Co工作台-做视频.html',
+        '后期': 'J.Co工作台-后期.html',
+        '发布': 'J.Co工作台-发布.html',
+        '运营': 'J.Co工作台-运营.html',
+        '管家团队': 'J.Co管家团队.html',
+        '账号中心': 'J.Co账号中心.html',
+        '设置': 'J.Co设置.html',
+        '自动任务': 'J.Co自动任务.html',
+        '技能库': 'J.Co技能库.html'
+      };
+      document.querySelectorAll('.nav-item').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          var label = btn.textContent.trim();
+          var target = PAGES[label];
+          if (target) {
+            if (target !== here) location.href = target;
+            return;
+          }
+          showToast('「' + label + '」还没开工，已经记进下一步清单（先把现有的七个环节用顺）。');
+        });
+      });
+      var bell = document.querySelector('.side-foot .icon-btn');
+      if (bell) bell.addEventListener('click', function (e) {
+        e.stopPropagation();
+        jcoToggleNotif(bell);
+      });
+      /* ---------- 右下角·总管助手 ---------- */
+      (function () {
+        var btn = document.getElementById('copilotBtn');
+        var panel = document.getElementById('copilot');
+        var fold = document.getElementById('cpFold');
+        var body = document.getElementById('cpBody');
+        var inp = document.getElementById('cpInp');
+        var sendBtn = document.getElementById('cpSend');
+        if (!btn || !panel) return;
+        btn.addEventListener('click', function () { panel.hidden = !panel.hidden; });
+        if (fold) fold.addEventListener('click', function () { panel.hidden = true; });
+        var FIXED = {
+          '这条视频数据怎么样？': '《成人高考报名其实就 3 步》实时数据：播放 <b>5.2 万</b>（还在涨）、点赞 3,180、评论 57、带来咨询 6 条。比你的平均表现高 <b>8 倍</b>。',
+          '今天还剩什么事？': '还有 3 件在你手上：2 条视频等你过目、8 条评论等你放行、19:30 的发布等你确认。都排好了，你点头就行。',
+          '评论有什么动静？': '新评论 6 条：2 条问价格（我拟好引导话术了），3 条夸的，1 条问「初中能不能报」。建议你亲自回，这种最容易成。'
+        };
+        function appendMe(t) {
+          var el = document.createElement('div');
+          el.className = 'cp-msg me';
+          el.textContent = t;
+          body.appendChild(el);
+          body.scrollTop = body.scrollHeight;
+        }
+        function appendAI(html) {
+          var el = document.createElement('div');
+          el.className = 'cp-msg ai';
+          el.innerHTML = html;
+          body.appendChild(el);
+          body.scrollTop = body.scrollHeight;
+        }
+        function ask(q) {
+          if (!q) return;
+          appendMe(q);
+          var cpKernel = (typeof window.jco !== 'undefined' && window.jco && window.jco.kernel);
+          if (cpKernel) {
+            appendAI('…');
+            var cpMsgs = body.querySelectorAll('.cp-msg.ai');
+            var cpEl = cpMsgs[cpMsgs.length - 1];
+            window.jco.kernel.ask(q).then(function (res) {
+              var cpText = (res && res.ok && res.text) ? res.text : ('没答上来：' + ((res && res.error) || '未知错误'));
+              cpEl.textContent = cpText;
+              cpEl.style.whiteSpace = 'pre-wrap';
+              body.scrollTop = body.scrollHeight;
+            });
+            return;
+          }
+          setTimeout(function () {
+            appendAI(FIXED[q] || ('收到「' + q + '」。正式版里我马上去查，查完把明细端给你。'));
+          }, 420);
+        }
+        document.querySelectorAll('.cp-act').forEach(function (b) {
+          b.addEventListener('click', function () { ask(b.getAttribute('data-q')); });
+        });
+        function fire() {
+          var v = inp.value.trim();
+          if (!v) return;
+          inp.value = '';
+          inp.style.height = 'auto';
+          ask(v);
+        }
+        sendBtn.addEventListener('click', fire);
+        inp.addEventListener('keydown', function (e) {
+          if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); fire(); }
+        });
+        inp.addEventListener('input', function () {
+          inp.style.height = 'auto';
+          inp.style.height = Math.min(inp.scrollHeight, 90) + 'px';
+        });
+      })();
+      /* ---------- 侧栏（图标栏 + 悬停展开 + 固定展开） ---------- */
+      (function () {
+        var sidebar = document.querySelector('.sidebar');
+        var pinBtn = document.querySelector('.side-toggle');
+        if (!sidebar) return;
+        function setPinned(v) {
+          document.documentElement.classList.toggle('side-pinned', v);
+          if (pinBtn) pinBtn.querySelector('.ti').className = 'ti ' + (v ? 'ti-layout-sidebar-left-collapse' : 'ti-layout-sidebar-left-expand');
+          try { localStorage.setItem('jco-side-pinned', v ? '1' : '0'); } catch (err) {}
+        }
+        if (pinBtn) pinBtn.addEventListener('click', function () {
+          setPinned(!document.documentElement.classList.contains('side-pinned'));
+        });
+        try {
+          if (localStorage.getItem('jco-side-pinned') === '1') setPinned(true);
+        } catch (err) {}
+      })();
+      /* ---------- 侧栏分组折叠 ---------- */
+      (function () {
+        var KEY = 'jco-sidebar-folded-groups';
+        function loadFolded() {
+          try { return (localStorage.getItem(KEY) || '').split(',').filter(Boolean); } catch (e) { return []; }
+        }
+        function saveFolded(list) {
+          try { localStorage.setItem(KEY, list.join(',')); } catch (e) {}
+        }
+        function applyFold(label, hide) {
+          label.classList.toggle('folded', hide);
+          var el = label.nextElementSibling;
+          while (el && !el.classList.contains('group-label')) {
+            if (el.classList.contains('nav-item') || el.classList.contains('convos')) {
+              el.style.display = hide ? 'none' : '';
+            }
+            el = el.nextElementSibling;
+          }
+        }
+        var folded = loadFolded();
+        document.querySelectorAll('.group-label').forEach(function (label) {
+          var name = label.textContent.trim();
+          if (folded.indexOf(name) !== -1) applyFold(label, true);
+          label.addEventListener('click', function () {
+            var hide = !label.classList.contains('folded');
+            applyFold(label, hide);
+            var list = loadFolded();
+            if (hide) { if (list.indexOf(name) === -1) list.push(name); }
+            else { list = list.filter(function (x) { return x !== name; }); }
+            saveFolded(list);
+          });
+        });
+      })();
+      var wm = document.querySelector('.wordmark');
+      if (wm) wm.addEventListener('click', function () {
+        if ('J.Co主界面-首页.html' !== here) location.href = 'J.Co主界面-首页.html';
+      });
+      document.querySelectorAll('.convo').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          location.href = 'J.Co总管.html';
+        });
+      });
+    })();
+  
+    /* ---------- 账号菜单（点头像弹出：设置 / 退出登录） ---------- */
+    (function () {
+      var meBtn = document.getElementById('meBtn');
+      var menu = document.getElementById('meMenu');
+      if (!meBtn || !menu) return;
+      function setOpen(open) {
+        menu.hidden = !open;
+        meBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+      }
+      meBtn.addEventListener('click', function () { setOpen(menu.hidden); });
+      meBtn.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setOpen(menu.hidden); }
+        if (e.key === 'Escape') setOpen(false);
+      });
+      document.addEventListener('click', function (e) {
+        if (!menu.hidden && !menu.contains(e.target) && !meBtn.contains(e.target)) setOpen(false);
+      });
+      document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && !menu.hidden) setOpen(false);
+      });
+      document.getElementById('mmSettings').addEventListener('click', function () {
+        setOpen(false);
+        var here = decodeURIComponent(location.pathname.split('/').pop());
+        if (here !== 'J.Co设置.html') location.href = 'J.Co设置.html';
+      });
+      document.getElementById('mmLogout').addEventListener('click', function () {
+        setOpen(false);
+        showToast('这台电脑上不用单独登录：关掉窗口就是退出，素材和草稿都留着。');
+      });
+    })();
+  
+    /* ---------- 通知面板：最近的活动记录（真数据） ---------- */
+    function jcoToggleNotif(anchor) {
+      var old = document.querySelector('.notif-pop');
+      if (old) { old.remove(); return; }
+      var items = [];
+      try { items = (JSON.parse(localStorage.getItem('jco-log-v1') || '{"items":[]}').items) || []; } catch (e) {}
+      var pop = document.createElement('div');
+      pop.className = 'notif-pop';
+      var r = anchor.getBoundingClientRect();
+      pop.style.position = 'fixed';
+      pop.style.left = Math.min(r.right + 10, window.innerWidth - 296) + 'px';
+      pop.style.bottom = Math.max(12, window.innerHeight - r.bottom) + 'px';
+      var head = document.createElement('div');
+      head.className = 'np-head';
+      head.textContent = '最近动态';
+      pop.appendChild(head);
+      if (items.length === 0) {
+        var empty = document.createElement('div');
+        empty.className = 'np-empty';
+        empty.textContent = '还没有记录。干一句活，这里就开始记。';
+        pop.appendChild(empty);
+      } else {
+        items.slice(0, 8).forEach(function (x) {
+          var row = document.createElement('div');
+          row.className = 'np-row';
+          var d = new Date(x.t);
+          var hh = String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+          var time = document.createElement('span');
+          time.className = 'np-time';
+          time.textContent = hh;
+          var txt = document.createElement('span');
+          txt.className = 'np-txt';
+          txt.textContent = x.title + (x.detail ? '（' + x.detail + '）' : '');
+          row.appendChild(time);
+          row.appendChild(txt);
+          pop.appendChild(row);
+        });
+      }
+      var foot = document.createElement('a');
+      foot.className = 'np-foot';
+      foot.href = 'J.Co总管.html';
+      foot.textContent = '去总管看全部 →';
+      pop.appendChild(foot);
+      document.body.appendChild(pop);
+      var closer = function (ev) {
+        if (!pop.contains(ev.target)) {
+          pop.remove();
+          document.removeEventListener('click', closer, true);
+        }
+      };
+      setTimeout(function () { document.addEventListener('click', closer, true); }, 0);
+    }
+  
+  
+    /* ---------- 对话列表（真会话）：点击续聊；每项可分享 / 重命名 / 删除；＋ 新会话 ---------- */
+    (function jcoConvos() {
+      var hasKernel = (typeof window.jco !== 'undefined' && window.jco && window.jco.kernel);
+      if (!hasKernel) return; // 浏览器直开：保留演示列表
+      var data = null;
+      try { data = JSON.parse(localStorage.getItem('jco-chats-v1') || 'null'); } catch (e) {}
+      var box = document.querySelector('.convos');
+      if (!box || !data || !Array.isArray(data.chats) || data.chats.length === 0) return;
+      var here = decodeURIComponent(location.pathname.split('/').pop());
+      function go(req) {
+        try { sessionStorage.setItem('jco-open-chat', req); } catch (e) {}
+        if (here !== 'J.Co总管.html') location.href = 'J.Co总管.html';
+      }
+      function saveChats() { try { localStorage.setItem('jco-chats-v1', JSON.stringify(data)); } catch (e) {} }
+
+      /* 会话操作：分享 / 重命名 / 删除（含两步防误删） */
+      var openMenu = null;
+      function closeMenu() { if (openMenu) { openMenu.remove(); openMenu = null; } }
+      document.addEventListener('click', closeMenu);
+      function toastIt(msg) {
+        var t = document.getElementById('toast');
+        if (!t) return;
+        t.textContent = msg; t.classList.add('show');
+        clearTimeout(toastIt._t); toastIt._t = setTimeout(function () { t.classList.remove('show'); }, 2600);
+      }
+      function shareChat(chat) {
+        var lines = ['【和 J.Co 的对话 · ' + (chat.title || '新会话') + '】'];
+        (chat.messages || []).forEach(function (m) {
+          lines.push((m.role === 'user' ? '我：' : 'J.Co：') + String(m.text || ''));
+        });
+        var text = lines.join('\n');
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(text).then(
+            function () { toastIt('对话已复制，去粘贴分享吧'); },
+            function () { toastIt('没复制成，手动选中复制一下'); }
+          );
+        } else { toastIt('这台环境不支持直接复制'); }
+      }
+      function showMenu(anchor, chat) {
+        closeMenu();
+        var menu = document.createElement('div');
+        menu.className = 'convo-menu';
+        menu.addEventListener('click', function (e) { e.stopPropagation(); });
+        function item(icon, label, cls, fn) {
+          var b = document.createElement('button');
+          b.type = 'button';
+          b.className = cls || '';
+          b.innerHTML = '<span class="ti ' + icon + '"></span>' + label;
+          b.addEventListener('click', fn);
+          menu.appendChild(b);
+          return b;
+        }
+        item('ti-share-3', '分享对话', '', function () { closeMenu(); shareChat(chat); });
+        item('ti-file-text', '重命名', '', function () {
+          closeMenu();
+          var row = anchor.closest('.convo');
+          var nameEl = row ? row.querySelector('.name') : null;
+          if (!nameEl) return;
+          var input = document.createElement('input');
+          input.className = 'convo-rename';
+          input.value = chat.title || '新会话';
+          nameEl.replaceWith(input);
+          input.focus(); input.select();
+          var done = false;
+          function commit(saveIt) {
+            if (done) return; done = true;
+            var v = input.value.trim().slice(0, 20);
+            if (saveIt && v) chat.title = v;
+            nameEl.textContent = chat.title || '新会话';
+            input.replaceWith(nameEl);
+            if (saveIt && v) { saveChats(); toastIt('改好名字了'); }
+          }
+          input.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter') { e.preventDefault(); commit(true); }
+            if (e.key === 'Escape') { commit(false); }
+          });
+          input.addEventListener('blur', function () { commit(true); });
+          input.addEventListener('click', function (e) { e.stopPropagation(); });
+        });
+        var del = item('ti-trash', '删除对话', 'danger', function () {
+          if (del.getAttribute('data-armed') !== '1') {
+            del.setAttribute('data-armed', '1');
+            del.innerHTML = '<span class="ti ti-trash"></span>再点一次，真删除';
+            return;
+          }
+          closeMenu();
+          var wasActive = data.activeId === chat.id;
+          data.chats = data.chats.filter(function (x) { return x.id !== chat.id; });
+          if (data.chats.length === 0) {
+            data.chats.push({ id: 'c' + Date.now().toString(36), title: '新会话', updatedAt: Date.now(), messages: [] });
+          }
+          if (wasActive) data.activeId = data.chats[0].id;
+          saveChats();
+          toastIt('已删除「' + (chat.title || '新会话') + '」');
+          render();
+        });
+        document.body.appendChild(menu);
+        var r = anchor.getBoundingClientRect();
+        var mw = menu.offsetWidth || 160, mh = menu.offsetHeight || 130;
+        var left = Math.min(r.right + 8, window.innerWidth - mw - 10);
+        var top = Math.min(r.bottom + 4, window.innerHeight - mh - 10);
+        if (top < 8) top = 8;
+        menu.style.left = left + 'px';
+        menu.style.top = top + 'px';
+        openMenu = menu;
+      }
+      function render() {
+        box.innerHTML = '';
+        var add = document.createElement('button');
+        add.className = 'convo new-btn';
+        add.innerHTML = '<span class="ti ti-plus"></span>新会话';
+        add.addEventListener('click', function (e) { e.stopPropagation(); go('new'); });
+        box.appendChild(add);
+        data.chats.slice(0, 8).forEach(function (c) {
+          var b = document.createElement('button');
+          b.className = 'convo' + (c.id === data.activeId ? ' active' : '');
+          var nm = document.createElement('span');
+          nm.className = 'name';
+          nm.textContent = c.title || '新会话';
+          b.appendChild(nm);
+          var more = document.createElement('span');
+          more.className = 'convo-more';
+          more.setAttribute('role', 'button');
+          more.setAttribute('tabindex', '0');
+          more.setAttribute('aria-label', '更多操作');
+          more.textContent = '⋯';
+          more.addEventListener('click', function (e) { e.stopPropagation(); showMenu(more, c); });
+          more.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); showMenu(more, c); } });
+          b.appendChild(more);
+          b.addEventListener('click', function (e) { e.stopPropagation(); go(c.id); });
+          box.appendChild(b);
+        });
+      }
+      render();
+    })();
+  
+  </script>
+  
+</body>
+</html>

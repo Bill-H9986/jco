@@ -1,0 +1,14 @@
+# 依赖（体积大，可随时重装）
+app/node_modules/
+
+# 本地备份存档（体积大；其中也含运行时配置）
+备份/
+*.zip
+
+# 运行时本地配置（含 API Key，绝不入库）
+app/kernel/model-config.json
+
+# 杂项
+*.log
+Thumbs.db
+.DS_Store

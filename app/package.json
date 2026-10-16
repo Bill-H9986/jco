@@ -1,0 +1,18 @@
+{
+  "name": "jco",
+  "productName": "J.Co",
+  "version": "0.1.0",
+  "description": "J.Co · 自媒体管家（桌面版）",
+  "main": "main.js",
+  "private": true,
+  "scripts": {
+    "start": "electron ."
+  },
+  "devDependencies": {
+    "electron": "^44.7.0"
+  },
+  "dependencies": {
+    "@deepseek-ai/dsh": "^0.2.0-rc.2",
+    "@deepseek-ai/dsh-sdk-client": "^0.2.0-rc.2"
+  }
+}

@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>J.Co · 聊天管家（方案B）</title>
+<style>
+  /* ============ 设计令牌（与方案A一致） ============ */
+  :root {
+    --font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display",
+            "Segoe UI Variable Text", "Segoe UI", "Noto Sans SC", "Microsoft YaHei UI", "Microsoft YaHei", sans-serif;
+    --bg: #fbfbfd;
+    --bar: rgba(251, 251, 253, 0.8);
+    --card: #fefefe;
+    --tint: #f5f5f7;
+    --text-1: #404046;
+    --text-2: #75757c;
+    --text-3: #9c9ca3;
+    --line: rgba(0, 0, 0, 0.07);
+    --accent: #0071e3;
+    --accent-strong: #0077ed;
+    --btn-2nd: #e8e8ed;
+    --btn-2nd-hover: #dcdce1;
+    --green: #248a3d;
+    --bubble-ai: #fefefe;
+    --avatar-bg: #57575c;
+    --avatar-fg: #fbfbfd;
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+    --ease: cubic-bezier(0.23, 1, 0.32, 1);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1c1c1e;
+      --bar: rgba(28, 28, 30, 0.8);
+      --card: #2c2c2e;
+      --tint: #3a3a3c;
+      --text-1: #e8e8ed;
+      --text-2: #a8a8af;
+      --text-3: #82828a;
+      --line: rgba(255, 255, 255, 0.1);
+      --accent: #0a84ff;
+      --accent-strong: #3d9bff;
+      --btn-2nd: #3a3a3c;
+      --btn-2nd-hover: #46464a;
+      --green: #30d158;
+      --bubble-ai: #2c2c2e;
+      --avatar-bg: #d9d9de;
+      --avatar-fg: #1c1c1e;
+      --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+    }
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { -webkit-font-smoothing: antialiased; }
+  body {
+    font-family: var(--font);
+    background: var(--bg); color: var(--text-1);
+    height: 100dvh; display: flex; flex-direction: column;
+  }
+
+  /* 顶栏 */
+  .topbar {
+    flex: none; position: sticky; top: 0; z-index: 10;
+    display: flex; align-items: center; justify-content: space-between;
+    height: 60px; padding: 0 40px;
+    background: var(--bar);
+    -webkit-backdrop-filter: saturate(180%) blur(20px);
+    backdrop-filter: saturate(180%) blur(20px);
+    border-bottom: 1px solid var(--line);
+  }
+  .brand { font-size: 19px; font-weight: 600; letter-spacing: -0.01em; }
+  .brand em { font-style: normal; color: var(--text-2); font-weight: 400; font-size: 15px; margin-left: 10px; }
+  .status { display: flex; align-items: center; gap: 8px; font-size: 14px; color: var(--text-2); }
+  .status i { width: 8px; height: 8px; border-radius: 50%; background: var(--green); }
+
+  /* 对话流 */
+  .chat { flex: 1; overflow-y: auto; padding: 36px 0 24px; }
+  .stream { max-width: 720px; margin: 0 auto; padding: 0 28px; display: flex; flex-direction: column; gap: 18px; }
+
+  .msg { display: flex; gap: 12px; align-items: flex-end; }
+  .msg.user { flex-direction: row-reverse; }
+  .pic {
+    flex: none; width: 30px; height: 30px; border-radius: 50%;
+    background: var(--avatar-bg); color: var(--avatar-fg);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 600; margin-bottom: 2px;
+  }
+  .msg.user .pic { display: none; }
+  .bubble {
+    max-width: 560px; font-size: 16px; line-height: 1.65;
+    background: var(--bubble-ai); color: var(--text-1);
+    border-radius: 18px 18px 18px 5px;
+    padding: 14px 18px;
+    box-shadow: var(--shadow-sm);
+  }
+  .msg.user .bubble {
+    background: var(--accent); color: #fefefe;
+    border-radius: 18px 18px 5px 18px;
+    box-shadow: none;
+  }
+  .bubble b { font-weight: 600; }
+  .bubble .sub { margin-top: 4px; font-size: 13px; color: var(--text-3); }
+
+  /* 消息入场 */
+  .anim { opacity: 0; transform: translateY(10px); }
+  .anim.in { opacity: 1; transform: none; transition: opacity 0.42s var(--ease), transform 0.42s var(--ease); }
+
+  /* 快捷按钮 */
+  .acts { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+  .act {
+    font-family: inherit; font-size: 14px; font-weight: 500;
+    height: 36px; padding: 0 16px; cursor: pointer;
+    border: 1px solid var(--line);
+    border-radius: 999px; background: transparent; color: var(--text-1);
+    transition: background 0.15s ease, transform 0.1s ease;
+  }
+  .act:hover { background: var(--btn-2nd); }
+  .act:active { transform: scale(0.97); }
+  .act:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .act.primary { background: var(--accent); border-color: var(--accent); color: #fefefe; }
+  .act.primary:hover { background: var(--accent-strong); border-color: var(--accent-strong); }
+
+  /* 迷你进度 */
+  .prog { margin-top: 10px; }
+  .prog .track { height: 4px; border-radius: 999px; background: rgba(120, 120, 128, 0.2); overflow: hidden; }
+  .prog .fill { height: 100%; width: 100%; border-radius: 999px; background: var(--accent); transform-origin: left; transform: scaleX(0.06); transition: transform 0.4s linear; }
+  .prog .label { margin-top: 7px; font-size: 13px; color: var(--text-3); }
+
+  /* 打字指示 */
+  .typing { display: inline-flex; gap: 5px; padding: 7px 2px; }
+  .typing i { width: 7px; height: 7px; border-radius: 50%; background: var(--text-3); animation: blink 1.15s infinite; }
+  .typing i:nth-child(2) { animation-delay: 0.18s; }
+  .typing i:nth-child(3) { animation-delay: 0.36s; }
+  @keyframes blink { 0%, 60%, 100% { opacity: 0.25; } 30% { opacity: 1; } }
+
+  /* 输入区 */
+  .composer {
+    flex: none; padding: 14px 28px 20px;
+    background: var(--bar);
+    -webkit-backdrop-filter: saturate(180%) blur(20px);
+    backdrop-filter: saturate(180%) blur(20px);
+    border-top: 1px solid var(--line);
+  }
+  .box { max-width: 720px; margin: 0 auto; display: flex; gap: 10px; }
+  .box input {
+    flex: 1; height: 48px; padding: 0 20px;
+    font-family: inherit; font-size: 16px; color: var(--text-1);
+    background: var(--card); border: 1px solid var(--line);
+    border-radius: 999px;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  }
+  .box input::placeholder { color: var(--text-3); }
+  .box input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(0, 113, 227, 0.15); }
+  .box input:focus-visible { outline: none; }
+  .box .send {
+    flex: none; height: 48px; padding: 0 24px;
+    font-family: inherit; font-size: 15px; font-weight: 500;
+    background: var(--accent); color: #fefefe; border: none; border-radius: 999px;
+    cursor: pointer; transition: background 0.15s ease, transform 0.1s ease;
+  }
+  .box .send:hover { background: var(--accent-strong); }
+  .box .send:active { transform: scale(0.97); }
+
+  .footnote { flex: none; text-align: center; font-size: 12px; color: var(--text-3); padding: 0 0 12px; background: var(--bar); }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; animation: none !important; }
+    .anim { opacity: 1; transform: none; }
+  }
+  @media (max-width: 640px) {
+    .topbar { padding: 0 20px; }
+    .stream { padding: 0 16px; }
+    .composer { padding: 12px 16px 16px; }
+  }
+</style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">J.Co <em>管家</em></div>
+    <div class="status"><i></i>在线，正在盯着 3 个平台</div>
+  </header>
+
+  <div class="chat" id="chat">
+    <div class="stream" id="stream"></div>
+  </div>
+
+  <div class="composer">
+    <div class="box">
+      <input id="inp" placeholder="说句话，或者点上面的按钮" onkeydown="if(event.key==='Enter') sendUser()">
+      <button class="send" onclick="sendUser()">发送</button>
+    </div>
+  </div>
+  <p class="footnote">原型草图，只做样子给你看（数据都是假的）</p>
+
+  <script>
+    const stream = document.getElementById('stream');
+    const chat = document.getElementById('chat');
+    const inp = document.getElementById('inp');
+    let busy = false;
+
+    const bottom = () => { chat.scrollTop = chat.scrollHeight; };
+
+    function node(html) {
+      const d = document.createElement('div');
+      d.innerHTML = html.trim();
+      return d.firstElementChild;
+    }
+
+    function addAI(html, typingFirst = true) {
+      return new Promise((resolve) => {
+        let el;
+        if (typingFirst) {
+          el = node(`<div class="msg ai anim"><div class="pic">J</div><div class="bubble"><span class="typing"><i></i><i></i><i></i></span></div></div>`);
+          stream.appendChild(el);
+          requestAnimationFrame(() => el.classList.add('in'));
+          bottom();
+          setTimeout(() => {
+            el.querySelector('.bubble').innerHTML = html;
+            bottom();
+            resolve(el);
+          }, 850);
+        } else {
+          el = node(`<div class="msg ai anim"><div class="pic">J</div><div class="bubble">${html}</div></div>`);
+          stream.appendChild(el);
+          requestAnimationFrame(() => el.classList.add('in'));
+          bottom();
+          resolve(el);
+        }
+      });
+    }
+
+    function addUser(text) {
+      const el = node(`<div class="msg user anim"><div class="bubble"></div></div>`);
+      el.querySelector('.bubble').textContent = text;
+      stream.appendChild(el);
+      requestAnimationFrame(() => el.classList.add('in'));
+      bottom();
+    }
+
+    function runProgress(el, label, doneHtml) {
+      const prog = node(`<div class="prog"><div class="track"><div class="fill"></div></div><div class="label">${label}</div></div>`);
+      el.querySelector('.bubble').appendChild(prog);
+      const fill = prog.querySelector('.fill');
+      let p = 6;
+      const timer = setInterval(() => {
+        p = Math.min(p + 8, 100);
+        fill.style.transform = 'scaleX(' + p / 100 + ')';
+        if (p >= 100) {
+          clearInterval(timer);
+          setTimeout(() => {
+            el.querySelector('.bubble').innerHTML = doneHtml;
+            bottom();
+          }, 450);
+        }
+      }, 320);
+    }
+
+    const REPLY = {
+      video: `好，按你上次「招生特辑」的路子来做。大约 2 分钟出片，做好我叫你。`,
+      publish: `要发的是这两条：<br>1、《暑期招生特辑②》<br>2、《学员故事③》<br>标题都拟好了，抖音和视频号都登录着，直接发吗？<div class="acts"><button class="act primary" onclick="pick('马上发')">马上发</button><button class="act" onclick="pick('我先看看')">我先看看</button></div>`,
+      data: `昨晚的账（3 条视频）：<br>播放 <b>+32%</b>，晚上 7 点发的那条最好（+58%）。<br>建议今天上午 11 点前再发 1 条，这几天上午流量好。<div class="acts"><button class="act" onclick="pick('看完整数据')">看完整数据</button></div>`,
+      comment: `评论箱里 5 条：<br>2 条在问价格，我拟好了私信引导话术；3 条是夸的，我拟好了回复。<br>你过目一下？<div class="acts"><button class="act primary" onclick="pick('看我拟的回复')">看我拟的回复</button><button class="act" onclick="pick('一键全回')">一键全回</button></div>`,
+      lead: `本周进私域 <b>12 人</b>（抖音 8、视频号 4）。<br>还有 3 人没打招呼，晚上 7 到 9 点通过率最高，建议今晚跟进。<div class="acts"><button class="act" onclick="pick('看名单')">看名单</button></div>`
+    };
+
+    function pick(text) {
+      addUser(text);
+      addAI(`收到，这一步马上就能接着干。正式版里我直接执行，你只看结果。`);
+    }
+
+    function quick(kind, btn) {
+      if (busy) return;
+      busy = true;
+      addUser(btn.textContent);
+      setTimeout(() => {
+        addAI(REPLY[kind]).then((el) => {
+          if (kind === 'video') {
+            runProgress(el, '正在写脚本，配音，剪辑合成', `做好了，这版你看看行不行：<br><b>《暑期招生特辑④ · 3 个真实学员故事》</b><div class="acts"><button class="act primary" onclick="pick('去发布')">去发布</button><button class="act" onclick="pick('重新做一版')">重新做一版</button></div>`);
+          }
+          busy = false;
+        });
+      }, 380);
+    }
+
+    function sendUser() {
+      const text = inp.value.trim();
+      if (!text) return;
+      inp.value = '';
+      addUser(text);
+      busy = true;
+      setTimeout(() => {
+        addAI(`收到。「${text}」<br>原型阶段我先记住这句话，正式版我会直接去干，干完把结果端给你。`).then(() => { busy = false; });
+      }, 300);
+    }
+
+    (async () => {
+      await addAI(`下午好。日报先交：昨天 3 条视频播放 <b>+32%</b>，5 条评论还没回，今天还没做视频。`);
+      await addAI(`今天想先干点啥？不用打字，点就行。<div class="acts">
+        <button class="act primary" onclick="quick('video', this)">做视频</button>
+        <button class="act" onclick="quick('publish', this)">去发布 (2)</button>
+        <button class="act" onclick="quick('data', this)">看数据</button>
+        <button class="act" onclick="quick('comment', this)">回评论 (5)</button>
+        <button class="act" onclick="quick('lead', this)">引流私域</button>
+      </div>`);
+    })();
+  </script>
+</body>
+</html>

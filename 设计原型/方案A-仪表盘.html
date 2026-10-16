@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>J.Co · 自媒体工作台（方案A）</title>
+<style>
+  /* ============ 设计令牌 ============ */
+  :root {
+    --font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display",
+            "Segoe UI Variable Text", "Segoe UI", "Noto Sans SC", "Microsoft YaHei UI", "Microsoft YaHei", sans-serif;
+    --bg: #fbfbfd;
+    --bar: rgba(251, 251, 253, 0.8);
+    --card: #fefefe;
+    --tint: #f5f5f7;
+    --text-1: #404046;
+    --text-2: #75757c;
+    --text-3: #9c9ca3;
+    --line: rgba(0, 0, 0, 0.07);
+    --accent: #0071e3;
+    --accent-strong: #0077ed;
+    --hover: rgba(120, 120, 128, 0.06);
+    --btn-2nd: #e8e8ed;
+    --btn-2nd-hover: #dcdce1;
+    --green: #248a3d;
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.04), 0 6px 20px rgba(0, 0, 0, 0.04);
+    --ease: cubic-bezier(0.23, 1, 0.32, 1);
+    --radius-card: 16px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1c1c1e;
+      --bar: rgba(28, 28, 30, 0.8);
+      --card: #2c2c2e;
+      --tint: #3a3a3c;
+      --text-1: #e8e8ed;
+      --text-2: #a8a8af;
+      --text-3: #82828a;
+      --line: rgba(255, 255, 255, 0.1);
+      --accent: #0a84ff;
+      --accent-strong: #3d9bff;
+      --hover: rgba(255, 255, 255, 0.07);
+      --btn-2nd: #3a3a3c;
+      --btn-2nd-hover: #46464a;
+      --green: #30d158;
+      --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 6px 20px rgba(0, 0, 0, 0.28);
+    }
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { -webkit-font-smoothing: antialiased; }
+  body {
+    font-family: var(--font);
+    background: var(--bg);
+    color: var(--text-1);
+    min-height: 100dvh;
+    padding-bottom: 96px;
+  }
+
+  /* ============ 顶栏 ============ */
+  .topbar {
+    position: sticky; top: 0; z-index: 10;
+    display: flex; align-items: center; justify-content: space-between;
+    height: 60px; padding: 0 40px;
+    background: var(--bar);
+    -webkit-backdrop-filter: saturate(180%) blur(20px);
+    backdrop-filter: saturate(180%) blur(20px);
+    border-bottom: 1px solid var(--line);
+  }
+  .brand { font-size: 19px; font-weight: 600; letter-spacing: -0.01em; }
+  .brand em { font-style: normal; color: var(--text-2); font-weight: 400; font-size: 15px; margin-left: 10px; }
+  .who { display: flex; align-items: center; gap: 10px; color: var(--text-2); font-size: 14px; }
+  .avatar {
+    width: 32px; height: 32px; border-radius: 50%;
+    background: var(--tint);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; font-weight: 600; color: var(--text-1);
+  }
+
+  /* ============ 主体 ============ */
+  .wrap { max-width: 920px; margin: 0 auto; padding: 0 40px; }
+
+  .hero { padding: 56px 0 40px; }
+  .hero h1 { font-size: 40px; font-weight: 600; letter-spacing: -0.02em; line-height: 1.15; }
+  .hero p { margin-top: 12px; font-size: 17px; line-height: 1.6; color: var(--text-2); max-width: 60ch; }
+  .hero b { color: var(--text-1); font-weight: 600; }
+
+  /* AI 干活条 */
+  .working {
+    display: flex; align-items: center; gap: 28px;
+    background: var(--tint); border-radius: var(--radius-card);
+    padding: 20px 26px;
+  }
+  .working .info { flex: 1; min-width: 0; }
+  .working .label { font-size: 12px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-3); }
+  .working .task { margin-top: 6px; font-size: 16px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .working .eta { margin-top: 4px; font-size: 13px; color: var(--text-3); }
+  .working .meter { display: flex; align-items: center; gap: 14px; flex: none; }
+  .track { width: 200px; height: 4px; border-radius: 999px; background: rgba(120, 120, 128, 0.2); overflow: hidden; }
+  .fill { height: 100%; width: 100%; border-radius: 999px; background: var(--accent); transform-origin: left; transform: scaleX(0.62); transition: transform 0.45s linear; }
+  .pct { font-size: 14px; font-weight: 600; font-variant-numeric: tabular-nums; color: var(--text-1); width: 44px; text-align: right; }
+
+  /* 工作清单容器 */
+  .list-card {
+    margin-top: 40px;
+    background: var(--card); border-radius: var(--radius-card);
+    box-shadow: var(--shadow);
+    padding: 10px 26px;
+  }
+  .row {
+    position: relative;
+    display: flex; align-items: center; gap: 20px;
+    padding: 22px 14px; margin: 0 -14px;
+    border-radius: 12px;
+    transition: background 0.18s ease;
+  }
+  .row:hover { background: var(--hover); }
+  .row + .row::before {
+    content: ""; position: absolute; top: 0; left: 14px; right: 14px; height: 1px; background: var(--line);
+  }
+  .row .name { width: 96px; flex: none; font-size: 17px; font-weight: 600; letter-spacing: -0.01em; }
+  .row .desc { flex: 1; font-size: 15px; line-height: 1.55; color: var(--text-2); }
+  .row .desc b { color: var(--text-1); font-weight: 600; }
+  .row .desc .up { color: var(--green); font-weight: 600; }
+
+  .btn {
+    flex: none;
+    font-family: inherit; font-size: 14px; font-weight: 500;
+    height: 38px; padding: 0 20px; border: none; border-radius: 999px;
+    cursor: pointer; color: var(--text-1); background: var(--btn-2nd);
+    transition: background 0.15s ease, transform 0.1s ease;
+  }
+  .btn:hover { background: var(--btn-2nd-hover); }
+  .btn:active { transform: scale(0.97); }
+  .btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .btn.primary { background: var(--accent); color: #fefefe; }
+  .btn.primary:hover { background: var(--accent-strong); }
+
+  /* 最近 */
+  .recent { margin-top: 52px; }
+  .recent h2 { font-size: 20px; font-weight: 600; letter-spacing: -0.01em; margin-bottom: 6px; }
+  .ev { display: flex; gap: 22px; padding: 15px 0; font-size: 15px; line-height: 1.6; color: var(--text-1); }
+  .ev + .ev { border-top: 1px solid var(--line); }
+  .ev time { flex: none; width: 58px; color: var(--text-3); font-variant-numeric: tabular-nums; }
+  .ev span { color: var(--text-2); }
+  .ev span b { color: var(--text-1); font-weight: 600; }
+
+  /* 底部说明 */
+  .footnote { margin-top: 56px; text-align: center; font-size: 13px; color: var(--text-3); }
+
+  /* Toast */
+  .toast {
+    position: fixed; top: 76px; left: 50%; z-index: 40;
+    transform: translate(-50%, -8px); opacity: 0; pointer-events: none;
+    background: rgba(70, 70, 74, 0.94);
+    -webkit-backdrop-filter: saturate(180%) blur(20px);
+    backdrop-filter: saturate(180%) blur(20px);
+    color: #f5f5f7; font-size: 14px; line-height: 1.5;
+    padding: 12px 22px; border-radius: 999px; max-width: 560px;
+    transition: transform 0.3s var(--ease), opacity 0.3s var(--ease);
+  }
+  .toast.show { transform: translate(-50%, 0); opacity: 1; }
+
+  /* 入场动效 */
+  .rise { opacity: 0; transform: translateY(12px); }
+  .rise.in { opacity: 1; transform: translateY(0); transition: opacity 0.5s var(--ease), transform 0.5s var(--ease); }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; animation: none !important; }
+    .rise { opacity: 1; transform: none; }
+  }
+
+  @media (max-width: 720px) {
+    .topbar { padding: 0 20px; }
+    .wrap { padding: 0 20px; }
+    .hero h1 { font-size: 30px; }
+    .working { flex-direction: column; align-items: flex-start; gap: 16px; }
+    .track { width: 100%; }
+    .row { flex-wrap: wrap; gap: 10px 20px; }
+    .row .name { width: auto; }
+    .row .desc { flex-basis: 100%; }
+  }
+</style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">J.Co <em>自媒体工作台</em></div>
+    <div class="who">
+      <span>J.Co 招生号</span>
+      <div class="avatar">J</div>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <section class="hero rise">
+      <h1>下午好。</h1>
+      <p>今天 AI 已经帮你做好了 <b>2 条视频</b>、发布了 <b>1 条</b>，还有 <b>5 条评论</b>在等你过目。</p>
+    </section>
+
+    <section class="working rise">
+      <div class="info">
+        <div class="label">AI 正在为你工作</div>
+        <div class="task">正在做视频：《暑期招生特辑 · 第 2 条》</div>
+        <div class="eta">预计还要约 2 分钟</div>
+      </div>
+      <div class="meter">
+        <div class="track"><div class="fill" id="fill"></div></div>
+        <div class="pct" id="pct">62%</div>
+      </div>
+    </section>
+
+    <section class="list-card rise" aria-label="五个环节">
+      <div class="row">
+        <div class="name">做视频</div>
+        <div class="desc">今天还没做。昨天的 2 条都已经发布</div>
+        <button class="btn" onclick="toast('点这里将来会打开「做视频」：说一句话，AI 出视频')">去做视频</button>
+      </div>
+      <div class="row">
+        <div class="name">发布</div>
+        <div class="desc"><b>2 条</b>视频已经就绪，等你点头就发</div>
+        <button class="btn primary" onclick="toast('点这里将来会打开「发布台」：一份内容，一键发到抖音、小红书、视频号')">去发布</button>
+      </div>
+      <div class="row">
+        <div class="name">看数据</div>
+        <div class="desc">昨天 3 条：播放 <span class="up">+32%</span>，晚上 7 点发的那条最好</div>
+        <button class="btn" onclick="toast('点这里将来会打开「数据本」：AI 每天帮你记好，还会告诉你是哪条、为什么好')">去看看</button>
+      </div>
+      <div class="row">
+        <div class="name">回评论</div>
+        <div class="desc"><b>5 条</b>没回，其中 2 条在问价格</div>
+        <button class="btn" onclick="toast('点这里将来会打开「评论箱」：AI 先拟好回复，你点一下才发')">去回复</button>
+      </div>
+      <div class="row">
+        <div class="name">引流私域</div>
+        <div class="desc">本周进私域 <b>12 人</b>（抖音 8、视频号 4）</div>
+        <button class="btn" onclick="toast('点这里将来会打开「引流台账」：谁引来的、聊到哪一步，一清二楚')">去看看</button>
+      </div>
+    </section>
+
+    <section class="recent rise">
+      <h2>最近</h2>
+      <div class="ev"><time>16:20</time><span>《暑期招生特辑①》已发到 <b>抖音</b>，标题和话题都填好了</span></div>
+      <div class="ev"><time>16:05</time><span>收到 3 条新评论，已按<b>咨询</b>和<b>闲聊</b>分好类</span></div>
+      <div class="ev"><time>15:50</time><span>做完了《暑期招生特辑②》，等你验收后发布</span></div>
+    </section>
+
+    <p class="footnote">原型草图，只做样子给你看（数据都是假的）</p>
+  </main>
+
+  <div class="toast" id="toast" role="status"></div>
+
+  <script>
+    // 入场
+    document.querySelectorAll('.rise').forEach((el, i) => {
+      setTimeout(() => el.classList.add('in'), 60 + i * 90);
+    });
+
+    // AI 干活进度（安静地走）
+    let p = 62;
+    const fill = document.getElementById('fill');
+    const pct = document.getElementById('pct');
+    setInterval(() => {
+      p = p >= 96 ? 62 : p + 1;
+      fill.style.transform = 'scaleX(' + (p / 100) + ')';
+      pct.textContent = p + '%';
+    }, 900);
+
+    // Toast
+    let t = null;
+    function toast(msg) {
+      const el = document.getElementById('toast');
+      el.textContent = msg;
+      el.classList.add('show');
+      clearTimeout(t);
+      t = setTimeout(() => el.classList.remove('show'), 2600);
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,827 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>J.Co · 账号中心</title>
+<script>
+  /* 提前恢复侧栏展开状态，避免页面加载时闪一下 */
+  try { if (localStorage.getItem('jco-side-pinned') === '1') document.documentElement.classList.add('side-pinned'); } catch (e) {}
+</script>
+  <link rel="stylesheet" href="./assets/jco-ui.css">
+  <style>
+/* ============ 主区 ============ */
+  .main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+
+.scroll { flex: 1; overflow-y: auto; }
+
+.wrap { max-width: none; margin: 0 auto; padding: 36px 32px 70px; }
+
+.agent-head { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 22px; }
+
+.agent-logo {
+    width: 30px; height: 30px; border-radius: 8px;
+    background: var(--text-1); color: var(--bg);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; font-weight: 600; flex: none;
+  }
+
+.agent-name { font-size: 16px; font-weight: 600; }
+
+.agent-chip {
+    height: 32px; padding: 0 16px; border-radius: 999px;
+    background: var(--card); color: var(--text-1);
+    font-size: 14px; font-weight: 600;
+    display: inline-flex; align-items: center;
+    box-shadow: var(--shadow-card);
+  }
+
+.agent-hint { font-size: 14px; color: var(--text-2); }
+
+/* 统计行 */
+  .stats-row {
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+    font-size: 13px; color: var(--text-2); margin-bottom: 12px;
+  }
+
+.stats-row b { color: var(--text-1); font-weight: 600; }
+
+.stats-row .sep { color: var(--text-3); }
+
+.st { display: inline-flex; align-items: center; gap: 6px; }
+
+.st::before { content: ""; width: 7px; height: 7px; border-radius: 50%; }
+
+.st.ok::before { background: var(--green); }
+
+.st.warn::before { background: var(--amber); }
+
+/* 安全承诺条 */
+  .safe-note {
+    display: flex; align-items: center; gap: 10px;
+    background: var(--card); border-radius: 20px; box-shadow: var(--shadow-card);
+    padding: 12px 16px; font-size: 13px; color: var(--text-2); line-height: 1.6;
+    margin-bottom: 24px;
+  }
+
+.safe-note .ti { flex: none; font-size: 18px; color: var(--green); }
+
+.safe-note b { color: var(--text-1); font-weight: 600; }
+
+/* 平台卡 */
+  .pf-card {
+    background: var(--card); border-radius: 20px; box-shadow: var(--shadow-card);
+    padding: 16px 18px 10px; margin-bottom: 12px;
+  }
+
+.pf-head { display: flex; align-items: center; gap: 11px; margin-bottom: 6px; }
+
+.pf-logo {
+    flex: none; width: 38px; height: 38px; border-radius: 12px;
+    color: #ffffff; font-size: 14px; font-weight: 600;
+    display: flex; align-items: center; justify-content: center;
+  }
+
+.pf-logo.dy { background: #2b2b30; }
+
+.pf-logo.sph { background: #1f9d55; }
+
+.pf-logo.xhs { background: #e8493a; }
+
+.pf-logo.bili { background: #4a9bd8; }
+
+.pf-logo.ks { background: #ef7a2f; }
+
+.pf-title { font-size: 14px; font-weight: 600; }
+
+.pf-count { font-size: 12px; color: var(--text-3); margin-top: 2px; }
+
+.pf-add {
+    margin-left: auto; flex: none;
+    display: inline-flex; align-items: center; gap: 6px;
+    height: 34px; padding: 0 15px; border: none; border-radius: 999px;
+    background: var(--btn-2nd); color: var(--text-1);
+    font-family: inherit; font-size: 13px; font-weight: 500; cursor: pointer;
+    transition: background 0.15s ease, transform 0.1s ease;
+  }
+
+.pf-add:hover { background: var(--btn-2nd-hover); }
+
+.pf-add:active { transform: scale(0.97); }
+
+.pf-add:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.acct {
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 8px; margin: 0 -8px; border-radius: 12px;
+    transition: background 0.15s ease;
+  }
+
+.acct:hover { background: var(--hover); }
+
+.acct + .acct { border-top: 0.5px solid var(--line); }
+
+.acct .a-ava {
+    flex: none; width: 34px; height: 34px; border-radius: 50%;
+    background: var(--tint); color: var(--text-2);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; font-weight: 600;
+  }
+
+.acct .a-main { flex: 1; min-width: 0; }
+
+.acct .a-name { font-size: 14px; font-weight: 600; }
+
+.acct .a-meta { margin-top: 3px; font-size: 12px; color: var(--text-3); }
+
+.acct .a-state {
+    flex: none; display: inline-flex; align-items: center; gap: 6px;
+    font-size: 12px; font-weight: 600; border-radius: 999px; padding: 4px 11px;
+  }
+
+.acct .a-state.ok { background: var(--green-tint); color: var(--green); }
+
+.acct .a-state.warn { background: var(--amber-tint); color: var(--amber); }
+
+.acct .a-acts { flex: none; display: flex; align-items: center; gap: 4px; }
+
+.a-btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    height: 32px; padding: 0 13px; border: none; border-radius: 8px;
+    background: transparent; color: var(--text-2);
+    font-family: inherit; font-size: 13px; cursor: pointer;
+    transition: background 0.15s ease, color 0.15s ease;
+  }
+
+.a-btn:hover { background: var(--hover); color: var(--text-1); }
+
+.a-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+
+.a-btn .ti { font-size: 14px; }
+
+.a-btn.warn-btn { background: var(--amber-tint); color: var(--amber); font-weight: 600; }
+
+.a-btn.warn-btn:hover { background: var(--amber-tint); color: var(--amber); }
+
+.pf-empty {
+    padding: 16px 8px; font-size: 13px; color: var(--text-3);
+    display: flex; align-items: center; gap: 8px;
+  }
+
+/* 弹层（添加账号流程） */
+  .overlay {
+    position: fixed; inset: 0; z-index: 80;
+    background: rgba(20, 20, 22, 0.4);
+    display: none; align-items: center; justify-content: center;
+    padding: 24px;
+  }
+
+.overlay.show { display: flex; }
+
+.sheet {
+    width: 420px; max-width: 100%;
+    background: var(--card); border-radius: 28px;
+    box-shadow: var(--shadow-modal);
+    padding: 26px 28px 22px;
+    animation: sheetIn 0.24s var(--ease);
+  }
+
+@keyframes sheetIn { from { opacity: 0; transform: translateY(10px) scale(0.98); } }
+
+.sheet h3 { font-size: 16px; font-weight: 600; }
+
+.sheet .sub { margin-top: 6px; font-size: 13px; color: var(--text-3); line-height: 1.6; }
+
+.step { display: flex; gap: 12px; margin-top: 16px; }
+
+.step .no {
+    flex: none; width: 24px; height: 24px; border-radius: 50%;
+    background: var(--accent); color: #ffffff;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 600;
+  }
+
+.step .tx { font-size: 13px; line-height: 1.6; color: var(--text-1); }
+
+.step .tx small { display: block; color: var(--text-3); font-size: 12px; margin-top: 2px; }
+
+.sheet .safe {
+    margin-top: 18px; display: flex; align-items: center; gap: 8px;
+    font-size: 12px; color: var(--green); background: var(--green-tint);
+    border-radius: 12px; padding: 10px 13px; line-height: 1.5;
+  }
+
+.sheet .safe .ti { flex: none; font-size: 16px; }
+
+.sheet-acts { margin-top: 20px; display: flex; gap: 10px; justify-content: flex-end; }
+
+.btn-primary {
+    height: 40px; padding: 0 20px; border: none; border-radius: 999px;
+    background: var(--accent); color: #ffffff;
+    font-family: inherit; font-size: 14px; font-weight: 500; cursor: pointer;
+    transition: background 0.15s ease, transform 0.1s ease;
+  }
+
+.btn-primary:hover { background: var(--accent-strong); }
+
+.btn-primary:active { transform: scale(0.97); }
+
+.btn-primary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.btn-cancel {
+    height: 40px; padding: 0 18px; border: none; border-radius: 999px;
+    background: var(--btn-2nd); color: var(--text-1);
+    font-family: inherit; font-size: 14px; cursor: pointer;
+    transition: background 0.15s ease;
+  }
+
+.btn-cancel:hover { background: var(--btn-2nd-hover); }
+
+.btn-cancel:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* DSH 规范：正圆与胶囊保持圆弧（其余圆角走超椭圆） */
+  .me .ava, .mm-head .ava, .agent-chip, .pf-add, .acct .a-ava, .acct .a-state, .a-btn, .toast,
+  .btn-primary, .btn-cancel, .step .no { corner-shape: round; }
+
+@media (prefers-color-scheme: dark) {
+    ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.24); border-radius: 999px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.4); border-radius: 999px; }
+  }
+
+@media (max-width: 860px) {
+    .sidebar { display: none; }
+    .wrap { padding: 24px 18px 60px; }
+  }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="sidebar-inner">
+        <div class="side-top">
+          <div class="wordmark">J.Co</div>
+          <button class="side-toggle" aria-label="固定展开侧栏" title="点一下固定展开，再点收起"><span class="ti ti-layout-sidebar-left-expand"></span></button>
+        </div>
+        <div class="search"><span class="ti ti-search"></span><input placeholder="搜索"></div>
+        <nav class="nav">
+          <button class="nav-item"><span class="ti ti-message-plus"></span>总管</button>
+          <button class="group-label" type="button"><span class="ti ti-layout-grid"></span>工作台<span class="ti ti-chevron-down"></span></button>
+          <button class="nav-item"><span class="ti ti-bulb"></span>选题</button>
+          <button class="nav-item"><span class="ti ti-photo"></span>素材</button>
+          <button class="nav-item"><span class="ti ti-file-text"></span>文案</button>
+          <button class="nav-item"><span class="ti ti-video"></span>创作</button>
+          <button class="nav-item"><span class="ti ti-wand"></span>后期</button>
+          <button class="nav-item"><span class="ti ti-upload"></span>发布</button>
+          <button class="nav-item"><span class="ti ti-chart-bar"></span>运营</button>
+          <button class="group-label" type="button"><span class="ti ti-tool"></span>工具<span class="ti ti-chevron-down"></span></button>
+          <button class="nav-item"><span class="ti ti-clock-play"></span>自动任务</button>
+          <button class="nav-item"><span class="ti ti-sparkles"></span>技能库</button>
+          <button class="nav-item"><span class="ti ti-users-group"></span>管家团队</button>
+          <button class="nav-item active"><span class="ti ti-key"></span>账号中心</button>
+        </nav>
+        <button class="group-label" type="button"><span class="ti ti-messages"></span>对话<span class="ti ti-chevron-down"></span></button>
+        <div class="convos">
+          <button class="convo"><span class="name">暑期招生 · 今日发布</span></button>
+          <button class="convo"><span class="name">评论跟进（5 条）</span></button>
+          <button class="convo"><span class="name">上周数据复盘</span></button>
+          <button class="convo"><span class="name">引流名单 · 待跟进</span></button>
+          <button class="convo"><span class="name">视频脚本草稿</span></button>
+          <button class="convo"><span class="name">技能库询价</span></button>
+        </div>
+        <div class="side-foot">
+          <div class="me" id="meBtn" role="button" tabindex="0" aria-haspopup="menu" aria-expanded="false"><div class="ava">J</div><span>Jay</span></div>
+          <button class="icon-btn" aria-label="通知"><span class="ti ti-bell"></span></button>
+        </div>
+      </div>
+      <div class="me-menu" id="meMenu" hidden role="menu" aria-label="账号菜单">
+        <div class="mm-head"><div class="ava">J</div><div class="mm-who"><b>Jay</b><span>软件账号 · 仅本机</span></div></div>
+        <div class="mm-sep"></div>
+        <button class="mm-item" id="mmSettings" role="menuitem"><span class="ti ti-settings"></span>设置</button>
+        <button class="mm-item" id="mmLogout" role="menuitem"><span class="ti ti-logout"></span>退出登录</button>
+      </div>
+    </aside>
+
+    <main class="main">
+      <div class="scroll">
+        <div class="wrap">
+          <div class="agent-head">
+            <span class="agent-logo">J</span>
+            <span class="agent-name">和 J.Co</span>
+            <span class="agent-chip">账号中心</span>
+            <span class="agent-hint">登录一次，长期干活；矩阵账号都在这儿</span>
+          </div>
+
+          <div class="stats-row" id="statsRow"></div>
+
+          <div class="safe-note">
+            <span class="ti ti-shield-lock"></span>
+            <span>所有登录都<b>只在这台电脑完成</b>，登录态不上传云端、不搬家；换电脑只需重新扫一次码。</span>
+          </div>
+
+          <div id="pfList"></div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- 添加账号弹层 -->
+  <div class="overlay" id="overlay">
+    <div class="sheet" role="dialog" aria-label="添加账号">
+      <h3 id="sheetTitle">添加抖音账号</h3>
+      <div class="sub" id="sheetSub">跟着做，一共三步：</div>
+      <div class="step">
+        <span class="no">1</span>
+        <span class="tx">打开 J.Co 专属浏览器<small>和你平时用的浏览器分开，互不打扰</small></span>
+      </div>
+      <div class="step">
+        <span class="no">2</span>
+        <span class="tx">用手机 App 扫一下码<small>和平时在电脑上登录一模一样</small></span>
+      </div>
+      <div class="step">
+        <span class="no">3</span>
+        <span class="tx">完成<small>登录态只留在这台电脑，长期有效</small></span>
+      </div>
+      <div class="safe"><span class="ti ti-shield-lock"></span>你的账号密码我们从头到尾看不到，只保存"已登录"的状态。</div>
+      <div class="sheet-acts">
+        <button class="btn-cancel" id="sheetCancel">先不了</button>
+        <button class="btn-cancel" id="sheetOpen">打开平台登录页</button>
+        <button class="btn-primary" id="sheetOk">我登录好了</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast" role="status"></div>
+
+  <script>
+    /* ---------- 数据（原型假数据）：平台 + 矩阵账号 ---------- */
+    const PLATFORMS = [
+      { id: 'dy', name: '抖音', logo: 'dy', ch: '抖', accounts: [
+        { name: 'J.Co 招生号', status: 'ok', last: '2 小时前活跃' },
+        { name: 'J.Co 学历规划', status: 'ok', last: '昨天发过' }
+      ]},
+      { id: 'sph', name: '视频号', logo: 'sph', ch: '视', accounts: [
+        { name: 'J.Co 招生号', status: 'ok', last: '昨天发过' }
+      ]},
+      { id: 'xhs', name: '小红书', logo: 'xhs', ch: '红', accounts: [
+        { name: 'J.Co 学历规划', status: 'ok', last: '3 小时前活跃' }
+      ]},
+      { id: 'ks', name: '快手', logo: 'ks', ch: '快', accounts: [
+        { name: 'J.Co 招生号', status: 'relogin', last: '登录已失效，需要重新扫码' }
+      ]},
+      { id: 'bili', name: 'B站', logo: 'bili', ch: 'B', accounts: [] }
+    ];
+
+    const toastEl = document.getElementById('toast');
+    function showToast(msg) {
+      toastEl.textContent = msg;
+      toastEl.classList.add('show');
+      clearTimeout(showToast.timer);
+      showToast.timer = setTimeout(() => toastEl.classList.remove('show'), 2800);
+    }
+
+    /* ---------- 渲染 ---------- */
+    function renderStats() {
+      let total = 0, ok = 0, warn = 0;
+      PLATFORMS.forEach((p) => p.accounts.forEach((a) => {
+        total++;
+        if (a.status === 'ok') ok++; else warn++;
+      }));
+      const row = document.getElementById('statsRow');
+      row.innerHTML = '<b>' + PLATFORMS.length + ' 个平台</b><span class="sep">·</span><b>' + total + ' 个账号</b>' +
+        '<span class="sep">|</span><span class="st ok">' + ok + ' 个状态正常</span>' +
+        (warn ? '<span class="st warn">' + warn + ' 个需要重新登录</span>' : '');
+    }
+
+    function renderPlatforms() {
+      const box = document.getElementById('pfList');
+      box.innerHTML = '';
+      PLATFORMS.forEach((p) => {
+        const card = document.createElement('div');
+        card.className = 'pf-card';
+        let rows = '';
+        if (p.accounts.length === 0) {
+          rows = '<div class="pf-empty"><span class="ti ti-login"></span>还没有账号，点右上角「+ 添加账号」扫一次码就行</div>';
+        } else {
+          p.accounts.forEach((a, i) => {
+            const isOk = a.status === 'ok';
+            rows += '<div class="acct">' +
+              '<span class="a-ava">' + a.name.slice(0, 1) + '</span>' +
+              '<span class="a-main"><span class="a-name">' + a.name + '</span>' +
+              '<div class="a-meta">' + a.last + '</div></span>' +
+              '<span class="a-state ' + (isOk ? 'ok' : 'warn') + '">' + (isOk ? '登录正常' : '需要重新登录') + '</span>' +
+              '<span class="a-acts">' +
+              (isOk
+                ? '<button class="a-btn" data-act="relogin" data-p="' + p.id + '" data-i="' + i + '"><span class="ti ti-refresh"></span>重新登录</button>'
+                : '<button class="a-btn warn-btn" data-act="relogin" data-p="' + p.id + '" data-i="' + i + '"><span class="ti ti-login"></span>重新登录</button>') +
+              '<button class="a-btn" data-act="remove" data-p="' + p.id + '" data-i="' + i + '"><span class="ti ti-trash"></span>移除</button>' +
+              '</span></div>';
+          });
+        }
+        card.innerHTML =
+          '<div class="pf-head">' +
+          '<span class="pf-logo ' + p.logo + '">' + p.ch + '</span>' +
+          '<span><div class="pf-title">' + p.name + '</div>' +
+          '<div class="pf-count">' + (p.accounts.length ? p.accounts.length + ' 个账号' : '还没有账号') + '</div></span>' +
+          '<button class="pf-add" data-add="' + p.id + '">+ 添加账号</button>' +
+          '</div>' + rows;
+        box.appendChild(card);
+      });
+      // 绑定
+      box.querySelectorAll('[data-add]').forEach((b) => {
+        b.addEventListener('click', () => openSheet(b.getAttribute('data-add'), -1));
+      });
+      box.querySelectorAll('[data-act]').forEach((b) => {
+        b.addEventListener('click', () => {
+          const pid = b.getAttribute('data-p');
+          const i = parseInt(b.getAttribute('data-i'), 10);
+          if (b.getAttribute('data-act') === 'relogin') openSheet(pid, i);
+          else {
+            const p = PLATFORMS.find((x) => x.id === pid);
+            const name = p.accounts[i].name;
+            p.accounts.splice(i, 1);
+            renderAll();
+            showToast('已移除「' + name + '」。想用随时可以重新扫码加回来。');
+          }
+        });
+      });
+    }
+
+    function renderAll() { renderStats(); renderPlatforms(); }
+
+    /* ---------- 添加 / 重新登录（弹层演示） ---------- */
+    const overlay = document.getElementById('overlay');
+    let sheetCtx = { pid: null, i: -1 };
+
+    function openSheet(pid, i) {
+      sheetCtx = { pid, i };
+      const p = PLATFORMS.find((x) => x.id === pid);
+      document.getElementById('sheetTitle').textContent = (i >= 0 ? '重新登录' : '添加') + p.name + '账号';
+      overlay.classList.add('show');
+    }
+    function closeSheet() { overlay.classList.remove('show'); }
+
+    document.getElementById('sheetCancel').addEventListener('click', closeSheet);
+    overlay.addEventListener('click', (e) => { if (e.target === overlay) closeSheet(); });
+    const LOGIN_URLS = {
+      dy: 'https://creator.douyin.com/',
+      sph: 'https://channels.weixin.qq.com/',
+      xhs: 'https://creator.xiaohongshu.com/',
+      ks: 'https://cp.kuaishou.com/',
+      bili: 'https://member.bilibili.com/',
+    };
+    document.getElementById('sheetOpen').addEventListener('click', () => {
+      const p = PLATFORMS.find((x) => x.id === sheetCtx.pid);
+      if (!p) return;
+      const url = LOGIN_URLS[p.id] || ('https://www.baidu.com/s?wd=' + encodeURIComponent(p.name + ' 创作者中心 登录'));
+      const sys = (typeof window.jco !== 'undefined' && window.jco && window.jco.sys) ? window.jco.sys : null;
+      if (sys && sys.openExternal) {
+        sys.openExternal(url).then(
+          (res) => showToast(res && res.ok ? '拿系统浏览器打开了。扫码登录后，回这里点「我登录好了」。' : ('没打开：' + ((res && res.error) || '未知错误'))),
+          () => showToast('没打开，再试一次。')
+        );
+        return;
+      }
+      window.open(url, '_blank');
+    });
+    document.getElementById('sheetOk').addEventListener('click', () => {
+      const p = PLATFORMS.find((x) => x.id === sheetCtx.pid);
+      if (sheetCtx.i >= 0) {
+        p.accounts[sheetCtx.i].status = 'ok';
+        p.accounts[sheetCtx.i].last = '刚刚重新登录';
+        showToast('「' + p.accounts[sheetCtx.i].name + '」重新登录好了。');
+      } else {
+        const n = p.accounts.length + 1;
+        const name = p.accounts.some((a) => a.name === 'J.Co 招生号') ? 'J.Co 矩阵号 ' + n : 'J.Co 招生号';
+        p.accounts.push({ name, status: 'ok', last: '刚刚添加' });
+        showToast('账号添加好了。「' + name + '」现在可以干活了。');
+      }
+      closeSheet();
+      renderAll();
+    });
+
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeSheet(); });
+
+    /* ---------- 侧栏（图标栏 + 按钮展开 + 固定展开） ---------- */
+    (function () {
+      var sidebar = document.querySelector('.sidebar');
+      var pinBtn = document.querySelector('.side-toggle');
+      if (!sidebar) return;
+      function setPinned(v) {
+        document.documentElement.classList.toggle('side-pinned', v);
+        if (pinBtn) pinBtn.querySelector('.ti').className = 'ti ' + (v ? 'ti-layout-sidebar-left-collapse' : 'ti-layout-sidebar-left-expand');
+        try { localStorage.setItem('jco-side-pinned', v ? '1' : '0'); } catch (err) {}
+      }
+      if (pinBtn) pinBtn.addEventListener('click', function () {
+        setPinned(!document.documentElement.classList.contains('side-pinned'));
+      });
+      try {
+        if (localStorage.getItem('jco-side-pinned') === '1') setPinned(true);
+      } catch (err) {}
+    })();
+
+    /* ---------- 侧栏分组折叠 ---------- */
+    (function () {
+      var KEY = 'jco-sidebar-folded-groups';
+      function loadFolded() {
+        try { return (localStorage.getItem(KEY) || '').split(',').filter(Boolean); } catch (e) { return []; }
+      }
+      function saveFolded(list) {
+        try { localStorage.setItem(KEY, list.join(',')); } catch (e) {}
+      }
+      function applyFold(label, hide) {
+        label.classList.toggle('folded', hide);
+        var el = label.nextElementSibling;
+        while (el && !el.classList.contains('group-label')) {
+          if (el.classList.contains('nav-item') || el.classList.contains('convos')) {
+            el.style.display = hide ? 'none' : '';
+          }
+          el = el.nextElementSibling;
+        }
+      }
+      var folded = loadFolded();
+      document.querySelectorAll('.group-label').forEach(function (label) {
+        var name = label.textContent.trim();
+        if (folded.indexOf(name) !== -1) applyFold(label, true);
+        label.addEventListener('click', function () {
+          var hide = !label.classList.contains('folded');
+          applyFold(label, hide);
+          var list = loadFolded();
+          if (hide) { if (list.indexOf(name) === -1) list.push(name); }
+          else { list = list.filter(function (x) { return x !== name; }); }
+          saveFolded(list);
+        });
+      });
+    })();
+
+    /* ---------- 侧栏导航 ---------- */
+    (function () {
+      var here = decodeURIComponent(location.pathname.split('/').pop());
+      var PAGES = {
+        '总管': 'J.Co总管.html',
+        '选题': 'J.Co工作台-选题.html',
+        '素材': 'J.Co工作台-素材.html',
+        '文案': 'J.Co工作台-创作.html',
+        '创作': 'J.Co工作台-做视频.html',
+        '后期': 'J.Co工作台-后期.html',
+        '发布': 'J.Co工作台-发布.html',
+        '运营': 'J.Co工作台-运营.html',
+        '管家团队': 'J.Co管家团队.html',
+        '账号中心': 'J.Co账号中心.html',
+        '设置': 'J.Co设置.html',
+        '自动任务': 'J.Co自动任务.html',
+        '技能库': 'J.Co技能库.html'
+      };
+      document.querySelectorAll('.nav-item').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          var label = btn.textContent.trim();
+          var target = PAGES[label];
+          if (target) {
+            if (target !== here) location.href = target;
+            return;
+          }
+          showToast('「' + label + '」还没开工，已经记进下一步清单（先把现有的七个环节用顺）。');
+        });
+      });
+      var bell = document.querySelector('.side-foot .icon-btn');
+      if (bell) bell.addEventListener('click', function (e) {
+        e.stopPropagation();
+        jcoToggleNotif(bell);
+      });
+      var wm = document.querySelector('.wordmark');
+      if (wm) wm.addEventListener('click', function () {
+        if ('J.Co主界面-首页.html' !== here) location.href = 'J.Co主界面-首页.html';
+      });
+      document.querySelectorAll('.convo').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          showToast('（原型示意）正式版里会打开这段对话记录。');
+        });
+      });
+    })();
+
+    renderAll();
+  
+    /* ---------- 账号菜单（点头像弹出：设置 / 退出登录） ---------- */
+    (function () {
+      var meBtn = document.getElementById('meBtn');
+      var menu = document.getElementById('meMenu');
+      if (!meBtn || !menu) return;
+      function setOpen(open) {
+        menu.hidden = !open;
+        meBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+      }
+      meBtn.addEventListener('click', function () { setOpen(menu.hidden); });
+      meBtn.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setOpen(menu.hidden); }
+        if (e.key === 'Escape') setOpen(false);
+      });
+      document.addEventListener('click', function (e) {
+        if (!menu.hidden && !menu.contains(e.target) && !meBtn.contains(e.target)) setOpen(false);
+      });
+      document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && !menu.hidden) setOpen(false);
+      });
+      document.getElementById('mmSettings').addEventListener('click', function () {
+        setOpen(false);
+        var here = decodeURIComponent(location.pathname.split('/').pop());
+        if (here !== 'J.Co设置.html') location.href = 'J.Co设置.html';
+      });
+      document.getElementById('mmLogout').addEventListener('click', function () {
+        setOpen(false);
+        showToast('这台电脑上不用单独登录：关掉窗口就是退出，素材和草稿都留着。');
+      });
+    })();
+  
+    /* ---------- 通知面板：最近的活动记录（真数据） ---------- */
+    function jcoToggleNotif(anchor) {
+      var old = document.querySelector('.notif-pop');
+      if (old) { old.remove(); return; }
+      var items = [];
+      try { items = (JSON.parse(localStorage.getItem('jco-log-v1') || '{"items":[]}').items) || []; } catch (e) {}
+      var pop = document.createElement('div');
+      pop.className = 'notif-pop';
+      var r = anchor.getBoundingClientRect();
+      pop.style.position = 'fixed';
+      pop.style.left = Math.min(r.right + 10, window.innerWidth - 296) + 'px';
+      pop.style.bottom = Math.max(12, window.innerHeight - r.bottom) + 'px';
+      var head = document.createElement('div');
+      head.className = 'np-head';
+      head.textContent = '最近动态';
+      pop.appendChild(head);
+      if (items.length === 0) {
+        var empty = document.createElement('div');
+        empty.className = 'np-empty';
+        empty.textContent = '还没有记录。干一句活，这里就开始记。';
+        pop.appendChild(empty);
+      } else {
+        items.slice(0, 8).forEach(function (x) {
+          var row = document.createElement('div');
+          row.className = 'np-row';
+          var d = new Date(x.t);
+          var hh = String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+          var time = document.createElement('span');
+          time.className = 'np-time';
+          time.textContent = hh;
+          var txt = document.createElement('span');
+          txt.className = 'np-txt';
+          txt.textContent = x.title + (x.detail ? '（' + x.detail + '）' : '');
+          row.appendChild(time);
+          row.appendChild(txt);
+          pop.appendChild(row);
+        });
+      }
+      var foot = document.createElement('a');
+      foot.className = 'np-foot';
+      foot.href = 'J.Co总管.html';
+      foot.textContent = '去总管看全部 →';
+      pop.appendChild(foot);
+      document.body.appendChild(pop);
+      var closer = function (ev) {
+        if (!pop.contains(ev.target)) {
+          pop.remove();
+          document.removeEventListener('click', closer, true);
+        }
+      };
+      setTimeout(function () { document.addEventListener('click', closer, true); }, 0);
+    }
+  
+  
+    /* ---------- 对话列表（真会话）：点击续聊；每项可分享 / 重命名 / 删除；＋ 新会话 ---------- */
+    (function jcoConvos() {
+      var hasKernel = (typeof window.jco !== 'undefined' && window.jco && window.jco.kernel);
+      if (!hasKernel) return; // 浏览器直开：保留演示列表
+      var data = null;
+      try { data = JSON.parse(localStorage.getItem('jco-chats-v1') || 'null'); } catch (e) {}
+      var box = document.querySelector('.convos');
+      if (!box || !data || !Array.isArray(data.chats) || data.chats.length === 0) return;
+      var here = decodeURIComponent(location.pathname.split('/').pop());
+      function go(req) {
+        try { sessionStorage.setItem('jco-open-chat', req); } catch (e) {}
+        if (here !== 'J.Co总管.html') location.href = 'J.Co总管.html';
+      }
+      function saveChats() { try { localStorage.setItem('jco-chats-v1', JSON.stringify(data)); } catch (e) {} }
+
+      /* 会话操作：分享 / 重命名 / 删除（含两步防误删） */
+      var openMenu = null;
+      function closeMenu() { if (openMenu) { openMenu.remove(); openMenu = null; } }
+      document.addEventListener('click', closeMenu);
+      function toastIt(msg) {
+        var t = document.getElementById('toast');
+        if (!t) return;
+        t.textContent = msg; t.classList.add('show');
+        clearTimeout(toastIt._t); toastIt._t = setTimeout(function () { t.classList.remove('show'); }, 2600);
+      }
+      function shareChat(chat) {
+        var lines = ['【和 J.Co 的对话 · ' + (chat.title || '新会话') + '】'];
+        (chat.messages || []).forEach(function (m) {
+          lines.push((m.role === 'user' ? '我：' : 'J.Co：') + String(m.text || ''));
+        });
+        var text = lines.join('\n');
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(text).then(
+            function () { toastIt('对话已复制，去粘贴分享吧'); },
+            function () { toastIt('没复制成，手动选中复制一下'); }
+          );
+        } else { toastIt('这台环境不支持直接复制'); }
+      }
+      function showMenu(anchor, chat) {
+        closeMenu();
+        var menu = document.createElement('div');
+        menu.className = 'convo-menu';
+        menu.addEventListener('click', function (e) { e.stopPropagation(); });
+        function item(icon, label, cls, fn) {
+          var b = document.createElement('button');
+          b.type = 'button';
+          b.className = cls || '';
+          b.innerHTML = '<span class="ti ' + icon + '"></span>' + label;
+          b.addEventListener('click', fn);
+          menu.appendChild(b);
+          return b;
+        }
+        item('ti-share-3', '分享对话', '', function () { closeMenu(); shareChat(chat); });
+        item('ti-file-text', '重命名', '', function () {
+          closeMenu();
+          var row = anchor.closest('.convo');
+          var nameEl = row ? row.querySelector('.name') : null;
+          if (!nameEl) return;
+          var input = document.createElement('input');
+          input.className = 'convo-rename';
+          input.value = chat.title || '新会话';
+          nameEl.replaceWith(input);
+          input.focus(); input.select();
+          var done = false;
+          function commit(saveIt) {
+            if (done) return; done = true;
+            var v = input.value.trim().slice(0, 20);
+            if (saveIt && v) chat.title = v;
+            nameEl.textContent = chat.title || '新会话';
+            input.replaceWith(nameEl);
+            if (saveIt && v) { saveChats(); toastIt('改好名字了'); }
+          }
+          input.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter') { e.preventDefault(); commit(true); }
+            if (e.key === 'Escape') { commit(false); }
+          });
+          input.addEventListener('blur', function () { commit(true); });
+          input.addEventListener('click', function (e) { e.stopPropagation(); });
+        });
+        var del = item('ti-trash', '删除对话', 'danger', function () {
+          if (del.getAttribute('data-armed') !== '1') {
+            del.setAttribute('data-armed', '1');
+            del.innerHTML = '<span class="ti ti-trash"></span>再点一次，真删除';
+            return;
+          }
+          closeMenu();
+          var wasActive = data.activeId === chat.id;
+          data.chats = data.chats.filter(function (x) { return x.id !== chat.id; });
+          if (data.chats.length === 0) {
+            data.chats.push({ id: 'c' + Date.now().toString(36), title: '新会话', updatedAt: Date.now(), messages: [] });
+          }
+          if (wasActive) data.activeId = data.chats[0].id;
+          saveChats();
+          toastIt('已删除「' + (chat.title || '新会话') + '」');
+          render();
+        });
+        document.body.appendChild(menu);
+        var r = anchor.getBoundingClientRect();
+        var mw = menu.offsetWidth || 160, mh = menu.offsetHeight || 130;
+        var left = Math.min(r.right + 8, window.innerWidth - mw - 10);
+        var top = Math.min(r.bottom + 4, window.innerHeight - mh - 10);
+        if (top < 8) top = 8;
+        menu.style.left = left + 'px';
+        menu.style.top = top + 'px';
+        openMenu = menu;
+      }
+      function render() {
+        box.innerHTML = '';
+        var add = document.createElement('button');
+        add.className = 'convo new-btn';
+        add.innerHTML = '<span class="ti ti-plus"></span>新会话';
+        add.addEventListener('click', function (e) { e.stopPropagation(); go('new'); });
+        box.appendChild(add);
+        data.chats.slice(0, 8).forEach(function (c) {
+          var b = document.createElement('button');
+          b.className = 'convo' + (c.id === data.activeId ? ' active' : '');
+          var nm = document.createElement('span');
+          nm.className = 'name';
+          nm.textContent = c.title || '新会话';
+          b.appendChild(nm);
+          var more = document.createElement('span');
+          more.className = 'convo-more';
+          more.setAttribute('role', 'button');
+          more.setAttribute('tabindex', '0');
+          more.setAttribute('aria-label', '更多操作');
+          more.textContent = '⋯';
+          more.addEventListener('click', function (e) { e.stopPropagation(); showMenu(more, c); });
+          more.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); showMenu(more, c); } });
+          b.appendChild(more);
+          b.addEventListener('click', function (e) { e.stopPropagation(); go(c.id); });
+          box.appendChild(b);
+        });
+      }
+      render();
+    })();
+  
+  </script>
+  
+</body>
+</html>

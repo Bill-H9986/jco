@@ -1,0 +1,956 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>J.Co · 运营</title>
+  <link rel="stylesheet" href="./assets/jco-ui.css">
+  <style>
+/* ============ 主区 ============ */
+  .main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+
+.scroll { flex: 1; overflow-y: auto; }
+
+.wrap { max-width: none; margin: 0 auto; padding: 36px 32px 70px; }
+
+.agent-head { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 6px; }
+
+.agent-logo {
+    width: 30px; height: 30px; border-radius: 8px;
+    background: var(--text-1); color: var(--bg);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; font-weight: 600; flex: none;
+  }
+
+.agent-name { font-size: 16px; font-weight: 600; }
+
+.agent-chip {
+    height: 32px; padding: 0 16px; border-radius: 999px;
+    background: var(--card); color: var(--text-1);
+    font-size: 14px; font-weight: 600;
+    display: inline-flex; align-items: center;
+    box-shadow: var(--shadow-card);
+  }
+
+.agent-hint { font-size: 16px; color: var(--text-2); }
+
+.sec-head { display: flex; align-items: baseline; gap: 10px; margin: 28px 0 12px; }
+
+.sec-head h2 { font-size: 16px; font-weight: 600; letter-spacing: -0.01em; }
+
+.sec-head .hint { font-size: 13px; color: var(--text-3); margin-left: auto; }
+
+/* 战报数字卡 */
+  .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+
+.dstat { background: var(--card); border-radius: 20px; box-shadow: var(--shadow-card); padding: 16px 18px; }
+
+.dlabel { font-size: 13px; color: var(--text-2); display: flex; align-items: center; gap: 6px; }
+
+.dlabel .ti { font-size: 14px; color: var(--text-3); }
+
+.dnum { margin-top: 9px; font-size: 27px; font-weight: 600; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+
+.dnum .unit { font-size: 14px; font-weight: 600; color: var(--text-2); margin-left: 2px; }
+
+.dsub { margin-top: 7px; font-size: 12px; color: var(--text-3); display: flex; align-items: center; gap: 5px; }
+
+.dsub .ti { font-size: 14px; }
+
+.dsub .up { color: var(--green); font-weight: 600; }
+
+.dsub .todo { color: var(--accent); font-weight: 600; }
+
+/* AI 复盘洞察卡 */
+  .insight {
+    margin-top: 12px;
+    background: var(--card); border-radius: 20px; box-shadow: var(--shadow);
+    padding: 18px 22px 20px; display: flex; gap: 15px;
+  }
+
+.insight .ibadge {
+    flex: none; width: 38px; height: 38px; border-radius: 12px;
+    background: rgba(0, 128, 255, 0.12); color: var(--accent);
+    display: flex; align-items: center; justify-content: center; font-size: 20px;
+  }
+
+.insight h3 { font-size: 16px; font-weight: 600; }
+
+.insight p { margin-top: 7px; font-size: 13px; color: var(--text-2); line-height: 1.7; }
+
+.insight .acts { margin-top: 13px; display: flex; gap: 9px; }
+
+.linkbtn {
+    border: none; background: none; color: var(--text-3);
+    font-family: inherit; font-size: 13px; cursor: pointer; padding: 4px 6px; border-radius: 4px;
+    display: inline-flex; align-items: center; gap: 4px;
+    transition: color 0.15s ease;
+  }
+
+.linkbtn:hover { color: var(--text-1); }
+
+.linkbtn:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+/* 评论卡 */
+  .cmts { display: flex; flex-direction: column; gap: 10px; }
+
+.cmt { background: var(--card); border-radius: 20px; box-shadow: var(--shadow-card); padding: 15px 18px; }
+
+.cmt-head { display: flex; align-items: center; gap: 10px; }
+
+.mini-logo {
+    width: 24px; height: 24px; border-radius: 8px; flex: none;
+    color: #ffffff; font-size: 12px; font-weight: 600;
+    display: flex; align-items: center; justify-content: center;
+  }
+
+.mini-logo.dy { background: #2b2b30; }
+
+.mini-logo.sph { background: #1f9d55; }
+
+.mini-logo.xhs { background: #e8493a; }
+
+.cmt-user { font-size: 14px; font-weight: 600; }
+
+.cmt-from { font-size: 12px; color: var(--text-3); }
+
+.cmt-text { margin-top: 9px; font-size: 14px; line-height: 1.6; }
+
+.cmt-reply { margin-top: 12px; background: var(--tint); border-radius: 12px; padding: 12px 14px; }
+
+.cmt-reply .rl { font-size: 12px; color: var(--text-3); display: flex; align-items: center; gap: 6px; margin-bottom: 9px; }
+
+.cmt-reply .rl .ti { font-size: 13px; color: var(--accent); }
+
+.cmt-reply textarea {
+    width: 100%; border: 0.5px solid var(--line); border-radius: 12px;
+    background: var(--card); color: var(--text-1);
+    font-family: inherit; font-size: 13px; line-height: 1.65;
+    padding: 9px 12px; min-height: 62px; resize: vertical; outline: none;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  }
+
+.cmt-reply textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(0, 128, 255, 0.12); }
+
+.cmt-reply textarea:focus-visible { outline: none; }
+
+.cmt-acts { margin-top: 10px; display: flex; align-items: center; gap: 9px; }
+
+.cmt .replied { display: none; align-items: flex-start; gap: 8px; font-size: 13px; line-height: 1.65; }
+
+.cmt .replied .ti { font-size: 14px; color: var(--green); margin-top: 3px; flex: none; }
+
+.cmt.done .editbox { display: none; }
+
+.cmt.done .replied { display: flex; }
+
+.cmt.done .rl { margin-bottom: 10px; }
+
+.cmt.done .rl .ti { color: var(--green); }
+
+.cmt.skipped .editbox { display: none; }
+
+.cmt.skipped .replied { display: flex; color: var(--text-3); }
+
+.cmt.skipped .replied .ti { color: var(--text-3); }
+
+/* 私域线索 */
+  .leadlist { display: flex; flex-direction: column; gap: 10px; }
+
+.lead {
+    display: flex; align-items: flex-start; gap: 14px;
+    background: var(--card); border-radius: 20px; box-shadow: var(--shadow-card);
+    padding: 14px 18px;
+  }
+
+.lava {
+    flex: none; width: 36px; height: 36px; border-radius: 50%;
+    background: var(--tint); color: var(--text-2);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 600;
+  }
+
+.lm { flex: 1; min-width: 0; }
+
+.lname { font-size: 14px; font-weight: 600; display: flex; align-items: baseline; gap: 7px; flex-wrap: wrap; }
+
+.lname .lnote { font-size: 12px; font-weight: 400; color: var(--text-3); }
+
+.lfrom { margin-top: 4px; font-size: 12px; color: var(--text-3); }
+
+.lnext { margin-top: 7px; font-size: 13px; color: var(--text-2); display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+
+.lnext b { font-weight: 600; color: var(--text-1); }
+
+.lnext .done-mark { display: none; align-items: center; gap: 5px; color: var(--green); font-weight: 600; font-size: 13px; }
+
+.lnext .done-mark .ti { font-size: 14px; }
+
+.lead.done .lnext .actions { display: none; }
+
+.lead.done .lnext .done-mark { display: inline-flex; }
+
+.stage { flex: none; font-size: 12px; font-weight: 600; border-radius: 999px; padding: 5px 12px; background: var(--tint); color: var(--text-2); }
+
+.stage.blue { background: rgba(0, 128, 255, 0.12); color: var(--accent); }
+
+.stage.green { background: var(--green-tint); color: var(--green); }
+
+/* 内容计划 */
+  .plans { display: flex; flex-direction: column; gap: 8px; }
+
+.planrow {
+    display: flex; align-items: center; gap: 14px;
+    background: var(--card); border-radius: 20px; box-shadow: var(--shadow-card);
+    padding: 12px 16px;
+  }
+
+.planrow .when { flex: none; width: 88px; font-size: 12px; font-weight: 600; color: var(--text-2); font-variant-numeric: tabular-nums; }
+
+.planrow .pt { flex: 1; min-width: 0; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.planrow .ps { flex: none; font-size: 12px; font-weight: 600; border-radius: 999px; padding: 4px 11px; background: var(--tint); color: var(--text-2); }
+
+.planrow .ps.making { background: rgba(0, 128, 255, 0.12); color: var(--accent); }
+
+/* DSH 规范：正圆与胶囊保持圆弧（其余圆角走超椭圆） */
+  .me .ava, .mm-head .ava, .msg.ai .ava, .card .go, .send, .ghost, .ghost-btn, .btn-sm, .act,
+  .cp-act, .cp-send, .agent-chip, .badge, .b-role, .s-badge, .stage, .r-dot,
+  .dot, .prog .track, .prog .fill, .prow .pbar, .prow .pf2, .toast,
+  .pf .pfck, .seg button, .go-btn, .copilot-btn, .acc .pfp, .use-btn,
+  .tag, .star, .check, .ai-state .dot, .regen, .agent-tabs, .agent-tabs button,
+  .tool, .model-pill, .send-big, .draft .dprog, .draft .dprog .dfill,
+  .draft .open, .ib-count, .ib-nav, .step .dot, .track, .fill, .shot .swap,
+  .export-btn, .play-btn, .playhead::after, .lava, .planrow .ps, .s-pbar,
+  .s-pfill, .s-badge::before { corner-shape: round; }
+
+@media (prefers-color-scheme: dark) {
+    ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.24); border-radius: 999px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.4); border-radius: 999px; }
+  }
+
+@media (max-width: 1080px) { .stats { grid-template-columns: repeat(2, 1fr); } }
+
+@media (max-width: 860px) {
+    .sidebar { display: none; }
+    .wrap { padding: 24px 18px 60px; }
+    .stats { grid-template-columns: 1fr; }
+  }
+  </style>
+<script>
+  /* 提前恢复侧栏展开状态，避免页面加载时闪一下 */
+  try { if (localStorage.getItem('jco-side-pinned') === '1') document.documentElement.classList.add('side-pinned'); } catch (e) {}
+</script>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="sidebar-inner">
+      <div class="side-top">
+        <div class="wordmark">J.Co</div>
+        <button class="side-toggle" aria-label="固定展开侧栏" title="点一下固定展开，再点收起"><span class="ti ti-layout-sidebar-left-expand"></span></button>
+      </div>
+      <div class="search"><span class="ti ti-search"></span><input placeholder="搜索"></div>
+      <nav class="nav">
+        <button class="nav-item"><span class="ti ti-message-plus"></span>总管</button>
+        <button class="group-label" type="button"><span class="ti ti-layout-grid"></span>工作台<span class="ti ti-chevron-down"></span></button>
+        <button class="nav-item"><span class="ti ti-bulb"></span>选题</button>
+        <button class="nav-item"><span class="ti ti-photo"></span>素材</button>
+        <button class="nav-item"><span class="ti ti-file-text"></span>文案</button>
+        <button class="nav-item"><span class="ti ti-video"></span>创作</button>
+        <button class="nav-item"><span class="ti ti-wand"></span>后期</button>
+        <button class="nav-item"><span class="ti ti-upload"></span>发布</button>
+        <button class="nav-item active"><span class="ti ti-chart-bar"></span>运营</button>
+        <button class="group-label" type="button"><span class="ti ti-tool"></span>工具<span class="ti ti-chevron-down"></span></button>
+        <button class="nav-item"><span class="ti ti-clock-play"></span>自动任务</button>
+        <button class="nav-item"><span class="ti ti-sparkles"></span>技能库</button>
+        <button class="nav-item"><span class="ti ti-users-group"></span>管家团队</button>
+        <button class="nav-item"><span class="ti ti-key"></span>账号中心</button>
+      </nav>
+      <button class="group-label" type="button"><span class="ti ti-messages"></span>对话<span class="ti ti-chevron-down"></span></button>
+      <div class="convos">
+        <button class="convo"><span class="name">暑期招生 · 今日发布</span></button>
+        <button class="convo"><span class="name">评论跟进（5 条）</span></button>
+        <button class="convo"><span class="name">上周数据复盘</span></button>
+        <button class="convo"><span class="name">引流名单 · 待跟进</span></button>
+        <button class="convo"><span class="name">视频脚本草稿</span></button>
+        <button class="convo"><span class="name">技能库询价</span></button>
+      </div>
+      <div class="side-foot">
+        <div class="me" id="meBtn" role="button" tabindex="0" aria-haspopup="menu" aria-expanded="false"><div class="ava">J</div><span>Jay</span></div>
+        <button class="icon-btn" aria-label="通知"><span class="ti ti-bell"></span></button>
+      </div>
+          </div>
+      <div class="me-menu" id="meMenu" hidden role="menu" aria-label="账号菜单">
+        <div class="mm-head"><div class="ava">J</div><div class="mm-who"><b>Jay</b><span>软件账号 · 仅本机</span></div></div>
+        <div class="mm-sep"></div>
+        <button class="mm-item" id="mmSettings" role="menuitem"><span class="ti ti-settings"></span>设置</button>
+        <button class="mm-item" id="mmLogout" role="menuitem"><span class="ti ti-logout"></span>退出登录</button>
+      </div>
+    </aside>
+
+    <main class="main">
+      <div class="scroll">
+        <div class="wrap">
+          <div class="agent-head">
+            <span class="agent-logo">J</span>
+            <span class="agent-name">和 J.Co</span>
+            <span class="agent-chip">运营</span>
+            <span class="agent-hint">发完之后的事，都在这儿收拾</span>
+          </div>
+
+          <!-- ============ 今日战报 ============ -->
+          <div class="sec-head"><h2>今日战报</h2><span class="hint">每天早上自动更新，昨晚的数据已经在了</span></div>
+          <div class="stats">
+            <div class="dstat">
+              <div class="dlabel"><span class="ti ti-player-play"></span>播放量（近 7 天）</div>
+              <div class="dnum">6.9<span class="unit">万</span></div>
+              <div class="dsub"><span class="ti ti-trending-up"></span><span class="up">5.2 万</span>是昨晚那条带来的</div>
+            </div>
+            <div class="dstat">
+              <div class="dlabel"><span class="ti ti-user-plus"></span>新增粉丝</div>
+              <div class="dnum">386</div>
+              <div class="dsub"><span class="ti ti-trending-up"></span><span class="up">比上周多 341</span></div>
+            </div>
+            <div class="dstat">
+              <div class="dlabel"><span class="ti ti-message-dots"></span>评论</div>
+              <div class="dnum">57</div>
+              <div class="dsub"><span class="todo">8 条等你回</span></div>
+            </div>
+            <div class="dstat">
+              <div class="dlabel"><span class="ti ti-users-group"></span>新线索</div>
+              <div class="dnum">9<span class="unit">人</span></div>
+              <div class="dsub"><span class="todo">3 个人待跟进</span></div>
+            </div>
+          </div>
+
+          <!-- ============ AI 复盘 ============ -->
+          <div class="insight">
+            <span class="ibadge ti ti-sparkles"></span>
+            <div>
+              <h3>昨晚那条，是你平常播放的 8 倍</h3>
+              <p>《成人高考报名其实就 3 步》播放 5.2 万，还带来 41 个粉丝、6 条咨询。AI 拆出来的原因：「3 步」给的是确定感，「不踩坑」戳的是怕麻烦。这两个词，就是你的流量密码。</p>
+              <div class="acts">
+                <button class="btn-sm" id="insightGo">照这个套路再做一条<span class="ti ti-arrow-right"></span></button>
+                <button class="btn-sm ghost2" id="insightMore">看完整分析</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- ============ 评论要你过目 ============ -->
+          <div class="sec-head"><h2>评论要你过目</h2><span class="hint">8 条等你回，先挑了 3 条重要的 · AI 拟好稿，你点头才发</span></div>
+          <div class="cmts" id="cmts"></div>
+
+          <!-- ============ 私域线索 ============ -->
+          <div class="sec-head"><h2>私域线索</h2><span class="hint">从评论和私信找过来 9 个人，先跟进这 3 个</span></div>
+          <div class="leadlist" id="leads"></div>
+
+          <!-- ============ 接下来发什么 ============ -->
+          <div class="sec-head"><h2>接下来发什么</h2><span class="hint">顺着复盘的节奏排的，不合适就改</span></div>
+          <div class="plans" id="plans"></div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- 右下角·总管助手 -->
+  <button class="copilot-btn" id="copilotBtn" aria-label="打开总管助手"><span class="ti ti-message-dots"></span></button>
+  <div class="copilot" id="copilot" hidden>
+    <div class="cp-head">
+      <span class="cp-ava">J</span>
+      <span class="cp-title">总管</span>
+      <span class="cp-sub">问点啥都行</span>
+      <button class="cp-fold" id="cpFold" aria-label="收起助手"><span class="ti ti-chevron-down"></span></button>
+    </div>
+    <div class="cp-body" id="cpBody">
+      <div class="cp-msg ai">在的。想问点什么？比如这条视频的实时数据。</div>
+      <div class="cp-acts">
+        <button class="cp-act" data-q="这条视频数据怎么样？">这条视频数据怎么样？</button>
+        <button class="cp-act" data-q="今天还剩什么事？">今天还剩什么事？</button>
+        <button class="cp-act" data-q="评论有什么动静？">评论有什么动静？</button>
+      </div>
+    </div>
+    <div class="cp-inp">
+      <textarea id="cpInp" rows="1" placeholder="问总管，比如：这条视频现在多少播放"></textarea>
+      <button class="cp-send" id="cpSend" aria-label="发送"><span class="ti ti-arrow-up"></span></button>
+    </div>
+  </div>
+  <div class="toast" id="toast" role="status"></div>
+
+  <script>
+    const $ = (id) => document.getElementById(id);
+    const toastEl = $('toast');
+
+    function showToast(msg) {
+      toastEl.textContent = msg;
+      toastEl.classList.add('show');
+      clearTimeout(showToast.timer);
+      showToast.timer = setTimeout(() => toastEl.classList.remove('show'), 2800);
+    }
+
+    /* ---------- 评论（AI 拟稿，人工放行） ---------- */
+    const COMMENTS = [
+      {
+        id: 'c1', logo: 'xhs', ch: '红', pfName: '小红书', user: '美好明天',
+        from: '《成人高考 3 步》下面的评论',
+        text: '成人高考真的只要 3 步吗？我初中毕业能报吗',
+        alts: [
+          '可以报的，年满 18 岁就能报高起专，初中学历没问题。我把报名要准备的材料整理给你呀。',
+          '能报。初中毕业符合高起专的条件。要准备的材料我发你一份，照着弄就行。',
+          '可以呀，只要你年满 18 岁、有初中毕业证就能报。我把「报名材料清单」发给你？'
+        ]
+      },
+      {
+        id: 'c2', logo: 'dy', ch: '抖', pfName: '抖音', user: '考不上怎么办',
+        from: '给你发了私信',
+        text: '多少钱？'
+      , alts: [
+          '现在高起专一年学费两千出头，不同学校略有差别。孩子想报专科还是本科呀？我帮你挑个合适的。',
+          '学费一年在 2000 到 2600 之间，看学校和专业。你先说下想报的方向，我把具体的发你。',
+          '两千多一年。价格表我发你一份呀，先看看再说，不着急定。'
+        ]
+      },
+      {
+        id: 'c3', logo: 'sph', ch: '视', pfName: '视频号', user: '王妈妈',
+        from: '《成人高考 3 步》下面的评论',
+        text: '我儿子高二，现在准备是不是太早了？'
+      , alts: [
+          '不早啦。高二先把路子了解清楚，高三报名的时候就不慌。我发你一份时间表，顺着走就行。',
+          '正合适。提前了解在前，报名的时候就不手忙脚乱。时间表我发你，看一眼就明白了。',
+          '现在了解刚刚好。我把「从高二到报名」的时间表整理给你，照着安排就行。'
+        ]
+      }
+    ];
+
+    function renderComments() {
+      const box = $('cmts');
+      box.innerHTML = '';
+      COMMENTS.forEach((c) => {
+        const el = document.createElement('article');
+        el.className = 'cmt';
+        el.id = 'cmt-' + c.id;
+        el.innerHTML = `
+          <div class="cmt-head">
+            <span class="mini-logo ${c.logo}">${c.ch}</span>
+            <span class="cmt-user">${c.user}</span>
+            <span class="cmt-from">${c.pfName} · ${c.from}</span>
+          </div>
+          <p class="cmt-text">${c.text}</p>
+          <div class="cmt-reply">
+            <div class="rl"><span class="ti ti-sparkles"></span>AI 拟好的回复（发之前你可以直接改）</div>
+            <div class="editbox">
+              <textarea rows="3"></textarea>
+              <div class="cmt-acts">
+                <button class="btn-sm act-send">发出去<span class="ti ti-send"></span></button>
+                <button class="btn-sm ghost2 act-alt"><span class="ti ti-refresh"></span>换个说法</button>
+                <button class="linkbtn act-skip">不用回</button>
+              </div>
+            </div>
+            <div class="replied"><span class="ti ti-check"></span><span class="rtxt"></span></div>
+          </div>`;
+        box.appendChild(el);
+
+        const ta = el.querySelector('textarea');
+        ta.value = c.alts[0];
+        let ai = 0;
+
+        el.querySelector('.act-alt').addEventListener('click', () => {
+          ai = (ai + 1) % c.alts.length;
+          ta.value = c.alts[ai];
+          ta.focus();
+        });
+        el.querySelector('.act-send').addEventListener('click', () => {
+          const txt = ta.value.trim();
+          if (!txt) { showToast('回复不能是空的呀，写一句再发。'); return; }
+          el.classList.add('done');
+          el.querySelector('.rl').innerHTML = '<span class="ti ti-check"></span>已发出 · 刚刚';
+          el.querySelector('.rtxt').textContent = txt;
+          showToast('已用你的账号回复 ' + c.user + '。');
+        });
+        el.querySelector('.act-skip').addEventListener('click', () => {
+          el.classList.add('skipped');
+          el.querySelector('.rl').innerHTML = '已跳过这条';
+          el.querySelector('.rtxt').textContent = '你觉得不需要回，就不回。';
+          el.querySelector('.replied .ti').className = 'ti ti-check';
+        });
+      });
+    }
+
+    /* ---------- 私域线索 ---------- */
+    const LEADS = [
+      {
+        id: 'l1', name: '刘姐', note: '孩子高二', ava: '刘',
+        from: '从《成人高考 3 步》小红书评论来的',
+        stage: '已加微信', stageCls: 'blue',
+        next: '把报名要准备的材料发给她'
+      },
+      {
+        id: 'l2', name: '阿凯', note: '', ava: '凯',
+        from: '从抖音私信来的',
+        stage: '聊过一轮', stageCls: 'blue',
+        next: '约个电话，问清楚想报的学校'
+      },
+      {
+        id: 'l3', name: '陈叔', note: '', ava: '陈',
+        from: '从视频号评论来的',
+        stage: '刚打招呼', stageCls: '',
+        next: '先发自我介绍和学员案例'
+      }
+    ];
+
+    function renderLeads() {
+      const box = $('leads');
+      box.innerHTML = '';
+      LEADS.forEach((l) => {
+        const el = document.createElement('div');
+        el.className = 'lead';
+        el.id = 'lead-' + l.id;
+        el.innerHTML = `
+          <div class="lava">${l.ava}</div>
+          <div class="lm">
+            <div class="lname">${l.name}${l.note ? '<span class="lnote">' + l.note + '</span>' : ''}</div>
+            <div class="lfrom">${l.from}</div>
+            <div class="lnext"><span>下一步：<b>${l.next}</b></span>
+              <span class="actions">
+                <button class="linkbtn act-copy"><span class="ti ti-copy"></span>复制这句话</button>
+                <button class="linkbtn act-follow"><span class="ti ti-check"></span>标记已跟进</button>
+              </span>
+              <span class="done-mark"><span class="ti ti-check"></span>已跟进 · 刚刚</span>
+            </div>
+          </div>
+          <span class="stage ${l.stageCls}">${l.stage}</span>`;
+        box.appendChild(el);
+
+        el.querySelector('.act-copy').addEventListener('click', () => {
+          showToast('（原型示意）正式版会把这句话复制好，你直接去微信发给她。');
+        });
+        el.querySelector('.act-follow').addEventListener('click', () => {
+          el.classList.add('done');
+          showToast('记下了：' + l.name + ' 这步已跟。');
+        });
+      });
+    }
+
+    /* ---------- 内容计划 ---------- */
+    const PLANS = [
+      { when: '周一 19:30', title: '《初中学历提升的 3 条路，哪条最省事》', state: '待拍', cls: '' },
+      { when: '周三 19:30', title: '《报名材料清单，照着准备就行》', state: '文案中', cls: 'making' },
+      { when: '周五 19:30', title: '《学员真实经历：38 岁也能报》', state: '待剪', cls: '' }
+    ];
+
+    function renderPlans() {
+      const box = $('plans');
+      box.innerHTML = '';
+      PLANS.forEach((p) => {
+        const el = document.createElement('div');
+        el.className = 'planrow';
+        el.innerHTML = `
+          <span class="when">${p.when}</span>
+          <span class="pt">${p.title}</span>
+          <span class="ps ${p.cls}">${p.state}</span>`;
+        box.appendChild(el);
+      });
+    }
+
+    /* ---------- 洞察按钮 ---------- */
+    $('insightGo').addEventListener('click', () => {
+      showToast('（原型示意）正式版会带着「3 步 + 不踩坑」这个思路，去「选题」帮你起 3 个题目。');
+    });
+    $('insightMore').addEventListener('click', () => {
+      showToast('（原型示意）正式版会展开对比：这条和你平常的视频，开头、标题、封面各差在哪。');
+    });
+
+    renderComments();
+    renderLeads();
+    renderPlans();
+  </script>
+  <script>
+    /* ---------- 侧栏导航（原型可点通） ---------- */
+    (function () {
+      var here = decodeURIComponent(location.pathname.split('/').pop());
+      var PAGES = {
+        '总管': 'J.Co总管.html',
+        '选题': 'J.Co工作台-选题.html',
+        '素材': 'J.Co工作台-素材.html',
+        '文案': 'J.Co工作台-创作.html',
+        '创作': 'J.Co工作台-做视频.html',
+        '后期': 'J.Co工作台-后期.html',
+        '发布': 'J.Co工作台-发布.html',
+        '运营': 'J.Co工作台-运营.html',
+        '管家团队': 'J.Co管家团队.html',
+        '账号中心': 'J.Co账号中心.html',
+        '设置': 'J.Co设置.html',
+        '自动任务': 'J.Co自动任务.html',
+        '技能库': 'J.Co技能库.html'
+      };
+      document.querySelectorAll('.nav-item').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          var label = btn.textContent.trim();
+          var target = PAGES[label];
+          if (target) {
+            if (target !== here) location.href = target;
+            return;
+          }
+          showToast('「' + label + '」还没开工，已经记进下一步清单（先把现有的七个环节用顺）。');
+        });
+      });
+      var bell = document.querySelector('.side-foot .icon-btn');
+      if (bell) bell.addEventListener('click', function (e) {
+        e.stopPropagation();
+        jcoToggleNotif(bell);
+      });
+      /* ---------- 右下角·总管助手 ---------- */
+      (function () {
+        var btn = document.getElementById('copilotBtn');
+        var panel = document.getElementById('copilot');
+        var fold = document.getElementById('cpFold');
+        var body = document.getElementById('cpBody');
+        var inp = document.getElementById('cpInp');
+        var sendBtn = document.getElementById('cpSend');
+        if (!btn || !panel) return;
+        btn.addEventListener('click', function () { panel.hidden = !panel.hidden; });
+        if (fold) fold.addEventListener('click', function () { panel.hidden = true; });
+        var FIXED = {
+          '这条视频数据怎么样？': '《成人高考报名其实就 3 步》实时数据：播放 <b>5.2 万</b>（还在涨）、点赞 3,180、评论 57、带来咨询 6 条。比你的平均表现高 <b>8 倍</b>。',
+          '今天还剩什么事？': '还有 3 件在你手上：2 条视频等你过目、8 条评论等你放行、19:30 的发布等你确认。都排好了，你点头就行。',
+          '评论有什么动静？': '新评论 6 条：2 条问价格（我拟好引导话术了），3 条夸的，1 条问「初中能不能报」。建议你亲自回，这种最容易成。'
+        };
+        function appendMe(t) {
+          var el = document.createElement('div');
+          el.className = 'cp-msg me';
+          el.textContent = t;
+          body.appendChild(el);
+          body.scrollTop = body.scrollHeight;
+        }
+        function appendAI(html) {
+          var el = document.createElement('div');
+          el.className = 'cp-msg ai';
+          el.innerHTML = html;
+          body.appendChild(el);
+          body.scrollTop = body.scrollHeight;
+        }
+        function ask(q) {
+          if (!q) return;
+          appendMe(q);
+          var cpKernel = (typeof window.jco !== 'undefined' && window.jco && window.jco.kernel);
+          if (cpKernel) {
+            appendAI('…');
+            var cpMsgs = body.querySelectorAll('.cp-msg.ai');
+            var cpEl = cpMsgs[cpMsgs.length - 1];
+            window.jco.kernel.ask(q).then(function (res) {
+              var cpText = (res && res.ok && res.text) ? res.text : ('没答上来：' + ((res && res.error) || '未知错误'));
+              cpEl.textContent = cpText;
+              cpEl.style.whiteSpace = 'pre-wrap';
+              body.scrollTop = body.scrollHeight;
+            });
+            return;
+          }
+          setTimeout(function () {
+            appendAI(FIXED[q] || ('收到「' + q + '」。正式版里我马上去查，查完把明细端给你。'));
+          }, 420);
+        }
+        document.querySelectorAll('.cp-act').forEach(function (b) {
+          b.addEventListener('click', function () { ask(b.getAttribute('data-q')); });
+        });
+        function fire() {
+          var v = inp.value.trim();
+          if (!v) return;
+          inp.value = '';
+          inp.style.height = 'auto';
+          ask(v);
+        }
+        sendBtn.addEventListener('click', fire);
+        inp.addEventListener('keydown', function (e) {
+          if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); fire(); }
+        });
+        inp.addEventListener('input', function () {
+          inp.style.height = 'auto';
+          inp.style.height = Math.min(inp.scrollHeight, 90) + 'px';
+        });
+      })();
+      /* ---------- 侧栏（图标栏 + 悬停展开 + 固定展开） ---------- */
+      (function () {
+        var sidebar = document.querySelector('.sidebar');
+        var pinBtn = document.querySelector('.side-toggle');
+        if (!sidebar) return;
+        function setPinned(v) {
+          document.documentElement.classList.toggle('side-pinned', v);
+          if (pinBtn) pinBtn.querySelector('.ti').className = 'ti ' + (v ? 'ti-layout-sidebar-left-collapse' : 'ti-layout-sidebar-left-expand');
+          try { localStorage.setItem('jco-side-pinned', v ? '1' : '0'); } catch (err) {}
+        }
+        if (pinBtn) pinBtn.addEventListener('click', function () {
+          setPinned(!document.documentElement.classList.contains('side-pinned'));
+        });
+        try {
+          if (localStorage.getItem('jco-side-pinned') === '1') setPinned(true);
+        } catch (err) {}
+      })();
+      /* ---------- 侧栏分组折叠 ---------- */
+      (function () {
+        var KEY = 'jco-sidebar-folded-groups';
+        function loadFolded() {
+          try { return (localStorage.getItem(KEY) || '').split(',').filter(Boolean); } catch (e) { return []; }
+        }
+        function saveFolded(list) {
+          try { localStorage.setItem(KEY, list.join(',')); } catch (e) {}
+        }
+        function applyFold(label, hide) {
+          label.classList.toggle('folded', hide);
+          var el = label.nextElementSibling;
+          while (el && !el.classList.contains('group-label')) {
+            if (el.classList.contains('nav-item') || el.classList.contains('convos')) {
+              el.style.display = hide ? 'none' : '';
+            }
+            el = el.nextElementSibling;
+          }
+        }
+        var folded = loadFolded();
+        document.querySelectorAll('.group-label').forEach(function (label) {
+          var name = label.textContent.trim();
+          if (folded.indexOf(name) !== -1) applyFold(label, true);
+          label.addEventListener('click', function () {
+            var hide = !label.classList.contains('folded');
+            applyFold(label, hide);
+            var list = loadFolded();
+            if (hide) { if (list.indexOf(name) === -1) list.push(name); }
+            else { list = list.filter(function (x) { return x !== name; }); }
+            saveFolded(list);
+          });
+        });
+      })();
+      var wm = document.querySelector('.wordmark');
+      if (wm) wm.addEventListener('click', function () {
+        if ('J.Co主界面-首页.html' !== here) location.href = 'J.Co主界面-首页.html';
+      });
+      document.querySelectorAll('.convo').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          location.href = 'J.Co总管.html';
+        });
+      });
+    })();
+  
+    /* ---------- 账号菜单（点头像弹出：设置 / 退出登录） ---------- */
+    (function () {
+      var meBtn = document.getElementById('meBtn');
+      var menu = document.getElementById('meMenu');
+      if (!meBtn || !menu) return;
+      function setOpen(open) {
+        menu.hidden = !open;
+        meBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+      }
+      meBtn.addEventListener('click', function () { setOpen(menu.hidden); });
+      meBtn.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setOpen(menu.hidden); }
+        if (e.key === 'Escape') setOpen(false);
+      });
+      document.addEventListener('click', function (e) {
+        if (!menu.hidden && !menu.contains(e.target) && !meBtn.contains(e.target)) setOpen(false);
+      });
+      document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && !menu.hidden) setOpen(false);
+      });
+      document.getElementById('mmSettings').addEventListener('click', function () {
+        setOpen(false);
+        var here = decodeURIComponent(location.pathname.split('/').pop());
+        if (here !== 'J.Co设置.html') location.href = 'J.Co设置.html';
+      });
+      document.getElementById('mmLogout').addEventListener('click', function () {
+        setOpen(false);
+        showToast('这台电脑上不用单独登录：关掉窗口就是退出，素材和草稿都留着。');
+      });
+    })();
+  
+    /* ---------- 通知面板：最近的活动记录（真数据） ---------- */
+    function jcoToggleNotif(anchor) {
+      var old = document.querySelector('.notif-pop');
+      if (old) { old.remove(); return; }
+      var items = [];
+      try { items = (JSON.parse(localStorage.getItem('jco-log-v1') || '{"items":[]}').items) || []; } catch (e) {}
+      var pop = document.createElement('div');
+      pop.className = 'notif-pop';
+      var r = anchor.getBoundingClientRect();
+      pop.style.position = 'fixed';
+      pop.style.left = Math.min(r.right + 10, window.innerWidth - 296) + 'px';
+      pop.style.bottom = Math.max(12, window.innerHeight - r.bottom) + 'px';
+      var head = document.createElement('div');
+      head.className = 'np-head';
+      head.textContent = '最近动态';
+      pop.appendChild(head);
+      if (items.length === 0) {
+        var empty = document.createElement('div');
+        empty.className = 'np-empty';
+        empty.textContent = '还没有记录。干一句活，这里就开始记。';
+        pop.appendChild(empty);
+      } else {
+        items.slice(0, 8).forEach(function (x) {
+          var row = document.createElement('div');
+          row.className = 'np-row';
+          var d = new Date(x.t);
+          var hh = String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+          var time = document.createElement('span');
+          time.className = 'np-time';
+          time.textContent = hh;
+          var txt = document.createElement('span');
+          txt.className = 'np-txt';
+          txt.textContent = x.title + (x.detail ? '（' + x.detail + '）' : '');
+          row.appendChild(time);
+          row.appendChild(txt);
+          pop.appendChild(row);
+        });
+      }
+      var foot = document.createElement('a');
+      foot.className = 'np-foot';
+      foot.href = 'J.Co总管.html';
+      foot.textContent = '去总管看全部 →';
+      pop.appendChild(foot);
+      document.body.appendChild(pop);
+      var closer = function (ev) {
+        if (!pop.contains(ev.target)) {
+          pop.remove();
+          document.removeEventListener('click', closer, true);
+        }
+      };
+      setTimeout(function () { document.addEventListener('click', closer, true); }, 0);
+    }
+  
+  
+    /* ---------- 对话列表（真会话）：点击续聊；每项可分享 / 重命名 / 删除；＋ 新会话 ---------- */
+    (function jcoConvos() {
+      var hasKernel = (typeof window.jco !== 'undefined' && window.jco && window.jco.kernel);
+      if (!hasKernel) return; // 浏览器直开：保留演示列表
+      var data = null;
+      try { data = JSON.parse(localStorage.getItem('jco-chats-v1') || 'null'); } catch (e) {}
+      var box = document.querySelector('.convos');
+      if (!box || !data || !Array.isArray(data.chats) || data.chats.length === 0) return;
+      var here = decodeURIComponent(location.pathname.split('/').pop());
+      function go(req) {
+        try { sessionStorage.setItem('jco-open-chat', req); } catch (e) {}
+        if (here !== 'J.Co总管.html') location.href = 'J.Co总管.html';
+      }
+      function saveChats() { try { localStorage.setItem('jco-chats-v1', JSON.stringify(data)); } catch (e) {} }
+
+      /* 会话操作：分享 / 重命名 / 删除（含两步防误删） */
+      var openMenu = null;
+      function closeMenu() { if (openMenu) { openMenu.remove(); openMenu = null; } }
+      document.addEventListener('click', closeMenu);
+      function toastIt(msg) {
+        var t = document.getElementById('toast');
+        if (!t) return;
+        t.textContent = msg; t.classList.add('show');
+        clearTimeout(toastIt._t); toastIt._t = setTimeout(function () { t.classList.remove('show'); }, 2600);
+      }
+      function shareChat(chat) {
+        var lines = ['【和 J.Co 的对话 · ' + (chat.title || '新会话') + '】'];
+        (chat.messages || []).forEach(function (m) {
+          lines.push((m.role === 'user' ? '我：' : 'J.Co：') + String(m.text || ''));
+        });
+        var text = lines.join('\n');
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(text).then(
+            function () { toastIt('对话已复制，去粘贴分享吧'); },
+            function () { toastIt('没复制成，手动选中复制一下'); }
+          );
+        } else { toastIt('这台环境不支持直接复制'); }
+      }
+      function showMenu(anchor, chat) {
+        closeMenu();
+        var menu = document.createElement('div');
+        menu.className = 'convo-menu';
+        menu.addEventListener('click', function (e) { e.stopPropagation(); });
+        function item(icon, label, cls, fn) {
+          var b = document.createElement('button');
+          b.type = 'button';
+          b.className = cls || '';
+          b.innerHTML = '<span class="ti ' + icon + '"></span>' + label;
+          b.addEventListener('click', fn);
+          menu.appendChild(b);
+          return b;
+        }
+        item('ti-share-3', '分享对话', '', function () { closeMenu(); shareChat(chat); });
+        item('ti-file-text', '重命名', '', function () {
+          closeMenu();
+          var row = anchor.closest('.convo');
+          var nameEl = row ? row.querySelector('.name') : null;
+          if (!nameEl) return;
+          var input = document.createElement('input');
+          input.className = 'convo-rename';
+          input.value = chat.title || '新会话';
+          nameEl.replaceWith(input);
+          input.focus(); input.select();
+          var done = false;
+          function commit(saveIt) {
+            if (done) return; done = true;
+            var v = input.value.trim().slice(0, 20);
+            if (saveIt && v) chat.title = v;
+            nameEl.textContent = chat.title || '新会话';
+            input.replaceWith(nameEl);
+            if (saveIt && v) { saveChats(); toastIt('改好名字了'); }
+          }
+          input.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter') { e.preventDefault(); commit(true); }
+            if (e.key === 'Escape') { commit(false); }
+          });
+          input.addEventListener('blur', function () { commit(true); });
+          input.addEventListener('click', function (e) { e.stopPropagation(); });
+        });
+        var del = item('ti-trash', '删除对话', 'danger', function () {
+          if (del.getAttribute('data-armed') !== '1') {
+            del.setAttribute('data-armed', '1');
+            del.innerHTML = '<span class="ti ti-trash"></span>再点一次，真删除';
+            return;
+          }
+          closeMenu();
+          var wasActive = data.activeId === chat.id;
+          data.chats = data.chats.filter(function (x) { return x.id !== chat.id; });
+          if (data.chats.length === 0) {
+            data.chats.push({ id: 'c' + Date.now().toString(36), title: '新会话', updatedAt: Date.now(), messages: [] });
+          }
+          if (wasActive) data.activeId = data.chats[0].id;
+          saveChats();
+          toastIt('已删除「' + (chat.title || '新会话') + '」');
+          render();
+        });
+        document.body.appendChild(menu);
+        var r = anchor.getBoundingClientRect();
+        var mw = menu.offsetWidth || 160, mh = menu.offsetHeight || 130;
+        var left = Math.min(r.right + 8, window.innerWidth - mw - 10);
+        var top = Math.min(r.bottom + 4, window.innerHeight - mh - 10);
+        if (top < 8) top = 8;
+        menu.style.left = left + 'px';
+        menu.style.top = top + 'px';
+        openMenu = menu;
+      }
+      function render() {
+        box.innerHTML = '';
+        var add = document.createElement('button');
+        add.className = 'convo new-btn';
+        add.innerHTML = '<span class="ti ti-plus"></span>新会话';
+        add.addEventListener('click', function (e) { e.stopPropagation(); go('new'); });
+        box.appendChild(add);
+        data.chats.slice(0, 8).forEach(function (c) {
+          var b = document.createElement('button');
+          b.className = 'convo' + (c.id === data.activeId ? ' active' : '');
+          var nm = document.createElement('span');
+          nm.className = 'name';
+          nm.textContent = c.title || '新会话';
+          b.appendChild(nm);
+          var more = document.createElement('span');
+          more.className = 'convo-more';
+          more.setAttribute('role', 'button');
+          more.setAttribute('tabindex', '0');
+          more.setAttribute('aria-label', '更多操作');
+          more.textContent = '⋯';
+          more.addEventListener('click', function (e) { e.stopPropagation(); showMenu(more, c); });
+          more.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); showMenu(more, c); } });
+          b.appendChild(more);
+          b.addEventListener('click', function (e) { e.stopPropagation(); go(c.id); });
+          box.appendChild(b);
+        });
+      }
+      render();
+    })();
+  
+  </script>
+  
+</body>
+</html>

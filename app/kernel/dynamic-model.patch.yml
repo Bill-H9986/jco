@@ -1,0 +1,10 @@
+# J.Co 自动生成：由设置页保存的模型配置写到这里（手工改动会被下次保存覆盖）
+- id: llm-pi-ai
+  config:
+    providers:
+      jco-custom:
+        apiKeyEnv: JCO_CUSTOM_KEY
+        api: openai-completions
+        baseURL: 'https://api.agnes-ai.cn/v1'
+        models:
+          - id: 'agnes-3.0-flash'

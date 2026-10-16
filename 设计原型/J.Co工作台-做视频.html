@@ -1,0 +1,2267 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>J.Co · 创作</title>
+  <link rel="stylesheet" href="./assets/jco-ui.css">
+  <style>
+/* ============ 主区 ============ */
+  .main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+
+.scroll { flex: 1; overflow-y: auto; }
+
+.wrap { max-width: none; margin: 0 auto; padding: 40px 32px 70px; }
+
+/* 头部：和 J.Co + 模式切换 */
+  .agent-head { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 22px; }
+
+.agent-logo {
+    width: 30px; height: 30px; border-radius: 8px;
+    background: var(--text-1); color: var(--bg);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; font-weight: 600; flex: none;
+  }
+
+.agent-name { font-size: 16px; font-weight: 600; }
+
+.agent-tabs { display: flex; background: var(--tint); border-radius: 999px; padding: 3px; gap: 2px; }
+
+.agent-tabs button {
+    border: none; background: transparent; border-radius: 999px;
+    font-family: inherit; font-size: 14px; color: var(--text-2);
+    height: 32px; padding: 0 16px; cursor: pointer;
+    transition: background 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+  }
+
+.agent-tabs button:hover { color: var(--text-1); }
+
+.agent-tabs button.on { background: var(--card); color: var(--text-1); font-weight: 600; box-shadow: var(--shadow-card); }
+
+.agent-tabs button:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+.agent-hint { font-size: 16px; color: var(--text-2); }
+
+.from {
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+    background: var(--tint); border-radius: 20px; padding: 12px 18px;
+    font-size: 13px; color: var(--text-2); margin-bottom: 16px;
+  }
+
+.from .ti { font-size: 16px; color: var(--text-2); }
+
+.from b { color: var(--text-1); font-weight: 600; }
+
+.from .src { color: var(--text-3); font-size: 12px; margin-left: auto; }
+
+/* ============ 核心输入卡 ============ */
+  .ask {
+    position: static; max-width: none; margin: 0 74px 0 0;
+    background: var(--card); border-radius: 28px; box-shadow: var(--shadow);
+    padding: 16px 20px 12px;
+  }
+
+.pinbar {
+    flex: none; padding: 8px 32px 14px;
+    background: transparent; border-top: none;
+  }
+
+
+
+.ask:focus-within { box-shadow: 0 0 0 3px rgba(0, 128, 255, 0.12), var(--shadow); }
+
+.ask textarea {
+    width: 100%; border: none; background: transparent; resize: none;
+    font-family: inherit; font-size: 16px; line-height: 1.6; color: var(--text-1);
+    outline: none; min-height: 54px; max-height: 140px;
+  }
+
+.ask textarea:focus-visible { outline: none; }
+
+.ask textarea::placeholder { color: var(--text-3); }
+
+.ask-bar { display: flex; align-items: center; gap: 10px; margin-top: 12px; }
+
+.ask-bar .left, .ask-bar .right { display: flex; align-items: center; gap: 8px; flex: none; }
+
+.ask-bar .mid { flex: 1; display: flex; justify-content: center; min-width: 0; }
+
+.tool {
+    display: inline-flex; align-items: center; gap: 6px;
+    height: 34px; padding: 0 13px; border: none; border-radius: 999px;
+    background: transparent; color: var(--text-2);
+    font-family: inherit; font-size: 13px; cursor: pointer;
+    transition: background 0.15s ease, color 0.15s ease;
+  }
+
+.tool:hover { background: var(--hover); color: var(--text-1); }
+
+.tool:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.tool .ti { font-size: 16px; }
+
+.model-pill {
+    display: inline-flex; align-items: center; gap: 8px;
+    height: 36px; padding: 0 15px; border: none; border-radius: 999px;
+    background: var(--tint); color: var(--text-1);
+    font-family: inherit; font-size: 13px; cursor: pointer;
+    max-width: 100%; white-space: nowrap; overflow: hidden;
+    transition: background 0.15s ease;
+  }
+
+.model-pill:hover { background: var(--btn-2nd); }
+
+.model-pill:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.model-pill .ti { font-size: 14px; color: var(--accent); flex: none; }
+
+.model-pill .px { overflow: hidden; text-overflow: ellipsis; }
+
+.model-pill .chev { color: var(--text-3); }
+
+.send-big {
+    display: flex; align-items: center; justify-content: center;
+    width: 40px; height: 40px; border: none; border-radius: 50%;
+    background: var(--accent); color: #ffffff; font-size: 18px; cursor: pointer;
+    transition: background 0.15s ease, transform 0.1s ease, opacity 0.15s ease;
+  }
+
+.send-big:hover { background: var(--accent-strong); }
+
+.send-big:active { transform: scale(0.95); }
+
+.send-big:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.send-big:disabled { background: rgba(120, 120, 128, 0.22); color: var(--bg); cursor: default; }
+
+/* 参数弹层 */
+  .pill-pop {
+    position: absolute; left: 50%; transform: translateX(-50%);
+    top: calc(100% - 44px); z-index: 30;
+    width: 480px; max-width: calc(100vw - 80px);
+    background: var(--card); border-radius: 20px;
+    box-shadow: var(--shadow-float);
+    padding: 18px 20px 14px;
+    display: none;
+  }
+
+.pill-pop.show { display: block; }
+
+.pop-row { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+
+.pop-row .plabel { width: 58px; flex: none; font-size: 13px; color: var(--text-2); }
+
+.pop-tip { font-size: 12px; color: var(--text-3); border-top: 0.5px solid var(--line); padding-top: 10px; margin-top: 2px; min-height: 20px; }
+
+/* ============ 技能快捷排（图标卡片） ============ */
+  .skills {
+    display: grid; grid-template-columns: repeat(8, 1fr); gap: 6px;
+    margin-top: 20px;
+  }
+
+.skill {
+    display: flex; flex-direction: column; align-items: center; gap: 8px;
+    padding: 12px 4px 11px; border: none; border-radius: 20px;
+    background: transparent; color: var(--text-1);
+    font-family: inherit; font-size: 12px; cursor: pointer;
+    transition: background 0.15s ease, transform 0.12s ease, box-shadow 0.15s ease;
+  }
+
+.skill:hover { background: var(--card); box-shadow: var(--shadow-card); }
+
+.skill:active { transform: scale(0.96); }
+
+.skill:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.skill .ic {
+    width: 44px; height: 44px; border-radius: 12px;
+    background: var(--tint); color: var(--text-2);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px;
+    transition: background 0.15s ease, color 0.15s ease;
+  }
+
+.skill:hover .ic { background: rgba(0, 128, 255, 0.12); color: var(--accent); }
+
+.skill .nm { white-space: nowrap; color: var(--text-2); }
+
+.skill:hover .nm { color: var(--text-1); font-weight: 500; }
+
+/* ============ 我的草稿 ============ */
+  .sec-drafts { margin-top: 34px; }
+
+.sec-title { display: flex; align-items: baseline; gap: 10px; margin-bottom: 12px; }
+
+.sec-title h2 { font-size: 16px; font-weight: 600; letter-spacing: -0.01em; }
+
+.sec-title .sec-hint { font-size: 13px; color: var(--text-3); }
+
+/* 草稿箱：白卡框里一排排"扑克牌"，每个单位一张 */
+  .drafts { display: grid; grid-template-columns: repeat(auto-fill, minmax(168px, 1fr)); gap: 12px; background: var(--card); border-radius: 20px; box-shadow: var(--shadow-card); padding: 14px; min-height: 96px; }
+
+.dcard { display: flex; flex-direction: column; border: 0.5px solid var(--line); border-radius: 20px; background: var(--bg); overflow: hidden; cursor: pointer; text-align: left; font-family: inherit; padding: 0; transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease; }
+
+.dcard:hover { transform: translateY(-2px); box-shadow: var(--shadow); border-color: var(--text-3); }
+
+.dcard:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.dcard:disabled { cursor: default; opacity: 0.95; }
+
+.dcard:disabled:hover { transform: none; box-shadow: none; border-color: var(--line); }
+
+.dcard .dcover { height: 128px; background: var(--tint); display: flex; align-items: center; justify-content: center; color: var(--text-3); font-size: 28px; position: relative; overflow: hidden; }
+
+.dcard .dcover img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+
+.dcard .dcorner { position: absolute; top: 8px; right: 8px; z-index: 1; }
+
+.dcard .dbody { padding: 10px 12px 12px; display: flex; flex-direction: column; gap: 6px; }
+
+.dcard .dname { font-size: 12px; font-weight: 600; line-height: 1.5; color: var(--text-1); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+
+.dcard .dsub { font-size: 12px; color: var(--text-3); display: flex; justify-content: space-between; gap: 6px; }
+
+.dcard .dprog { height: 4px; border-radius: 999px; background: rgba(120, 120, 128, 0.18); overflow: hidden; }
+
+.dcard .dprog .dfill { height: 100%; width: 100%; border-radius: 999px; background: var(--accent); transform-origin: left; transform: scaleX(0); transition: transform 0.3s linear; }
+
+.drafts-empty {
+    grid-column: 1 / -1;
+    padding: 26px 24px; text-align: center;
+    font-size: 13px; color: var(--text-3); line-height: 1.7;
+  }
+
+.draft {
+    display: flex; align-items: center; gap: 14px;
+    background: var(--card); border-radius: 20px; box-shadow: var(--shadow-card);
+    padding: 13px 16px;
+    transition: box-shadow 0.16s ease;
+  }
+
+.draft:hover { box-shadow: var(--shadow); }
+
+.draft .thumb {
+    flex: none; width: 66px; height: 42px; border-radius: 12px;
+    background: var(--tint); color: var(--text-3);
+    display: flex; align-items: center; justify-content: center; font-size: 18px;
+  }
+
+.draft .info { flex: 1; min-width: 0; }
+
+.draft .dtitle { font-size: 14px; font-weight: 600; color: var(--text-1); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.draft .dmeta { margin-top: 4px; font-size: 12px; color: var(--text-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.draft .dprog { margin-top: 7px; height: 4px; border-radius: 999px; background: rgba(120, 120, 128, 0.18); overflow: hidden; }
+
+.draft .dprog .dfill { height: 100%; width: 100%; border-radius: 999px; background: var(--accent); transform-origin: left; transform: scaleX(0); transition: transform 0.3s linear; }
+
+.badge {
+    flex: none; font-size: 12px; font-weight: 600;
+    border-radius: 999px; padding: 4px 12px;
+    background: var(--tint); color: var(--text-2);
+  }
+
+.badge.gen { color: var(--accent); background: rgba(0, 128, 255, 0.12); }
+
+.badge.review { color: #b25000; background: rgba(255, 140, 40, 0.14); }
+
+.badge.adjusted { color: var(--accent); background: rgba(0, 128, 255, 0.12); }
+
+.badge.approved { color: var(--green); background: rgba(36, 138, 61, 0.12); }
+
+.draft .open {
+    flex: none; height: 34px; padding: 0 16px; border: none; border-radius: 999px;
+    background: var(--btn-2nd); color: var(--text-1);
+    font-family: inherit; font-size: 13px; font-weight: 500; cursor: pointer;
+    transition: background 0.15s ease, transform 0.1s ease;
+  }
+
+.draft .open:hover { background: var(--btn-2nd-hover); }
+
+.draft .open:active { transform: scale(0.97); }
+
+.draft .open:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.draft .open.primary { background: var(--accent); color: #ffffff; }
+
+.draft .open.primary:hover { background: var(--accent-strong); }
+
+/* 草稿详情状态头 */
+  .dhead { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+
+.dhead .dtime { font-size: 12px; color: var(--text-3); }
+
+/* ============ 图片草稿：大图随选随修 ============ */
+  .imgboard { display: none; flex-direction: column; width: 100%; gap: 14px; }
+
+.ib-head { display: flex; align-items: center; gap: 10px; }
+
+.ib-head .dtime { font-size: 12px; color: var(--text-3); }
+
+.ib-body { display: flex; gap: 24px; }
+
+.ib-main { flex: none; }
+
+.ib-big {
+    position: relative; width: 252px; height: 336px; border-radius: 20px;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--text-3); font-size: 34px;
+    border: 0.5px solid var(--line);
+  }
+
+.ib-big.g1, .ib-thumb.g1 { background: linear-gradient(135deg, rgba(64, 120, 255, 0.18), rgba(64, 120, 255, 0.05)); }
+
+.ib-big.g2, .ib-thumb.g2 { background: linear-gradient(135deg, rgba(40, 160, 110, 0.18), rgba(40, 160, 110, 0.05)); }
+
+.ib-big.g3, .ib-thumb.g3 { background: linear-gradient(135deg, rgba(235, 140, 60, 0.2), rgba(235, 140, 60, 0.06)); }
+
+.ib-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; border-radius: inherit; }
+
+.ib-thumb img { width: 100%; height: 100%; object-fit: cover; border-radius: inherit; }
+
+.ib-count {
+    position: absolute; right: 10px; top: 10px;
+    font-size: 12px; color: var(--text-2); background: var(--card);
+    border-radius: 999px; padding: 3px 10px;
+  }
+
+.ib-nav {
+    position: absolute; top: 50%; transform: translateY(-50%);
+    width: 32px; height: 32px; border: none; border-radius: 50%;
+    background: var(--card); box-shadow: var(--shadow-card); color: var(--text-1);
+    font-size: 16px; line-height: 1; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: background 0.15s ease, transform 0.1s ease;
+  }
+
+.ib-nav:hover { background: var(--btn-2nd-hover); }
+
+.ib-nav:active { transform: translateY(-50%) scale(0.94); }
+
+.ib-nav:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.ib-nav.prev { left: 8px; }
+
+.ib-nav.next { right: 8px; }
+
+.ib-sel {
+    position: absolute; display: none;
+    border: 2px solid var(--accent);
+    background: rgba(0, 128, 255, 0.12);
+    border-radius: 4px;
+    pointer-events: none;
+  }
+
+.ib-sel.show { display: block; }
+
+.ib-sel.working { animation: selpulse 0.6s infinite alternate; }
+
+@keyframes selpulse {
+    from { background: rgba(0, 128, 255, 0.12); }
+    to { background: rgba(0, 128, 255, 0.34); }
+  }
+
+.ib-sel.done { border-color: var(--green); background: rgba(36, 138, 61, 0.12); }
+
+.ib-sel.done::after {
+    content: '已修改';
+    position: absolute; right: -2px; top: -24px;
+    font-size: 12px; color: var(--green); background: var(--card);
+    border-radius: 4px; padding: 2px 8px; border: 0.5px solid var(--line);
+  }
+
+.ib-tip { font-size: 12px; color: var(--text-3); }
+
+.ib-tip.on { color: var(--accent); font-weight: 600; }
+
+.ib-title { margin-top: 10px; font-size: 12px; color: var(--text-2); text-align: center; }
+
+.ib-side { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 14px; }
+
+.ib-thumbs { display: flex; gap: 10px; }
+
+.ib-thumb {
+    width: 64px; height: 86px; border-radius: 12px; border: 2px solid transparent;
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    color: var(--text-3); font-size: 18px; padding: 0;
+    transition: border-color 0.15s ease, transform 0.1s ease;
+  }
+
+.ib-thumb:hover { transform: translateY(-2px); }
+
+.ib-thumb:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.ib-thumb.on { border-color: var(--accent); }
+
+.ib-add {
+    width: 64px; height: 86px; border-radius: 12px;
+    border: 1px dashed var(--line); background: transparent;
+    color: var(--text-3); font-size: 20px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: border-color 0.15s ease, color 0.15s ease;
+  }
+
+.ib-add:hover { border-color: var(--text-3); color: var(--text-1); }
+
+.ib-add:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.ib-side .fix-bar { margin-top: 0; }
+
+.ib-ops { display: flex; align-items: center; gap: 10px; margin-top: auto; }
+
+/* ============ 模板区 ============ */
+  .templates { margin-top: 36px; }
+
+.tp-head { font-size: 14px; color: var(--text-2); margin-bottom: 12px; }
+
+.tp-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+
+.tp {
+    text-align: left; background: var(--card); border: none; border-radius: 20px;
+    box-shadow: var(--shadow-card); padding: 16px 16px 15px;
+    font-family: inherit; cursor: pointer;
+    display: flex; flex-direction: column; gap: 8px;
+    transition: transform 0.16s var(--ease), box-shadow 0.16s var(--ease);
+  }
+
+.tp:hover { transform: translateY(-2px); box-shadow: var(--shadow); }
+
+.tp:active { transform: scale(0.985); }
+
+.tp:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.tp .ic { font-size: 20px; color: var(--text-2); }
+
+.tp .nm { font-size: 14px; font-weight: 600; color: var(--text-1); }
+
+.tp .ds { font-size: 12px; color: var(--text-2); line-height: 1.6; min-height: 40px; }
+
+/* ============ 对话流 / 生成 / 成品 ============ */
+  .flow { display: flex; flex-direction: column; gap: 12px; margin-top: 26px; }
+
+.stage {
+    display: none;
+    background: var(--card); border-radius: 20px; box-shadow: var(--shadow);
+    padding: 22px 24px; margin-top: 16px;
+  }
+
+.stage.show { display: flex; gap: 24px; }
+
+.phone {
+    flex: none; width: 150px; aspect-ratio: 9 / 16;
+    background: var(--tint); border-radius: 20px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;
+    color: var(--text-3); font-size: 12px; text-align: center; padding: 10px;
+  }
+
+.phone .ti { font-size: 30px; }
+
+.phone.wide { width: 190px; aspect-ratio: 16 / 9; }
+
+.phone.square { width: 150px; aspect-ratio: 1 / 1; }
+
+.stage .body { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+
+.stage .stage-title { font-size: 16px; font-weight: 600; }
+
+.steps { margin-top: 14px; display: flex; flex-direction: column; gap: 11px; }
+
+.step { display: flex; align-items: center; gap: 10px; font-size: 14px; color: var(--text-3); }
+
+.step .dot {
+    width: 20px; height: 20px; border-radius: 50%; flex: none;
+    display: flex; align-items: center; justify-content: center;
+    background: var(--tint); color: var(--text-3); font-size: 12px;
+  }
+
+.step.cur { color: var(--text-1); font-weight: 600; }
+
+.step.cur .dot { background: rgba(0, 128, 255, 0.12); color: var(--accent); }
+
+.step.done { color: var(--text-2); }
+
+.step.done .dot { background: rgba(36, 138, 61, 0.12); color: var(--green); }
+
+.track { margin-top: 18px; height: 5px; border-radius: 999px; background: rgba(120, 120, 128, 0.2); overflow: hidden; }
+
+.fill { height: 100%; width: 100%; border-radius: 999px; background: var(--accent); transform-origin: left; transform: scaleX(0); transition: transform 0.24s linear; }
+
+.stage .note { margin-top: 12px; font-size: 12px; color: var(--text-3); }
+
+.done {
+    display: none;
+    background: var(--card); border-radius: 20px; box-shadow: var(--shadow);
+    padding: 22px 24px; margin-top: 16px;
+  }
+
+.done.show { display: flex; }
+
+.board { display: flex; gap: 22px; width: 100%; }
+
+.board .left { flex: none; display: flex; flex-direction: column; gap: 10px; align-items: center; }
+
+.board .right { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+
+.board .phone { cursor: pointer; }
+
+.board-head .title { font-size: 16px; font-weight: 600; letter-spacing: -0.01em; line-height: 1.5; }
+
+.board-head .meta { margin-top: 6px; font-size: 13px; color: var(--text-2); }
+
+.shots { margin-top: 14px; display: flex; flex-direction: column; gap: 8px; }
+
+.shot-bar { display: flex; align-items: center; gap: 10px; margin-top: 14px; flex-wrap: wrap; }
+
+.shot-bar .go-btn { height: 34px; padding: 0 16px; font-size: 13px; border-radius: 999px; }
+
+.shot-bar .go-btn:disabled { opacity: 0.55; cursor: default; }
+
+.shot-hint { font-size: 12px; color: var(--text-3); }
+
+.shot .make { color: var(--accent); }
+
+.shot .make:disabled { opacity: 0.6; cursor: default; }
+
+/* 视频预览弹层 */
+  .video-pop { position: fixed; inset: 0; z-index: 70; display: flex; align-items: center; justify-content: center; background: rgba(20, 20, 24, 0.55); }
+
+.video-pop[hidden] { display: none; }
+
+.vp-box { width: min(560px, 88vw); max-height: 86vh; background: var(--card); border-radius: 20px; box-shadow: 0 24px 60px rgba(0, 0, 0, 0.32); overflow: hidden; display: flex; flex-direction: column; }
+
+.vp-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 14px 12px 18px; border-bottom: 0.5px solid var(--line); font-size: 14px; font-weight: 600; }
+
+.vp-close { flex: none; display: flex; align-items: center; justify-content: center; width: 30px; height: 30px; border: none; border-radius: 8px; background: transparent; color: var(--text-2); font-size: 16px; cursor: pointer; }
+
+.vp-close:hover { background: var(--hover); }
+
+.vp-close:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+
+.vp-box video { width: 100%; max-height: 70vh; background: #141418; display: block; }
+
+.shot {
+    display: flex; align-items: center; gap: 12px;
+    background: var(--tint); border-radius: 12px; padding: 10px 12px;
+  }
+
+.shot .no { flex: none; width: 24px; font-size: 12px; font-weight: 600; color: var(--text-3); font-variant-numeric: tabular-nums; }
+
+.shot .pic-thumb {
+    flex: none; width: 54px; height: 34px; border-radius: 8px;
+    background: rgba(120, 120, 128, 0.16); color: var(--text-3);
+    display: flex; align-items: center; justify-content: center; font-size: 14px;
+  }
+
+.shot .mid { flex: 1; min-width: 0; }
+
+.shot .line { display: block; font-size: 13px; color: var(--text-1); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.shot .pic { display: block; margin-top: 3px; font-size: 12px; color: var(--text-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.shot .dur { flex: none; font-size: 12px; color: var(--text-3); font-variant-numeric: tabular-nums; }
+
+.shot .swap {
+    flex: none; height: 28px; padding: 0 11px; border: none; border-radius: 999px;
+    background: var(--card); color: var(--text-1); font-family: inherit; font-size: 12px;
+    cursor: pointer; transition: background 0.15s ease;
+  }
+
+.shot .swap:hover { background: var(--btn-2nd-hover); }
+
+.shot .swap:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+.ops { display: flex; align-items: center; gap: 10px; margin-top: auto; padding-top: 16px; flex-wrap: wrap; }
+
+.fix-bar {
+    margin-top: 14px; display: flex; gap: 10px; align-items: center;
+    background: var(--tint); border-radius: 12px; padding: 9px 10px 9px 16px;
+  }
+
+.fix-bar .ti { font-size: 16px; color: var(--text-2); flex: none; }
+
+.fix-bar input {
+    flex: 1; border: none; background: transparent; outline: none;
+    font-family: inherit; font-size: 14px; color: var(--text-1);
+  }
+
+.fix-bar input:focus-visible { outline: none; }
+
+.fix-bar input::placeholder { color: var(--text-3); }
+
+.fix-bar .ghost { height: 32px; padding: 0 13px; font-size: 13px; background: var(--card); }
+
+/* DSH 规范：正圆与胶囊保持圆弧（其余圆角走超椭圆） */
+  .me .ava, .mm-head .ava, .msg.ai .ava, .card .go, .send, .ghost, .ghost-btn, .btn-sm, .act,
+  .cp-act, .cp-send, .agent-chip, .badge, .b-role, .s-badge, .stage, .r-dot,
+  .dot, .prog .track, .prog .fill, .prow .pbar, .prow .pf2, .toast,
+  .pf .pfck, .seg button, .go-btn, .copilot-btn, .acc .pfp, .use-btn,
+  .tag, .star, .check, .ai-state .dot, .regen, .agent-tabs, .agent-tabs button,
+  .tool, .model-pill, .send-big, .draft .dprog, .draft .dprog .dfill,
+  .draft .open, .ib-count, .ib-nav, .step .dot, .track, .fill, .shot .swap,
+  .export-btn, .play-btn, .playhead::after, .lava, .planrow .ps, .s-pbar,
+  .s-pfill, .s-badge::before { corner-shape: round; }
+
+@media (prefers-color-scheme: dark) {
+    ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.24); border-radius: 999px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.4); border-radius: 999px; }
+  }
+
+@media (max-width: 860px) {
+    .sidebar { display: none; }
+    .wrap { padding: 24px 18px 60px; }
+    .stage.show, .done.show { flex-direction: column; }
+    .board { flex-direction: column; }
+    .ask-bar { flex-wrap: wrap; }
+    .skills { grid-template-columns: repeat(4, 1fr); }
+    .tp-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+  </style>
+<script>
+  /* 提前恢复侧栏展开状态，避免页面加载时闪一下 */
+  try { if (localStorage.getItem('jco-side-pinned') === '1') document.documentElement.classList.add('side-pinned'); } catch (e) {}
+</script>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="sidebar-inner">
+      <div class="side-top">
+        <div class="wordmark">J.Co</div>
+        <button class="side-toggle" aria-label="固定展开侧栏" title="点一下固定展开，再点收起"><span class="ti ti-layout-sidebar-left-expand"></span></button>
+      </div>
+      <div class="search"><span class="ti ti-search"></span><input placeholder="搜索"></div>
+      <nav class="nav">
+        <button class="nav-item"><span class="ti ti-message-plus"></span>总管</button>
+        <button class="group-label" type="button"><span class="ti ti-layout-grid"></span>工作台<span class="ti ti-chevron-down"></span></button>
+        <button class="nav-item"><span class="ti ti-bulb"></span>选题</button>
+        <button class="nav-item"><span class="ti ti-photo"></span>素材</button>
+        <button class="nav-item"><span class="ti ti-file-text"></span>文案</button>
+        <button class="nav-item active"><span class="ti ti-video"></span>创作</button>
+        <button class="nav-item"><span class="ti ti-wand"></span>后期</button>
+        <button class="nav-item"><span class="ti ti-upload"></span>发布</button>
+        <button class="nav-item"><span class="ti ti-chart-bar"></span>运营</button>
+        <button class="group-label" type="button"><span class="ti ti-tool"></span>工具<span class="ti ti-chevron-down"></span></button>
+        <button class="nav-item"><span class="ti ti-clock-play"></span>自动任务</button>
+        <button class="nav-item"><span class="ti ti-sparkles"></span>技能库</button>
+        <button class="nav-item"><span class="ti ti-users-group"></span>管家团队</button>
+        <button class="nav-item"><span class="ti ti-key"></span>账号中心</button>
+      </nav>
+      <button class="group-label" type="button"><span class="ti ti-messages"></span>对话<span class="ti ti-chevron-down"></span></button>
+      <div class="convos">
+        <button class="convo"><span class="name">暑期招生 · 今日发布</span></button>
+        <button class="convo"><span class="name">评论跟进（5 条）</span></button>
+        <button class="convo"><span class="name">上周数据复盘</span></button>
+        <button class="convo"><span class="name">引流名单 · 待跟进</span></button>
+        <button class="convo"><span class="name">视频脚本草稿</span></button>
+        <button class="convo"><span class="name">技能库询价</span></button>
+      </div>
+      <div class="side-foot">
+        <div class="me" id="meBtn" role="button" tabindex="0" aria-haspopup="menu" aria-expanded="false"><div class="ava">J</div><span>Jay</span></div>
+        <button class="icon-btn" aria-label="通知"><span class="ti ti-bell"></span></button>
+      </div>
+          </div>
+      <div class="me-menu" id="meMenu" hidden role="menu" aria-label="账号菜单">
+        <div class="mm-head"><div class="ava">J</div><div class="mm-who"><b>Jay</b><span>软件账号 · 仅本机</span></div></div>
+        <div class="mm-sep"></div>
+        <button class="mm-item" id="mmSettings" role="menuitem"><span class="ti ti-settings"></span>设置</button>
+        <button class="mm-item" id="mmLogout" role="menuitem"><span class="ti ti-logout"></span>退出登录</button>
+      </div>
+    </aside>
+
+    <main class="main">
+      <div class="scroll">
+        <div class="wrap">
+          <div class="agent-head">
+            <span class="agent-logo">J</span>
+            <span class="agent-name">和 J.Co</span>
+            <div class="agent-tabs" id="agentTabs">
+              <button class="on" data-t="video">做视频</button>
+              <button data-t="image">做图</button>
+            </div>
+            <span class="agent-hint" id="agentHint">说说你想做什么</span>
+          </div>
+
+          <div class="from">
+            <span class="ti ti-video"></span>
+            <span>手头素材：<b>《成人高考报名其实就 3 步》稿子 8 句 · 素材 3 件</b></span>
+            <span class="src">说一句就行，也可以直接选下面的技能</span>
+          </div>
+
+          <div class="skills" id="skills"></div>
+
+          <div class="sec-drafts">
+            <div class="sec-title"><h2>草稿箱</h2><span class="sec-hint">一个单位一张牌：一次生成的东西（多图或多段视频）装在一起，点开看详情</span></div>
+            <div class="drafts" id="drafts"></div>
+          </div>
+
+          <div class="done" id="done">
+            <div class="board">
+              <div class="left">
+                <div class="phone" id="donePhone" onclick="showToast('（原型示意）正式版点这里全屏播放成片。')"><span class="ti ti-player-play"></span><span id="donePhoneTxt"></span></div>
+                <button class="ghost" onclick="showToast('（原型示意）正式版会从头到尾播一遍给你看。')"><span class="ti ti-eye"></span>播放整片</button>
+              </div>
+              <div class="right">
+                <div class="board-head">
+                  <div class="dhead"><span class="badge" id="dStatus"></span><span class="dtime" id="dTime">刚刚生成</span></div>
+                  <div class="title" id="doneTitle"></div>
+                  <div class="meta" id="doneMeta"></div>
+                </div>
+                <div class="shots" id="shots"></div>
+                <div class="ops">
+                  <button class="ghost" onclick="regen()">换一版</button>
+                  <span style="flex:1"></span>
+                  <button class="go-btn" id="approveBtn" onclick="approveDraft()">这版可以了</button>
+                </div>
+                <div class="fix-bar">
+                  <span class="ti ti-wand"></span>
+                  <input id="fixInp" placeholder="对哪里不满意，直接说：第 3 段换画面 / 配音换男声 / 结尾加一句找我报名">
+                  <button class="ghost" onclick="fixGo()">按我说的改</button>
+                </div>
+              </div>
+            </div>
+            <div class="imgboard" id="imgBoard">
+              <div class="ib-head">
+                <span class="badge" id="ibStatus"></span>
+                <span class="dtime">刚刚生成 · 点哪张就修哪张</span>
+              </div>
+              <div class="ib-body">
+                <div class="ib-main">
+                  <div class="ib-big g1" id="ibBig">
+                    <span class="ti ti-photo"></span>
+                    <span class="ib-count" id="ibCount"></span>
+                    <div class="ib-sel" id="ibSel"></div>
+                    <button class="ib-nav prev" onclick="ibStep(-1)" aria-label="上一张">‹</button>
+                    <button class="ib-nav next" onclick="ibStep(1)" aria-label="下一张">›</button>
+                  </div>
+                  <div class="ib-title" id="ibTitle"></div>
+                </div>
+                <div class="ib-side">
+                  <div class="ib-thumbs" id="ibThumbs"></div>
+                  <div class="ib-tip" id="ibTip">在图上拖框，圈住要改的地方（比如那行字、那个背景），再告诉 AI 改成什么</div>
+                  <div class="fix-bar">
+                    <span class="ti ti-wand"></span>
+                    <input id="ibFixInp" placeholder="把圈住的地方改成：……">
+                    <button class="ghost" onclick="ibFix()">修这里</button>
+                  </div>
+                  <div class="ib-ops">
+                    <span style="flex:1"></span>
+                    <button class="go-btn" id="ibApprove" onclick="approveDraft()">这版可以了</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="templates">
+            <div class="tp-head">不知道做什么？挑一个试试（也可以直接说你的想法）</div>
+            <div class="tp-grid" id="tpGrid"></div>
+          </div>
+        </div>
+      </div>
+      <div class="pinbar">
+        <section class="ask">
+          <textarea id="askInp" rows="2" placeholder="说说你的创作想法，也可以选素材或参考（比如：把稿子做成口播视频，用学员采访画面）"></textarea>
+          <div class="ask-bar">
+            <div class="left">
+              <button class="tool" onclick="location.href='J.Co工作台-素材.html'"><span class="ti ti-plus"></span>素材</button>
+              <button class="tool" onclick="location.href='J.Co工作台-创作.html'"><span class="ti ti-at"></span>引用</button>
+            </div>
+            <div class="mid">
+              <button class="model-pill" id="pillBtn">
+                <span class="ti ti-sparkles"></span>
+                <span class="px" id="pillText">Seedance 2.5 | 9:16 · 30 秒 · 1080P</span>
+                <span class="ti ti-chevron-down chev"></span>
+              </button>
+            </div>
+            <div class="right">
+              <button class="send-big" id="goBtn" disabled aria-label="开始生成"><span class="ti ti-arrow-up"></span></button>
+            </div>
+          </div>
+
+          <div class="pill-pop" id="pillPop">
+            <div class="pop-row"><span class="plabel">模型</span><div class="seg" id="segModel"></div></div>
+            <div class="pop-row"><span class="plabel">比例</span><div class="seg" id="segRatio"></div></div>
+            <div class="pop-row"><span class="plabel" id="durLabel">时长</span><div class="seg" id="segDur"></div></div>
+            <div class="pop-row"><span class="plabel">清晰度</span><div class="seg" id="segRes"></div></div>
+            <div class="pop-row" id="voiceRow"><span class="plabel">配音</span><div class="seg" id="segVoice"></div></div>
+            <div class="pop-tip" id="popTip"></div>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <!-- 右下角·总管助手 -->
+  <button class="copilot-btn" id="copilotBtn" aria-label="打开总管助手"><span class="ti ti-message-dots"></span></button>
+  <div class="copilot" id="copilot" hidden>
+    <div class="cp-head">
+      <span class="cp-ava">J</span>
+      <span class="cp-title">总管</span>
+      <span class="cp-sub">问点啥都行</span>
+      <button class="cp-fold" id="cpFold" aria-label="收起助手"><span class="ti ti-chevron-down"></span></button>
+    </div>
+    <div class="cp-body" id="cpBody">
+      <div class="cp-msg ai">在的。想问点什么？比如这条视频的实时数据。</div>
+      <div class="cp-acts">
+        <button class="cp-act" data-q="这条视频数据怎么样？">这条视频数据怎么样？</button>
+        <button class="cp-act" data-q="今天还剩什么事？">今天还剩什么事？</button>
+        <button class="cp-act" data-q="评论有什么动静？">评论有什么动静？</button>
+      </div>
+    </div>
+    <div class="cp-inp">
+      <textarea id="cpInp" rows="1" placeholder="问总管，比如：这条视频现在多少播放"></textarea>
+      <button class="cp-send" id="cpSend" aria-label="发送"><span class="ti ti-arrow-up"></span></button>
+    </div>
+  </div>
+  <div class="toast" id="toast" role="status"></div>
+
+  <!-- 视频预览弹层（分段出片后点「看这段」） -->
+  <div class="video-pop" id="videoPop" hidden>
+    <div class="vp-box">
+      <div class="vp-head"><span id="vpTitle">视频预览</span><button class="vp-close" id="vpClose" aria-label="关闭预览"><span class="ti ti-x"></span></button></div>
+      <video id="vpVideo" controls playsinline></video>
+    </div>
+  </div>
+
+  <script>
+    /* ================= 状态 ================= */
+    const state = {
+      type: 'video',       // video | image
+      ratio: '9:16',
+      duration: '30 秒',
+      res: '1080P',
+      voice: '标准女声',
+      count: '3 张',
+      method: 'assemble',  // 技能会影响它
+    };
+
+    const $ = (id) => document.getElementById(id);
+    const toastEl = $('toast');
+
+    function showToast(msg) {
+      toastEl.textContent = msg;
+      toastEl.classList.add('show');
+      clearTimeout(showToast.timer);
+      showToast.timer = setTimeout(() => toastEl.classList.remove('show'), 2800);
+    }
+
+    /* ================= 数据 ================= */
+    const RATIOS = {
+      video: [
+        { v: '9:16', tip: '竖屏，发抖音、视频号、小红书' },
+        { v: '16:9', tip: '横屏，发 B站、公众号视频' },
+        { v: '1:1', tip: '方形，朋友圈、头条也适用' },
+      ],
+      image: [
+        { v: '3:4', tip: '小红书图文首选' },
+        { v: '9:16', tip: '封面 / 竖屏物料' },
+        { v: '1:1', tip: '方图，朋友圈、头像' },
+      ],
+    };
+    const VIDEO_DURATIONS = [
+      { v: '5 秒', tip: '一条口播开头的时间' },
+      { v: '10 秒', tip: '一个完整卖点' },
+      { v: '30 秒', tip: '口播常用，讲清一件事（推荐）' },
+      { v: '1 分钟', tip: '讲两三个卖点，抖音也能发' },
+      { v: '3 分钟', tip: '长视频：AI 分段生成，再自动拼接' },
+      { v: '5 分钟', tip: '长视频：讲深讲透，适合 B站、视频号' },
+    ];
+    const RES = {
+      video: [
+        { v: '720P', tip: '省时间；先看效果用这个' },
+        { v: '1080P', tip: '清晰度够用，平台都认（推荐）' },
+        { v: '2K', tip: '更清晰，生成更慢' },
+      ],
+      image: [
+        { v: '1K', tip: '够发出去用' },
+        { v: '2K', tip: '清楚细腻（推荐）' },
+        { v: '4K', tip: '放大也不糊，生成更慢' },
+      ],
+    };
+    const VOICES = ['标准女声', '沉稳男声', '我自己录'];
+    const COUNTS = [
+      { v: '1 张', tip: '一张封面够用' },
+      { v: '3 张', tip: '配图常用（推荐）' },
+      { v: '5 张', tip: '整篇图文都用它' },
+    ];
+
+    const SKILLS = [
+      { id: 'copy', icon: 'ti-repeat', nm: '爆款复刻', fill: '帮我复刻这条爆款视频，链接：', method: 't2v', toast: '把爆款链接粘在后面就行，AI 拆它的结构，做你的内容' },
+      { id: 'avatar', icon: 'ti-users-group', nm: '数字人口播', fill: '用数字人把这份稿子讲出来，帮我选个合适的形象', method: 'assemble', toast: '数字人口播：AI 选形象、配音、出成片' },
+      { id: 'talking', icon: 'ti-photo', nm: '照片会说话', fill: '让这张照片开口说话，念这段稿子：', method: 'i2v', toast: '从素材里选照片，让它像真人一样开口' },
+      { id: 'onetake', icon: 'ti-video', nm: '一镜到底', fill: '把这张图做成连续运镜、一镜到底的短视频', method: 'i2v', toast: '一镜到底：一张图延展出连续运镜' },
+      { id: 'bg', icon: 'ti-wand', nm: '智能换背景', fill: '把这张图的背景换成：', method: 'i2v', toast: '换背景：抠图 + 新背景 + 光影处理' },
+      { id: 'img', icon: 'ti-photo-video', nm: '图片设计', fill: '帮我出几张配图，风格：', type: 'image', toast: '已切到做图模式，说说要什么风格的图' },
+      { id: 'long', icon: 'ti-movie', nm: '长视频', fill: '', type: 'video', duration: '3 分钟', toast: '已把时长调到 3 分钟：长视频由 AI 分段生成、自动拼接' },
+      { id: 'shoot', icon: 'ti-device-mobile', nm: '我自己出镜念', fill: '', method: 'shoot', toast: '（原型示意）正式版会打开提词器，你拍完传回来 AI 帮你剪' },
+    ];
+
+    const TEMPLATES = [
+      { icon: 'ti-file-text', nm: '政策解读', ds: '新规出来，第一时间讲清楚', fill: '做一条政策解读视频：把最新的成人学历改革讲清楚' },
+      { icon: 'ti-users-group', nm: '学员故事', ds: '真实学员的逆袭，最打动人', fill: '做一条学员故事视频：32 岁宝妈 6 个月拿证的故事' },
+      { icon: 'ti-bulb', nm: '避坑指南', ds: '这几种说法别信，信任感拉满', fill: '做一条避坑视频：学历提升里最常见的 4 个坑' },
+      { icon: 'ti-chart-bar', nm: '对比测评', ds: '两种方式怎么选，一条讲完', fill: '做一条对比视频：自考和成考到底怎么选' },
+    ];
+
+    /* ================= 渲染 ================= */
+    const TYPE_DEFAULT_RATIO = { video: '9:16', image: '3:4' };
+    const HINTS = { video: '说说你想做什么', image: '说说你要什么图' };
+    const PLACEHOLDERS = {
+      video: '说说你的创作想法，也可以选素材或参考（比如：把稿子做成口播视频，用学员采访画面）',
+      image: '比如：给这篇稿子配 3 张小红书风格的图',
+    };
+
+    function segRender(container, options, current, onPick) {
+      container.innerHTML = '';
+      options.forEach((opt) => {
+        const b = document.createElement('button');
+        b.textContent = opt.v;
+        if (opt.v === current) b.classList.add('on');
+        b.addEventListener('click', () => onPick(opt));
+        container.appendChild(b);
+      });
+    }
+
+    function pillInfo() {
+      if (state.type === 'image') {
+        return 'Seedream 5.0 | ' + state.ratio + ' · ' + state.count + ' · ' + state.res;
+      }
+      return 'Seedance 2.5 | ' + state.ratio + ' · ' + state.duration + ' · ' + state.res;
+    }
+
+    function render() {
+      $('pillText').textContent = pillInfo();
+      $('agentHint').textContent = HINTS[state.type];
+      $('askInp').placeholder = PLACEHOLDERS[state.type];
+      document.querySelectorAll('#agentTabs button').forEach((b) => {
+        b.classList.toggle('on', b.dataset.t === state.type);
+      });
+
+      // 弹层
+      const isImage = state.type === 'image';
+      segRender($('segModel'), [{ v: isImage ? 'Seedream 5.0' : 'Seedance 2.5' }], isImage ? 'Seedream 5.0' : 'Seedance 2.5', () => {});
+      segRender($('segRatio'), RATIOS[state.type], state.ratio, (o) => { state.ratio = o.v; render(); tip(o.tip); });
+      $('durLabel').textContent = isImage ? '张数' : '时长';
+      if (isImage) {
+        segRender($('segDur'), COUNTS, state.count, (o) => { state.count = o.v; render(); tip(o.tip); });
+      } else {
+        segRender($('segDur'), VIDEO_DURATIONS, state.duration, (o) => { state.duration = o.v; render(); tip(o.tip); });
+      }
+      const resOpts = isImage ? RES.image : RES.video;
+      segRender($('segRes'), resOpts, state.res, (o) => { state.res = o.v; render(); tip(o.tip); });
+      $('voiceRow').style.display = (isImage) ? 'none' : '';
+      segRender($('segVoice'), VOICES.map((v) => ({ v })), state.voice, (o) => { state.voice = o.v; render(); tip('AI 的声音。想用自己的，选「我自己录」'); });
+
+      // 技能排
+      const el = $('skills');
+      el.innerHTML = '';
+      SKILLS.forEach((s) => {
+        const b = document.createElement('button');
+        b.className = 'skill';
+        b.innerHTML = `<span class="ic ti ${s.icon}"></span><span class="nm">${s.nm}</span>`;
+        b.addEventListener('click', () => onSkill(s));
+        el.appendChild(b);
+      });
+    }
+
+    function renderTemplates() {
+      const el = $('tpGrid');
+      el.innerHTML = '';
+      TEMPLATES.forEach((t) => {
+        const b = document.createElement('button');
+        b.className = 'tp';
+        b.innerHTML = `<span class="ic ti ${t.icon}"></span><span class="nm"></span><span class="ds"></span>`;
+        b.querySelector('.nm').textContent = t.nm;
+        b.querySelector('.ds').textContent = t.ds;
+        b.addEventListener('click', () => {
+          askInp.value = t.fill;
+          inputChanged();
+          askInp.focus();
+          askInp.setSelectionRange(t.fill.length, t.fill.length);
+          showToast('填好了。点发送就开始，AI 会照这个做成你的版本。');
+        });
+        el.appendChild(b);
+      });
+    }
+
+    function tip(text) {
+      $('popTip').textContent = text;
+    }
+
+    function onSkill(s) {
+      if (s.type && s.type !== state.type) {
+        state.type = s.type;
+        state.ratio = TYPE_DEFAULT_RATIO[s.type];
+        if (state.type === 'image') state.res = '2K'; else state.res = '1080P';
+      }
+      if (s.duration) state.duration = s.duration;
+      if (s.method) state.method = s.method;
+      if (s.fill) {
+        $('askInp').value = s.fill;
+        inputChanged();
+        $('askInp').focus();
+        $('askInp').setSelectionRange(s.fill.length, s.fill.length);
+      }
+      render();
+      showToast(s.toast);
+    }
+
+    /* ================= 输入 ================= */
+    const askInp = $('askInp');
+    const goBtn = $('goBtn');
+
+    // 从「选题」带过来的主题：预填想法，确认一下就开做（不自动开始）
+    (function consumeHandoff() {
+      // 注意：这里不能引用后面的 JCO_KERNEL 常量（TDZ），直接现场判断
+      var hasKernel = (typeof window.jco !== 'undefined' && window.jco && window.jco.kernel);
+      if (!hasKernel) return;
+      let t = null;
+      try { t = sessionStorage.getItem('jco-make-topic'); if (t) sessionStorage.removeItem('jco-make-topic'); } catch (e) {}
+      if (t) {
+        askInp.value = '把《' + t + '》做成口播短视频，用学员采访和校区实拍画面';
+        inputChanged();
+        askInp.focus();
+        showToast('从选题带过来的，确认一下想法就能开做。');
+      }
+    })();
+
+    function inputChanged() { goBtn.disabled = askInp.value.trim().length === 0; }
+
+    askInp.addEventListener('input', () => {
+      inputChanged();
+      askInp.style.height = 'auto';
+      askInp.style.height = Math.min(askInp.scrollHeight, 140) + 'px';
+    });
+    askInp.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        if (!goBtn.disabled) startGen();
+      }
+    });
+    goBtn.addEventListener('click', startGen);
+
+    // 模式切换
+    document.querySelectorAll('#agentTabs button').forEach((b) => {
+      b.addEventListener('click', () => {
+        state.type = b.dataset.t;
+        state.ratio = TYPE_DEFAULT_RATIO[state.type];
+        if (state.type === 'image') { state.res = '2K'; state.count = '3 张'; } else { state.res = '1080P'; }
+        render();
+      });
+    });
+
+    // 胶囊弹层
+    const pillPop = $('pillPop');
+    $('pillBtn').addEventListener('click', (e) => {
+      e.stopPropagation();
+      pillPop.classList.toggle('show');
+      if (pillPop.classList.contains('show')) tip(RATIOS[state.type].find((r) => r.v === state.ratio).tip);
+    });
+    pillPop.addEventListener('click', (e) => e.stopPropagation());
+    document.addEventListener('click', () => pillPop.classList.remove('show'));
+
+    /* ================= 生成流程（沿用） ================= */
+    /* ---------- 真内核模式（桌面应用里启用；浏览器直开保持演示） ---------- */
+    const JCO_KERNEL = (typeof window.jco !== 'undefined' && window.jco && window.jco.kernel) ? window.jco.kernel : null;
+    /* ---------- J.Co 本地状态层：活动日志 + 草稿持久化 ---------- */
+    function jcoLogAdd(kind, title, detail) {
+      try {
+        var data = JSON.parse(localStorage.getItem('jco-log-v1') || '{"items":[]}');
+        data.items.unshift({ t: Date.now(), kind: kind, title: String(title || '').slice(0, 80), detail: String(detail || '').slice(0, 160) });
+        if (data.items.length > 200) data.items.length = 200;
+        localStorage.setItem('jco-log-v1', JSON.stringify(data));
+      } catch (e) {}
+    }
+    /** 完事提醒（真：系统通知；可在设置页关掉） */
+    function jcoNotifyDone(title, body) {
+      try {
+        if (localStorage.getItem('jco-notify-done') === '0') return;
+        var sys = (typeof window.jco !== 'undefined' && window.jco && window.jco.sys) ? window.jco.sys : null;
+        if (sys && sys.notify) sys.notify({ title: title, body: body });
+      } catch (e) {}
+    }
+    function jcoDraftsSave() {
+      try {
+        var items = drafts.slice(0, 12).map(function (d) {
+          return {
+            id: d.id, idea: d.idea, status: d.status, type: d.type, ratio: d.ratio,
+            duration: d.duration, res: d.res, voice: d.voice, method: d.method,
+            shots: (d.shots || []).slice(0, 20),
+            videos: d.videos || {},
+            images: (d.images || []).slice(0, 6).map(function (im) {
+              if (!im) return null;
+              var src = String(im.src || '');
+              // 旧版内嵌大图（dataUrl）：不入存储，避免撑爆（新图都走素材文件夹落盘）
+              if (src.length > 300000 && !im.path) return { src: '', path: '', prompt: (im.prompt || '') + '（旧版大图未入草稿）' };
+              return { src: src, path: im.path || '', prompt: im.prompt || '' };
+            }).filter(Boolean),
+          };
+        });
+        localStorage.setItem('jco-drafts-v1', JSON.stringify({ items: items }));
+      } catch (e) {}
+    }
+    function jcoDraftsLoad() {
+      try {
+        var items = (JSON.parse(localStorage.getItem('jco-drafts-v1') || '{"items":[]}').items) || [];
+        return items.map(function (d) {
+          d.progress = 100;
+          if (d.status === 'generating') d.status = 'review'; // 中断的生成不复活成假进度，落成待检查
+          d.stepText = '';
+          // 中断的"出片中"段：复位为可重试，不装成还在跑
+          if (d.videos && typeof d.videos === 'object') {
+            Object.keys(d.videos).forEach(function (k) {
+              if (d.videos[k] && d.videos[k].status === 'doing') {
+                d.videos[k] = { status: 'failed', error: '上次出片被中断，点「重试」。' };
+              }
+            });
+          }
+          return d;
+        });
+      } catch (e) { return []; }
+    }
+    function cleanLines(text) {
+      return String(text).split('\n').map((l) => l
+        .replace(/^#{1,6}\s*/, '')
+        .replace(/^[-•*]\s+/, '')
+        .replace(/^\d{1,2}[.、)]\s+/, '')
+        .trim()).filter((l) => l !== '');
+    }
+    /** 解析分镜：优先 JSON 数组，失败回退按行 */
+    function parseShots(text) {
+      let t = String(text).trim();
+      t = t.replace(/^```(?:json)?/i, '').replace(/```$/, '').trim();
+      const start = t.indexOf('[');
+      const end = t.lastIndexOf(']');
+      if (start >= 0 && end > start) t = t.slice(start, end + 1);
+      try {
+        const arr = JSON.parse(t);
+        if (Array.isArray(arr)) {
+          const shots = arr
+            .map((x) => ({ line: String((x && x.line) || '').trim(), pic: String((x && x.pic) || '').trim() }))
+            .filter((x) => x.line !== '');
+          if (shots.length >= 3) return shots;
+        }
+      } catch (e) {}
+      const lines = cleanLines(text);
+      if (lines.length >= 3) {
+        return lines
+          .map((l) => {
+            const parts = l.split(/[|｜]/);
+            return { line: (parts[0] || '').trim(), pic: (parts[1] || '').trim() };
+          })
+          .filter((x) => x.line !== '');
+      }
+      return null;
+    }
+
+    const SHOT_LINES = [
+      '别被网上那些流程吓到。',
+      '成人高考报名，其实就三步，两分钟讲完。',
+      '第一步，定学校和专业。这个最花时间，今天就能定下来。',
+      '第二步，备齐三样东西。身份证、学历证明、两寸照片。',
+      '第三步，网上填报。十分钟的事，别拖到最后一天。',
+      '对了，今年报名截止比往年早半个月。',
+      '想报的抓紧，错过真的要再等一年。',
+      '我是 J.Co，帮你把学历的事儿整明白。',
+    ];
+    const PIC_POOL = ['学员采访片段·小李', '校区教室实拍', '城市清晨空镜', '学员采访片段·王姐', '办公室学习场景', '备考桌上书本', '证书阶梯背景', '老师讲课花絮'];
+    const SHOT_DUR = ['4 秒', '5 秒', '6 秒', '6 秒', '5 秒', '5 秒', '5 秒', '4 秒'];
+
+    let genTimer = null;
+    let p = 0;
+    let draftSeq = 0;
+    const drafts = [];
+    let currentDraft = null;
+    const STATUS_META = {
+      generating: { cls: 'gen', text: '生成中' },
+      review: { cls: 'review', text: '待检查' },
+      adjusted: { cls: 'adjusted', text: '已改过' },
+      approved: { cls: 'approved', text: '已通过' },
+    };
+
+    function stepsFor() {
+      const isLongVid = state.type === 'video' && (state.duration === '3 分钟' || state.duration === '5 分钟');
+      if (state.type === 'image') {
+        return [
+          { text: '读懂稿子重点', icon: 'ti-file-text' },
+          { text: '生成 ' + state.ratio + ' 图片（' + state.count + '）', icon: 'ti-photo' },
+        ];
+      }
+      if (isLongVid) {
+        return [
+          { text: '配音中（' + state.voice + '）', icon: 'ti-microphone' },
+          { text: '分段生成画面并拼接', icon: 'ti-movie' },
+          { text: '统一字幕和背景音乐', icon: 'ti-music' },
+        ];
+      }
+      if (state.method === 't2v') {
+        return [
+          { text: '拆解爆款结构', icon: 'ti-repeat' },
+          { text: '按你的内容生成画面（' + state.ratio + ' · ' + state.res + '）', icon: 'ti-sparkles' },
+        ];
+      }
+      if (state.method === 'i2v') {
+        return [
+          { text: '读你选的那张图', icon: 'ti-photo' },
+          { text: '生成动态画面（' + state.duration + ' · ' + state.res + '）', icon: 'ti-photo-video' },
+        ];
+      }
+      return [
+        { text: '配音中（' + state.voice + '）', icon: 'ti-microphone' },
+        { text: '铺画面（3 件素材）', icon: 'ti-photo' },
+        { text: '加字幕和背景音乐', icon: 'ti-music' },
+      ];
+    }
+
+    /* ---------- 草稿系统 ---------- */
+    function draftTitle(d) {
+      return d.idea.length > 24 ? d.idea.slice(0, 24) + '…' : d.idea;
+    }
+
+    function createDraft(idea) {
+      const d = {
+        id: ++draftSeq,
+        idea,
+        status: 'generating',
+        progress: 0,
+        stepText: stepsFor()[0].text,
+        type: state.type,
+        ratio: state.ratio,
+        duration: state.type === 'image' ? state.count : state.duration,
+        res: state.res,
+        voice: state.voice,
+        method: state.method,
+      };
+      drafts.unshift(d);
+      if (drafts.length > 30) drafts.pop();
+      return d;
+    }
+
+    function renderDrafts() {
+      const el = $('drafts');
+      el.innerHTML = '';
+      if (drafts.length === 0) {
+        el.innerHTML = '<div class="drafts-empty">草稿箱还空着。在下面说一句你的想法，生成第一个单位：一个单位可以是一组图，也可以是一条多段视频；点开就能看里面的每一张、每一段。</div>';
+        return;
+      }
+      drafts.forEach((d) => {
+        const st = STATUS_META[d.status];
+        const card = document.createElement('button');
+        card.type = 'button';
+        card.className = 'dcard';
+        // 封面：优先第一张图；视频单位用播放图标
+        const coverImg = (d.images && d.images[0] && d.images[0].src) ? d.images[0].src : '';
+        const coverHtml = coverImg
+          ? '<img src="' + coverImg + '" alt="">'
+          : '<span class="ti ' + (d.type === 'image' ? 'ti-photo' : 'ti-player-play') + '"></span>';
+        // 单位内容量
+        let amount = '';
+        if (d.type === 'image') {
+          amount = ((d.images || []).length || (d.status === 'generating' ? 0 : IMG_COUNT)) + ' 张图';
+        } else {
+          const nShots = (d.shots || []).length || 8;
+          const nVid = d.videos ? Object.values(d.videos).filter((v) => v && v.status === 'done').length : 0;
+          amount = nShots + ' 段' + (nVid > 0 ? ' · 已出 ' + nVid : '');
+        }
+        card.innerHTML = '<span class="dcover">' + coverHtml + '<span class="dcorner badge ' + st.cls + '">' + (d.status === 'generating' ? ('生成中 ' + Math.round(d.progress) + '%') : st.text) + '</span></span>' +
+          '<span class="dbody"><span class="dname"></span><span class="dsub"><span class="dmeta"></span><span class="dtime"></span></span>' +
+          (d.status === 'generating' ? '<span class="dprog"><span class="dfill"></span></span>' : '') +
+          '</span>';
+        card.querySelector('.dname').textContent = draftTitle(d);
+        card.querySelector('.dmeta').textContent = d.ratio + ' · ' + amount;
+        card.querySelector('.dtime').textContent = d.status === 'generating' ? '' : '点开看详情';
+        if (d.status === 'generating') {
+          card.disabled = true;
+          const f = card.querySelector('.dfill');
+          if (f) f.style.transform = 'scaleX(' + (d.progress / 100) + ')';
+        } else {
+          card.addEventListener('click', () => { openDraft(d.id); });
+        }
+        el.appendChild(card);
+      });
+      // 状态落定后持久化（生成中的过程不落盘，避免假进度复活）
+      if (!drafts.some(function (d) { return d.status === 'generating'; })) jcoDraftsSave();
+    }
+
+    function phoneClassFor(d) {
+      if (d.ratio === '16:9') return 'phone wide';
+      if (d.ratio === '1:1') return 'phone square';
+      return 'phone';
+    }
+
+    function openDraft(id) {
+      const d = drafts.find((x) => x.id === id);
+      if (!d) return;
+      currentDraft = d;
+      const done = $('done');
+      done.classList.add('show');
+      const st = STATUS_META[d.status];
+      $('dStatus').className = 'badge ' + st.cls;
+      $('dStatus').textContent = st.text;
+      $('ibStatus').className = 'badge ' + st.cls;
+      $('ibStatus').textContent = st.text;
+      $('donePhone').className = phoneClassFor(d);
+      const isImage = d.type === 'image';
+      $('imgBoard').style.display = isImage ? 'flex' : 'none';
+      document.querySelector('.done .board').style.display = isImage ? 'none' : 'flex';
+      if (isImage) {
+        imgIdx = 0;
+        renderImgBoard();
+      } else {
+        $('donePhoneTxt').textContent = d.ratio + ' · ' + d.duration;
+        const isLong = d.duration === '3 分钟' || d.duration === '5 分钟';
+        const shotCount = Array.isArray(d.shots) && d.shots.length > 0 ? d.shots.length : 8;
+        const titleText = d.idea && d.idea.length <= 28 ? d.idea : '《成人高考报名其实就 3 步，看完不踩坑》' + (isLong ? '（长视频版）' : '');
+        $('doneTitle').textContent = titleText;
+        const voiceTxt = d.method === 'assemble' ? (' · AI 配音（' + d.voice + '）') : '';
+        $('doneMeta').textContent = d.ratio + ' · ' + d.res + ' · ' + d.duration + voiceTxt + ' · 共 ' + shotCount + ' 段 · 每一段都能看、能换';
+        renderShots();
+      }
+      $('approveBtn').textContent = d.status === 'approved' ? '去发布' : '这版可以了';
+      $('ibApprove').textContent = d.status === 'approved' ? '去发布' : '这版可以了';
+      done.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    function approveDraft() {
+      if (!currentDraft) return;
+      if (currentDraft.status === 'approved') {
+        goPublish(currentDraft);
+        return;
+      }
+      currentDraft.status = 'approved';
+      const st = STATUS_META.approved;
+      $('dStatus').className = 'badge ' + st.cls;
+      $('dStatus').textContent = st.text;
+      $('ibStatus').className = 'badge ' + st.cls;
+      $('ibStatus').textContent = st.text;
+      $('approveBtn').textContent = '去发布';
+      $('ibApprove').textContent = '去发布';
+      renderDrafts();
+      showToast('这版通过了。草稿还在，随时能回来再改。');
+    }
+
+    function markAdjusted() {
+      if (!currentDraft) return;
+      if (currentDraft.status === 'approved' || currentDraft.status === 'generating') return;
+      if (currentDraft.status === 'review') currentDraft.status = 'adjusted';
+      const st = STATUS_META[currentDraft.status];
+      $('dStatus').className = 'badge ' + st.cls;
+      $('dStatus').textContent = st.text;
+      $('ibStatus').className = 'badge ' + st.cls;
+      $('ibStatus').textContent = st.text;
+      renderDrafts();
+    }
+
+    /** 从草稿想法里提取一个像标题的名字（《xxx》优先，否则截断） */
+    function draftTitleOf(d) {
+      if (!d) return '';
+      const m = /《([^》]+)》/.exec(d.idea || '');
+      if (m) return m[1];
+      return String(d.idea || '').slice(0, 30);
+    }
+
+    /** 带着这条成片去「发布」页（交接给下一页） */
+    function goPublish(d) {
+      try {
+        sessionStorage.setItem('jco-publish-draft', JSON.stringify({
+          title: draftTitleOf(d),
+          ratio: d ? d.ratio : '',
+          duration: d ? d.duration : '',
+        }));
+      } catch (e) {}
+      location.href = 'J.Co工作台-发布.html';
+    }
+
+    function startGen() {
+      const idea = askInp.value.trim();
+      if (!idea) return;
+      // 「每步问我」模式：第一次点击先问一句，再点一次才真的开始
+      let runMode = 'auto';
+      try { runMode = localStorage.getItem('jco-mode-v1') || 'auto'; } catch (e) {}
+      if (runMode === 'ask' && goBtn.dataset.confirm !== '1') {
+        goBtn.dataset.confirm = '1';
+        showToast('「每步问我」：再点一次「开始生成」就开始。');
+        setTimeout(() => { if (goBtn.dataset.confirm === '1') goBtn.dataset.confirm = ''; }, 4000);
+        return;
+      }
+      goBtn.dataset.confirm = '';
+      askInp.value = '';
+      inputChanged();
+      askInp.style.height = 'auto';
+
+      // 每生成一条 = 开一个草稿（实时记录在草稿卡上）
+      const d = createDraft(idea);
+      renderDrafts();
+      $('drafts').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+      // 真模式（视频类）：真分镜生成；图片类与浏览器演示保持原流程
+      if (JCO_KERNEL && state.type === 'video') { startGenReal(d, idea); return; }
+      if (JCO_KERNEL && state.type === 'image') { startGenImageReal(d, idea); return; }
+
+      if (genTimer) { clearInterval(genTimer); genTimer = null; }
+      p = 0;
+      $('done').classList.remove('show');
+      const list = stepsFor();
+      const stepSpan = 100 / list.length;
+      genTimer = setInterval(() => {
+        p = Math.min(p + 2, 100);
+        d.progress = p;
+        if (p >= 100) {
+          clearInterval(genTimer);
+          genTimer = null;
+          d.progress = 100;
+          d.status = 'review';
+          d.stepText = '';
+          renderDrafts();
+          openDraft(d.id);
+          showToast(state.type === 'image'
+            ? '图片方案出来了（预演图；在设置里填「画图修图」的 Key 后出真图）。'
+            : '草稿出来了。每一段都摆好了，不顺眼的直接换，满意了再点「这版可以了」。');
+        } else {
+          d.stepText = list[Math.min(Math.floor(p / stepSpan), list.length - 1)].text;
+          renderDrafts();
+        }
+      }, 100);
+    }
+
+    /** 真模式：调内核生成分镜（进度条走到 90% 等真实结果） */
+    async function startGenReal(d, idea) {
+      if (genTimer) { clearInterval(genTimer); genTimer = null; }
+      p = 0;
+      $('done').classList.remove('show');
+      const list = stepsFor();
+      const stepSpan = 90 / list.length;
+      genTimer = setInterval(() => {
+        p = Math.min(p + 2, 90); // 封顶 90%：剩下一段留给真实生成
+        d.progress = p;
+        d.stepText = list[Math.min(Math.floor(p / stepSpan), list.length - 1)].text;
+        renderDrafts();
+      }, 240);
+      const isLong = state.duration === '3 分钟' || state.duration === '5 分钟';
+      const input = [
+        '我要做一条' + (isLong ? '长' : '短') + '视频：' + idea,
+        '比例 ' + state.ratio + '，时长目标 ' + state.duration + '，清晰度 ' + state.res + '。',
+        isLong ? '给我 12~16 个镜头的分镜。' : '给我 8~12 个镜头的分镜。',
+        '输出一个 JSON 数组（不要 markdown 代码块、不要解释），每个元素形如：{"line":"这一句台词，口语、一句话","pic":"这个镜头的画面描述，简短，比如 学员采访片段·小李"}',
+      ].join('\n');
+      const res = await Promise.race([
+        JCO_KERNEL.task({
+          system: '你是短视频分镜师，服务成人学历提升招生赛道（成人高考/自考）。只输出 JSON 数组。',
+          input: input,
+        }),
+        new Promise((resolve) => setTimeout(() => resolve({ ok: false, error: '这次想太久了（超过 100 秒），再点一次试试。' }), 100000)),
+      ]);
+      if (genTimer) { clearInterval(genTimer); genTimer = null; }
+      const shots = res && res.ok ? parseShots(res.text) : null;
+      if (shots && shots.length >= 3) {
+        d.shots = shots;
+        d.progress = 100;
+        d.status = 'review';
+        d.stepText = '';
+        renderDrafts();
+        openDraft(d.id);
+        jcoLogAdd('shot', draftTitleOf(d) || '一条分镜', '共 ' + shots.length + ' 段，待你过目');
+        jcoNotifyDone('分镜好了', '共 ' + shots.length + ' 段，等你过目');
+        showToast('分镜好了，共 ' + shots.length + ' 段。每段都能换画面、点着改，满意了再点「这版可以了」。');
+        return;
+      }
+      // 失败：不留假草稿，如实报错
+      const idx = drafts.indexOf(d);
+      if (idx >= 0) drafts.splice(idx, 1);
+      renderDrafts();
+      showToast('没生成成：' + ((res && res.error) || '内容没解析出来') + '。再点一次试试。');
+    }
+
+    /** 真模式（图片类）：内核先出画面方案，再逐张真画（用「画图修图」的配置） */
+    async function startGenImageReal(d, idea) {
+      if (genTimer) { clearInterval(genTimer); genTimer = null; }
+      p = 0;
+      $('done').classList.remove('show');
+      const list = stepsFor();
+      const stepSpan = 90 / list.length;
+      genTimer = setInterval(() => {
+        p = Math.min(p + 2, 90);
+        d.progress = p;
+        d.stepText = list[Math.min(Math.floor(p / stepSpan), list.length - 1)].text;
+        renderDrafts();
+      }, 240);
+      // 想画几张：读用户选的数量（3 张 / 6 张）
+      const wanted = Math.max(1, Math.min(6, parseInt(state.count, 10) || 3))
+      const ratioWord = state.ratio === '9:16' ? '9:16 竖屏' : (state.ratio === '16:9' ? '16:9 横屏' : '1:1 方形')
+      // 1) 画面方案（wanted 条描述）
+      let prompts = []
+      try {
+        const planRes = await JCO_KERNEL.task({
+          system: '你是短视频画面策划，只输出画面描述行，不要解释。',
+          input: '视频想法：' + idea + '\n为这条视频设计 ' + wanted + ' 个镜头的画面（' + ratioWord + '，成人学历提升主题），每行一条简短描述，不要序号。',
+        })
+        if (planRes && planRes.ok && planRes.text) prompts = cleanLines(planRes.text).filter((l) => l.length > 3).slice(0, wanted)
+      } catch (e) {}
+      if (prompts.length === 0) prompts = [idea, idea + '（细节特写）', idea + '（场景全景）'].slice(0, wanted)
+      // 2) 逐张真画
+      const images = []
+      let lastError = ''
+      for (let i = 0; i < prompts.length; i++) {
+        d.stepText = '正在画第 ' + (i + 1) + ' 张 / ' + prompts.length;
+        d.progress = Math.max(d.progress, 40 + Math.round((i / prompts.length) * 50));
+        renderDrafts()
+        const r = await JCO_KERNEL.draw({ prompt: ratioWord + '，' + prompts[i] })
+        if (r && r.ok && (r.dataUrl || r.url)) {
+          let src = r.dataUrl || r.url
+          let savedPath = ''
+          // 落盘到素材文件夹：草稿只存路径，不撑爆本机存储
+          try {
+            const sys = window.jco && window.jco.sys
+            if (sys && sys.saveAsset) {
+              const saved = await sys.saveAsset(r.dataUrl ? { kind: 'image', dataUrl: r.dataUrl } : { kind: 'image', url: r.url })
+              if (saved && saved.ok && saved.path) {
+                savedPath = saved.path
+                src = 'file:///' + String(saved.path).replace(/\\/g, '/')
+              }
+            }
+          } catch (e) {}
+          images.push({ src: src, path: savedPath, prompt: prompts[i] })
+        }
+        else if (r && r.error) lastError = r.error
+      }
+      if (genTimer) { clearInterval(genTimer); genTimer = null; }
+      if (images.length === 0) {
+        const idx = drafts.indexOf(d)
+        if (idx >= 0) drafts.splice(idx, 1)
+        renderDrafts()
+        showToast('没画成：' + (lastError || '检查「设置 → AI 大脑 → 画图修图」的 Key 后重试'))
+        return
+      }
+      d.images = images
+      d.progress = 100
+      d.status = 'review'
+      d.stepText = ''
+      renderDrafts()
+      openDraft(d.id)
+      jcoLogAdd('material', 'AI 出图', images.length + ' 张')
+      jcoNotifyDone('图好了', '共 ' + images.length + ' 张，等你过目')
+      showToast('画好了 ' + images.length + ' 张。点着看、框住改；满意了点「这版可以了」。' + (images.length < prompts.length ? '（有 ' + (prompts.length - images.length) + ' 张没画成，可重试）' : ''))
+    }
+
+    function regen() {
+      if (!currentDraft) return;
+      askInp.value = currentDraft.idea;
+      inputChanged();
+      startGen();
+    }
+
+    function renderShots() {
+      const el = $('shots');
+      el.innerHTML = '';
+      const real = currentDraft && Array.isArray(currentDraft.shots) && currentDraft.shots.length > 0 ? currentDraft.shots : null;
+      const rows = real || SHOT_LINES.map((line, i) => ({ line: line, pic: PIC_POOL[i % PIC_POOL.length] }));
+
+      // 真模式：全出片工具行（逐段出真视频，干完系统通知）
+      if (JCO_KERNEL && rows.length > 0) {
+        const videos = (currentDraft && currentDraft.videos) || {};
+        const doneCount = Object.values(videos).filter((v) => v && v.status === 'done').length;
+        const doing = Object.values(videos).some((v) => v && v.status === 'doing');
+        const bar = document.createElement('div');
+        bar.className = 'shot-bar';
+        const btn = document.createElement('button');
+        btn.className = 'go-btn';
+        const remain = rows.length - doneCount;
+        btn.textContent = doing ? '出片中……' : (doneCount > 0 && remain > 0 ? '继续出片（还差 ' + remain + ' 段）' : (remain === 0 ? '全部出好了' : '全部出片（' + rows.length + ' 段）'));
+        btn.disabled = doing || remain === 0;
+        if (!btn.disabled) btn.addEventListener('click', () => makeAllVideos(rows));
+        const hint = document.createElement('span');
+        hint.className = 'shot-hint';
+        hint.textContent = remain > 0 ? ('每段约 3~4 分钟 · 全部约 ' + Math.round(remain * 3.5) + ' 分钟 · 干完弹通知') : '都出好了，点每段的「看这段」预览';
+        bar.appendChild(btn);
+        bar.appendChild(hint);
+        el.appendChild(bar);
+      }
+
+      rows.forEach((item, i) => {
+        const row = document.createElement('div');
+        row.className = 'shot';
+        row.innerHTML = `
+          <span class="no">${String(i + 1).padStart(2, '0')}</span>
+          <span class="pic-thumb ti ti-player-play"></span>
+          <span class="mid"><span class="line"></span><span class="pic"></span></span>
+          <span class="dur">${SHOT_DUR[i % SHOT_DUR.length]}</span>
+          <button class="swap">换画面</button>`;
+        row.querySelector('.line').textContent = item.line;
+        // 真分镜保留模型给的画面描述；点「换画面」在本机备选池里轮换
+        let picIdx = -1;
+        const picEl = row.querySelector('.pic');
+        const paintPic = () => {
+          picEl.textContent = '画面：' + (picIdx < 0 ? (item.pic || '现场画面') : PIC_POOL[picIdx % PIC_POOL.length]);
+        };
+        paintPic();
+        row.querySelector('.swap').addEventListener('click', () => {
+          picIdx = (picIdx + 1) % PIC_POOL.length;
+          paintPic();
+          markAdjusted();
+          showToast('第 ' + (i + 1) + ' 段换成了「' + PIC_POOL[picIdx] + '」。每一段都能这样换。');
+        });
+        // 真模式：每段一个出片入口
+        if (JCO_KERNEL) {
+          const videos = (currentDraft && currentDraft.videos) || {};
+          const vs = videos[i];
+          const mk = document.createElement('button');
+          mk.className = 'swap make';
+          if (vs && vs.status === 'doing') {
+            mk.textContent = '生成中…';
+            mk.disabled = true;
+          } else if (vs && vs.status === 'done') {
+            mk.textContent = '看这段';
+            mk.addEventListener('click', () => playShotVideo(vs.url, i));
+          } else if (vs && vs.status === 'failed') {
+            mk.textContent = '重试';
+            mk.title = vs.error || '';
+            mk.addEventListener('click', () => makeShotVideo(i, item));
+          } else {
+            mk.textContent = '出这段';
+            mk.addEventListener('click', () => makeShotVideo(i, item));
+          }
+          row.appendChild(mk);
+        }
+        el.appendChild(row);
+      });
+    }
+
+    /* ---------- 分段出真视频（Agnes 异步任务，单段约 3~4 分钟） ---------- */
+    async function makeShotVideo(i, item) {
+      if (!JCO_KERNEL || !currentDraft) return;
+      const videos = (currentDraft.videos = currentDraft.videos || {});
+      if (videos[i] && videos[i].status === 'doing') return;
+      videos[i] = { status: 'doing' };
+      renderShots();
+      const aspect = state.ratio === '9:16' ? '9:16' : (state.ratio === '16:9' ? '16:9' : '1:1');
+      const prompt = (item.pic ? item.pic + '。' : '') + (item.line || '');
+      const res = await JCO_KERNEL.video({ prompt: prompt, seconds: 5, aspect: aspect });
+      if (res && res.ok && res.url) {
+        let src = res.url
+        let savedPath = ''
+        // 视频落盘（平台 URL 会过期；本地文件长期可播）
+        try {
+          const sys = window.jco && window.jco.sys
+          if (sys && sys.saveAsset) {
+            const saved = await sys.saveAsset({ kind: 'video', url: res.url, ext: 'mp4' })
+            if (saved && saved.ok && saved.path) {
+              savedPath = saved.path
+              src = 'file:///' + String(saved.path).replace(/\\/g, '/')
+            }
+          }
+        } catch (e) {}
+        videos[i] = { status: 'done', url: src, path: savedPath, videoId: res.videoId || '' };
+        jcoLogAdd('shot', '出片：第 ' + (i + 1) + ' 段', '5 秒 · 720P');
+        jcoNotifyDone('第 ' + (i + 1) + ' 段视频好了', '回做视频页点「看这段」');
+      } else {
+        videos[i] = { status: 'failed', error: (res && res.error) || '未知错误' };
+      }
+      jcoDraftsSave();
+      renderDrafts();
+      renderShots();
+    }
+    async function makeAllVideos(rows) {
+      if (!currentDraft) return;
+      const videos = (currentDraft.videos = currentDraft.videos || {});
+      for (let i = 0; i < rows.length; i++) {
+        if (videos[i] && videos[i].status === 'done') continue;
+        await makeShotVideo(i, rows[i]);
+      }
+      jcoNotifyDone('全部出片完成', '共 ' + rows.length + ' 段，回做视频页过目');
+      showToast('全部出好了：每段点「看这段」预览，不满意的段可以重出。');
+    }
+    function playShotVideo(url, i) {
+      const pop = document.getElementById('videoPop');
+      const v = document.getElementById('vpVideo');
+      if (!pop || !v || !url) return;
+      document.getElementById('vpTitle').textContent = '第 ' + (i + 1) + ' 段 · 5 秒 · 720P';
+      v.src = url;
+      pop.hidden = false;
+      v.play().catch(() => {});
+    }
+    function closeVideoPop() {
+      const pop = document.getElementById('videoPop');
+      const v = document.getElementById('vpVideo');
+      if (!pop) return;
+      pop.hidden = true;
+      if (v) { v.pause(); v.removeAttribute('src'); v.load(); }
+    }
+    (function bindVideoPop() {
+      const pop = document.getElementById('videoPop');
+      const close = document.getElementById('vpClose');
+      if (close) close.addEventListener('click', closeVideoPop);
+      if (pop) pop.addEventListener('click', (e) => { if (e.target === pop) closeVideoPop(); });
+      document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeVideoPop(); });
+    })();
+
+    /* ---------- 图片草稿：大图随选随修（框住哪里、修哪里） ---------- */
+    let imgIdx = 0;
+    const IMG_COUNT = 3;
+    let selRect = null;
+    let dragOn = false;
+    let dragSx = 0;
+    let dragSy = 0;
+
+    function imgClass(i) { return 'g' + ((i % 3) + 1); }
+
+    function clearSel() {
+      selRect = null;
+      const sel = $('ibSel');
+      sel.className = 'ib-sel';
+      sel.style.display = 'none';
+      const tip = $('ibTip');
+      tip.textContent = '在图上拖框，圈住要改的地方（比如那行字、那个背景），再告诉 AI 改成什么';
+      tip.classList.remove('on');
+    }
+
+    function renderImgBoard() {
+      const big = $('ibBig');
+      const realImgs = (currentDraft && Array.isArray(currentDraft.images) && currentDraft.images.length > 0) ? currentDraft.images : null;
+      const count = realImgs ? realImgs.length : IMG_COUNT;
+      if (imgIdx >= count) imgIdx = 0;
+      big.className = 'ib-big ' + imgClass(imgIdx);
+      $('ibCount').textContent = (imgIdx + 1) + ' / ' + count;
+      const anchors = [1, 3, 6];
+      $('ibTitle').textContent = '配图 ' + (imgIdx + 1) + ' · 放在稿子第 ' + anchors[imgIdx % 3] + ' 段旁边';
+      clearSel();
+      // 真图：大图区显示真实图片（占位图标藏起来）
+      const oldImg = big.querySelector('.ib-img');
+      if (oldImg) oldImg.remove();
+      const phIcon = big.querySelector('.ti-photo');
+      if (phIcon) phIcon.style.display = realImgs ? 'none' : '';
+      if (realImgs && realImgs[imgIdx]) {
+        const img = document.createElement('img');
+        img.className = 'ib-img';
+        img.src = realImgs[imgIdx].src;
+        img.alt = realImgs[imgIdx].prompt || '';
+        big.insertBefore(img, big.firstChild);
+      }
+      const thumbs = $('ibThumbs');
+      thumbs.innerHTML = '';
+      for (let i = 0; i < count; i++) {
+        const t = document.createElement('button');
+        t.className = 'ib-thumb ' + imgClass(i) + (i === imgIdx ? ' on' : '');
+        t.setAttribute('aria-label', '选择第 ' + (i + 1) + ' 张');
+        t.innerHTML = realImgs && realImgs[i]
+          ? ''
+          : '<span class="ti ti-photo"></span>';
+        if (realImgs && realImgs[i]) {
+          const ti = document.createElement('img');
+          ti.src = realImgs[i].src;
+          ti.alt = '';
+          t.appendChild(ti);
+        }
+        t.addEventListener('click', () => { imgIdx = i; renderImgBoard(); });
+        thumbs.appendChild(t);
+      }
+      const add = document.createElement('button');
+      add.className = 'ib-add';
+      add.textContent = '＋';
+      add.setAttribute('aria-label', '再出几张');
+      add.addEventListener('click', async () => {
+        if (!JCO_KERNEL || !currentDraft || !Array.isArray(currentDraft.images) || currentDraft.images.length === 0) {
+          showToast('先生成一版图，这里就能继续加画。');
+          return;
+        }
+        showToast('再画 3 张……');
+        const ratioWord = state.ratio === '9:16' ? '9:16 竖屏' : (state.ratio === '16:9' ? '16:9 横屏' : '1:1 方形');
+        const base = currentDraft.idea || '画面';
+        const more = [];
+        for (let i = 0; i < 3; i++) {
+          const r = await JCO_KERNEL.draw({ prompt: ratioWord + '，' + base + '（第 ' + (currentDraft.images.length + i + 1) + ' 个角度，与已有画面不重复）' });
+          if (r && r.ok && (r.dataUrl || r.url)) more.push({ src: r.dataUrl || r.url, prompt: base });
+        }
+        if (more.length === 0) { showToast('没画出来，再试一次。'); return; }
+        currentDraft.images = currentDraft.images.concat(more);
+        renderDrafts();
+        renderImgBoard();
+        jcoLogAdd('material', 'AI 加图', more.length + ' 张');
+        jcoNotifyDone('图好了', '又加了 ' + more.length + ' 张');
+        showToast('加了 ' + more.length + ' 张，点缩略图看。');
+      });
+      thumbs.appendChild(add);
+    }
+
+    function ibStep(d) {
+      const realImgs = (currentDraft && Array.isArray(currentDraft.images) && currentDraft.images.length > 0) ? currentDraft.images : null;
+      const count = realImgs ? realImgs.length : IMG_COUNT;
+      imgIdx = (imgIdx + d + count) % count;
+      renderImgBoard();
+    }
+
+    /* 在图上拖框 = 选中要修的地方 */
+    (function bindSelDrag() {
+      const big = $('ibBig');
+      big.addEventListener('mousedown', (e) => {
+        if (e.target.closest('.ib-nav')) return;
+        e.preventDefault();
+        dragOn = true;
+        const r = big.getBoundingClientRect();
+        dragSx = Math.min(Math.max(e.clientX - r.left, 0), r.width);
+        dragSy = Math.min(Math.max(e.clientY - r.top, 0), r.height);
+        const sel = $('ibSel');
+        sel.className = 'ib-sel';
+        sel.style.left = dragSx + 'px';
+        sel.style.top = dragSy + 'px';
+        sel.style.width = '0px';
+        sel.style.height = '0px';
+        sel.style.display = 'block';
+      });
+      window.addEventListener('mousemove', (e) => {
+        if (!dragOn) return;
+        const r = big.getBoundingClientRect();
+        const cx = Math.min(Math.max(e.clientX - r.left, 0), r.width);
+        const cy = Math.min(Math.max(e.clientY - r.top, 0), r.height);
+        const x = Math.min(dragSx, cx);
+        const y = Math.min(dragSy, cy);
+        const w = Math.abs(cx - dragSx);
+        const h = Math.abs(cy - dragSy);
+        const sel = $('ibSel');
+        sel.style.left = x + 'px';
+        sel.style.top = y + 'px';
+        sel.style.width = w + 'px';
+        sel.style.height = h + 'px';
+      });
+      window.addEventListener('mouseup', () => {
+        if (!dragOn) return;
+        dragOn = false;
+        const sel = $('ibSel');
+        const w = parseFloat(sel.style.width);
+        const h = parseFloat(sel.style.height);
+        if (w < 12 || h < 12) { clearSel(); return; }
+        sel.classList.add('show');
+        selRect = { x: parseFloat(sel.style.left), y: parseFloat(sel.style.top), w, h };
+        const tip = $('ibTip');
+        tip.textContent = '已框住一块。说一句把它改成什么，点「修这里」，只改这块，其它地方不动';
+        tip.classList.add('on');
+      });
+    })();
+
+    function ibFix() {
+      if (!selRect) { showToast('先在图上拖住鼠标，框住要改的地方'); return; }
+      const v = $('ibFixInp').value.trim();
+      if (!v) { showToast('说一句把这块改成什么，比如：换成“暑期班招生”'); return; }
+      $('ibFixInp').value = '';
+      const sel = $('ibSel');
+      sel.classList.add('working');
+      setTimeout(() => {
+        sel.classList.remove('working');
+        sel.classList.add('done');
+        markAdjusted();
+        showToast('只改了框住的这一块，其它地方没动。');
+      }, 1300);
+    }
+
+    function fixGo() {
+      const v = $('fixInp').value.trim();
+      if (!v) { showToast('说一句你想怎么改，比如：配音换男声'); return; }
+      $('fixInp').value = '';
+      markAdjusted();
+      showToast('（原型示意）正式版会按「' + v + '」改好给你重看，改了哪儿会标出来。');
+    }
+
+    render();
+    renderTemplates();
+    // 恢复上次的草稿（真模式：草稿不丢，回来接着改）
+    (function restoreDrafts() {
+      var saved = jcoDraftsLoad();
+      if (saved.length === 0) return;
+      saved.forEach(function (d) {
+        drafts.push(d);
+        draftSeq = Math.max(draftSeq, d.id || 0);
+      });
+      renderDrafts();
+    })();
+    renderDrafts();
+  </script>
+  <script>
+    /* ---------- 侧栏导航（原型可点通） ---------- */
+    (function () {
+      var here = decodeURIComponent(location.pathname.split('/').pop());
+      var PAGES = {
+        '总管': 'J.Co总管.html',
+        '选题': 'J.Co工作台-选题.html',
+        '素材': 'J.Co工作台-素材.html',
+        '文案': 'J.Co工作台-创作.html',
+        '创作': 'J.Co工作台-做视频.html',
+        '后期': 'J.Co工作台-后期.html',
+        '发布': 'J.Co工作台-发布.html',
+        '运营': 'J.Co工作台-运营.html',
+        '管家团队': 'J.Co管家团队.html',
+        '账号中心': 'J.Co账号中心.html',
+        '设置': 'J.Co设置.html',
+        '自动任务': 'J.Co自动任务.html',
+        '技能库': 'J.Co技能库.html'
+      };
+      document.querySelectorAll('.nav-item').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          var label = btn.textContent.trim();
+          var target = PAGES[label];
+          if (target) {
+            if (target !== here) location.href = target;
+            return;
+          }
+          showToast('「' + label + '」还没开工，已经记进下一步清单（先把现有的七个环节用顺）。');
+        });
+      });
+      var bell = document.querySelector('.side-foot .icon-btn');
+      if (bell) bell.addEventListener('click', function (e) {
+        e.stopPropagation();
+        jcoToggleNotif(bell);
+      });
+      /* ---------- 右下角·总管助手 ---------- */
+      (function () {
+        var btn = document.getElementById('copilotBtn');
+        var panel = document.getElementById('copilot');
+        var fold = document.getElementById('cpFold');
+        var body = document.getElementById('cpBody');
+        var inp = document.getElementById('cpInp');
+        var sendBtn = document.getElementById('cpSend');
+        if (!btn || !panel) return;
+        btn.addEventListener('click', function () { panel.hidden = !panel.hidden; });
+        if (fold) fold.addEventListener('click', function () { panel.hidden = true; });
+        var FIXED = {
+          '这条视频数据怎么样？': '《成人高考报名其实就 3 步》实时数据：播放 <b>5.2 万</b>（还在涨）、点赞 3,180、评论 57、带来咨询 6 条。比你的平均表现高 <b>8 倍</b>。',
+          '今天还剩什么事？': '还有 3 件在你手上：2 条视频等你过目、8 条评论等你放行、19:30 的发布等你确认。都排好了，你点头就行。',
+          '评论有什么动静？': '新评论 6 条：2 条问价格（我拟好引导话术了），3 条夸的，1 条问「初中能不能报」。建议你亲自回，这种最容易成。'
+        };
+        function appendMe(t) {
+          var el = document.createElement('div');
+          el.className = 'cp-msg me';
+          el.textContent = t;
+          body.appendChild(el);
+          body.scrollTop = body.scrollHeight;
+        }
+        function appendAI(html) {
+          var el = document.createElement('div');
+          el.className = 'cp-msg ai';
+          el.innerHTML = html;
+          body.appendChild(el);
+          body.scrollTop = body.scrollHeight;
+        }
+        function ask(q) {
+          if (!q) return;
+          appendMe(q);
+          var cpKernel = (typeof window.jco !== 'undefined' && window.jco && window.jco.kernel);
+          if (cpKernel) {
+            appendAI('…');
+            var cpMsgs = body.querySelectorAll('.cp-msg.ai');
+            var cpEl = cpMsgs[cpMsgs.length - 1];
+            window.jco.kernel.ask(q).then(function (res) {
+              var cpText = (res && res.ok && res.text) ? res.text : ('没答上来：' + ((res && res.error) || '未知错误'));
+              cpEl.textContent = cpText;
+              cpEl.style.whiteSpace = 'pre-wrap';
+              body.scrollTop = body.scrollHeight;
+            });
+            return;
+          }
+          setTimeout(function () {
+            appendAI(FIXED[q] || ('收到「' + q + '」。正式版里我马上去查，查完把明细端给你。'));
+          }, 420);
+        }
+        document.querySelectorAll('.cp-act').forEach(function (b) {
+          b.addEventListener('click', function () { ask(b.getAttribute('data-q')); });
+        });
+        function fire() {
+          var v = inp.value.trim();
+          if (!v) return;
+          inp.value = '';
+          inp.style.height = 'auto';
+          ask(v);
+        }
+        sendBtn.addEventListener('click', fire);
+        inp.addEventListener('keydown', function (e) {
+          if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); fire(); }
+        });
+        inp.addEventListener('input', function () {
+          inp.style.height = 'auto';
+          inp.style.height = Math.min(inp.scrollHeight, 90) + 'px';
+        });
+      })();
+      /* ---------- 侧栏（图标栏 + 悬停展开 + 固定展开） ---------- */
+      (function () {
+        var sidebar = document.querySelector('.sidebar');
+        var pinBtn = document.querySelector('.side-toggle');
+        if (!sidebar) return;
+        function setPinned(v) {
+          document.documentElement.classList.toggle('side-pinned', v);
+          if (pinBtn) pinBtn.querySelector('.ti').className = 'ti ' + (v ? 'ti-layout-sidebar-left-collapse' : 'ti-layout-sidebar-left-expand');
+          try { localStorage.setItem('jco-side-pinned', v ? '1' : '0'); } catch (err) {}
+        }
+        if (pinBtn) pinBtn.addEventListener('click', function () {
+          setPinned(!document.documentElement.classList.contains('side-pinned'));
+        });
+        try {
+          if (localStorage.getItem('jco-side-pinned') === '1') setPinned(true);
+        } catch (err) {}
+      })();
+      /* ---------- 侧栏分组折叠 ---------- */
+      (function () {
+        var KEY = 'jco-sidebar-folded-groups';
+        function loadFolded() {
+          try { return (localStorage.getItem(KEY) || '').split(',').filter(Boolean); } catch (e) { return []; }
+        }
+        function saveFolded(list) {
+          try { localStorage.setItem(KEY, list.join(',')); } catch (e) {}
+        }
+        function applyFold(label, hide) {
+          label.classList.toggle('folded', hide);
+          var el = label.nextElementSibling;
+          while (el && !el.classList.contains('group-label')) {
+            if (el.classList.contains('nav-item') || el.classList.contains('convos')) {
+              el.style.display = hide ? 'none' : '';
+            }
+            el = el.nextElementSibling;
+          }
+        }
+        var folded = loadFolded();
+        document.querySelectorAll('.group-label').forEach(function (label) {
+          var name = label.textContent.trim();
+          if (folded.indexOf(name) !== -1) applyFold(label, true);
+          label.addEventListener('click', function () {
+            var hide = !label.classList.contains('folded');
+            applyFold(label, hide);
+            var list = loadFolded();
+            if (hide) { if (list.indexOf(name) === -1) list.push(name); }
+            else { list = list.filter(function (x) { return x !== name; }); }
+            saveFolded(list);
+          });
+        });
+      })();
+      var wm = document.querySelector('.wordmark');
+      if (wm) wm.addEventListener('click', function () {
+        if ('J.Co主界面-首页.html' !== here) location.href = 'J.Co主界面-首页.html';
+      });
+      document.querySelectorAll('.convo').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          location.href = 'J.Co总管.html';
+        });
+      });
+    })();
+  
+    /* ---------- 账号菜单（点头像弹出：设置 / 退出登录） ---------- */
+    (function () {
+      var meBtn = document.getElementById('meBtn');
+      var menu = document.getElementById('meMenu');
+      if (!meBtn || !menu) return;
+      function setOpen(open) {
+        menu.hidden = !open;
+        meBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+      }
+      meBtn.addEventListener('click', function () { setOpen(menu.hidden); });
+      meBtn.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setOpen(menu.hidden); }
+        if (e.key === 'Escape') setOpen(false);
+      });
+      document.addEventListener('click', function (e) {
+        if (!menu.hidden && !menu.contains(e.target) && !meBtn.contains(e.target)) setOpen(false);
+      });
+      document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && !menu.hidden) setOpen(false);
+      });
+      document.getElementById('mmSettings').addEventListener('click', function () {
+        setOpen(false);
+        var here = decodeURIComponent(location.pathname.split('/').pop());
+        if (here !== 'J.Co设置.html') location.href = 'J.Co设置.html';
+      });
+      document.getElementById('mmLogout').addEventListener('click', function () {
+        setOpen(false);
+        showToast('这台电脑上不用单独登录：关掉窗口就是退出，素材和草稿都留着。');
+      });
+    })();
+  
+    /* ---------- 通知面板：最近的活动记录（真数据） ---------- */
+    function jcoToggleNotif(anchor) {
+      var old = document.querySelector('.notif-pop');
+      if (old) { old.remove(); return; }
+      var items = [];
+      try { items = (JSON.parse(localStorage.getItem('jco-log-v1') || '{"items":[]}').items) || []; } catch (e) {}
+      var pop = document.createElement('div');
+      pop.className = 'notif-pop';
+      var r = anchor.getBoundingClientRect();
+      pop.style.position = 'fixed';
+      pop.style.left = Math.min(r.right + 10, window.innerWidth - 296) + 'px';
+      pop.style.bottom = Math.max(12, window.innerHeight - r.bottom) + 'px';
+      var head = document.createElement('div');
+      head.className = 'np-head';
+      head.textContent = '最近动态';
+      pop.appendChild(head);
+      if (items.length === 0) {
+        var empty = document.createElement('div');
+        empty.className = 'np-empty';
+        empty.textContent = '还没有记录。干一句活，这里就开始记。';
+        pop.appendChild(empty);
+      } else {
+        items.slice(0, 8).forEach(function (x) {
+          var row = document.createElement('div');
+          row.className = 'np-row';
+          var d = new Date(x.t);
+          var hh = String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+          var time = document.createElement('span');
+          time.className = 'np-time';
+          time.textContent = hh;
+          var txt = document.createElement('span');
+          txt.className = 'np-txt';
+          txt.textContent = x.title + (x.detail ? '（' + x.detail + '）' : '');
+          row.appendChild(time);
+          row.appendChild(txt);
+          pop.appendChild(row);
+        });
+      }
+      var foot = document.createElement('a');
+      foot.className = 'np-foot';
+      foot.href = 'J.Co总管.html';
+      foot.textContent = '去总管看全部 →';
+      pop.appendChild(foot);
+      document.body.appendChild(pop);
+      var closer = function (ev) {
+        if (!pop.contains(ev.target)) {
+          pop.remove();
+          document.removeEventListener('click', closer, true);
+        }
+      };
+      setTimeout(function () { document.addEventListener('click', closer, true); }, 0);
+    }
+  
+  
+    /* ---------- 对话列表（真会话）：点击续聊；每项可分享 / 重命名 / 删除；＋ 新会话 ---------- */
+    (function jcoConvos() {
+      var hasKernel = (typeof window.jco !== 'undefined' && window.jco && window.jco.kernel);
+      if (!hasKernel) return; // 浏览器直开：保留演示列表
+      var data = null;
+      try { data = JSON.parse(localStorage.getItem('jco-chats-v1') || 'null'); } catch (e) {}
+      var box = document.querySelector('.convos');
+      if (!box || !data || !Array.isArray(data.chats) || data.chats.length === 0) return;
+      var here = decodeURIComponent(location.pathname.split('/').pop());
+      function go(req) {
+        try { sessionStorage.setItem('jco-open-chat', req); } catch (e) {}
+        if (here !== 'J.Co总管.html') location.href = 'J.Co总管.html';
+      }
+      function saveChats() { try { localStorage.setItem('jco-chats-v1', JSON.stringify(data)); } catch (e) {} }
+
+      /* 会话操作：分享 / 重命名 / 删除（含两步防误删） */
+      var openMenu = null;
+      function closeMenu() { if (openMenu) { openMenu.remove(); openMenu = null; } }
+      document.addEventListener('click', closeMenu);
+      function toastIt(msg) {
+        var t = document.getElementById('toast');
+        if (!t) return;
+        t.textContent = msg; t.classList.add('show');
+        clearTimeout(toastIt._t); toastIt._t = setTimeout(function () { t.classList.remove('show'); }, 2600);
+      }
+      function shareChat(chat) {
+        var lines = ['【和 J.Co 的对话 · ' + (chat.title || '新会话') + '】'];
+        (chat.messages || []).forEach(function (m) {
+          lines.push((m.role === 'user' ? '我：' : 'J.Co：') + String(m.text || ''));
+        });
+        var text = lines.join('\n');
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(text).then(
+            function () { toastIt('对话已复制，去粘贴分享吧'); },
+            function () { toastIt('没复制成，手动选中复制一下'); }
+          );
+        } else { toastIt('这台环境不支持直接复制'); }
+      }
+      function showMenu(anchor, chat) {
+        closeMenu();
+        var menu = document.createElement('div');
+        menu.className = 'convo-menu';
+        menu.addEventListener('click', function (e) { e.stopPropagation(); });
+        function item(icon, label, cls, fn) {
+          var b = document.createElement('button');
+          b.type = 'button';
+          b.className = cls || '';
+          b.innerHTML = '<span class="ti ' + icon + '"></span>' + label;
+          b.addEventListener('click', fn);
+          menu.appendChild(b);
+          return b;
+        }
+        item('ti-share-3', '分享对话', '', function () { closeMenu(); shareChat(chat); });
+        item('ti-file-text', '重命名', '', function () {
+          closeMenu();
+          var row = anchor.closest('.convo');
+          var nameEl = row ? row.querySelector('.name') : null;
+          if (!nameEl) return;
+          var input = document.createElement('input');
+          input.className = 'convo-rename';
+          input.value = chat.title || '新会话';
+          nameEl.replaceWith(input);
+          input.focus(); input.select();
+          var done = false;
+          function commit(saveIt) {
+            if (done) return; done = true;
+            var v = input.value.trim().slice(0, 20);
+            if (saveIt && v) chat.title = v;
+            nameEl.textContent = chat.title || '新会话';
+            input.replaceWith(nameEl);
+            if (saveIt && v) { saveChats(); toastIt('改好名字了'); }
+          }
+          input.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter') { e.preventDefault(); commit(true); }
+            if (e.key === 'Escape') { commit(false); }
+          });
+          input.addEventListener('blur', function () { commit(true); });
+          input.addEventListener('click', function (e) { e.stopPropagation(); });
+        });
+        var del = item('ti-trash', '删除对话', 'danger', function () {
+          if (del.getAttribute('data-armed') !== '1') {
+            del.setAttribute('data-armed', '1');
+            del.innerHTML = '<span class="ti ti-trash"></span>再点一次，真删除';
+            return;
+          }
+          closeMenu();
+          var wasActive = data.activeId === chat.id;
+          data.chats = data.chats.filter(function (x) { return x.id !== chat.id; });
+          if (data.chats.length === 0) {
+            data.chats.push({ id: 'c' + Date.now().toString(36), title: '新会话', updatedAt: Date.now(), messages: [] });
+          }
+          if (wasActive) data.activeId = data.chats[0].id;
+          saveChats();
+          toastIt('已删除「' + (chat.title || '新会话') + '」');
+          render();
+        });
+        document.body.appendChild(menu);
+        var r = anchor.getBoundingClientRect();
+        var mw = menu.offsetWidth || 160, mh = menu.offsetHeight || 130;
+        var left = Math.min(r.right + 8, window.innerWidth - mw - 10);
+        var top = Math.min(r.bottom + 4, window.innerHeight - mh - 10);
+        if (top < 8) top = 8;
+        menu.style.left = left + 'px';
+        menu.style.top = top + 'px';
+        openMenu = menu;
+      }
+      function render() {
+        box.innerHTML = '';
+        var add = document.createElement('button');
+        add.className = 'convo new-btn';
+        add.innerHTML = '<span class="ti ti-plus"></span>新会话';
+        add.addEventListener('click', function (e) { e.stopPropagation(); go('new'); });
+        box.appendChild(add);
+        data.chats.slice(0, 8).forEach(function (c) {
+          var b = document.createElement('button');
+          b.className = 'convo' + (c.id === data.activeId ? ' active' : '');
+          var nm = document.createElement('span');
+          nm.className = 'name';
+          nm.textContent = c.title || '新会话';
+          b.appendChild(nm);
+          var more = document.createElement('span');
+          more.className = 'convo-more';
+          more.setAttribute('role', 'button');
+          more.setAttribute('tabindex', '0');
+          more.setAttribute('aria-label', '更多操作');
+          more.textContent = '⋯';
+          more.addEventListener('click', function (e) { e.stopPropagation(); showMenu(more, c); });
+          more.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); showMenu(more, c); } });
+          b.appendChild(more);
+          b.addEventListener('click', function (e) { e.stopPropagation(); go(c.id); });
+          box.appendChild(b);
+        });
+      }
+      render();
+    })();
+  
+  </script>
+  
+</body>
+</html>

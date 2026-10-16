@@ -1,0 +1,1283 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>J.Co · 设置</title>
+<script>
+  /* 提前恢复侧栏展开状态，避免页面加载时闪一下 */
+  try { if (localStorage.getItem('jco-side-pinned') === '1') document.documentElement.classList.add('side-pinned'); } catch (e) {}
+</script>
+  <link rel="stylesheet" href="./assets/jco-ui.css">
+  <style>
+/* ============ 主区 ============ */
+  .main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+
+.scroll { flex: 1; overflow-y: auto; }
+
+.wrap { max-width: none; margin: 0 auto; padding: 36px 32px 70px; }
+
+.agent-head { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 8px; }
+
+.agent-logo {
+    width: 30px; height: 30px; border-radius: 8px;
+    background: var(--text-1); color: var(--bg);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; font-weight: 600; flex: none;
+  }
+
+.agent-name { font-size: 16px; font-weight: 600; }
+
+.agent-chip {
+    height: 32px; padding: 0 16px; border-radius: 999px;
+    background: var(--card); color: var(--text-1);
+    font-size: 14px; font-weight: 600;
+    display: inline-flex; align-items: center;
+    box-shadow: var(--shadow-card);
+  }
+
+.agent-hint { font-size: 14px; color: var(--text-2); }
+
+.grp-title { display: flex; align-items: center; gap: 7px; font-size: 13px; font-weight: 600; color: var(--text-2); margin: 24px 4px 9px; }
+
+.grp-title .ti { font-size: 16px; color: var(--text-3); }
+
+.grp-card { background: var(--card); border-radius: 20px; box-shadow: var(--shadow-card); padding: 4px 18px; }
+
+.row { display: flex; align-items: center; gap: 16px; padding: 14px 0; }
+
+.row + .row { border-top: 0.5px solid var(--line); }
+
+.r-main { flex: 1; min-width: 0; }
+
+.r-title { font-size: 14px; font-weight: 500; color: var(--text-1); }
+
+.r-desc { margin-top: 4px; font-size: 12px; color: var(--text-3); line-height: 1.55; }
+
+.r-ctl { flex: none; display: flex; align-items: center; gap: 8px; }
+
+.btn-ghost {
+    display: inline-flex; align-items: center; gap: 7px;
+    height: 34px; padding: 0 15px; border: none; border-radius: 999px;
+    background: var(--btn-2nd); color: var(--text-1);
+    font-family: inherit; font-size: 13px; cursor: pointer; flex: none;
+    transition: background 0.15s ease, transform 0.1s ease;
+  }
+
+.btn-ghost:hover { background: var(--btn-2nd-hover); }
+
+.btn-ghost:active { transform: scale(0.97); }
+
+.btn-ghost:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.btn-ghost .ti { font-size: 14px; color: var(--text-2); }
+
+.btn-ghost.primary { background: var(--accent); color: #ffffff; }
+
+.btn-ghost.primary:hover { background: var(--accent-strong); }
+
+.btn-ghost.primary .ti { color: #ffffff; }
+
+.r-value { font-size: 13px; color: var(--text-3); }
+
+/* ============ AI 大脑配置 ============ */
+  .brain-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    height: 26px; padding: 0 11px; border-radius: 999px;
+    background: var(--green-tint); color: var(--green);
+    font-size: 12px; font-weight: 600; white-space: nowrap;
+  }
+
+.brain-badge .ti { font-size: 13px; }
+
+.brain-panel { padding: 2px 0 18px; border-top: 0.5px solid var(--line); }
+
+.brain-panel[hidden] { display: none; }
+
+.brain-panel:not([hidden]) + .row { border-top: 0.5px solid var(--line); }
+
+.bp-sub { font-size: 12px; color: var(--text-3); line-height: 1.6; margin-top: 14px; }
+
+.kind-sec { padding: 14px 0 6px; }
+
+.kind-sec + .kind-sec { border-top: 0.5px solid var(--line); }
+
+.kind-head { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+
+.kind-head .ti { font-size: 16px; color: var(--text-2); }
+
+.kind-title { font-size: 13px; font-weight: 600; color: var(--text-1); }
+
+.kind-desc { font-size: 12px; color: var(--text-3); flex: 1; min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+
+.kind-badge { display: inline-flex; align-items: center; height: 24px; padding: 0 10px; border-radius: 999px; background: var(--hover); color: var(--text-2); font-size: 12px; font-weight: 600; white-space: nowrap; }
+
+.kind-badge.on { background: var(--green-tint); color: var(--green); }
+
+.kind-note { font-size: 12px; color: var(--text-3); margin-top: 10px; }
+
+.kind-note[hidden] { display: none; }
+
+.kind-fields { display: flex; flex-direction: column; gap: 14px; margin-top: 14px; }
+
+.kind-fields[hidden] { display: none; }
+
+.model-list { border: 0.5px solid var(--line); border-radius: 12px; padding: 4px; display: flex; flex-direction: column; gap: 2px; max-height: 178px; overflow-y: auto; margin-top: 8px; }
+
+.model-list[hidden] { display: none; }
+
+.ml-item { display: flex; align-items: center; gap: 8px; height: 34px; padding: 0 10px; border: none; border-radius: 8px; background: transparent; color: var(--text-1); font-family: inherit; font-size: 13px; cursor: pointer; text-align: left; transition: background 0.15s ease; }
+
+.ml-item:hover { background: var(--hover); }
+
+.ml-item:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+
+.ml-hint { padding: 8px 10px; font-size: 12px; color: var(--text-3); }
+
+.field { display: flex; flex-direction: column; gap: 7px; }
+
+.field[hidden] { display: none; }
+
+.f-label { font-size: 12px; font-weight: 600; color: var(--text-2); }
+
+.inp {
+    width: 100%; height: 38px; padding: 0 12px;
+    border: 0.5px solid var(--line); border-radius: 12px;
+    background: var(--card); color: var(--text-1);
+    font-family: inherit; font-size: 13px;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  }
+
+.inp::placeholder { color: var(--text-3); }
+
+.inp:focus { outline: 2px solid transparent; outline-offset: 0; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(0, 128, 255, 0.12); }
+
+.f-wrap { position: relative; }
+
+.f-wrap .inp { padding-right: 40px; }
+
+.f-eye {
+    position: absolute; right: 5px; top: 50%; transform: translateY(-50%);
+    display: flex; align-items: center; justify-content: center;
+    width: 28px; height: 28px; border: none; border-radius: 8px;
+    background: transparent; color: var(--text-3); cursor: pointer; font-size: 14px;
+    transition: background 0.15s ease, color 0.15s ease;
+  }
+
+.f-eye:hover { background: var(--hover); color: var(--text-1); }
+
+.f-eye:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+
+.f-hint { font-size: 12px; color: var(--text-3); line-height: 1.55; }
+
+.f-test { display: flex; align-items: center; gap: 10px; }
+
+.conn-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    height: 30px; padding: 0 12px; border-radius: 999px;
+    font-size: 12px; font-weight: 600;
+  }
+
+.conn-badge[hidden] { display: none; }
+
+.conn-badge .ti { font-size: 14px; }
+
+.conn-badge.busy { background: var(--hover); color: var(--text-2); }
+
+.conn-badge.ok { background: var(--green-tint); color: var(--green); }
+
+.conn-badge.bad { background: var(--red-tint); color: var(--red); }
+
+.bp-foot { display: flex; align-items: center; justify-content: space-between; margin-top: 18px; }
+
+#btnModel .ti { transition: transform 0.2s var(--ease); }
+
+#btnModel.open .ti { transform: rotate(180deg); }
+
+.about-foot {
+    margin-top: 18px; text-align: center; font-size: 12px; color: var(--text-3); line-height: 1.8;
+  }
+
+.about-foot b { color: var(--text-2); font-weight: 600; }
+
+/* DSH 规范：正圆与胶囊保持圆弧（其余圆角走超椭圆） */
+  .me .ava, .mm-head .ava, .agent-chip, .btn-ghost, .seg button, .tg, .tg::after, .toast, .brain-badge, .conn-badge, .kind-badge { corner-shape: round; }
+
+@media (prefers-color-scheme: dark) {
+    ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.24); border-radius: 999px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.4); border-radius: 999px; }
+  }
+
+@media (max-width: 860px) {
+    .sidebar { display: none; }
+    .wrap { padding: 24px 18px 60px; }
+  }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="sidebar-inner">
+        <div class="side-top">
+          <div class="wordmark">J.Co</div>
+          <button class="side-toggle" aria-label="固定展开侧栏" title="点一下固定展开，再点收起"><span class="ti ti-layout-sidebar-left-expand"></span></button>
+        </div>
+        <div class="search"><span class="ti ti-search"></span><input placeholder="搜索"></div>
+        <nav class="nav">
+          <button class="nav-item"><span class="ti ti-message-plus"></span>总管</button>
+          <button class="group-label" type="button"><span class="ti ti-layout-grid"></span>工作台<span class="ti ti-chevron-down"></span></button>
+          <button class="nav-item"><span class="ti ti-bulb"></span>选题</button>
+          <button class="nav-item"><span class="ti ti-photo"></span>素材</button>
+          <button class="nav-item"><span class="ti ti-file-text"></span>文案</button>
+          <button class="nav-item"><span class="ti ti-video"></span>创作</button>
+          <button class="nav-item"><span class="ti ti-wand"></span>后期</button>
+          <button class="nav-item"><span class="ti ti-upload"></span>发布</button>
+          <button class="nav-item"><span class="ti ti-chart-bar"></span>运营</button>
+          <button class="group-label" type="button"><span class="ti ti-tool"></span>工具<span class="ti ti-chevron-down"></span></button>
+          <button class="nav-item"><span class="ti ti-clock-play"></span>自动任务</button>
+          <button class="nav-item"><span class="ti ti-sparkles"></span>技能库</button>
+          <button class="nav-item"><span class="ti ti-users-group"></span>管家团队</button>
+          <button class="nav-item"><span class="ti ti-key"></span>账号中心</button>
+        </nav>
+        <button class="group-label" type="button"><span class="ti ti-messages"></span>对话<span class="ti ti-chevron-down"></span></button>
+        <div class="convos">
+          <button class="convo"><span class="name">暑期招生 · 今日发布</span></button>
+          <button class="convo"><span class="name">评论跟进（5 条）</span></button>
+          <button class="convo"><span class="name">上周数据复盘</span></button>
+          <button class="convo"><span class="name">引流名单 · 待跟进</span></button>
+          <button class="convo"><span class="name">视频脚本草稿</span></button>
+          <button class="convo"><span class="name">技能库询价</span></button>
+        </div>
+        <div class="side-foot">
+          <div class="me" id="meBtn" role="button" tabindex="0" aria-haspopup="menu" aria-expanded="false"><div class="ava">J</div><span>Jay</span></div>
+          <button class="icon-btn" aria-label="通知"><span class="ti ti-bell"></span></button>
+        </div>
+      </div>
+      <div class="me-menu" id="meMenu" hidden role="menu" aria-label="账号菜单">
+        <div class="mm-head"><div class="ava">J</div><div class="mm-who"><b>Jay</b><span>软件账号 · 仅本机</span></div></div>
+        <div class="mm-sep"></div>
+        <button class="mm-item" id="mmSettings" role="menuitem"><span class="ti ti-settings"></span>设置</button>
+        <button class="mm-item" id="mmLogout" role="menuitem"><span class="ti ti-logout"></span>退出登录</button>
+      </div>
+    </aside>
+
+    <main class="main">
+      <div class="scroll">
+        <div class="wrap">
+          <div class="agent-head">
+            <span class="agent-logo">J</span>
+            <span class="agent-name">和 J.Co</span>
+            <span class="agent-chip">设置</span>
+            <span class="agent-hint">把它调教成你顺手的样子</span>
+          </div>
+
+          <!-- 常规 -->
+          <div class="grp-title"><span class="ti ti-settings"></span>常规</div>
+          <div class="grp-card">
+            <div class="row">
+              <div class="r-main"><div class="r-title">开机自动启动</div><div class="r-desc">打开电脑就能看到 J.Co，像微信一样</div></div>
+              <div class="r-ctl"><button class="tg on" aria-label="开机自动启动" id="tgLogin"></button></div>
+            </div>
+            <div class="row">
+              <div class="r-main"><div class="r-title">关掉窗口后留在托盘</div><div class="r-desc">活儿还在后台干，随时点图标回来</div></div>
+              <div class="r-ctl"><button class="tg on" aria-label="最小化到托盘" id="tgTray"></button></div>
+            </div>
+            <div class="row">
+              <div class="r-main"><div class="r-title">外观主题</div><div class="r-desc">跟随系统，还是自己定</div></div>
+              <div class="r-ctl">
+                <div class="seg" id="segTheme">
+                  <button class="on" data-v="sys"><span class="ti ti-settings"></span>跟随系统</button>
+                  <button data-v="light"><span class="ti ti-sun"></span>浅色</button>
+                  <button data-v="dark"><span class="ti ti-moon"></span>深色</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- AI 与干活方式 -->
+          <div class="grp-title"><span class="ti ti-adjustments"></span>AI 与干活方式</div>
+          <div class="grp-card">
+            <div class="row">
+              <div class="r-main"><div class="r-title">AI 大脑</div><div class="r-desc" id="brainNow">现在用的是内置 Agnes，开箱即用；说话写稿、画图修图、出片成视频，也可以各接各的服务</div></div>
+              <div class="r-ctl">
+                <span class="brain-badge" id="brainBadge"><span class="ti ti-sparkles"></span><span id="brainBadgeText">Agnes 内置</span></span>
+                <button class="btn-ghost" id="btnModel" aria-expanded="false" aria-controls="brainPanel"><span id="btnModelText">换我自己的</span><span class="ti ti-chevron-down"></span></button>
+              </div>
+            </div>
+            <div class="brain-panel" id="brainPanel" hidden>
+              <div class="bp-sub">三类活可以分开接：聊天的、画图的、出片的。都用 Agnes 也行，也可以各接各的服务。</div>
+
+              <div class="kind-sec">
+                <div class="kind-head">
+                  <span class="ti ti-message-chatbot"></span>
+                  <span class="kind-title">说话写稿</span>
+                  <span class="kind-desc">总管聊天、写文案、想选题</span>
+                  <span class="kind-badge on" id="badge-chat">Agnes 内置</span>
+                </div>
+                <div class="seg" id="src-chat">
+                  <button class="on" data-src="agnes">Agnes 内置</button>
+                  <button data-src="compat">OpenAI 兼容接口</button>
+                </div>
+                <div class="kind-note" id="note-chat">用内置 Agnes，什么都不用填，直接干活。</div>
+                <div class="kind-fields" id="fields-chat" hidden>
+                  <div class="field" id="urlfield-chat">
+                    <label class="f-label" for="url-chat">接口地址</label>
+                    <input class="inp" id="url-chat" type="text" autocomplete="off" spellcheck="false" placeholder="服务商给你的地址，比如 https://api.xxx.com/v1">
+                  </div>
+                  <div class="field">
+                    <label class="f-label" for="key-chat">API Key</label>
+                    <div class="f-wrap">
+                      <input class="inp" id="key-chat" type="password" autocomplete="off" spellcheck="false" placeholder="粘贴服务商给你的 Key">
+                      <button class="f-eye" id="eye-chat" type="button" aria-label="显示或隐藏 Key" aria-pressed="false"><span class="ti ti-eye" id="eyeicon-chat"></span></button>
+                    </div>
+                    <div class="f-hint">只存在这台电脑上，不联网、不上传。</div>
+                  </div>
+                  <div class="field">
+                    <label class="f-label" for="model-chat">模型名</label>
+                    <input class="inp" id="model-chat" type="text" autocomplete="off" spellcheck="false" placeholder="点「搜索可用模型」，搜出来直接选">
+                    <div class="model-list" id="list-chat" hidden></div>
+                  </div>
+                  <div class="f-test">
+                    <button class="btn-ghost" id="search-chat"><span class="ti ti-search"></span>搜索可用模型</button>
+                    <button class="btn-ghost primary" id="test-chat">测试连接</button>
+                    <span class="conn-badge" id="conn-chat" hidden></span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="kind-sec">
+                <div class="kind-head">
+                  <span class="ti ti-photo"></span>
+                  <span class="kind-title">画图修图</span>
+                  <span class="kind-desc">封面、配图、修图</span>
+                  <span class="kind-badge on" id="badge-image">Agnes 内置</span>
+                </div>
+                <div class="seg" id="src-image">
+                  <button class="on" data-src="agnes">Agnes 内置</button>
+                  <button data-src="compat">OpenAI 兼容接口</button>
+                </div>
+                <div class="kind-note" id="note-image">用内置 Agnes，什么都不用填，直接干活。</div>
+                <div class="kind-fields" id="fields-image" hidden>
+                  <div class="field" id="urlfield-image">
+                    <label class="f-label" for="url-image">接口地址</label>
+                    <input class="inp" id="url-image" type="text" autocomplete="off" spellcheck="false" placeholder="服务商给你的地址，比如 https://api.xxx.com/v1">
+                  </div>
+                  <div class="field">
+                    <label class="f-label" for="key-image">API Key</label>
+                    <div class="f-wrap">
+                      <input class="inp" id="key-image" type="password" autocomplete="off" spellcheck="false" placeholder="粘贴服务商给你的 Key">
+                      <button class="f-eye" id="eye-image" type="button" aria-label="显示或隐藏 Key" aria-pressed="false"><span class="ti ti-eye" id="eyeicon-image"></span></button>
+                    </div>
+                    <div class="f-hint">只存在这台电脑上，不联网、不上传。</div>
+                  </div>
+                  <div class="field">
+                    <label class="f-label" for="model-image">模型名</label>
+                    <input class="inp" id="model-image" type="text" autocomplete="off" spellcheck="false" placeholder="点「搜索可用模型」，搜出来直接选">
+                    <div class="model-list" id="list-image" hidden></div>
+                  </div>
+                  <div class="f-test">
+                    <button class="btn-ghost" id="search-image"><span class="ti ti-search"></span>搜索可用模型</button>
+                    <button class="btn-ghost primary" id="test-image">测试连接</button>
+                    <span class="conn-badge" id="conn-image" hidden></span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="kind-sec">
+                <div class="kind-head">
+                  <span class="ti ti-video"></span>
+                  <span class="kind-title">出片成视频</span>
+                  <span class="kind-desc">生成、修改视频片段</span>
+                  <span class="kind-badge on" id="badge-video">Agnes 内置</span>
+                </div>
+                <div class="seg" id="src-video">
+                  <button class="on" data-src="agnes">Agnes 内置</button>
+                  <button data-src="compat">OpenAI 兼容接口</button>
+                </div>
+                <div class="kind-note" id="note-video">用内置 Agnes，什么都不用填，直接干活。</div>
+                <div class="kind-fields" id="fields-video" hidden>
+                  <div class="field" id="urlfield-video">
+                    <label class="f-label" for="url-video">接口地址</label>
+                    <input class="inp" id="url-video" type="text" autocomplete="off" spellcheck="false" placeholder="服务商给你的地址，比如 https://api.xxx.com/v1">
+                  </div>
+                  <div class="field">
+                    <label class="f-label" for="key-video">API Key</label>
+                    <div class="f-wrap">
+                      <input class="inp" id="key-video" type="password" autocomplete="off" spellcheck="false" placeholder="粘贴服务商给你的 Key">
+                      <button class="f-eye" id="eye-video" type="button" aria-label="显示或隐藏 Key" aria-pressed="false"><span class="ti ti-eye" id="eyeicon-video"></span></button>
+                    </div>
+                    <div class="f-hint">只存在这台电脑上，不联网、不上传。</div>
+                  </div>
+                  <div class="field">
+                    <label class="f-label" for="model-video">模型名</label>
+                    <input class="inp" id="model-video" type="text" autocomplete="off" spellcheck="false" placeholder="点「搜索可用模型」，搜出来直接选">
+                    <div class="model-list" id="list-video" hidden></div>
+                  </div>
+                  <div class="f-test">
+                    <button class="btn-ghost" id="search-video"><span class="ti ti-search"></span>搜索可用模型</button>
+                    <button class="btn-ghost primary" id="test-video">测试连接</button>
+                    <span class="conn-badge" id="conn-video" hidden></span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="bp-foot">
+                <button class="btn-ghost" id="btnBrainReset">恢复默认</button>
+                <button class="btn-ghost primary" id="btnBrainSave">保存并使用</button>
+              </div>
+            </div>
+            <div class="row">
+              <div class="r-main"><div class="r-title">默认干活方式</div><div class="r-desc">全自动：AI 一路干完再给你看。每步问我：大事小事都先问一句</div></div>
+              <div class="r-ctl">
+                <div class="seg" id="segMode">
+                  <button data-v="auto">全自动</button>
+                  <button class="on" data-v="ask">每步问我</button>
+                </div>
+              </div>
+            </div>
+            <div class="row">
+              <div class="r-main"><div class="r-title">发布前必须我确认</div><div class="r-desc">AI 拟好的内容，永远等你点头才发出去（你的红线，默认开）</div></div>
+              <div class="r-ctl"><button class="tg on" aria-label="发布前必须我确认" id="tgConfirmPublish"></button></div>
+            </div>
+          </div>
+
+          <!-- 通知 -->
+          <div class="grp-title"><span class="ti ti-bell-ringing"></span>通知</div>
+          <div class="grp-card">
+            <div class="row">
+              <div class="r-main"><div class="r-title">活儿干完了提醒我</div><div class="r-desc">视频做好、发布完成、日报出炉，都叫你一声</div></div>
+              <div class="r-ctl"><button class="tg on" aria-label="任务完成提醒" id="tgNotifyDone"></button></div>
+            </div>
+            <div class="row">
+              <div class="r-main"><div class="r-title">账号失效时提醒我</div><div class="r-desc">有一个号需要重新扫码，马上告诉你</div></div>
+              <div class="r-ctl"><button class="tg on" aria-label="账号失效提醒" id="tgNotifyAuth"></button></div>
+            </div>
+          </div>
+
+          <!-- 数据与账号 -->
+          <div class="grp-title"><span class="ti ti-database"></span>数据与账号</div>
+          <div class="grp-card">
+            <div class="row">
+              <div class="r-main"><div class="r-title">账号管理</div><div class="r-desc">5 个平台 · 5 个账号 · 1 个需要重新登录</div></div>
+              <div class="r-ctl"><button class="btn-ghost primary" id="btnAccounts">去账号中心<span class="ti ti-arrow-right"></span></button></div>
+            </div>
+            <div class="row">
+              <div class="r-main"><div class="r-title">素材和成片存这儿</div><div class="r-desc" id="pathText">C:\Users\Jay\J.Co\素材</div></div>
+              <div class="r-ctl"><button class="btn-ghost" id="btnPath">更改…</button></div>
+            </div>
+            <div class="row">
+              <div class="r-main"><div class="r-title">本地数据占用</div><div class="r-desc">素材索引、草稿和历史记录都只在这台电脑</div></div>
+              <div class="r-ctl"><span class="r-value">2.4 GB</span><button class="btn-ghost" id="btnCleanup">清理缓存</button></div>
+            </div>
+          </div>
+
+          <!-- 关于 -->
+          <div class="grp-title"><span class="ti ti-info-circle"></span>关于</div>
+          <div class="grp-card">
+            <div class="row">
+              <div class="r-main"><div class="r-title">J.Co v0.1（原型）</div><div class="r-desc">驱动内核 · DeepSeek Harness（MIT 开源）</div></div>
+              <div class="r-ctl"><button class="btn-ghost" id="btnUpdate">检查更新</button></div>
+            </div>
+          </div>
+
+          <div class="about-foot">写什么、发什么，永远<b>你说了算</b>。J.Co 只是把活干利索。</div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <div class="toast" id="toast" role="status"></div>
+
+  <script>
+    const toastEl = document.getElementById('toast');
+    function showToast(msg) {
+      toastEl.textContent = msg;
+      toastEl.classList.add('show');
+      clearTimeout(showToast.timer);
+      showToast.timer = setTimeout(() => toastEl.classList.remove('show'), 2800);
+    }
+
+    /* 开关 */
+    document.querySelectorAll('.tg').forEach((t) => {
+      t.addEventListener('click', () => {
+        // 真开关们交给各自的逻辑（以存储/系统状态为准，避免双 toggle）
+        if (t.id === 'tgLogin' || t.id === 'tgTray' || t.id === 'tgNotifyDone' || t.id === 'tgNotifyAuth' || t.id === 'tgConfirmPublish') return;
+        t.classList.toggle('on');
+      });
+    });
+
+    /* ---------- 真系统开关（桌面应用内；浏览器保持演示） ---------- */
+    (function sysSwitches() {
+      const sys = (typeof window.jco !== 'undefined' && window.jco && window.jco.sys) ? window.jco.sys : null;
+      if (!sys) return;
+      // 开机自动启动
+      const tg = document.getElementById('tgLogin');
+      if (tg) {
+        sys.getLogin().then((res) => { if (res && res.ok) tg.classList.toggle('on', !!res.enabled); }, () => {});
+        tg.addEventListener('click', () => {
+          const want = !tg.classList.contains('on');
+          tg.classList.toggle('on'); // 乐观反馈，随后以系统状态校正
+          sys.login(want).then((res) => {
+            if (res && res.ok) {
+              tg.classList.toggle('on', !!res.enabled);
+              showToast(res.enabled ? '好，开机就自动打开 J.Co。' : '好，开机不再自动打开。');
+            } else {
+              tg.classList.toggle('on', !want);
+              showToast('没设成：' + ((res && res.error) || '未知错误'));
+            }
+          }, () => { tg.classList.toggle('on', !want); showToast('没设成，再试一次。'); });
+        });
+      }
+      // 主题偏好回填（打开设置页时高亮当前主题）
+      sys.getTheme().then((res) => {
+        if (!res || !res.ok) return;
+        const v = res.theme === 'dark' ? 'dark' : (res.theme === 'light' ? 'light' : 'sys');
+        document.querySelectorAll('#segTheme button').forEach((b) => b.classList.toggle('on', b.dataset.v === v));
+      }, () => {});
+      // 托盘（真：关窗缩到右下角）
+      const tgTray = document.getElementById('tgTray');
+      if (tgTray && sys.getTray) {
+        sys.getTray().then((res) => { if (res && res.ok) tgTray.classList.toggle('on', !!res.enabled); }, () => {});
+        tgTray.addEventListener('click', () => {
+          const want = !tgTray.classList.contains('on');
+          tgTray.classList.toggle('on');
+          sys.tray(want).then((res) => {
+            if (res && res.ok) {
+              tgTray.classList.toggle('on', !!res.enabled);
+              showToast(res.enabled ? '好：以后关窗口会缩到右下角托盘，点小蓝点回来。' : '好：关窗口就直接退出了。');
+            } else {
+              tgTray.classList.toggle('on', !want);
+              showToast('没设成：' + ((res && res.error) || '未知错误'));
+            }
+          }, () => { tgTray.classList.toggle('on', !want); showToast('没设成，再试一次。'); });
+        });
+      }
+    })();
+
+    /* ---------- 本地偏好开关（真存）：完事提醒 / 账号提醒 / 发布前确认 ---------- */
+    (function localSwitches() {
+      const LOCAL_TG = { tgNotifyDone: 'jco-notify-done', tgNotifyAuth: 'jco-notify-auth', tgConfirmPublish: 'jco-confirm-publish' };
+      Object.entries(LOCAL_TG).forEach(([id, key]) => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        let on = true;
+        try { on = localStorage.getItem(key) !== '0'; } catch (e) {}
+        el.classList.toggle('on', on);
+        el.addEventListener('click', () => {
+          const want = !el.classList.contains('on');
+          el.classList.toggle('on');
+          try { localStorage.setItem(key, want ? '1' : '0'); } catch (e) {}
+          const MSG = {
+            tgNotifyDone: want ? '好：活儿干完会弹系统通知叫你。' : '好：不打扰你，干完就在软件里等你。',
+            tgNotifyAuth: want ? '好：有账号掉线马上叫你（接上平台账号后生效）。' : '好：不提醒账号问题。',
+            tgConfirmPublish: want ? '好：发之前一定等你点头。' : '注意：关了它，发布将不等你确认（建议保持开）。',
+          };
+          showToast(MSG[id] || '已记下。');
+        });
+      });
+    })();
+
+    /* 分段选择 */
+    document.querySelectorAll('.seg').forEach((seg) => {
+      seg.addEventListener('click', (e) => {
+        const btn = e.target.closest('button');
+        if (!btn) return;
+        seg.querySelectorAll('button').forEach((b) => b.classList.remove('on'));
+        btn.classList.add('on');
+      });
+    });
+    document.getElementById('segTheme').addEventListener('click', (e) => {
+      const btn = e.target.closest('button');
+      if (!btn) return;
+      const mode = btn.dataset.v === 'dark' ? 'dark' : (btn.dataset.v === 'light' ? 'light' : 'system');
+      const sys = (typeof window.jco !== 'undefined' && window.jco && window.jco.sys) ? window.jco.sys : null;
+      if (sys) {
+        sys.theme(mode).then(function (res) {
+          showToast(res && res.ok ? '换好了，整个应用都跟着变。' : '没换成：' + ((res && res.error) || '未知错误'));
+        }, function () { showToast('没换成，再点一次试试。'); });
+        return;
+      }
+      showToast('（原型示意）正式版会立即把整个应用换成这个主题。');
+    });
+    document.getElementById('segMode').addEventListener('click', (e) => {
+      const btn = e.target.closest('button');
+      if (!btn) return;
+      try { localStorage.setItem('jco-mode-v1', btn.dataset.v === 'ask' ? 'ask' : 'auto'); } catch (err) {}
+      showToast(btn.dataset.v === 'ask' ? '好：生成类操作动手前先问一句。' : '好：AI 一路干完再汇报。');
+    });
+    (function modeInit() {
+      let m = 'auto';
+      try { m = localStorage.getItem('jco-mode-v1') || 'auto'; } catch (err) {}
+      document.querySelectorAll('#segMode button').forEach((b) => b.classList.toggle('on', (b.dataset.v === 'auto') === (m === 'auto')));
+    })();
+
+    /* 按钮 */
+    document.getElementById('btnAccounts').addEventListener('click', () => { location.href = 'J.Co账号中心.html'; });
+    document.getElementById('btnPath').addEventListener('click', () => {
+      const sys = (typeof window.jco !== 'undefined' && window.jco && window.jco.sys) ? window.jco.sys : null;
+      if (!sys || !sys.pickFolder) {
+        showToast('（原型示意）正式版会打开文件夹选择框，选你想放素材的地方。');
+        return;
+      }
+      sys.pickFolder().then((res) => {
+        if (!res || !res.ok) { showToast('没打开选择框：' + ((res && res.error) || '未知错误')); return; }
+        if (!res.path) return;
+        document.getElementById('pathText').textContent = res.path;
+        try { localStorage.setItem('jco-assets-dir', res.path); } catch (e) {}
+        showToast('记下了：素材和成片以后都放这儿。');
+      }, () => showToast('没打开选择框，再试一次。'));
+    });
+    (function pathInit() {
+      try {
+        const saved = localStorage.getItem('jco-assets-dir');
+        if (saved) document.getElementById('pathText').textContent = saved;
+      } catch (e) {}
+    })();
+    document.getElementById('btnCleanup').addEventListener('click', () => {
+      const sys = (typeof window.jco !== 'undefined' && window.jco && window.jco.sys) ? window.jco.sys : null;
+      if (!sys) {
+        showToast('（原型示意）会清掉临时缓存，你的素材和草稿一个都不会动。');
+        return;
+      }
+      sys.clean().then((res) => {
+        showToast(res && res.ok ? '清好了。素材、草稿和记录一个都没动。' : '没清成：' + ((res && res.error) || '未知错误'));
+      }, () => showToast('没清成，再试一次。'));
+    });
+    document.getElementById('btnUpdate').addEventListener('click', () =>
+      showToast('当前是本地原版（v0.1），装好后更新会从服务器自动检查。'));
+
+    /* ---------- 账号菜单（点头像弹出：设置 / 退出登录） ---------- */
+    (function () {
+      var meBtn = document.getElementById('meBtn');
+      var menu = document.getElementById('meMenu');
+      if (!meBtn || !menu) return;
+      function setOpen(open) {
+        menu.hidden = !open;
+        meBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+      }
+      meBtn.addEventListener('click', function () { setOpen(menu.hidden); });
+      meBtn.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setOpen(menu.hidden); }
+        if (e.key === 'Escape') setOpen(false);
+      });
+      document.addEventListener('click', function (e) {
+        if (!menu.hidden && !menu.contains(e.target) && !meBtn.contains(e.target)) setOpen(false);
+      });
+      document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && !menu.hidden) setOpen(false);
+      });
+      document.getElementById('mmSettings').addEventListener('click', function () {
+        setOpen(false);
+        var here = decodeURIComponent(location.pathname.split('/').pop());
+        if (here !== 'J.Co设置.html') location.href = 'J.Co设置.html';
+      });
+      document.getElementById('mmLogout').addEventListener('click', function () {
+        setOpen(false);
+        showToast('这台电脑上不用单独登录：关掉窗口就是退出，素材和草稿都留着。');
+      });
+    })();
+
+    /* ---------- AI 大脑（说话写稿 / 画图修图 / 出片成视频，三类可分开接） ---------- */
+    (function () {
+      var KEY = 'jco-brain-config';
+      var panel = document.getElementById('brainPanel');
+      var btnModel = document.getElementById('btnModel');
+      var btnModelText = document.getElementById('btnModelText');
+      var btnSave = document.getElementById('btnBrainSave');
+      var btnReset = document.getElementById('btnBrainReset');
+      var brainNow = document.getElementById('brainNow');
+      var brainBadgeText = document.getElementById('brainBadgeText');
+
+      var KINDS = ['chat', 'image', 'video'];
+      var AGNES_BUILTIN_URL = 'https://api.agnes-ai.cn/v1';
+      var KIND_META = {
+        chat: { title: '说话写稿', demo: ['deepseek-chat', 'deepseek-reasoner', 'gpt-4o-mini', 'Qwen/Qwen3-32B', 'moonshot-v1-8k'] },
+        image: { title: '画图修图', demo: ['dall-e-3', 'flux.1-schnell', 'stable-diffusion-3.5-large', 'doubao-seedream-3.0-t2i'] },
+        video: { title: '出片成视频', demo: ['sora-2', 'kling-v2', 'runway-gen4-turbo', 'doubao-seedance-1.0-pro'] }
+      };
+      var srcState = { chat: 'agnes', image: 'agnes', video: 'agnes' };
+
+      function el(id) { return document.getElementById(id); }
+
+      function setConn(kind, state, text) {
+        var conn = el('conn-' + kind);
+        if (!state) { conn.hidden = true; conn.textContent = ''; return; }
+        conn.hidden = false;
+        conn.className = 'conn-badge ' + state;
+        conn.textContent = '';
+        var ic = document.createElement('span');
+        ic.className = 'ti ' + (state === 'ok' ? 'ti-check' : state === 'bad' ? 'ti-alert-triangle' : 'ti-refresh');
+        conn.appendChild(ic);
+        conn.appendChild(document.createTextNode(text));
+      }
+
+      function setSrc(kind, next) {
+        srcState[kind] = next;
+        var seg = el('src-' + kind);
+        seg.querySelectorAll('button').forEach(function (b) {
+          b.classList.toggle('on', b.dataset.src === next);
+        });
+        var isAgnes = next === 'agnes';
+        // 两种模式共用同一套字段：Agnes 只隐藏「接口地址」（内置好了），Key 和模型名还是要露出来
+        el('fields-' + kind).hidden = false;
+        el('urlfield-' + kind).hidden = isAgnes;
+        var note = el('note-' + kind);
+        note.hidden = false;
+        note.textContent = isAgnes
+          ? '用内置 Agnes（api.agnes-ai.cn）：地址和常用模型替你填好了，只差你的 Key（在 Agnes 控制台复制一次）。'
+          : '把你服务商的地址、Key、模型名填上；不想手抄模型名，点「搜索可用模型」搜出来直接选。';
+        var badge = el('badge-' + kind);
+        badge.textContent = isAgnes ? 'Agnes 内置' : '自接接口';
+        badge.classList.toggle('on', isAgnes);
+        if (isAgnes) {
+          el('url-' + kind).value = AGNES_BUILTIN_URL;
+          if (!el('model-' + kind).value.trim()) el('model-' + kind).value = 'agnes-2.5-flash';
+          if (!el('key-' + kind).value.trim()) {
+            var lastKey = null;
+            try { lastKey = localStorage.getItem('jco-agnes-key-last'); } catch (e) {}
+            if (lastKey) el('key-' + kind).value = lastKey;
+          }
+        }
+        el('list-' + kind).hidden = true;
+        setConn(kind, null);
+      }
+
+      function readKind(kind) {
+        return {
+          src: srcState[kind],
+          url: el('url-' + kind).value.trim(),
+          key: el('key-' + kind).value.trim(),
+          model: el('model-' + kind).value.trim()
+        };
+      }
+
+      function renderList(kind, models) {
+        var list = el('list-' + kind);
+        list.textContent = '';
+        if (!models.length) {
+          var d = document.createElement('div');
+          d.className = 'ml-hint';
+          d.textContent = '没搜到模型，检查一下地址和 Key。';
+          list.appendChild(d);
+          return;
+        }
+        models.forEach(function (name) {
+          var b = document.createElement('button');
+          b.type = 'button';
+          b.className = 'ml-item';
+          b.textContent = name;
+          b.addEventListener('click', function () {
+            el('model-' + kind).value = name;
+            list.hidden = true;
+            showToast('选好了：' + name);
+          });
+          list.appendChild(b);
+        });
+      }
+
+      function searchModels(kind) {
+        var list = el('list-' + kind);
+        if (!list.hidden) { list.hidden = true; return; }
+        var url = el('url-' + kind).value.trim();
+        var key = el('key-' + kind).value.trim();
+        if (!url) { showToast('先填接口地址，再搜索。'); el('url-' + kind).focus(); return; }
+        if (!key) { showToast('先填 API Key，再搜索。'); el('key-' + kind).focus(); return; }
+        var btn = el('search-' + kind);
+        btn.disabled = true;
+        list.hidden = false;
+        list.textContent = '';
+        var d = document.createElement('div');
+        d.className = 'ml-hint';
+        d.textContent = '正在向这个接口要模型清单……';
+        list.appendChild(d);
+        var realProbe = (typeof window.jco !== 'undefined' && window.jco && window.jco.kernel && window.jco.kernel.probe) ? window.jco.kernel.probe : null;
+        if (realProbe) {
+          /* 桌面应用：真拉 {地址}/models */
+          realProbe({ url: url, key: key }).then(function (res) {
+            btn.disabled = false;
+            if (res && res.ok) {
+              renderList(kind, res.models || []);
+            } else {
+              list.textContent = '';
+              var bad = document.createElement('div');
+              bad.className = 'ml-hint';
+              bad.textContent = '没搜到：' + ((res && res.error) || '未知错误');
+              list.appendChild(bad);
+            }
+          }, function (err) {
+            btn.disabled = false;
+            list.textContent = '';
+            var bad = document.createElement('div');
+            bad.className = 'ml-hint';
+            bad.textContent = '没搜到：' + String((err && err.message) || err);
+            list.appendChild(bad);
+          });
+          return;
+        }
+        /* 浏览器原型：用演示清单模拟 */
+        setTimeout(function () {
+          btn.disabled = false;
+          renderList(kind, KIND_META[kind].demo);
+        }, 1000);
+      }
+
+      function testKind(kind) {
+        var url = el('url-' + kind).value.trim();
+        var key = el('key-' + kind).value.trim();
+        var model = el('model-' + kind).value.trim();
+        if (!url) { setConn(kind, 'bad', '先填接口地址'); el('url-' + kind).focus(); return; }
+        if (!key) { setConn(kind, 'bad', '先填 API Key'); el('key-' + kind).focus(); return; }
+        if (!model) { setConn(kind, 'bad', '先填模型名'); el('model-' + kind).focus(); return; }
+        var btn = el('test-' + kind);
+        btn.disabled = true;
+        setConn(kind, 'busy', '正在连……');
+        var realProbe = (typeof window.jco !== 'undefined' && window.jco && window.jco.kernel && window.jco.kernel.probe) ? window.jco.kernel.probe : null;
+        var t0 = Date.now();
+        if (realProbe) {
+          /* 桌面应用：真发请求验地址和 Key */
+          realProbe({ url: url, key: key }).then(function (res) {
+            btn.disabled = false;
+            if (res && res.ok) {
+              var n = (res.models && res.models.length) || 0;
+              setConn(kind, 'ok', '连接成功 · ' + (n > 0 ? n + ' 个模型可用' : '接口在线') + ' · ' + (Date.now() - t0) + ' ms');
+            } else {
+              setConn(kind, 'bad', '没连上：' + ((res && res.error) || '未知错误'));
+            }
+          }, function (err) {
+            btn.disabled = false;
+            setConn(kind, 'bad', '没连上：' + String((err && err.message) || err));
+          });
+          return;
+        }
+        /* 浏览器原型：模拟一次往返 */
+        setTimeout(function () {
+          btn.disabled = false;
+          if (key.length < 8) {
+            setConn(kind, 'bad', '没连上：检查一下 Key');
+          } else {
+            setConn(kind, 'ok', '连接成功 · 42 ms');
+          }
+        }, 1100);
+      }
+
+      function paintSummary() {
+        var custom = [];
+        KINDS.forEach(function (k) {
+          if (srcState[k] === 'compat') {
+            custom.push(KIND_META[k].title);
+          }
+        });
+        if (!custom.length) {
+          brainBadgeText.textContent = 'Agnes 内置';
+          brainNow.textContent = '现在用的是内置 Agnes，开箱即用；说话写稿、画图修图、出片成视频，也可以各接各的服务';
+        } else {
+          brainBadgeText.textContent = 'Agnes + 自接';
+          brainNow.textContent = '已接你自己的接口：' + custom.join('、') + '。其余用 Agnes 内置。';
+        }
+      }
+
+      function openPanel(open) {
+        panel.hidden = !open;
+        btnModel.classList.toggle('open', open);
+        btnModel.setAttribute('aria-expanded', open ? 'true' : 'false');
+        btnModelText.textContent = open ? '收起' : '换我自己的';
+        if (open) panel.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+      }
+
+      btnModel.addEventListener('click', function () { openPanel(panel.hidden); });
+
+      KINDS.forEach(function (kind) {
+        el('src-' + kind).addEventListener('click', function (e) {
+          var b = e.target.closest('button');
+          if (b) setSrc(kind, b.dataset.src);
+        });
+        el('eye-' + kind).addEventListener('click', function () {
+          var inp = el('key-' + kind);
+          var show = inp.type === 'password';
+          inp.type = show ? 'text' : 'password';
+          el('eyeicon-' + kind).className = 'ti ' + (show ? 'ti-eye-off' : 'ti-eye');
+          el('eye-' + kind).setAttribute('aria-pressed', show ? 'true' : 'false');
+        });
+        el('search-' + kind).addEventListener('click', function () { searchModels(kind); });
+        el('test-' + kind).addEventListener('click', function () { testKind(kind); });
+      });
+
+      btnSave.addEventListener('click', function () {
+        var cfg = { v: 2 };
+        var missing = null;
+        KINDS.forEach(function (k) {
+          cfg[k] = readKind(k);
+          if (!missing && cfg[k].src === 'compat' && (!cfg[k].url || !cfg[k].key || !cfg[k].model)) missing = k;
+        });
+        if (missing) {
+          showToast('「' + KIND_META[missing].title + '」还差一点：地址、Key、模型名都填上。');
+          return;
+        }
+        try { localStorage.setItem(KEY, JSON.stringify(cfg)); } catch (e) {}
+        // 记住最近填过的 Key：其他类别切到 Agnes 时自动带出（贴过一次就不用每类重贴）
+        var rememberedKey = cfg.chat.key || cfg.image.key || cfg.video.key;
+        if (rememberedKey) { try { localStorage.setItem('jco-agnes-key-last', rememberedKey); } catch (e) {} }
+        paintSummary();
+        // 喂给内核（桌面应用里真实生效；浏览器原型里跳过）
+        var realSet = (typeof window.jco !== 'undefined' && window.jco && window.jco.kernel && window.jco.kernel.setModel) ? window.jco.kernel.setModel : null;
+        if (realSet) {
+          realSet({ chat: cfg.chat, image: cfg.image, video: cfg.video }).then(function (res) {
+            if (res && res.ok) {
+              var label = (res.route && res.route.label) || '新配置';
+              if (cfg.chat.src === 'agnes' && !cfg.chat.key) {
+                showToast('配置存了。Key 还没填：聊天暂时走默认内核，填上 Key 保存后就切到 Agnes。');
+              } else {
+                showToast('保存好了：聊天现在用' + label + '。说句话试试。');
+              }
+            } else {
+              showToast('配置存了，但内核没接上：' + ((res && res.error) || '未知错误'));
+            }
+            openPanel(false);
+          }, function (err) {
+            showToast('配置存了，但内核没接上：' + String((err && err.message) || err));
+            openPanel(false);
+          });
+          return;
+        }
+        showToast('保存好了，以后按这套配置干活。');
+        openPanel(false);
+      });
+
+      btnReset.addEventListener('click', function () {
+        try { localStorage.removeItem(KEY); } catch (e) {}
+        try { localStorage.removeItem('jco-agnes-key-last'); } catch (e) {}
+        KINDS.forEach(function (k) {
+          el('url-' + k).value = '';
+          el('key-' + k).value = '';
+          el('model-' + k).value = '';
+          setSrc(k, 'agnes');
+        });
+        paintSummary();
+        // 通知内核回到默认路由（桌面应用里生效）
+        var realSet = (typeof window.jco !== 'undefined' && window.jco && window.jco.kernel && window.jco.kernel.setModel) ? window.jco.kernel.setModel : null;
+        if (realSet) { realSet({ chat: { src: 'agnes' }, image: { src: 'agnes' }, video: { src: 'agnes' } }).catch(function () {}); }
+        showToast('三类活都切回 Agnes 内置了。');
+      });
+
+      /* 初始化：读回上次保存的配置（旧版单模型配置自动迁移到「说话写稿」） */
+      (function init() {
+        var saved = null;
+        try { saved = JSON.parse(localStorage.getItem(KEY) || 'null'); } catch (e) {}
+        if (saved && saved.v === 2) {
+          // 把已存的 Key 记进"记忆"：其他类别切到 Agnes 时自动带出
+          try {
+            var anyKey = (saved.chat && saved.chat.key) || (saved.image && saved.image.key) || (saved.video && saved.video.key);
+            if (anyKey) localStorage.setItem('jco-agnes-key-last', anyKey);
+          } catch (e) {}
+          KINDS.forEach(function (k) {
+            var c = saved[k];
+            if (!c) { setSrc(k, 'agnes'); return; }
+            if (c.url) el('url-' + k).value = c.url;
+            if (c.key) el('key-' + k).value = c.key;
+            if (c.model) el('model-' + k).value = c.model;
+            setSrc(k, c.src === 'compat' ? 'compat' : 'agnes');
+          });
+        } else if (saved && (saved.src === 'compat' || saved.src === 'deepseek' || saved.src === 'local') && (saved.key || saved.url || saved.model)) {
+          if (saved.url) el('url-chat').value = saved.url;
+          if (saved.key) el('key-chat').value = saved.key;
+          if (saved.model) el('model-chat').value = saved.model;
+          setSrc('chat', 'compat');
+        } else {
+          // 无历史配置：三类都按「Agnes 内置」的初始态渲染（字段/说明/地址预填统一走 setSrc）
+          KINDS.forEach(function (k) { setSrc(k, 'agnes'); });
+        }
+        paintSummary();
+      })();
+    })();
+
+    /* ---------- 侧栏（图标栏 + 按钮展开 + 固定展开） ---------- */
+    (function () {
+      var sidebar = document.querySelector('.sidebar');
+      var pinBtn = document.querySelector('.side-toggle');
+      if (!sidebar) return;
+      function setPinned(v) {
+        document.documentElement.classList.toggle('side-pinned', v);
+        if (pinBtn) pinBtn.querySelector('.ti').className = 'ti ' + (v ? 'ti-layout-sidebar-left-collapse' : 'ti-layout-sidebar-left-expand');
+        try { localStorage.setItem('jco-side-pinned', v ? '1' : '0'); } catch (err) {}
+      }
+      if (pinBtn) pinBtn.addEventListener('click', function () {
+        setPinned(!document.documentElement.classList.contains('side-pinned'));
+      });
+      try {
+        if (localStorage.getItem('jco-side-pinned') === '1') setPinned(true);
+      } catch (err) {}
+    })();
+
+    /* ---------- 侧栏分组折叠 ---------- */
+    (function () {
+      var KEY = 'jco-sidebar-folded-groups';
+      function loadFolded() {
+        try { return (localStorage.getItem(KEY) || '').split(',').filter(Boolean); } catch (e) { return []; }
+      }
+      function saveFolded(list) {
+        try { localStorage.setItem(KEY, list.join(',')); } catch (e) {}
+      }
+      function applyFold(label, hide) {
+        label.classList.toggle('folded', hide);
+        var el = label.nextElementSibling;
+        while (el && !el.classList.contains('group-label')) {
+          if (el.classList.contains('nav-item') || el.classList.contains('convos')) {
+            el.style.display = hide ? 'none' : '';
+          }
+          el = el.nextElementSibling;
+        }
+      }
+      var folded = loadFolded();
+      document.querySelectorAll('.group-label').forEach(function (label) {
+        var name = label.textContent.trim();
+        if (folded.indexOf(name) !== -1) applyFold(label, true);
+        label.addEventListener('click', function () {
+          var hide = !label.classList.contains('folded');
+          applyFold(label, hide);
+          var list = loadFolded();
+          if (hide) { if (list.indexOf(name) === -1) list.push(name); }
+          else { list = list.filter(function (x) { return x !== name; }); }
+          saveFolded(list);
+        });
+      });
+    })();
+
+    /* ---------- 侧栏导航 ---------- */
+    (function () {
+      var here = decodeURIComponent(location.pathname.split('/').pop());
+      var PAGES = {
+        '总管': 'J.Co总管.html',
+        '选题': 'J.Co工作台-选题.html',
+        '素材': 'J.Co工作台-素材.html',
+        '文案': 'J.Co工作台-创作.html',
+        '创作': 'J.Co工作台-做视频.html',
+        '后期': 'J.Co工作台-后期.html',
+        '发布': 'J.Co工作台-发布.html',
+        '运营': 'J.Co工作台-运营.html',
+        '管家团队': 'J.Co管家团队.html',
+        '账号中心': 'J.Co账号中心.html',
+        '设置': 'J.Co设置.html',
+        '自动任务': 'J.Co自动任务.html',
+        '技能库': 'J.Co技能库.html'
+      };
+      document.querySelectorAll('.nav-item').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          var label = btn.textContent.trim();
+          var target = PAGES[label];
+          if (target) {
+            if (target !== here) location.href = target;
+            return;
+          }
+          showToast('「' + label + '」还没开工，已经记进下一步清单（先把现有的七个环节用顺）。');
+        });
+      });
+      var bell = document.querySelector('.side-foot .icon-btn');
+      if (bell) bell.addEventListener('click', function (e) {
+        e.stopPropagation();
+        jcoToggleNotif(bell);
+      });
+      var wm = document.querySelector('.wordmark');
+      if (wm) wm.addEventListener('click', function () {
+        if ('J.Co主界面-首页.html' !== here) location.href = 'J.Co主界面-首页.html';
+      });
+      document.querySelectorAll('.convo').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          showToast('（原型示意）正式版里会打开这段对话记录。');
+        });
+      });
+    })();
+  
+    /* ---------- 通知面板：最近的活动记录（真数据） ---------- */
+    function jcoToggleNotif(anchor) {
+      var old = document.querySelector('.notif-pop');
+      if (old) { old.remove(); return; }
+      var items = [];
+      try { items = (JSON.parse(localStorage.getItem('jco-log-v1') || '{"items":[]}').items) || []; } catch (e) {}
+      var pop = document.createElement('div');
+      pop.className = 'notif-pop';
+      var r = anchor.getBoundingClientRect();
+      pop.style.position = 'fixed';
+      pop.style.left = Math.min(r.right + 10, window.innerWidth - 296) + 'px';
+      pop.style.bottom = Math.max(12, window.innerHeight - r.bottom) + 'px';
+      var head = document.createElement('div');
+      head.className = 'np-head';
+      head.textContent = '最近动态';
+      pop.appendChild(head);
+      if (items.length === 0) {
+        var empty = document.createElement('div');
+        empty.className = 'np-empty';
+        empty.textContent = '还没有记录。干一句活，这里就开始记。';
+        pop.appendChild(empty);
+      } else {
+        items.slice(0, 8).forEach(function (x) {
+          var row = document.createElement('div');
+          row.className = 'np-row';
+          var d = new Date(x.t);
+          var hh = String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+          var time = document.createElement('span');
+          time.className = 'np-time';
+          time.textContent = hh;
+          var txt = document.createElement('span');
+          txt.className = 'np-txt';
+          txt.textContent = x.title + (x.detail ? '（' + x.detail + '）' : '');
+          row.appendChild(time);
+          row.appendChild(txt);
+          pop.appendChild(row);
+        });
+      }
+      var foot = document.createElement('a');
+      foot.className = 'np-foot';
+      foot.href = 'J.Co总管.html';
+      foot.textContent = '去总管看全部 →';
+      pop.appendChild(foot);
+      document.body.appendChild(pop);
+      var closer = function (ev) {
+        if (!pop.contains(ev.target)) {
+          pop.remove();
+          document.removeEventListener('click', closer, true);
+        }
+      };
+      setTimeout(function () { document.addEventListener('click', closer, true); }, 0);
+    }
+  
+  
+    /* ---------- 对话列表（真会话）：点击续聊；每项可分享 / 重命名 / 删除；＋ 新会话 ---------- */
+    (function jcoConvos() {
+      var hasKernel = (typeof window.jco !== 'undefined' && window.jco && window.jco.kernel);
+      if (!hasKernel) return; // 浏览器直开：保留演示列表
+      var data = null;
+      try { data = JSON.parse(localStorage.getItem('jco-chats-v1') || 'null'); } catch (e) {}
+      var box = document.querySelector('.convos');
+      if (!box || !data || !Array.isArray(data.chats) || data.chats.length === 0) return;
+      var here = decodeURIComponent(location.pathname.split('/').pop());
+      function go(req) {
+        try { sessionStorage.setItem('jco-open-chat', req); } catch (e) {}
+        if (here !== 'J.Co总管.html') location.href = 'J.Co总管.html';
+      }
+      function saveChats() { try { localStorage.setItem('jco-chats-v1', JSON.stringify(data)); } catch (e) {} }
+
+      /* 会话操作：分享 / 重命名 / 删除（含两步防误删） */
+      var openMenu = null;
+      function closeMenu() { if (openMenu) { openMenu.remove(); openMenu = null; } }
+      document.addEventListener('click', closeMenu);
+      function toastIt(msg) {
+        var t = document.getElementById('toast');
+        if (!t) return;
+        t.textContent = msg; t.classList.add('show');
+        clearTimeout(toastIt._t); toastIt._t = setTimeout(function () { t.classList.remove('show'); }, 2600);
+      }
+      function shareChat(chat) {
+        var lines = ['【和 J.Co 的对话 · ' + (chat.title || '新会话') + '】'];
+        (chat.messages || []).forEach(function (m) {
+          lines.push((m.role === 'user' ? '我：' : 'J.Co：') + String(m.text || ''));
+        });
+        var text = lines.join('\n');
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(text).then(
+            function () { toastIt('对话已复制，去粘贴分享吧'); },
+            function () { toastIt('没复制成，手动选中复制一下'); }
+          );
+        } else { toastIt('这台环境不支持直接复制'); }
+      }
+      function showMenu(anchor, chat) {
+        closeMenu();
+        var menu = document.createElement('div');
+        menu.className = 'convo-menu';
+        menu.addEventListener('click', function (e) { e.stopPropagation(); });
+        function item(icon, label, cls, fn) {
+          var b = document.createElement('button');
+          b.type = 'button';
+          b.className = cls || '';
+          b.innerHTML = '<span class="ti ' + icon + '"></span>' + label;
+          b.addEventListener('click', fn);
+          menu.appendChild(b);
+          return b;
+        }
+        item('ti-share-3', '分享对话', '', function () { closeMenu(); shareChat(chat); });
+        item('ti-file-text', '重命名', '', function () {
+          closeMenu();
+          var row = anchor.closest('.convo');
+          var nameEl = row ? row.querySelector('.name') : null;
+          if (!nameEl) return;
+          var input = document.createElement('input');
+          input.className = 'convo-rename';
+          input.value = chat.title || '新会话';
+          nameEl.replaceWith(input);
+          input.focus(); input.select();
+          var done = false;
+          function commit(saveIt) {
+            if (done) return; done = true;
+            var v = input.value.trim().slice(0, 20);
+            if (saveIt && v) chat.title = v;
+            nameEl.textContent = chat.title || '新会话';
+            input.replaceWith(nameEl);
+            if (saveIt && v) { saveChats(); toastIt('改好名字了'); }
+          }
+          input.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter') { e.preventDefault(); commit(true); }
+            if (e.key === 'Escape') { commit(false); }
+          });
+          input.addEventListener('blur', function () { commit(true); });
+          input.addEventListener('click', function (e) { e.stopPropagation(); });
+        });
+        var del = item('ti-trash', '删除对话', 'danger', function () {
+          if (del.getAttribute('data-armed') !== '1') {
+            del.setAttribute('data-armed', '1');
+            del.innerHTML = '<span class="ti ti-trash"></span>再点一次，真删除';
+            return;
+          }
+          closeMenu();
+          var wasActive = data.activeId === chat.id;
+          data.chats = data.chats.filter(function (x) { return x.id !== chat.id; });
+          if (data.chats.length === 0) {
+            data.chats.push({ id: 'c' + Date.now().toString(36), title: '新会话', updatedAt: Date.now(), messages: [] });
+          }
+          if (wasActive) data.activeId = data.chats[0].id;
+          saveChats();
+          toastIt('已删除「' + (chat.title || '新会话') + '」');
+          render();
+        });
+        document.body.appendChild(menu);
+        var r = anchor.getBoundingClientRect();
+        var mw = menu.offsetWidth || 160, mh = menu.offsetHeight || 130;
+        var left = Math.min(r.right + 8, window.innerWidth - mw - 10);
+        var top = Math.min(r.bottom + 4, window.innerHeight - mh - 10);
+        if (top < 8) top = 8;
+        menu.style.left = left + 'px';
+        menu.style.top = top + 'px';
+        openMenu = menu;
+      }
+      function render() {
+        box.innerHTML = '';
+        var add = document.createElement('button');
+        add.className = 'convo new-btn';
+        add.innerHTML = '<span class="ti ti-plus"></span>新会话';
+        add.addEventListener('click', function (e) { e.stopPropagation(); go('new'); });
+        box.appendChild(add);
+        data.chats.slice(0, 8).forEach(function (c) {
+          var b = document.createElement('button');
+          b.className = 'convo' + (c.id === data.activeId ? ' active' : '');
+          var nm = document.createElement('span');
+          nm.className = 'name';
+          nm.textContent = c.title || '新会话';
+          b.appendChild(nm);
+          var more = document.createElement('span');
+          more.className = 'convo-more';
+          more.setAttribute('role', 'button');
+          more.setAttribute('tabindex', '0');
+          more.setAttribute('aria-label', '更多操作');
+          more.textContent = '⋯';
+          more.addEventListener('click', function (e) { e.stopPropagation(); showMenu(more, c); });
+          more.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); showMenu(more, c); } });
+          b.appendChild(more);
+          b.addEventListener('click', function (e) { e.stopPropagation(); go(c.id); });
+          box.appendChild(b);
+        });
+      }
+      render();
+    })();
+  
+  </script>
+  
+</body>
+</html>
