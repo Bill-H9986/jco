@@ -685,7 +685,7 @@
 
           <div class="from">
             <span class="ti ti-video"></span>
-            <span>手头素材：<b>《成人高考报名其实就 3 步》稿子 8 句 · 素材 3 件</b></span>
+            <span>手头素材：<b id="handyLine">正在看本机数据……</b></span>
             <span class="src">说一句就行，也可以直接选下面的技能</span>
           </div>
 
@@ -699,8 +699,8 @@
           <div class="done" id="done">
             <div class="board">
               <div class="left">
-                <div class="phone" id="donePhone" onclick="showToast('（原型示意）正式版点这里全屏播放成片。')"><span class="ti ti-player-play"></span><span id="donePhoneTxt"></span></div>
-                <button class="ghost" onclick="showToast('（原型示意）正式版会从头到尾播一遍给你看。')"><span class="ti ti-eye"></span>播放整片</button>
+                <div class="phone" id="donePhone" onclick="playWhole()"><span class="ti ti-player-play"></span><span id="donePhoneTxt"></span></div>
+                <button class="ghost" onclick="playWhole()"><span class="ti ti-eye"></span>播放整片</button>
               </div>
               <div class="right">
                 <div class="board-head">
@@ -1098,7 +1098,7 @@
         var items = drafts.slice(0, 12).map(function (d) {
           return {
             id: d.id, idea: d.idea, status: d.status, type: d.type, ratio: d.ratio,
-            duration: d.duration, res: d.res, voice: d.voice, method: d.method,
+            duration: d.duration, res: d.res, voice: d.voice, method: d.method, fixNote: d.fixNote || '',
             shots: (d.shots || []).slice(0, 20),
             videos: d.videos || {},
             images: (d.images || []).slice(0, 6).map(function (im) {
@@ -1619,12 +1619,18 @@
           const vs = videos[i];
           const mk = document.createElement('button');
           mk.className = 'swap make';
+          let reBtn = null;
           if (vs && vs.status === 'doing') {
             mk.textContent = '生成中…';
             mk.disabled = true;
           } else if (vs && vs.status === 'done') {
             mk.textContent = '看这段';
             mk.addEventListener('click', () => playShotVideo(vs.url, i));
+            reBtn = document.createElement('button');
+            reBtn.className = 'swap make';
+            reBtn.textContent = '重出';
+            reBtn.title = '按最新要求重出一版';
+            reBtn.addEventListener('click', () => makeShotVideo(i, item));
           } else if (vs && vs.status === 'failed') {
             mk.textContent = '重试';
             mk.title = vs.error || '';
@@ -1634,6 +1640,7 @@
             mk.addEventListener('click', () => makeShotVideo(i, item));
           }
           row.appendChild(mk);
+          if (reBtn) row.appendChild(reBtn);
         }
         el.appendChild(row);
       });
@@ -1647,7 +1654,7 @@
       videos[i] = { status: 'doing' };
       renderShots();
       const aspect = state.ratio === '9:16' ? '9:16' : (state.ratio === '16:9' ? '16:9' : '1:1');
-      const prompt = (item.pic ? item.pic + '。' : '') + (item.line || '');
+      const prompt = (item.pic ? item.pic + '。' : '') + (item.line || '') + (currentDraft.fixNote ? ('。（修改要求：' + currentDraft.fixNote + '）') : '');
       const res = await JCO_KERNEL.video({ prompt: prompt, seconds: 5, aspect: aspect });
       if (res && res.ok && res.url) {
         let src = res.url
@@ -1692,18 +1699,51 @@
       pop.hidden = false;
       v.play().catch(() => {});
     }
+    /* 整片连播（分段顺序播；自动拼接还没接上——如实标"分段连播"） */
+    let wholeQueue = [];
+    let wholeIdx = 0;
+    function playWhole() {
+      if (!currentDraft) { showToast('先开一张草稿，再点播放。'); return; }
+      const videos = currentDraft.videos || {};
+      const keys = Object.keys(videos).filter((k) => videos[k] && videos[k].status === 'done' && videos[k].url);
+      keys.sort((a, b) => Number(a) - Number(b));
+      wholeQueue = keys.map((k) => videos[k].url);
+      if (wholeQueue.length === 0) { showToast('这段还没有出片——先点「全部出片」或每段的「出这段」。'); return; }
+      wholeIdx = 0;
+      openWholeVideo();
+    }
+    function openWholeVideo() {
+      const pop = document.getElementById('videoPop');
+      const v = document.getElementById('vpVideo');
+      if (!pop || !v || wholeQueue.length === 0) return;
+      const total = (currentDraft && Array.isArray(currentDraft.shots) && currentDraft.shots.length) || wholeQueue.length;
+      document.getElementById('vpTitle').textContent =
+        '整片 · 分段连播（' + (wholeIdx + 1) + '/' + wholeQueue.length + ' 段已出片' + (total > wholeQueue.length ? '，共 ' + total + ' 段；未出片的会略过' : '') + '）';
+      v.src = wholeQueue[wholeIdx];
+      pop.hidden = false;
+      v.play().catch(() => {});
+    }
     function closeVideoPop() {
       const pop = document.getElementById('videoPop');
       const v = document.getElementById('vpVideo');
       if (!pop) return;
       pop.hidden = true;
+      wholeQueue = [];
       if (v) { v.pause(); v.removeAttribute('src'); v.load(); }
     }
     (function bindVideoPop() {
       const pop = document.getElementById('videoPop');
       const close = document.getElementById('vpClose');
+      const v = document.getElementById('vpVideo');
       if (close) close.addEventListener('click', closeVideoPop);
       if (pop) pop.addEventListener('click', (e) => { if (e.target === pop) closeVideoPop(); });
+      if (v)
+        v.addEventListener('ended', () => {
+          if (!pop || pop.hidden || wholeQueue.length === 0) return;
+          wholeIdx += 1;
+          if (wholeIdx < wholeQueue.length) openWholeVideo();
+          else wholeQueue = [];
+        });
       document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeVideoPop(); });
     })();
 
@@ -1850,29 +1890,62 @@
       });
     })();
 
-    function ibFix() {
+    async function ibFix() {
       if (!selRect) { showToast('先在图上拖住鼠标，框住要改的地方'); return; }
       const v = $('ibFixInp').value.trim();
       if (!v) { showToast('说一句把这块改成什么，比如：换成“暑期班招生”'); return; }
       $('ibFixInp').value = '';
       const sel = $('ibSel');
+      if (!JCO_KERNEL || !currentDraft || !Array.isArray(currentDraft.images) || currentDraft.images.length === 0) {
+        showToast('这版还没有真图可改——先在底部写要求生成一版图。');
+        return;
+      }
       sel.classList.add('working');
-      setTimeout(() => {
-        sel.classList.remove('working');
-        sel.classList.add('done');
+      const base = (currentDraft.images[imgIdx] && currentDraft.images[imgIdx].prompt) || currentDraft.idea || '画面';
+      const ratioWord = state.ratio === '9:16' ? '9:16 竖屏' : (state.ratio === '16:9' ? '16:9 横屏' : '1:1 方形');
+      const r = await JCO_KERNEL.draw({ prompt: ratioWord + '，' + base + '；按这个要求调整：' + v + '（整图重绘）' });
+      sel.classList.remove('working');
+      sel.style.display = 'none';
+      selRect = null;
+      if (r && r.ok && (r.dataUrl || r.url)) {
+        currentDraft.images = currentDraft.images.concat([{ src: r.dataUrl || r.url, prompt: base + '（改：' + v + '）' }]);
+        imgIdx = currentDraft.images.length - 1;
+        renderDrafts();
+        renderImgBoard();
         markAdjusted();
-        showToast('只改了框住的这一块，其它地方没动。');
-      }, 1300);
+        jcoLogAdd('material', 'AI 重画一版', String(v).slice(0, 30));
+        jcoNotifyDone('重画好了', '按你说的改了一版（整图重绘）');
+        showToast('按你说的重画了一张（整图重绘，不是局部修改）——在新缩略图里。');
+      } else {
+        showToast('没画成：' + ((r && r.error) || '再试一次'));
+      }
     }
 
     function fixGo() {
+      if (!currentDraft) { showToast('先开一张草稿，再说要改什么。'); return; }
       const v = $('fixInp').value.trim();
       if (!v) { showToast('说一句你想怎么改，比如：配音换男声'); return; }
       $('fixInp').value = '';
+      currentDraft.fixNote = v;
+      jcoDraftsSave();
       markAdjusted();
-      showToast('（原型示意）正式版会按「' + v + '」改好给你重看，改了哪儿会标出来。');
+      showToast('记下了：「' + v + '」会带进后面的出片；已出好的段，点「重出」就能按新要求再出一版。');
     }
 
+    /* 手头素材行：读本机真数据（最近稿子 / 素材库） */
+    (function handyLine() {
+      const el = document.getElementById('handyLine');
+      if (!el) return;
+      let script = null;
+      try { script = JSON.parse(localStorage.getItem('jco-script-v1') || 'null'); } catch (e) {}
+      let mats = 0;
+      try { mats = (JSON.parse(localStorage.getItem('jco-materials-v1') || '{"items":[]}').items || []).length; } catch (e) {}
+      const parts = [];
+      if (script && script.topic && Array.isArray(script.lines) && script.lines.length > 0) parts.push('《' + String(script.topic).slice(0, 18) + '》稿子 ' + script.lines.length + ' 句');
+      else parts.push('还没有稿子（去「文案」页写一篇）');
+      parts.push(mats > 0 ? ('素材 ' + mats + ' 件') : '素材还没导入');
+      el.textContent = parts.join(' · ');
+    })();
     render();
     renderTemplates();
     // 恢复上次的草稿（真模式：草稿不丢，回来接着改）
