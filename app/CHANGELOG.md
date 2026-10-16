@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.4.13](///compare/v0.4.12...v0.4.13) (2026-10-16)
+
+### Bug Fixes
+
+* **m7:** 封版前对抗审查（M9 单元⑥收尾）——发现 8 项、当场修 4：R1 任务视图"过程行"实时反馈（liveLineOf 纯函数+单测 3 条+真机验证"开始干活"可见，补设计冻结 B2 差距）· R2 运营页防连点（回复评论重复发送风险）· R3 全链路 emoji 安全截断（clipSafe/Array.from）· R4 任务内存 Map 上限（>50 清最旧已完成）；R5-R8 登记；双门 4 页 0 差异 + preflight 0 违规 + 门禁全绿（单测 89 + E2E 27）+ 装机 0.4.13 冒烟通过 d4580b5
+
 ## [0.4.12](///compare/v0.4.11...v0.4.12) (2026-10-16)
 
 ### Bug Fixes
