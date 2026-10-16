@@ -708,6 +708,50 @@
       var busy = false;
       function setState(t, ok) { stateEl.textContent = t; stateEl.classList.toggle('ok', !!ok); }
       setState(live ? '未启动' : '桌面应用内可用');
+
+      /* 数据层接线：从草稿里找"最近出的一段成片"（做视频页落盘的真实路径） */
+      function lastVideoPath() {
+        try {
+          var ds = JSON.parse(localStorage.getItem('jco-drafts-v1') || '{"items":[]}');
+          var items = ds.items || [];
+          var found = '';
+          for (var i = 0; i < items.length; i++) {
+            var vids = items[i] && items[i].videos ? items[i].videos : null;
+            if (!vids) continue;
+            for (var k in vids) {
+              if (vids[k] && vids[k].status === 'done' && vids[k].path) found = vids[k].path;
+            }
+          }
+          return found;
+        } catch (e) { return ''; }
+      }
+
+      /* 数据层接线：从活动日志找最近一张封面图路径 */
+      function lastCoverPath() {
+        try {
+          var lg = JSON.parse(localStorage.getItem('jco-log-v1') || '{"items":[]}');
+          var items = lg.items || [];
+          for (var i = 0; i < items.length; i++) {
+            if (items[i] && items[i].title === '封面图生成' && items[i].detail && /\.[a-z0-9]+$/i.test(String(items[i].detail))) {
+              return String(items[i].detail);
+            }
+          }
+          return '';
+        } catch (e) { return ''; }
+      }
+
+      function videoLine() {
+        var p = lastVideoPath();
+        return p
+          ? '视频文件：' + p + '（我最近出的一段成片；如果不对，告诉我换哪条）。'
+          : '视频文件先问我（我会把路径发给你）。';
+      }
+
+      function coverLine() {
+        var c = lastCoverPath();
+        return c ? '封面图：' + c + '（能用就用它，横竖都设）。' : '封面没有现成图，横竖都用视频画面来设。';
+      }
+
       btn.addEventListener('click', async function () {
         if (!live) { showToast('这个功能在桌面应用里可用（浏览器直开是演示模式）。'); return; }
         if (busy) return;
@@ -729,7 +773,8 @@
           var title = (document.getElementById('titleInp') || {}).value || '';
           var tags = (document.getElementById('tagInp') || {}).value || '';
           var task = '帮我发一条视频到抖音：标题「' + String(title).trim() + '」，话题：' + String(tags).trim() + '。' +
-            '视频文件先问我（我会把路径发给你），封面横竖都设上，全部就绪后停在发布前等我确认。千万不要点「发布」。';
+            videoLine() + coverLine() +
+            '全部就绪后停在发布前等我确认。千万不要点「发布」。';
           try { sessionStorage.setItem('jco-handoff', task); } catch (e) {}
           location.href = 'J.Co总管.html';
         } finally {
