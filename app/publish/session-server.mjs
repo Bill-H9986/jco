@@ -234,6 +234,10 @@ process.stdin.setEncoding('utf8')
 process.stdin.on('data', (chunk) => {
   if (String(chunk).includes('stop')) void shutdown()
 })
+// 父进程退出（stdin 断开）也要收工，避免留下孤儿浏览器窗口
+process.stdin.on('end', () => {
+  void shutdown()
+})
 
 async function main() {
   await startBrowser()

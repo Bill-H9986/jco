@@ -209,6 +209,15 @@
 
 .exec .donebar .dtxt { flex: 1; font-size: 14px; font-weight: 600; color: var(--green); }
 
+/* 「让 AI 发到抖音」入口（M2：AI 实操） */
+.ai-go-row { display: flex; align-items: center; gap: 12px; margin-top: 12px; }
+
+.ai-go-row .ghost { display: inline-flex; align-items: center; gap: 6px; }
+
+.ai-go-row .ai-state { font-size: 13px; color: var(--text-3); }
+
+.ai-go-row .ai-state.ok { color: var(--green); }
+
 /* DSH 规范：正圆与胶囊保持圆弧（其余圆角走超椭圆） */
   .me .ava, .mm-head .ava, .msg.ai .ava, .postlist .dot, .typing i, .send, .cp-send,
   .agent-chip, .badge, .act, .ghost-btn, .ghost, .go-btn, .cp-act,
@@ -350,6 +359,11 @@
           <div class="go-row">
             <button class="go-btn" id="pubBtn">开始发布<span class="ti ti-arrow-right"></span></button>
             <span class="eta" id="pubEta"></span>
+          </div>
+
+          <div class="ai-go-row">
+            <button class="ghost" id="aiDyBtn"><span class="ti ti-sparkles"></span>让 AI 发到抖音</button>
+            <span class="ai-state" id="aiDyState"></span>
           </div>
 
           <div class="exec" id="exec">
@@ -684,6 +698,46 @@
     }
 
     $('pubBtn').addEventListener('click', startPublish);
+
+    /* ---------- 让 AI 发到抖音（M2：启动发布会话 → 带着任务去总管开干） ---------- */
+    (function () {
+      var btn = document.getElementById('aiDyBtn');
+      var stateEl = document.getElementById('aiDyState');
+      if (!btn || !stateEl) return;
+      var live = (typeof window.jco !== 'undefined' && window.jco && window.jco.publish && window.jco.publish.session);
+      var busy = false;
+      function setState(t, ok) { stateEl.textContent = t; stateEl.classList.toggle('ok', !!ok); }
+      setState(live ? '未启动' : '桌面应用内可用');
+      btn.addEventListener('click', async function () {
+        if (!live) { showToast('这个功能在桌面应用里可用（浏览器直开是演示模式）。'); return; }
+        if (busy) return;
+        busy = true;
+        btn.disabled = true;
+        setState('正在启动发布会话…');
+        try {
+          var res = await window.jco.publish.session.start();
+          if (!res || !res.ok) { setState('启动失败'); showToast((res && res.error) || '发布会话启动不了，稍后再试一次。'); return; }
+          var ready = false;
+          for (var i = 0; i < 20; i++) {
+            await new Promise(function (r) { setTimeout(r, 1500); });
+            var st = await window.jco.publish.session.status();
+            if (st && st.ready) { ready = true; break; }
+            if (!st || !st.active) break;
+          }
+          if (!ready) { setState('还没就绪'); showToast('浏览器还没起来，稍等几秒再点一次。'); return; }
+          setState('已就绪 ✓', true);
+          var title = (document.getElementById('titleInp') || {}).value || '';
+          var tags = (document.getElementById('tagInp') || {}).value || '';
+          var task = '帮我发一条视频到抖音：标题「' + String(title).trim() + '」，话题：' + String(tags).trim() + '。' +
+            '视频文件先问我（我会把路径发给你），封面横竖都设上，全部就绪后停在发布前等我确认。千万不要点「发布」。';
+          try { sessionStorage.setItem('jco-handoff', task); } catch (e) {}
+          location.href = 'J.Co总管.html';
+        } finally {
+          busy = false;
+          btn.disabled = false;
+        }
+      });
+    })();
 
     renderPlatforms();
     updateEta();

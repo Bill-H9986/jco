@@ -536,6 +536,11 @@ if (!gotLock) {
 }
 
 // 退出前回收内核进程（带 1.5s 兜底，不让清理拖住退出）
+// 退出前收掉发布会话（浏览器会跟着关闭；不等它，防拖住退出）
+app.on('before-quit', () => {
+  if (publishSessionManager) publishSessionManager.stop()
+})
+
 let quitting = false
 app.on('before-quit', (event) => {
   if (quitting || !bridgePromise) return

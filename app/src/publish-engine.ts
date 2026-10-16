@@ -340,8 +340,16 @@ export class PublishSessionManager {
     private readonly emit: (event: SessionEvent) => void,
   ) {}
 
-  status(): { active: boolean } {
-    return { active: this.child !== null }
+  status(): { active: boolean; ready: boolean } {
+    let ready = false
+    if (this.child) {
+      try {
+        ready = existsSync(this.host.sessionFile)
+      } catch {
+        ready = false
+      }
+    }
+    return { active: this.child !== null, ready }
   }
 
   start(): { ok: boolean; already?: boolean; error?: string } {
