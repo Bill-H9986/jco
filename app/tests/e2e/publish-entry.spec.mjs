@@ -31,7 +31,7 @@ test('发布页：让 AI 发到抖音入口就位（存在性与文案）', asyn
   }
 })
 
-test('运营页：AI 运营入口就位（马上跑 / 取评论）', async () => {
+test('运营页：AI 运营入口就位（马上跑 / 取评论走唯一管道）', async () => {
   const app = await electron.launch({ executablePath: ELECTRON_BIN, args: [APP_DIR, '--jco-test'] })
   try {
     const win = await app.firstWindow()
@@ -44,6 +44,10 @@ test('运营页：AI 运营入口就位（马上跑 / 取评论）', async () =>
     await win.waitForTimeout(1000)
     await expect(win.locator('#opsReportBtn')).toBeVisible()
     await expect(win.locator('#opsCommentsBtn')).toBeVisible()
+    // 批 2：派活已走唯一管道（无 handoff 残留、走 tasks.dispatch）
+    const opsSrc = await win.evaluate(() => [...document.scripts].map((s) => s.textContent || '').join('\n'))
+    expect(opsSrc.includes('jco-handoff')).toBe(false)
+    expect(opsSrc.includes('tasks.dispatch')).toBe(true)
     expect(errors, `JS 错误：\n${errors.join('\n')}`).toEqual([])
   } finally {
     await app.close()
