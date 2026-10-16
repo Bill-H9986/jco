@@ -420,7 +420,7 @@ const publishSessionManager = publishEngine
         serverPath: publishEngine.unpackedPath(path.join(__dirname, 'publish', 'session-server.mjs')),
         execPath: process.execPath,
         profileRoot: path.join(app.getPath('userData'), 'publish'),
-        sessionFile: path.join(__dirname, 'kernel', 'publish-session.json'),
+        sessionFile: publishEngine.unpackedPath(path.join(__dirname, 'kernel', 'publish-session.json')),
         shotsDir: path.join(app.getPath('userData'), 'publish', 'shots'),
       },
       (event) => {

@@ -15,21 +15,26 @@
 import { DeepSeekHarness } from '@deepseek-ai/dsh-sdk-client'
 import { readFileSync, writeFileSync } from 'node:fs'
 import { fileURLToPath, pathToFileURL } from 'node:url'
-import { dirname, join } from 'node:path'
+import { dirname, join, sep } from 'node:path'
 
 const HERE = dirname(fileURLToPath(import.meta.url))
+/** 打包适配：内核子进程读不到 asar 内文件——把 kernel 内路径映射到 app.asar.unpacked */
+function toUnpacked(p) {
+  const marker = `app.asar${sep}`
+  return p.includes(marker) ? p.replace(marker, `app.asar.unpacked${sep}`) : p
+}
 /** 设置页保存的模型配置（说话写稿） */
-const CONFIG_PATH = join(HERE, 'model-config.json')
+const CONFIG_PATH = toUnpacked(join(HERE, 'model-config.json'))
 /** 由配置动态生成的内核 patch（注册 jco-custom provider） */
-const PATCH_PATH = join(HERE, 'dynamic-model.patch.yml')
+const PATCH_PATH = toUnpacked(join(HERE, 'dynamic-model.patch.yml'))
 /** 固定携带：对话链路的工具面收口（禁掉 shell/文件/网页等干活工具） */
-const CHAT_PATCH_PATH = join(HERE, 'jco-chat.patch.yml')
-const PUBLISH_TOOLS_PATCH_PATH = join(HERE, 'publish-tools.patch.yml')
+const CHAT_PATCH_PATH = toUnpacked(join(HERE, 'jco-chat.patch.yml'))
+const PUBLISH_TOOLS_PATCH_PATH = toUnpacked(join(HERE, 'publish-tools.patch.yml'))
 
 /** 生成发布工具 patch：内核侧"瘦代理"插件（8 个浏览器工具；sessionFile 动态取址，不随会话启停重启内核） */
 function writePublishToolsPatch() {
-  const pluginUrl = pathToFileURL(join(HERE, 'publish-tools', 'index.mjs')).href
-  const sessionFile = join(HERE, 'publish-session.json').replace(/\\/g, '/')
+  const pluginUrl = pathToFileURL(toUnpacked(join(HERE, 'publish-tools', 'index.mjs'))).href
+  const sessionFile = toUnpacked(join(HERE, 'publish-session.json')).replace(/\\/g, '/')
   writeFileSync(
     PUBLISH_TOOLS_PATCH_PATH,
     [

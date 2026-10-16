@@ -14,8 +14,11 @@ files:
   - kernel/**
   - "!kernel/model-config.json"
   - "!kernel/dynamic-model.patch.yml"
+  - "!kernel/publish-session.json"
+  - publish/**
   - dist/**
 asarUnpack:
+  - "kernel/**"
   - "node_modules/@deepseek-ai/**"
   - "node_modules/koffi/**"
   - "node_modules/node-pty/**"
@@ -26,6 +29,7 @@ extraResources:
   - from: ../设计原型
     to: 设计原型
 win:
+  icon: build/icon.ico
   target: nsis
 nsis:
   oneClick: false
