@@ -153,6 +153,7 @@ export function apply(ctx, config) {
     {
       metrics: {
         type: 'object',
+        additionalProperties: true,
         required: true,
         description: '指标对象（如 views 播放 / fans 新增粉丝 / comments 评论）',
       },
@@ -166,7 +167,12 @@ export function apply(ctx, config) {
     '把评论与拟稿保存到本机（运营页供用户过目）。每条：{id, author, text, draft}。' +
       '红线：用户点头之后才执行回复；本工具只负责"存草稿"。',
     {
-      items: { type: 'array', required: true, description: '评论数组（最多 50 条）；draft 为拟好的回复稿' },
+      items: {
+        type: 'array',
+        items: { type: 'object', additionalProperties: true },
+        required: true,
+        description: '评论数组（最多 50 条）；draft 为拟好的回复稿',
+      },
     },
     'save_comments',
   )

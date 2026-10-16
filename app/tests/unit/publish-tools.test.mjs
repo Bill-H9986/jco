@@ -2,7 +2,7 @@
 // 核心：工具白名单"不多不少"——未来任何人想加工具，必须先过测试与安全评审。
 import { readFileSync } from 'node:fs'
 import path from 'node:path'
-import { fileURLToPath } from 'node:url'
+import { fileURLToPath, pathToFileURL } from 'node:url'
 import { describe, expect, it } from 'vitest'
 import { DATA_TOOLS, IMPLEMENTATIONS, isAllowedUrl, TOOLS } from '../../publish/tools.mjs'
 
@@ -46,5 +46,30 @@ describe('域名白名单（AI 只许在平台域名里活动）', () => {
     expect(isAllowedUrl('http://127.0.0.1:8080/', ['douyin.com'])).toBe(false)
     expect(isAllowedUrl('file:///C:/secret.txt', ['douyin.com'])).toBe(false)
     expect(isAllowedUrl('javascript:alert(1)', ['douyin.com'])).toBe(false)
+  })
+})
+
+describe('插件注册健康（防 schema 写法炸掉整个工具面）', () => {
+  it('内核插件 apply 后恰好注册 10 个工具（含 2 个数据提交工具）', async () => {
+    const pluginFile = path.resolve(__dirname, '..', '..', 'kernel', 'publish-tools', 'index.mjs')
+    const mod = await import(pathToFileURL(pluginFile).href)
+    const registered = []
+    const ctx = { tools: { register: (t) => registered.push(t) } }
+    mod.apply(ctx, { sessionFile: 'x' })
+    expect(registered.length).toBe(10)
+    expect(registered.map((t) => t.name).sort()).toEqual(
+      [
+        'jco_open_page',
+        'jco_snapshot',
+        'jco_click',
+        'jco_type_text',
+        'jco_upload_file',
+        'jco_scroll',
+        'jco_screenshot',
+        'jco_wait',
+        'jco_save_report',
+        'jco_save_comments',
+      ].sort(),
+    )
   })
 })

@@ -76,6 +76,7 @@ const CHAT_SYSTEM = [
   '④ 看不明白的内容（比如截图里有什么）就如实说看不清，绝不瞎猜。',
   '⑤ 全部就绪后做收尾汇报（确保这是本回合的最后一句话）：填了什么、封面设了没、最后一步留给用户点。',
   '⑥ 运营任务（战报 / 评论）：读完平台数据或评论页后，用 jco_save_report / jco_save_comments 把结果存到本机（运营页会展示）；评论回复只在用户点头之后执行，点头前绝不发送。',
+  '⑦ 工具调用如果失败或没有真正执行：不要假装做过——改用正确的工具名重新调用一次；仍不行就如实告诉用户。',
 ].join('\n')
 
 let harness = null
@@ -572,12 +573,23 @@ export function ask(text, onDelta, options) {
       }
       if (result && result.__askError) throw result.__askError
       const finalText = (result && result.finalResponse) || ''
+      // 工具调用泄漏防护：模型偶发把工具调用写成文本（如 DeepSeek 原生 ｜｜DSML｜｜ 标记）——
+      // 剥离泄漏段并附明确下一步（诚实提示，绝不装成功）
+      let toolLeak = false
+      let cleanedText = finalText
+      if (/｜｜DSML｜｜|<tool_calls>|<tool▁calls>/.test(finalText)) {
+        toolLeak = true
+        cleanedText = finalText
+          .replace(/<｜｜DSML｜｜[\s\S]*$/, '')
+          .replace(/<tool_calls>[\s\S]*$/, '')
+          .trim()
+      }
       // 回合以错误结束且没有产出正文：如实报错，而不是留一段空白
-      if (finalText === '' && turnError !== '') {
+      if (cleanedText === '' && turnError !== '') {
         return { ok: false, error: friendlyError(turnError), raw: turnError }
       }
       // 厂商不发实时增量时：按模型真实时间戳把整段压成回放节拍（逐字出现，而不是一下蹦出）
-      if (finalText !== '' && !streamed && typeof onDelta === 'function') {
+      if (cleanedText !== '' && !toolLeak && !streamed && typeof onDelta === 'function') {
         const frames = replayFrames(streamParts)
         for (const frame of frames) {
           if (frame.waitMs > 0) await new Promise((resolveWait) => setTimeout(resolveWait, frame.waitMs))
@@ -589,7 +601,11 @@ export function ask(text, onDelta, options) {
         }
         streamed = frames.length > 0
       }
-      return { ok: true, text: finalText, streamed }
+      if (toolLeak) {
+        const base = cleanedText === '' ? '刚才那步工具调用没有真正执行成功。' : `${cleanedText}\n\n`
+        return { ok: true, text: `${base}（那步操作没有真正执行——请对我说「继续」，我重新做一次。）`, streamed }
+      }
+      return { ok: true, text: cleanedText, streamed }
     } catch (error) {
       return { ok: false, error: String((error && error.message) || error) }
     }
