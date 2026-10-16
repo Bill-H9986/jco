@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.4.5](///compare/v0.4.4...v0.4.5) (2026-10-16)
+
+### Features
+
+* **m9:** 做视频页补全（队列单元②）——成片分段连播真化（替换两处假 toast）·「按我说的改」真闭环（fixNote 入草稿+出片 prompt 带要求+已出片段「重出」按钮）·修图『修这里』去掉假成功改真·整图重绘（如实标注）·手头素材行读真数据；E2E 1 条；双门 0 差异/0 违规 + 门禁全绿（22 条）+ 装机 0.4.4 冒烟通过 836626d
+
 ## [0.4.4](///compare/v0.4.3...v0.4.4) (2026-10-16)
 
 ### Features
