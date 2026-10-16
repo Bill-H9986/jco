@@ -419,10 +419,9 @@ const publishSessionManager = publishEngine
       {
         serverPath: publishEngine.unpackedPath(path.join(__dirname, 'publish', 'session-server.mjs')),
         execPath: process.execPath,
-        profileDir: path.join(app.getPath('userData'), 'publish', 'douyin', 'profile'),
+        profileRoot: path.join(app.getPath('userData'), 'publish'),
         sessionFile: path.join(__dirname, 'kernel', 'publish-session.json'),
         shotsDir: path.join(app.getPath('userData'), 'publish', 'shots'),
-        allowedDomains: ['douyin.com'],
       },
       (event) => {
         BrowserWindow.getAllWindows().forEach((win) => {
@@ -436,9 +435,9 @@ const publishSessionManager = publishEngine
     )
   : null
 
-ipcMain.handle('publish:session:start', () => {
+ipcMain.handle('publish:session:start', (_event, payload) => {
   if (!publishSessionManager) return { ok: false, error: '发布引擎还没有构建好，需要重新构建一次' }
-  return publishSessionManager.start()
+  return publishSessionManager.start(payload && payload.platform)
 })
 
 ipcMain.handle('publish:session:stop', () => {

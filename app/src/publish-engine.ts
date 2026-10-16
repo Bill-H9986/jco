@@ -2,7 +2,7 @@
 // 设计依据：docs/plans/M1-发布工作流/（已冻结）——技术方案 / 接口契约
 // 红线：本模块不含任何"点击发布"能力；一切平台差异由适配包（publish/platforms/<平台>/）承担。
 import { type ChildProcessWithoutNullStreams, spawn } from 'node:child_process'
-import { existsSync } from 'node:fs'
+import { existsSync, readFileSync } from 'node:fs'
 import { join, sep } from 'node:path'
 
 // ---------- 状态机（契约 §1） ----------
@@ -317,14 +317,12 @@ export interface SessionHostConfig {
   serverPath: string
   /** node/electron 可执行文件 */
   execPath: string
-  /** 浏览器登录态目录（本机持久，按平台隔离） */
-  profileDir: string
+  /** 各平台登录态目录的父目录（本机持久，按平台隔离：<profileRoot>/<平台>/profile） */
+  profileRoot: string
   /** 会话端点文件（插件按此文件动态取址） */
   sessionFile: string
   /** 诊断截图目录 */
   shotsDir: string
-  /** 工具允许访问的域名白名单 */
-  allowedDomains: string[]
 }
 
 export interface SessionEvent {
@@ -334,39 +332,50 @@ export interface SessionEvent {
 
 export class PublishSessionManager {
   private child: ChildProcessWithoutNullStreams | null = null
+  private currentPlatform: string | null = null
 
   constructor(
     private readonly host: SessionHostConfig,
     private readonly emit: (event: SessionEvent) => void,
   ) {}
 
-  status(): { active: boolean; ready: boolean } {
+  status(): { active: boolean; ready: boolean; platform: string | null } {
     let ready = false
     if (this.child) {
       try {
-        ready = existsSync(this.host.sessionFile)
+        // 就绪 = 会话文件属于"当前这个进程与这个平台"（防止切平台竞态误判）
+        const data = JSON.parse(readFileSync(this.host.sessionFile, 'utf8')) as { pid?: number; platform?: string }
+        ready = data.pid === this.child.pid && data.platform === this.currentPlatform
       } catch {
         ready = false
       }
     }
-    return { active: this.child !== null, ready }
+    return { active: this.child !== null, ready, platform: this.currentPlatform }
   }
 
-  start(): { ok: boolean; already?: boolean; error?: string } {
-    if (this.child) return { ok: true, already: true }
+  start(platform?: string): { ok: boolean; already?: boolean; error?: string } {
+    const platformId = typeof platform === 'string' && platform !== '' ? platform : 'douyin'
+    if (this.child) {
+      if (this.currentPlatform === platformId) return { ok: true, already: true }
+      // 平台切换：歇旧、起新（不同平台 = 不同登录态目录，互不锁；旧会话异步收尾）
+      this.stop()
+      this.child = null
+      this.currentPlatform = null
+    }
     try {
+      const profileDir = join(this.host.profileRoot, platformId, 'profile')
       const child = spawn(
         this.host.execPath,
         [
           this.host.serverPath,
+          '--platform',
+          platformId,
           '--profile-dir',
-          this.host.profileDir,
+          profileDir,
           '--session-file',
           this.host.sessionFile,
           '--shots-dir',
           this.host.shotsDir,
-          '--allowed-domains',
-          this.host.allowedDomains.join(','),
         ],
         {
           env: { ...process.env, ELECTRON_RUN_AS_NODE: '1' },
@@ -375,6 +384,7 @@ export class PublishSessionManager {
         },
       )
       this.child = child
+      this.currentPlatform = platformId
       let buffer = ''
       child.stdout.setEncoding('utf8')
       child.stdout.on('data', (chunk: string) => {
@@ -399,7 +409,10 @@ export class PublishSessionManager {
         /* 诊断日志暂不转发 */
       })
       child.on('close', () => {
-        if (this.child === child) this.child = null
+        if (this.child === child) {
+          this.child = null
+          this.currentPlatform = null
+        }
         this.emit({ type: 'closed' })
       })
       return { ok: true }

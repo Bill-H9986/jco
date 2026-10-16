@@ -51,7 +51,7 @@ contextBridge.exposeInMainWorld('jco', {
     status: () => ipcRenderer.invoke('publish:status'),
     /** 发布会话（AI 的"手"的宿主）：启动/停止常驻浏览器会话（本机、按需） */
     session: {
-      start: () => ipcRenderer.invoke('publish:session:start'),
+      start: (platform) => ipcRenderer.invoke('publish:session:start', { platform: String(platform || '') }),
       stop: () => ipcRenderer.invoke('publish:session:stop'),
       status: () => ipcRenderer.invoke('publish:session:status'),
     },

@@ -22,7 +22,7 @@ test('发布页：让 AI 发到抖音入口就位（存在性与文案）', asyn
 
     const btn = win.locator('#aiDyBtn')
     await expect(btn).toBeVisible()
-    await expect(btn).toContainText('让 AI 发到抖音')
+    await expect(btn).toContainText('让 AI 发到「抖音」')
     await expect(win.locator('#aiDyState')).toHaveText(/未启动|桌面应用内可用/)
     expect(errors, `JS 错误：\n${errors.join('\n')}`).toEqual([])
   } finally {

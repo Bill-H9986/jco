@@ -362,7 +362,7 @@
           </div>
 
           <div class="ai-go-row">
-            <button class="ghost" id="aiDyBtn"><span class="ti ti-sparkles"></span>让 AI 发到抖音</button>
+            <button class="ghost" id="aiDyBtn"><span class="ti ti-sparkles"></span>让 AI 发</button>
             <span class="ai-state" id="aiDyState"></span>
           </div>
 
@@ -706,7 +706,22 @@
       if (!btn || !stateEl) return;
       var live = (typeof window.jco !== 'undefined' && window.jco && window.jco.publish && window.jco.publish.session);
       var busy = false;
+      var AI_IDS = { dy: 'douyin', sph: 'shipinhao', xhs: 'xiaohongshu', bili: 'bilibili', ks: 'kuaishou' };
       function setState(t, ok) { stateEl.textContent = t; stateEl.classList.toggle('ok', !!ok); }
+      function currentPlatform() {
+        for (var i = 0; i < PLATFORMS.length; i++) { if (PLATFORMS[i].on) return PLATFORMS[i]; }
+        return PLATFORMS[0] || null;
+      }
+      function refreshAiGo() {
+        var p = currentPlatform();
+        if (p) btn.innerHTML = '<span class="ti ti-sparkles"></span>让 AI 发到「' + p.name + '」';
+      }
+      window.__refreshAiGo = refreshAiGo;
+      refreshAiGo();
+      (function () {
+        var wrap = document.getElementById('platforms');
+        if (wrap) wrap.addEventListener('click', function () { setTimeout(refreshAiGo, 60); });
+      })();
       setState(live ? '未启动' : '桌面应用内可用');
 
       /* 数据层接线：从草稿里找"最近出的一段成片"（做视频页落盘的真实路径） */
@@ -759,7 +774,9 @@
         btn.disabled = true;
         setState('正在启动发布会话…');
         try {
-          var res = await window.jco.publish.session.start();
+          var target = currentPlatform();
+          var platformId = target && AI_IDS[target.id] ? AI_IDS[target.id] : 'douyin';
+          var res = await window.jco.publish.session.start(platformId);
           if (!res || !res.ok) { setState('启动失败'); showToast((res && res.error) || '发布会话启动不了，稍后再试一次。'); return; }
           var ready = false;
           for (var i = 0; i < 20; i++) {
@@ -772,7 +789,7 @@
           setState('已就绪 ✓', true);
           var title = (document.getElementById('titleInp') || {}).value || '';
           var tags = (document.getElementById('tagInp') || {}).value || '';
-          var task = '帮我发一条视频到抖音：标题「' + String(title).trim() + '」，话题：' + String(tags).trim() + '。' +
+          var task = '帮我发一条视频到' + (target ? target.name : '抖音') + '：标题「' + String(title).trim() + '」，话题：' + String(tags).trim() + '。' +
             videoLine() + coverLine() +
             '全部就绪后停在发布前等我确认。千万不要点「发布」。';
           try { sessionStorage.setItem('jco-handoff', task); } catch (e) {}

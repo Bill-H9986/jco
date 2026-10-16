@@ -4,9 +4,10 @@
 // 协议：POST /tool { name, args }（Bearer token）；GET /health；stdin 收到 stop 则收工。
 // 安全：仅绑定 127.0.0.1；token 随机；工具面复用 tools.mjs 白名单（无发布/删除类能力）。
 import { randomBytes } from 'node:crypto'
-import { mkdirSync, unlinkSync, writeFileSync } from 'node:fs'
+import { mkdirSync, readFileSync, unlinkSync, writeFileSync } from 'node:fs'
 import { createServer } from 'node:http'
 import { join } from 'node:path'
+import { PLATFORMS } from './platforms.mjs'
 import * as tools from './tools.mjs'
 
 const argv = process.argv.slice(2)
@@ -18,10 +19,9 @@ const arg = (flag, fallback = '') => {
 const profileDir = arg('--profile-dir')
 const sessionFile = arg('--session-file')
 const shotsDir = arg('--shots-dir', join(process.cwd(), 'shots'))
-const allowedDomains = arg('--allowed-domains', 'douyin.com')
-  .split(',')
-  .map((d) => d.trim())
-  .filter(Boolean)
+const platformId = arg('--platform', 'douyin')
+const platformConf = PLATFORMS[platformId] || PLATFORMS.douyin
+const allowedDomains = platformConf.domains
 
 const TOOL_NAMES = Object.keys(tools.IMPLEMENTATIONS)
 const token = randomBytes(24).toString('hex')
@@ -49,9 +49,11 @@ async function shutdown() {
   shuttingDown = true
   state = 'closed'
   try {
-    unlinkSync(sessionFile)
+    // 只删"自己的"会话文件：切平台竞态下，旧会话退出不得误删新会话的登记
+    const current = JSON.parse(readFileSync(sessionFile, 'utf8'))
+    if (current && current.pid === process.pid) unlinkSync(sessionFile)
   } catch {
-    /* 文件可能已不存在 */
+    /* 文件不存在或已被替换 */
   }
   try {
     if (context) await context.close()
@@ -246,7 +248,7 @@ async function main() {
     const endpoint = `http://127.0.0.1:${address.port}`
     writeFileSync(
       sessionFile,
-      JSON.stringify({ endpoint, token, pid: process.pid, startedAt: Date.now() }, null, 2),
+      JSON.stringify({ endpoint, token, pid: process.pid, platform: platformId, startedAt: Date.now() }, null, 2),
       'utf8',
     )
     log(`会话服务就绪：${endpoint}`)
