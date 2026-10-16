@@ -29,3 +29,22 @@ test('发布页：让 AI 发到抖音入口就位（存在性与文案）', asyn
     await app.close()
   }
 })
+
+test('运营页：AI 运营入口就位（马上跑 / 取评论）', async () => {
+  const app = await electron.launch({ executablePath: ELECTRON_BIN, args: [APP_DIR, '--jco-test'] })
+  try {
+    const win = await app.firstWindow()
+    const errors = []
+    win.on('pageerror', (e) => errors.push(String(e.message).slice(0, 200)))
+    await win.waitForTimeout(2500)
+    await win.evaluate(() => {
+      window.location.href = 'J.Co工作台-运营.html'
+    })
+    await win.waitForTimeout(1000)
+    await expect(win.locator('#opsReportBtn')).toBeVisible()
+    await expect(win.locator('#opsCommentsBtn')).toBeVisible()
+    expect(errors, `JS 错误：\n${errors.join('\n')}`).toEqual([])
+  } finally {
+    await app.close()
+  }
+})

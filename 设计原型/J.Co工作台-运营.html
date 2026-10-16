@@ -40,6 +40,8 @@
 
 .sec-head .hint { font-size: 13px; color: var(--text-3); margin-left: auto; }
 
+.sec-head .btn-sm { margin-left: 8px; }
+
 /* 战报数字卡 */
   .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
 
@@ -300,27 +302,27 @@
           </div>
 
           <!-- ============ 今日战报 ============ -->
-          <div class="sec-head"><h2>今日战报</h2><span class="hint">每天早上自动更新，昨晚的数据已经在了</span></div>
+          <div class="sec-head"><h2>今日战报</h2><span class="hint" id="reportHint">每天早上自动更新，昨晚的数据已经在了</span><button class="btn-sm" id="opsReportBtn"><span class="ti ti-sparkles"></span>马上跑</button></div>
           <div class="stats">
             <div class="dstat">
               <div class="dlabel"><span class="ti ti-player-play"></span>播放量（近 7 天）</div>
-              <div class="dnum">6.9<span class="unit">万</span></div>
-              <div class="dsub"><span class="ti ti-trending-up"></span><span class="up">5.2 万</span>是昨晚那条带来的</div>
+              <div class="dnum" id="statViews">6.9<span class="unit">万</span></div>
+              <div class="dsub" id="statViewsSub"><span class="ti ti-trending-up"></span><span class="up">5.2 万</span>是昨晚那条带来的</div>
             </div>
             <div class="dstat">
               <div class="dlabel"><span class="ti ti-user-plus"></span>新增粉丝</div>
-              <div class="dnum">386</div>
-              <div class="dsub"><span class="ti ti-trending-up"></span><span class="up">比上周多 341</span></div>
+              <div class="dnum" id="statFans">386</div>
+              <div class="dsub" id="statFansSub"><span class="ti ti-trending-up"></span><span class="up">比上周多 341</span></div>
             </div>
             <div class="dstat">
               <div class="dlabel"><span class="ti ti-message-dots"></span>评论</div>
-              <div class="dnum">57</div>
-              <div class="dsub"><span class="todo">8 条等你回</span></div>
+              <div class="dnum" id="statComments">57</div>
+              <div class="dsub" id="statCommentsSub"><span class="todo">8 条等你回</span></div>
             </div>
             <div class="dstat">
               <div class="dlabel"><span class="ti ti-users-group"></span>新线索</div>
-              <div class="dnum">9<span class="unit">人</span></div>
-              <div class="dsub"><span class="todo">3 个人待跟进</span></div>
+              <div class="dnum" id="statLeads">9<span class="unit">人</span></div>
+              <div class="dsub" id="statLeadsSub"><span class="todo">3 个人待跟进</span></div>
             </div>
           </div>
 
@@ -328,8 +330,8 @@
           <div class="insight">
             <span class="ibadge ti ti-sparkles"></span>
             <div>
-              <h3>昨晚那条，是你平常播放的 8 倍</h3>
-              <p>《成人高考报名其实就 3 步》播放 5.2 万，还带来 41 个粉丝、6 条咨询。AI 拆出来的原因：「3 步」给的是确定感，「不踩坑」戳的是怕麻烦。这两个词，就是你的流量密码。</p>
+              <h3 id="insightTitle">昨晚那条，是你平常播放的 8 倍</h3>
+              <p id="insightText">《成人高考报名其实就 3 步》播放 5.2 万，还带来 41 个粉丝、6 条咨询。AI 拆出来的原因：「3 步」给的是确定感，「不踩坑」戳的是怕麻烦。这两个词，就是你的流量密码。</p>
               <div class="acts">
                 <button class="btn-sm" id="insightGo">照这个套路再做一条<span class="ti ti-arrow-right"></span></button>
                 <button class="btn-sm ghost2" id="insightMore">看完整分析</button>
@@ -338,11 +340,11 @@
           </div>
 
           <!-- ============ 评论要你过目 ============ -->
-          <div class="sec-head"><h2>评论要你过目</h2><span class="hint">8 条等你回，先挑了 3 条重要的 · AI 拟好稿，你点头才发</span></div>
+          <div class="sec-head"><h2>评论要你过目</h2><span class="hint" id="cmtsHint">8 条等你回，先挑了 3 条重要的 · AI 拟好稿，你点头才发</span><button class="btn-sm" id="opsCommentsBtn"><span class="ti ti-sparkles"></span>取评论</button></div>
           <div class="cmts" id="cmts"></div>
 
           <!-- ============ 私域线索 ============ -->
-          <div class="sec-head"><h2>私域线索</h2><span class="hint">从评论和私信找过来 9 个人，先跟进这 3 个</span></div>
+          <div class="sec-head"><h2>私域线索</h2><span class="hint" id="leadsHint">从评论和私信找过来 9 个人，先跟进这 3 个</span></div>
           <div class="leadlist" id="leads"></div>
 
           <!-- ============ 接下来发什么 ============ -->
@@ -563,6 +565,169 @@
     renderComments();
     renderLeads();
     renderPlans();
+
+    /* ---------- 运营环 · 真数据（M4：AI 取回的战报 / 评论 / 线索） ---------- */
+    (function () {
+      var jcoLive = (typeof window.jco !== 'undefined' && window.jco && window.jco.publish && window.jco.publish.data && window.jco.publish.session) ? window.jco : null;
+
+      function esc(s) {
+        return String(s == null ? '' : s).replace(/[&<>"']/g, function (m) {
+          return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m];
+        });
+      }
+      function fmtNum(n) {
+        var v = Number(n);
+        if (!isFinite(v)) return '–';
+        if (Math.abs(v) >= 10000) return (v / 10000).toFixed(1) + '<span class="unit">万</span>';
+        return String(Math.round(v));
+      }
+      function relTime(ts) {
+        var m = Math.floor(Math.max(0, Date.now() - Number(ts || Date.now())) / 60000);
+        if (m < 1) return '刚刚更新';
+        if (m < 60) return m + ' 分钟前更新';
+        return Math.floor(m / 60) + ' 小时前更新';
+      }
+      var LEAD_WORDS = /(报名|多少钱|费用|学费|怎么联系|想学|咨询|加微信|私信|了解)/;
+
+      function demoHints() {
+        $('reportHint').textContent = '演示数据 · 点「马上跑」让 AI 去取真数据';
+        $('cmtsHint').textContent = '演示内容 · 点「取评论」让 AI 取回真评论和拟稿';
+        $('leadsHint').textContent = '演示内容 · 取回评论后自动识别意向线索';
+      }
+
+      function applyReport(r) {
+        var m = (r && r.metrics) || {};
+        $('statViews').innerHTML = fmtNum(m.views);
+        $('statFans').innerHTML = fmtNum(m.fans);
+        $('statComments').innerHTML = fmtNum(m.comments);
+        $('statViewsSub').innerHTML = '近 7 天 · ' + relTime(r.at);
+        $('statFansSub').innerHTML = '<span class="up">来自抖音 · ' + relTime(r.at) + '</span>';
+        $('statCommentsSub').innerHTML = '<span class="todo">来自抖音 · ' + relTime(r.at) + '</span>';
+        $('reportHint').textContent = '实时数据 · 来自抖音 · ' + relTime(r.at);
+        if (r.note) {
+          $('insightTitle').textContent = r.note;
+        } else {
+          $('insightTitle').textContent = '今天的数据已经取回来了';
+        }
+        $('insightText').textContent = '数据来源：抖音创作者中心（' + new Date(Number(r.at || Date.now())).toLocaleString('zh-CN') + '）。点「马上跑」可以随时再取一次。';
+      }
+
+      function renderRealComments(items) {
+        var box = $('cmts');
+        box.innerHTML = '';
+        items.forEach(function (c, idx) {
+          var el = document.createElement('article');
+          el.className = 'cmt';
+          el.id = 'cmt-real-' + idx;
+          el.innerHTML =
+            '<div class="cmt-head"><span class="mini-logo dy">抖</span>' +
+            '<span class="cmt-user">' + esc(c.author) + '</span>' +
+            '<span class="cmt-from">抖音 · 从评论管理页取回</span></div>' +
+            '<p class="cmt-text">' + esc(c.text) + '</p>' +
+            '<div class="cmt-reply"><div class="rl"><span class="ti ti-sparkles"></span>AI 拟好的回复（发之前你可以直接改）</div>' +
+            '<div class="editbox"><textarea rows="3"></textarea>' +
+            '<div class="cmt-acts">' +
+            '<button class="btn-sm act-send">发出去<span class="ti ti-send"></span></button>' +
+            '<button class="linkbtn act-skip">不用回</button>' +
+            '</div>' +
+            '<div class="replied"><span class="ti ti-check"></span><span class="rtxt"></span></div></div></div>';
+          box.appendChild(el);
+          var ta = el.querySelector('textarea');
+          ta.value = c.draft || '';
+          el.querySelector('.act-send').addEventListener('click', function () {
+            var txt = ta.value.trim();
+            if (!txt) { showToast('回复不能是空的呀，写一句再发。'); return; }
+            sendReply(c, txt);
+          });
+          el.querySelector('.act-skip').addEventListener('click', function () {
+            el.classList.add('skipped');
+            el.querySelector('.rl').innerHTML = '已跳过这条';
+            el.querySelector('.replied .ti').className = 'ti ti-check';
+            el.querySelector('.rtxt').textContent = '你觉得不需要回，就不回。';
+          });
+        });
+        $('cmtsHint').textContent = 'AI 拟好稿，你点头才发 · 共 ' + items.length + ' 条待你过目';
+      }
+
+      function renderRealLeads(items) {
+        var hits = (items || []).filter(function (c) { return LEAD_WORDS.test(String(c.text || '')); });
+        $('statLeads').innerHTML = hits.length + '<span class="unit">人</span>';
+        var box = $('leads');
+        box.innerHTML = '';
+        if (hits.length === 0) {
+          box.innerHTML = '<div class="lead"><div class="lm"><div class="lfrom">这次的评论里暂时没识别到意向线索；取回新评论后我会再找。</div></div></div>';
+          $('statLeadsSub').innerHTML = '<span class="todo">暂无意向</span>';
+          $('leadsHint').textContent = '从评论识别（本次 0 个）';
+          return;
+        }
+        hits.forEach(function (c, idx) {
+          var el = document.createElement('div');
+          el.className = 'lead';
+          el.id = 'lead-real-' + idx;
+          el.innerHTML =
+            '<div class="lava">' + esc(String(c.author || '客').slice(0, 1)) + '</div>' +
+            '<div class="lm"><div class="lname">' + esc(c.author) + '<span class="lnote">有报名意向</span></div>' +
+            '<div class="lfrom">从抖音评论识别：「' + esc(String(c.text || '').slice(0, 40)) + '」</div>' +
+            '<div class="lnext"><span>下一步：<b>回复引导到私信，先发材料清单</b></span>' +
+            '<span class="actions"><button class="linkbtn act-follow"><span class="ti ti-check"></span>标记已跟进</button></span>' +
+            '<span class="done-mark"><span class="ti ti-check"></span>已跟进 · 刚刚</span></div></div>';
+          box.appendChild(el);
+          el.querySelector('.act-follow').addEventListener('click', function () {
+            el.classList.add('done');
+            showToast('记下了：' + c.author + ' 这步已跟。');
+          });
+        });
+        $('statLeadsSub').innerHTML = '<span class="todo">' + hits.length + ' 个人待跟进</span>';
+        $('leadsHint').textContent = '从评论识别到 ' + hits.length + ' 个意向，先跟进这些';
+      }
+
+      function startOps(kind) {
+        if (!jcoLive) { showToast('这个功能在桌面应用里可用（浏览器直开是演示模式）。'); return; }
+        jcoLive.publish.session.start('douyin').then(function (res) {
+          if (!res || !res.ok) { showToast((res && res.error) || '发布会话启动不了，稍后再试一次。'); return; }
+          var tries = 0;
+          (function poll() {
+            jcoLive.publish.session.status().then(function (st) {
+              if (st && st.ready) {
+                var task = kind === 'report'
+                  ? '帮我取今天的战报：打开抖音创作者中心的数据页，看清近 7 天的播放量、新增粉丝、评论数，然后用 jco_save_report 把数字存好（metrics 里放 views / fans / comments，note 里写一句你的解读），存好后跟我说一句。记住只读，不动任何东西。'
+                  : '帮我取抖音的待回评论：打开评论管理页，挑最重要的几条（最多 5 条），每条拟一句得体的回复（不承诺效果、引导到私信），然后用 jco_save_comments 存好（每条含 id / author / text / draft），我回运营页过目。记住：不要替我回复。';
+                try { sessionStorage.setItem('jco-handoff', task); } catch (e) {}
+                location.href = 'J.Co总管.html';
+                return;
+              }
+              tries += 1;
+              if (st && st.active && tries < 20) { setTimeout(poll, 1200); return; }
+              showToast('浏览器还没起来，稍等几秒再点一次。');
+            });
+          })();
+        });
+      }
+
+      function sendReply(c, text) {
+        var task = '帮我回复抖音评论：找到作者「' + String(c.author || '') + '」的那条评论（内容「' + String(c.text || '').slice(0, 30) + '」，id ' + String(c.id || '') + '），回复：「' + String(text) + '」。用发布工具操作，发完告诉我。只回这一条，别动别的。';
+        try { sessionStorage.setItem('jco-handoff', task); } catch (e) {}
+        location.href = 'J.Co总管.html';
+      }
+
+      $('opsReportBtn').addEventListener('click', function () { startOps('report'); });
+      $('opsCommentsBtn').addEventListener('click', function () { startOps('comments'); });
+
+      (function loadOps() {
+        if (!jcoLive) { demoHints(); return; }
+        jcoLive.publish.data.get().then(function (data) {
+          if (data && data.report) { applyReport(data.report); } else { $('reportHint').textContent = '演示数据 · 点「马上跑」让 AI 去取真数据'; }
+          var items = data && data.comments && data.comments.items;
+          if (items && items.length) {
+            renderRealComments(items);
+            renderRealLeads(items);
+          } else {
+            $('cmtsHint').textContent = '演示内容 · 点「取评论」让 AI 取回真评论和拟稿';
+            $('leadsHint').textContent = '演示内容 · 取回评论后自动识别意向线索';
+          }
+        }).catch(function () { demoHints(); });
+      })();
+    })();
   </script>
   <script>
     /* ---------- 侧栏导航（原型可点通） ---------- */
