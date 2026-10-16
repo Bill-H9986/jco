@@ -131,7 +131,37 @@ async function dispatch(toolName, args) {
     case 'snapshot':
       return await formatSnapshot()
     case 'click': {
-      await tools.click(page, args.ref)
+      const chooserPromise = page.waitForEvent('filechooser', { timeout: 1500 }).catch(() => null)
+      try {
+        await tools.click(page, args.ref)
+      } catch (error) {
+        const message = String((error && error.message) || error)
+        // 被上层元素遮挡：从错误里找出"真正能点到的"那个编号，直接告诉 AI 改点谁（可行动的错误）
+        if (message.includes('intercepts pointer events')) {
+          const candidates = [...message.matchAll(/data-jco-ref="(\d+)"/g)]
+            .map((match) => Number(match[1]))
+            .filter((n) => n !== Number(args.ref))
+          if (candidates.length > 0) {
+            throw new Error(
+              `点击 [${Number(args.ref)}] 没成功：它被上层元素 [${candidates[0]}] 挡住了（那个位置真正能点到的是 [${candidates[0]}]）。请重新调用 jco_snapshot 后，点击 [${candidates[0]}]。`,
+            )
+          }
+        }
+        if (/Timeout.*exceeded/i.test(message)) {
+          throw new Error(
+            `点击 [${Number(args.ref)}] 等不到可点击状态（可能被遮挡，或页面正在变化）。请重新 jco_snapshot 看最新页面，再决定点哪个编号。`,
+          )
+        }
+        throw error
+      }
+      const chooser = await chooserPromise
+      if (chooser) {
+        // 点到了"文件选择"类按钮：取消对话框，并直接告诉 AI 正确的做法（可行动的错误）
+        await chooser.cancel().catch(() => {})
+        throw new Error(
+          `点击 [${Number(args.ref)}] 弹出的是"文件选择"对话框（这是个上传类按钮）。要传文件请改用 jco_upload_file(${Number(args.ref)}, "文件绝对路径")。`,
+        )
+      }
       return `已点击 [${Number(args.ref)}]`
     }
     case 'type_text': {

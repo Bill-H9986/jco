@@ -89,7 +89,7 @@ export async function snapshot(page) {
 
 /** 按快照引用点击（Playwright 真实鼠标事件 + 自动滚动 + 可操作性检查） */
 export async function click(page, ref) {
-  await page.locator(`[data-jco-ref="${Number(ref)}"]`).click({ timeout: 15_000 })
+  await page.locator(`[data-jco-ref="${Number(ref)}"]`).click({ timeout: 8_000 })
 }
 
 /** 按快照引用输入文字（对 contenteditable 逐字键入，更像人） */
