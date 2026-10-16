@@ -145,4 +145,29 @@ export function apply(ctx, config) {
     },
     'wait',
   )
+
+  define(
+    'jco_save_report',
+    '把战报数据保存到本机（运营页展示用）。用法：打开平台创作者中心数据页、看清近 7 天数据后调用。' +
+      '例：jco_save_report({"views": 5234, "fans": 41, "comments": 8}, "播放回升，主要是开头「3 步」留住了人")。',
+    {
+      metrics: {
+        type: 'object',
+        required: true,
+        description: '指标对象（如 views 播放 / fans 新增粉丝 / comments 评论）',
+      },
+      note: { type: 'string', description: '一句话解读（可选）' },
+    },
+    'save_report',
+  )
+
+  define(
+    'jco_save_comments',
+    '把评论与拟稿保存到本机（运营页供用户过目）。每条：{id, author, text, draft}。' +
+      '红线：用户点头之后才执行回复；本工具只负责"存草稿"。',
+    {
+      items: { type: 'array', required: true, description: '评论数组（最多 50 条）；draft 为拟好的回复稿' },
+    },
+    'save_comments',
+  )
 }

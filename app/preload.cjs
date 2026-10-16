@@ -55,6 +55,10 @@ contextBridge.exposeInMainWorld('jco', {
       stop: () => ipcRenderer.invoke('publish:session:stop'),
       status: () => ipcRenderer.invoke('publish:session:status'),
     },
+    /** 运营数据（战报 / 评论）：读本机数据文件（AI 提交后由会话服务写入） */
+    data: {
+      get: () => ipcRenderer.invoke('publish:data:get'),
+    },
     onEvent: (callback) => {
       if (typeof callback !== 'function') return
       ipcRenderer.on('publish:event', (_event, ev) => {

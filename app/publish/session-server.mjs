@@ -19,6 +19,7 @@ const arg = (flag, fallback = '') => {
 const profileDir = arg('--profile-dir')
 const sessionFile = arg('--session-file')
 const shotsDir = arg('--shots-dir', join(process.cwd(), 'shots'))
+const dataDir = arg('--data-dir', join(process.cwd(), 'publish-data'))
 const platformId = arg('--platform', 'douyin')
 const platformConf = PLATFORMS[platformId] || PLATFORMS.douyin
 const allowedDomains = platformConf.domains
@@ -124,7 +125,9 @@ async function formatSnapshot() {
 }
 
 async function dispatch(toolName, args) {
-  if (!TOOL_NAMES.includes(toolName)) throw new Error(`未知工具：${toolName}`)
+  if (!TOOL_NAMES.includes(toolName) && !tools.DATA_TOOLS.includes(toolName)) {
+    throw new Error(`未知工具：${toolName}`)
+  }
   switch (toolName) {
     case 'open_page': {
       await tools.openPage(page, args.url, allowedDomains)
@@ -189,6 +192,31 @@ async function dispatch(toolName, args) {
       const ms = Math.min(Math.max(0, Number(args.ms) || 0), 10_000)
       await tools.wait(page, ms)
       return `已等待 ${ms} ms`
+    }
+    case 'save_report': {
+      mkdirSync(dataDir, { recursive: true })
+      const metrics = args && typeof args.metrics === 'object' && args.metrics !== null ? args.metrics : {}
+      const payload = { platform: platformId, at: Date.now(), metrics, note: String((args && args.note) || '') }
+      writeFileSync(join(dataDir, 'report-latest.json'), JSON.stringify(payload, null, 2), 'utf8')
+      log('report saved')
+      return '战报数据已保存（运营页可读取）。'
+    }
+    case 'save_comments': {
+      mkdirSync(dataDir, { recursive: true })
+      const raw = args && Array.isArray(args.items) ? args.items : []
+      const items = raw.slice(0, 50).map((x) => ({
+        id: String((x && x.id) || ''),
+        author: String((x && x.author) || ''),
+        text: String((x && x.text) || '').slice(0, 500),
+        draft: String((x && x.draft) || '').slice(0, 500),
+      }))
+      writeFileSync(
+        join(dataDir, 'comments-latest.json'),
+        JSON.stringify({ platform: platformId, at: Date.now(), items }, null, 2),
+        'utf8',
+      )
+      log(`comments saved (${items.length})`)
+      return `评论数据已保存（${items.length} 条，运营页供你过目）。`
     }
     default:
       throw new Error(`未实现的工具：${toolName}`)

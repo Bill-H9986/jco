@@ -17,6 +17,10 @@ export const TOOLS = Object.freeze([
   'wait',
 ])
 
+/** 数据提交工具（非页面操作；由会话服务写本机数据文件，供运营页读取）——
+ *  安全评审：只写本机、无外部副作用；全集（TOOLS + DATA_TOOLS）无危险动作词汇（测试守着）。 */
+export const DATA_TOOLS = Object.freeze(['save_report', 'save_comments'])
+
 const WAIT_MAX_MS = 10_000
 
 /** URL 是否在允许的域名白名单内（AI 只许在指定平台域名里活动） */

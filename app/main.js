@@ -422,6 +422,7 @@ const publishSessionManager = publishEngine
         profileRoot: path.join(app.getPath('userData'), 'publish'),
         sessionFile: publishEngine.unpackedPath(path.join(__dirname, 'kernel', 'publish-session.json')),
         shotsDir: path.join(app.getPath('userData'), 'publish', 'shots'),
+        dataDir: path.join(app.getPath('userData'), 'publish', 'data'),
       },
       (event) => {
         BrowserWindow.getAllWindows().forEach((win) => {
@@ -448,6 +449,17 @@ ipcMain.handle('publish:session:stop', () => {
 ipcMain.handle('publish:session:status', () => {
   if (!publishSessionManager) return { active: false }
   return publishSessionManager.status()
+})
+
+ipcMain.handle('publish:data:get', () => {
+  const read = (name) => {
+    try {
+      return JSON.parse(fs.readFileSync(path.join(app.getPath('userData'), 'publish', 'data', name), 'utf8'))
+    } catch (error) {
+      return null
+    }
+  }
+  return { report: read('report-latest.json'), comments: read('comments-latest.json') }
 })
 
 // 测试模式：用独立的临时数据目录，避免和正在使用的 J.Co 抢单实例锁

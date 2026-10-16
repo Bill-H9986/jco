@@ -323,6 +323,8 @@ export interface SessionHostConfig {
   sessionFile: string
   /** 诊断截图目录 */
   shotsDir: string
+  /** 运营数据目录（战报/评论落盘处，运营页读取） */
+  dataDir: string
 }
 
 export interface SessionEvent {
@@ -376,6 +378,8 @@ export class PublishSessionManager {
           this.host.sessionFile,
           '--shots-dir',
           this.host.shotsDir,
+          '--data-dir',
+          this.host.dataDir,
         ],
         {
           env: { ...process.env, ELECTRON_RUN_AS_NODE: '1' },

@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
-import { IMPLEMENTATIONS, isAllowedUrl, TOOLS } from '../../publish/tools.mjs'
+import { DATA_TOOLS, IMPLEMENTATIONS, isAllowedUrl, TOOLS } from '../../publish/tools.mjs'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const TOOLS_FILE = path.resolve(__dirname, '..', '..', 'publish', 'tools.mjs')
@@ -20,8 +20,10 @@ describe('工具白名单（AI 的"手"）', () => {
     expect(Object.keys(IMPLEMENTATIONS).sort()).toEqual([...TOOLS].sort())
   })
 
-  it('白名单里不存在危险动作词汇（发布/删除/支付等一律没有）', () => {
-    for (const name of TOOLS) {
+  it('工具全集（浏览器操作 + 数据提交）共 10 个，且无危险动作词汇', () => {
+    const all = [...TOOLS, ...DATA_TOOLS]
+    expect(all.length).toBe(10)
+    for (const name of all) {
       expect(name, `工具名不应包含危险动作：${name}`).not.toMatch(/publish|delete|remove|pay|submit|exec|eval/i)
     }
   })
