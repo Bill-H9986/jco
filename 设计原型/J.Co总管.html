@@ -750,7 +750,7 @@
       try {
         res = await Promise.race([
           JCO_KERNEL.ask(text, activeChat().id),
-          new Promise((resolveTimeout) => setTimeout(() => resolveTimeout({ ok: false, error: '等太久了（超过 100 秒）。内核可能卡住了，再发一次试试。' }), 100000)),
+        new Promise((resolveTimeout) => setTimeout(() => resolveTimeout({ ok: false, error: '等太久了（超过 4 分钟）。内核可能卡住了，再发一次试试。' }), 240000)),
         ]);
       } catch (e) {
         res = { ok: false, error: String((e && e.message) || e) };

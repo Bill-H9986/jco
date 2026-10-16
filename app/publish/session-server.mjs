@@ -70,6 +70,21 @@ async function startBrowser() {
     ignoreDefaultArgs: ['--enable-automation'],
     args: ['--disable-blink-features=AutomationControlled'],
   })
+  // 预设"拒绝定位"：避免浏览器位置权限弹窗挡住操作（发布不需要位置权限；效果等同于用户点"阻止"）
+  await context.addInitScript(() => {
+    try {
+      Object.defineProperty(navigator, 'geolocation', {
+        configurable: true,
+        get: () => ({
+          getCurrentPosition: (_ok, err) => err && err({ code: 1, message: 'denied' }),
+          watchPosition: () => 0,
+          clearWatch: () => {},
+        }),
+      })
+    } catch {
+      /* 注入失败不影响主流程 */
+    }
+  })
   const pages = context.pages()
   page = pages.length > 0 ? pages[0] : await context.newPage()
   context.on('close', () => {
