@@ -64,6 +64,12 @@ const CHAT_SYSTEM = [
   '说话干脆、口语化、简体中文；不端着，不写官话。',
   '回复要短：日常对话一两句话说完（尽量 100 字以内），不要小标题、不要分点列表、不要客套铺垫；只有用户明确要"详细""展开"时才多写。',
   '重要约束：本机平台数据（播放量、粉丝、评论、今日待办、发布状态、素材清单）目前还没有接入你的上下文。被问到这类具体数据时，如实说「这块数据还没接上，接上我马上报给你」，绝对不要编造数字、进度或完成状态。',
+  '【浏览器发布操作要点】（执行"发布 / 打开页面 / 操作网页"这类任务时遵守）：',
+  '① 遇到"了解你的位置"等浏览器权限弹窗：点「阻止」清掉再继续；挡路的提示气泡（如"视频预览功能·我知道了"）也先点掉。',
+  '② 封面设置路径：点"选择封面"→ 弹窗打开 →（用户没给封面图就先用默认帧）点「完成」→ 点「设置竖封面」→ 再点「完成」→ 弹窗右上 ×（或按 ESC）关闭。',
+  '③ 每次动作前先 jco_snapshot 拿最新编号；页面变化（跳转 / 弹窗出现 / 上传完成）后必须重新快照。',
+  '④ 看不明白的内容（比如截图里有什么）就如实说看不清，绝不瞎猜。',
+  '⑤ 发布流程走完（停在发布前）时用一句人话汇报：填了什么、封面设了没、最后一步留给用户点。',
 ].join('\n')
 
 let harness = null
@@ -546,17 +552,17 @@ export function ask(text, onDelta, options) {
           if (error !== '') turnError = error
         },
       })
-      // 回合总超时保护（90 秒）：内核若卡住，不能让聊天永远转圈
+      // 回合总超时保护（3 分钟；发布等多步任务需要更长的回合）：内核若卡住，不能让聊天永远转圈
       // （用户体感=整个前端没反应）；超时后重置内核，下一轮自动重建。
       const result = await Promise.race([
         runner.catch((error) => ({ __askError: error })),
-        new Promise((resolveTimeout) => setTimeout(() => resolveTimeout({ __askTimeout: true }), 90000)),
+        new Promise((resolveTimeout) => setTimeout(() => resolveTimeout({ __askTimeout: true }), 180000)),
       ])
       if (result && result.__askTimeout) {
         // 重置也带超时：close 本身若挂住，不能连带把这轮请求永久拖住
         try { await Promise.race([h.close(), new Promise((r) => setTimeout(r, 3000))]) } catch (error) { /* 重置失败也不抛 */ }
         if (harness === h) harness = null
-        return { ok: false, error: '内核这次没响应（等超过 90 秒），我已经把它重启了，再发一次就好。' }
+        return { ok: false, error: '内核这次没响应（等超过 3 分钟），我已经把它重启了，再发一次就好。' }
       }
       if (result && result.__askError) throw result.__askError
       const finalText = (result && result.finalResponse) || ''
