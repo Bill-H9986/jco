@@ -288,6 +288,13 @@ function getBridge() {
   return bridgePromise
 }
 
+/** 打包适配：kernel 内文件映射到 app.asar.unpacked（与 bridge.mjs 的 toUnpacked 同款） */
+function kernelUnpackedPath(p) {
+  const marker = 'app.asar' + path.sep
+  return p.includes(marker) ? p.replace(marker, 'app.asar.unpacked' + path.sep) : p
+}
+const SKILLS_FILE = kernelUnpackedPath(path.join(__dirname, 'kernel', 'skills.json'))
+
 // 内核对话：渲染进程 ask → 内核 → 增量推回
 ipcMain.handle('kernel:ask', async (event, payload) => {
   const sender = event.sender
@@ -295,9 +302,17 @@ ipcMain.handle('kernel:ask', async (event, payload) => {
     const text = typeof payload === 'string' ? payload : String((payload && payload.text) || '')
     const sessionId = (payload && typeof payload === 'object' && payload.sessionId) ? ('jco-chat-' + String(payload.sessionId)) : undefined
     const bridge = await getBridge()
+    const options = {}
+    if (sessionId) options.sessionId = sessionId
+    // 干活活动（M5 员工实时状态）：广播给所有窗口——团队页/总管页谁开着谁能看
+    options.onActivity = (act) => {
+      BrowserWindow.getAllWindows().forEach((win) => {
+        try { win.webContents.send('kernel:activity', act) } catch (error) { /* 窗口已关闭则忽略 */ }
+      })
+    }
     return await bridge.ask(text, (delta) => {
       if (!sender.isDestroyed()) sender.send('kernel:delta', delta)
-    }, sessionId ? { sessionId } : undefined)
+    }, options)
   } catch (error) {
     return { ok: false, error: String((error && error.message) || error) }
   }
@@ -357,6 +372,27 @@ ipcMain.handle('kernel:video', async (_event, payload) => {
   try {
     const bridge = await getBridge()
     return await bridge.videoGenerate(payload || {})
+  } catch (error) {
+    return { ok: false, error: String((error && error.message) || error) }
+  }
+})
+
+// 技能库 → 内核侧同步（M5）：写 kernel/skills.json，供系统提示词注入技能段。
+// 纪律：界面是单一事实源，这个文件是从属副本；只收约定字段并截断长度（防脏数据进内核）。
+ipcMain.handle('skills:sync', (_event, payload) => {
+  try {
+    const raw = payload && Array.isArray(payload.items) ? payload.items : []
+    const items = raw
+      .filter((i) => i && typeof i.id === 'string' && i.id !== '')
+      .map((i) => ({
+        id: String(i.id).slice(0, 24),
+        name: String(i.name || '').slice(0, 40),
+        desc: String(i.desc || '').slice(0, 200),
+        entry: String(i.entry || '').slice(0, 160),
+        on: i.on === true,
+      }))
+    fs.writeFileSync(SKILLS_FILE, JSON.stringify({ items }, null, 2), 'utf8')
+    return { ok: true, count: items.length }
   } catch (error) {
     return { ok: false, error: String((error && error.message) || error) }
   }

@@ -881,29 +881,27 @@
     })();
   
   </script>
+<script src="./assets/jco-skills.js"></script>
 <script>
   (function () {
     var KEY = 'jco-skills-v1'
-    var DEFAULTS = [
-      { id: 's1', name: '爆款复刻', desc: '拆爆款的结构、换成你的内容，照着跑', kind: 'video', icon: 'ti-flame', on: true },
-      { id: 's2', name: '数字人口播', desc: '一段音色样本，数字人替你出镜说话', kind: 'video', icon: 'ti-microphone', on: true },
-      { id: 's3', name: '智能换背景', desc: '口播素材换任意场景背景，不用绿幕', kind: 'video', icon: 'ti-photo', on: true },
-      { id: 's4', name: '一镜到底', desc: '一个长镜头讲完故事，几乎不用剪', kind: 'video', icon: 'ti-video', on: false },
-      { id: 's5', name: '长视频拆条', desc: '一条长视频拆成 5 条短视频', kind: 'video', icon: 'ti-copy', on: false },
-      { id: 's6', name: '学员故事收集', desc: '从素材库找对口的画面，成一条故事片', kind: 'video', icon: 'ti-users-group', on: false },
-      { id: 's7', name: '封面设计', desc: '一次出三套封面方案，挑一套就用', kind: 'graphic', icon: 'ti-photo-video', on: true },
-      { id: 's8', name: '标题工厂', desc: '一组内容，三种风格的标题候选', kind: 'graphic', icon: 'ti-file-text', on: true },
-      { id: 's9', name: '评论回复官', desc: '评论先拟稿，你点头才发出去', kind: 'social', icon: 'ti-message-dots', on: true },
-      { id: 's10', name: '私信引导', desc: '问价的评论，自动给一段私信话术', kind: 'social', icon: 'ti-at', on: false },
-      { id: 's11', name: '话题雷达', desc: '热点话题和对标话题，发之前看一眼', kind: 'data', icon: 'ti-search', on: true },
-      { id: 's12', name: '周报生成器', desc: '每周数据汇成一页纸，发给谁都能看', kind: 'data', icon: 'ti-chart-bar', on: true }
-    ]
+    // 技能表来自全站单一事实源（assets/jco-skills.js）；这里留一个引用兜底
+    var JSK = (typeof window.JCO_SKILLS !== 'undefined' && window.JCO_SKILLS) ? window.JCO_SKILLS : null;
+    var DEFAULTS = JSK ? JSK.DEFAULTS : [];
     var KIND_LABEL = { video: '视频', graphic: '图文', social: '互动', data: '数据' }
-    function load() { try { var d = JSON.parse(localStorage.getItem(KEY) || 'null'); if (d && Array.isArray(d.items)) return d.items } catch (e) {} return DEFAULTS.slice() }
+    function load() {
+      var local = null;
+      try { var d = JSON.parse(localStorage.getItem(KEY) || 'null'); if (d && Array.isArray(d.items)) local = d.items } catch (e) {}
+      if (JSK) return JSK.merge(local); // 合并：已存在项以用户为准，新技能按默认补入
+      return local || DEFAULTS.slice();
+    }
     function save(items) { try { localStorage.setItem(KEY, JSON.stringify({ items: items })) } catch (e) {} }
     var tostEl = document.getElementById('toast')
     function toast(msg) { if (!tostEl) return; tostEl.textContent = msg; tostEl.classList.add('show'); clearTimeout(toast._t); toast._t = setTimeout(function () { tostEl.classList.remove('show') }, 2600) }
     var items = load()
+    save(items)   // 合并结果写回（新技能补入、数据以共享表为准）
+    function syncKernel() { try { if (window.jco && window.jco.skills && window.jco.skills.sync) window.jco.skills.sync(items) } catch (e) {} }
+    syncKernel()  // 同步给内核侧（系统提示词注入「手艺清单」用；浏览器直开时静默跳过）
     var grid = document.getElementById('skillGrid')
     var countEl = document.getElementById('skCount')
     var filter = 'all'
@@ -926,6 +924,7 @@
           s.on = !s.on
           paint()
           save(items)
+          syncKernel()
           toast(s.on ? '「' + s.name + '」启用了，去创作页就能叫它' : '「' + s.name + '」先收起来了')
         })
         grid.appendChild(el)

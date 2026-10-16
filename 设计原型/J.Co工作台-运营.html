@@ -692,7 +692,7 @@
                 var task = kind === 'report'
                   ? '帮我取今天的战报：打开抖音创作者中心的数据页，看清近 7 天的播放量、新增粉丝、评论数，然后用 jco_save_report 把数字存好（metrics 里放 views / fans / comments，note 里写一句你的解读），存好后跟我说一句。记住只读，不动任何东西。'
                   : '帮我取抖音的待回评论：打开评论管理页，挑最重要的几条（最多 5 条），每条拟一句得体的回复（不承诺效果、引导到私信），然后用 jco_save_comments 存好（每条含 id / author / text / draft），我回运营页过目。记住：不要替我回复。';
-                try { sessionStorage.setItem('jco-handoff', task); } catch (e) {}
+                try { sessionStorage.setItem('jco-handoff', task); sessionStorage.setItem('jco-handoff-staff', 'ops'); } catch (e) {}
                 location.href = 'J.Co总管.html';
                 return;
               }
@@ -706,7 +706,7 @@
 
       function sendReply(c, text) {
         var task = '帮我回复抖音评论：找到作者「' + String(c.author || '') + '」的那条评论（内容「' + String(c.text || '').slice(0, 30) + '」，id ' + String(c.id || '') + '），回复：「' + String(text) + '」。用发布工具操作，发完告诉我。只回这一条，别动别的。';
-        try { sessionStorage.setItem('jco-handoff', task); } catch (e) {}
+        try { sessionStorage.setItem('jco-handoff', task); sessionStorage.setItem('jco-handoff-staff', 'ops'); } catch (e) {}
         location.href = 'J.Co总管.html';
       }
 

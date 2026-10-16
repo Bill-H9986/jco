@@ -792,7 +792,7 @@
           var task = '帮我发一条视频到' + (target ? target.name : '抖音') + '：标题「' + String(title).trim() + '」，话题：' + String(tags).trim() + '。' +
             videoLine() + coverLine() +
             '全部就绪后停在发布前等我确认。千万不要点「发布」。';
-          try { sessionStorage.setItem('jco-handoff', task); } catch (e) {}
+          try { sessionStorage.setItem('jco-handoff', task); sessionStorage.setItem('jco-handoff-staff', 'publish'); } catch (e) {}
           location.href = 'J.Co总管.html';
         } finally {
           busy = false;

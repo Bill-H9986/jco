@@ -912,10 +912,18 @@ html:not(.side-pinned) .newchat { display: none; }
     (async () => {
       if (JCO_KERNEL) {
         var handoff = null;
-        try { handoff = sessionStorage.getItem('jco-handoff'); if (handoff) sessionStorage.removeItem('jco-handoff'); } catch (e) {}
+        var handoffStaff = '';
+        try {
+          handoff = sessionStorage.getItem('jco-handoff');
+          if (handoff) sessionStorage.removeItem('jco-handoff');
+          handoffStaff = sessionStorage.getItem('jco-handoff-staff') || '';
+          if (handoffStaff) sessionStorage.removeItem('jco-handoff-staff');
+        } catch (e) {}
         // 渲染当前会话（新建 / 切换由 consumeOpenChat 与左侧会话列表负责）
         renderActiveChat();
         if (handoff) {
+          // 派活归属（M5）：任务卡从哪来，这个会话就算哪个员工在忙（发布 / 运营）
+          if (handoffStaff) { activeChat().staff = handoffStaff; chatsSave(); }
           addUser(handoff);
           busy = true;
           askKernel(handoff);

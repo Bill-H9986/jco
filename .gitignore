@@ -16,6 +16,10 @@ app/tests/report/
 app/kernel/model-config.json
 # 发布工具 patch（自动生成，含本机路径，不入库）
 app/kernel/publish-tools.patch.yml
+# 技能库同步副本（运行时生成、随界面走，不入库）
+app/kernel/skills.json
+# 视觉守门员的改前副本（临时对比用，不入库）
+设计原型/.verify-before-*
 
 # 杂项
 *.log

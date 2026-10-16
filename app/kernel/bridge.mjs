@@ -16,6 +16,8 @@ import { DeepSeekHarness } from '@deepseek-ai/dsh-sdk-client'
 import { readFileSync, writeFileSync } from 'node:fs'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import { dirname, join, sep } from 'node:path'
+import { activityOf } from './activity.mjs'
+import { buildSkillsSection } from './skills-prompt.mjs'
 
 const HERE = dirname(fileURLToPath(import.meta.url))
 /** 打包适配：内核子进程读不到 asar 内文件——把 kernel 内路径映射到 app.asar.unpacked */
@@ -30,6 +32,8 @@ const PATCH_PATH = toUnpacked(join(HERE, 'dynamic-model.patch.yml'))
 /** 固定携带：对话链路的工具面收口（禁掉 shell/文件/网页等干活工具） */
 const CHAT_PATCH_PATH = toUnpacked(join(HERE, 'jco-chat.patch.yml'))
 const PUBLISH_TOOLS_PATCH_PATH = toUnpacked(join(HERE, 'publish-tools.patch.yml'))
+/** 技能库同步来的清单（M5：界面为准、这里是从属）；缺失时技能段整体省略 */
+const SKILLS_PATH = toUnpacked(join(HERE, 'skills.json'))
 
 /** 生成发布工具 patch：内核侧"瘦代理"插件（8 个浏览器工具；sessionFile 动态取址，不随会话启停重启内核） */
 function writePublishToolsPatch() {
@@ -80,11 +84,34 @@ const CHAT_SYSTEM = [
   '⑦ 工具调用如果失败或没有真正执行：不要假装做过——改用正确的工具名重新调用一次；仍不行就如实告诉用户。',
 ].join('\n')
 
+/**
+ * 组装本回合的系统提示词：基础段 + 技能库段（M5）。
+ * 技能库段来自界面同步的 skills.json（用户启用的手艺，入口指路式注入；
+ * 出处：Anthropic Agent Skills 渐进式披露第一层——见《M5 先例调研笔记》）。
+ */
+function buildChatSystem() {
+  let skills = ''
+  try {
+    const data = JSON.parse(readFileSync(SKILLS_PATH, 'utf8'))
+    skills = buildSkillsSection(data && data.items)
+  } catch (error) {
+    skills = ''
+  }
+  return skills === '' ? CHAT_SYSTEM : CHAT_SYSTEM + '\n\n' + skills
+}
+
 let harness = null
 let queue = Promise.resolve() // 串行化：内核一次只服务一个回合
 let sessionSeq = 0
 let sessionId = 'jco-0'
 let currentRoute = null // 当前 harness 实际使用的路由描述
+/**
+ * 会话别名表（缺陷修复 2026-10-16）：SDK 服务端只认"内存里没有就新建"，
+ * 应用重启后旧会话续聊会撞持久化层的 SessionAlreadyExistsError（见
+ * docs/plans/缺陷记录-2026-10-16-会话续聊.md）。修复：撞上了就换一个本进程
+ * 专属会话 id 重试，并记住映射——同一进程内后续消息继续用它（上下文连续）。
+ */
+const sessionAliases = new Map()
 
 function makeSessionId() {
   sessionSeq += 1
@@ -102,6 +129,9 @@ function loadUserConfig() {
 
 /** 由设置页配置解析出本次内核启动的路由 */
 function resolveRoute() {
+  // 测试模式（--jco-test）：一律走官方兜底路由（本机 ~/.dsh 凭据）——
+  // 不烧 Agnes 配额、结果稳定；只影响开发者测试，用户无感。
+  if (process.argv.includes('--jco-test')) return { ...FALLBACK, env: {}, patch: null }
   const cfg = loadUserConfig()
   const chat = cfg && cfg.chat
   if (chat && typeof chat === 'object') {
@@ -539,31 +569,59 @@ export function ask(text, onDelta, options) {
       // 多会话：前端传它自己的会话 id（同一内核进程内可复用，上下文各自保留）；
       // copilot 等不传时用默认会话。
       const session = (options && typeof options.sessionId === 'string' && options.sessionId !== '') ? options.sessionId : sessionId
+      const onActivity = options && typeof options.onActivity === 'function' ? options.onActivity : null
+      const callNames = new Map() // callId → 工具名（tool/result 只有 callId，用它对齐名字）
       let streamed = false
       let turnError = ''
       let streamParts = []
-      const runner = h.run(CHAT_SYSTEM + '\n\n' + String(text), {
-        sessionId: session,
-        onNotification: (notification) => {
-          const delta = assistantDeltaOf(notification)
-          if (delta !== '') {
-            streamed = true
-            try {
-              if (typeof onDelta === 'function') onDelta(delta)
-            } catch (error) {
-              /* 单个增量回调失败不影响整轮 */
+      const runTurn = (useSessionId) =>
+        h.run(buildChatSystem() + '\n\n' + String(text), {
+          sessionId: useSessionId,
+          onNotification: (notification) => {
+            const delta = assistantDeltaOf(notification)
+            if (delta !== '') {
+              streamed = true
+              try {
+                if (typeof onDelta === 'function') onDelta(delta)
+              } catch (error) {
+                /* 单个增量回调失败不影响整轮 */
+              }
             }
-          }
-          const parts = assistantStreamPartsOf(notification)
-          if (parts.length > 0) streamParts = parts
-          const error = turnErrorOf(notification)
-          if (error !== '') turnError = error
-        },
-      })
+            const parts = assistantStreamPartsOf(notification)
+            if (parts.length > 0) streamParts = parts
+            const activity = activityOf(notification)
+            if (activity !== null) {
+              if (activity.kind === 'tool' && activity.phase === 'call') callNames.set(activity.callId, activity.tool)
+              if (activity.kind === 'tool' && activity.phase === 'result') activity.tool = callNames.get(activity.callId) || ''
+              try {
+                // session 用前端视角的原会话 id（团队页归属查询靠它）
+                if (onActivity) onActivity({ ...activity, session, t: Date.now() })
+              } catch (error) {
+                /* 单个活动回调失败不影响整轮 */
+              }
+            }
+            const error = turnErrorOf(notification)
+            if (error !== '') turnError = error
+          },
+        })
+      // 重启后旧会话续聊：内核持久化层报 already exists → 换本进程专属 id 重试一次（记忆映射）
+      const runWithRecover = async () => {
+        const mapped = sessionAliases.get(session)
+        if (mapped) return await runTurn(mapped)
+        try {
+          return await runTurn(session)
+        } catch (error) {
+          const message = String((error && error.message) || error)
+          if (!/already exists/i.test(message)) throw error
+          const alt = session + '-r' + Date.now().toString(36)
+          sessionAliases.set(session, alt)
+          return await runTurn(alt)
+        }
+      }
       // 回合总超时保护（3 分钟；发布等多步任务需要更长的回合）：内核若卡住，不能让聊天永远转圈
       // （用户体感=整个前端没反应）；超时后重置内核，下一轮自动重建。
       const result = await Promise.race([
-        runner.catch((error) => ({ __askError: error })),
+        runWithRecover().catch((error) => ({ __askError: error })),
         new Promise((resolveTimeout) => setTimeout(() => resolveTimeout({ __askTimeout: true }), 180000)),
       ])
       if (result && result.__askTimeout) {

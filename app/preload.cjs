@@ -19,6 +19,17 @@ contextBridge.exposeInMainWorld('jco', {
         }
       })
     },
+    /** 干活活动（M5 员工实时状态）：订阅 AI 的工具调用/回合事件 */
+    onActivity: (callback) => {
+      if (typeof callback !== 'function') return
+      ipcRenderer.on('kernel:activity', (_event, act) => {
+        try {
+          callback(act)
+        } catch (error) {
+          /* 页面回调异常不扩散 */
+        }
+      })
+    },
     /** 内核状态（是否已就绪） */
     status: () => ipcRenderer.invoke('kernel:status'),
     /** 真探测一个 OpenAI 兼容接口：GET {url}/models，返回 { ok, models } 或 { ok:false, error } */
@@ -69,6 +80,18 @@ contextBridge.exposeInMainWorld('jco', {
         }
       })
     },
+  },
+  /** 技能库（M5）：启用状态同步给内核侧（系统提示词注入"手艺清单"用；界面是单一事实源） */
+  skills: {
+    sync: (items) => ipcRenderer.invoke('skills:sync', {
+      items: (Array.isArray(items) ? items : []).map((i) => ({
+        id: String((i && i.id) || ''),
+        name: String((i && i.name) || ''),
+        desc: String((i && i.desc) || ''),
+        entry: String((i && i.entry) || ''),
+        on: Boolean(i && i.on),
+      })),
+    }),
   },
   /** 系统级开关：主题（真切换）/ 开机启动（系统登录项）/ 清缓存（真清理） */
   sys: {

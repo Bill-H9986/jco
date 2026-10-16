@@ -824,6 +824,7 @@
     </div>
   </div>
 
+  <script src="./assets/jco-skills.js"></script>
   <script>
     /* ================= 状态 ================= */
     const state = {
@@ -886,16 +887,26 @@
       { v: '5 张', tip: '整篇图文都用它' },
     ];
 
-    const SKILLS = [
-      { id: 'copy', icon: 'ti-repeat', nm: '爆款复刻', fill: '帮我复刻这条爆款视频，链接：', method: 't2v', toast: '把爆款链接粘在后面就行，AI 拆它的结构，做你的内容' },
-      { id: 'avatar', icon: 'ti-users-group', nm: '数字人口播', fill: '用数字人把这份稿子讲出来，帮我选个合适的形象', method: 'assemble', toast: '数字人口播：AI 选形象、配音、出成片' },
-      { id: 'talking', icon: 'ti-photo', nm: '照片会说话', fill: '让这张照片开口说话，念这段稿子：', method: 'i2v', toast: '从素材里选照片，让它像真人一样开口' },
-      { id: 'onetake', icon: 'ti-video', nm: '一镜到底', fill: '把这张图做成连续运镜、一镜到底的短视频', method: 'i2v', toast: '一镜到底：一张图延展出连续运镜' },
-      { id: 'bg', icon: 'ti-wand', nm: '智能换背景', fill: '把这张图的背景换成：', method: 'i2v', toast: '换背景：抠图 + 新背景 + 光影处理' },
-      { id: 'img', icon: 'ti-photo-video', nm: '图片设计', fill: '帮我出几张配图，风格：', type: 'image', toast: '已切到做图模式，说说要什么风格的图' },
-      { id: 'long', icon: 'ti-movie', nm: '长视频', fill: '', type: 'video', duration: '3 分钟', toast: '已把时长调到 3 分钟：长视频由 AI 分段生成、自动拼接' },
-      { id: 'shoot', icon: 'ti-device-mobile', nm: '我自己出镜念', fill: '', method: 'shoot', toast: '（原型示意）正式版会打开提词器，你拍完传回来 AI 帮你剪' },
-    ];
+    /* 技能排（M5）：数据来自技能库单一事实源——启用的手艺才出现（停用时少一个按钮，不动已做好的东西） */
+    var MV_ORDER = ['s1', 's2', 's13', 's4', 's3', 's14', 's15', 's16']; // 保持做视频页既有排布顺序（原 8 按钮的次序）
+    function loadMakeVideoSkills() {
+      var local = null;
+      try { var d = JSON.parse(localStorage.getItem('jco-skills-v1') || 'null'); if (d && Array.isArray(d.items)) local = d.items; } catch (e) {}
+      var base = (typeof window.JCO_SKILLS !== 'undefined' && window.JCO_SKILLS) ? window.JCO_SKILLS : null;
+      if (!base) return [];
+      var list = base.makeVideoSkills(base.merge(local));
+      list.sort(function (a, b) {
+        var ia = MV_ORDER.indexOf(a.id); var ib = MV_ORDER.indexOf(b.id);
+        if (ia === -1) ia = 99;
+        if (ib === -1) ib = 99;
+        return ia - ib;
+      });
+      return list.map(function (s) {
+        var a = s.action || {};
+        return { id: s.id, icon: a.icon || s.icon, nm: s.name, fill: a.fill || '', method: a.method, toast: a.toast, type: a.type, duration: a.duration };
+      });
+    }
+    const SKILLS = loadMakeVideoSkills();
 
     const TEMPLATES = [
       { icon: 'ti-file-text', nm: '政策解读', ds: '新规出来，第一时间讲清楚', fill: '做一条政策解读视频：把最新的成人学历改革讲清楚' },

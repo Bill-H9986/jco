@@ -593,6 +593,153 @@
         }
       })();
 
+      /* ---------- 员工实时状态（M5）：内核工具事件 → 在忙（谁在干活，看得见） ---------- */
+      (function staffActivity() {
+        var kernel = (typeof window.jco !== 'undefined' && window.jco && window.jco.kernel) ? window.jco.kernel : null;
+        if (!kernel || typeof kernel.onActivity !== 'function') return; // 浏览器直开：保留静态演示
+
+        var STAFF_HREF = { publish: 'J.Co工作台-发布.html', ops: 'J.Co工作台-运营.html' };
+        var ACT_LABEL = {
+          jco_open_page: '正在打开平台页面',
+          jco_snapshot: '正在看页面元素',
+          jco_click: '正在点按钮',
+          jco_type_text: '正在填写内容',
+          jco_upload_file: '正在上传文件',
+          jco_scroll: '正在操作页面',
+          jco_press_key: '正在操作页面',
+          jco_wait_for: '正在操作页面',
+          jco_screenshot: '正在截图诊断',
+          jco_save_report: '正在整理战报',
+          jco_save_comments: '正在整理评论'
+        };
+        var IDLE_MS = 180000; // 3 分钟无事件自动回落（内核卡死 / 重启时防"假在忙"）
+
+        function findCard(href) {
+          var cards = document.querySelectorAll('.staff');
+          for (var i = 0; i < cards.length; i++) {
+            if (cards[i].getAttribute('href') === href) return cards[i];
+          }
+          return null;
+        }
+
+        function staffOfSession(session) {
+          var sid = String(session || '').replace(/^jco-chat-/, '');
+          if (!sid) return '';
+          try {
+            var d = JSON.parse(localStorage.getItem('jco-chats-v1') || 'null');
+            var chats = (d && d.chats) || [];
+            for (var i = 0; i < chats.length; i++) {
+              if (chats[i] && chats[i].id === sid) return String(chats[i].staff || '');
+            }
+          } catch (e) {}
+          return '';
+        }
+
+        var sayEl = document.querySelector('.b-say');
+        var sayOrg = sayEl ? sayEl.innerHTML : '';
+        var states = {}; // key（'publish' / 'ops' / 'any'）→ 进入前的现场（用于回落还原）
+
+        function setSay(html) {
+          if (sayEl) sayEl.innerHTML = html;
+        }
+
+        function enter(key, label) {
+          var st = states[key];
+          if (!st) {
+            var card = key === 'any' ? null : findCard(STAFF_HREF[key] || '');
+            if (key !== 'any' && !card) return; // 没有对应员工卡：不动，不猜
+            st = states[key] = { card: card, timer: null, liveOrg: '', badgeCls: '', badgeText: '', timeOrg: '' };
+            if (card) {
+              var live = card.querySelector('.s-live');
+              var badge = card.querySelector('.s-badge');
+              var time = card.querySelector('.s-time');
+              st.liveOrg = live ? live.textContent : '';
+              st.badgeCls = badge ? badge.className : '';
+              st.badgeText = badge ? badge.textContent : '';
+              st.timeOrg = time ? time.innerHTML : '';
+            }
+          }
+          if (st.card) {
+            var liveEl = st.card.querySelector('.s-live');
+            var badgeEl = st.card.querySelector('.s-badge');
+            var timeEl = st.card.querySelector('.s-time');
+            if (liveEl) liveEl.textContent = '正在：' + label;
+            if (badgeEl) { badgeEl.className = 's-badge busy'; badgeEl.textContent = '在忙'; }
+            if (timeEl) {
+              var now = new Date();
+              timeEl.innerHTML = '<span class="ti ti-clock-hour-3"></span>' + String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
+            }
+            var nameEl = st.card.querySelector('.s-name');
+            setSay('<b>' + (nameEl ? nameEl.textContent : '员工') + '</b> 正在忙：' + label);
+          } else {
+            setSay('我正在干活：<b>' + label + '</b>');
+          }
+          clearTimeout(st.timer);
+          st.timer = setTimeout(function () { leave(key); }, IDLE_MS);
+        }
+
+        function leave(key) {
+          var st = states[key];
+          if (!st) return;
+          clearTimeout(st.timer);
+          if (st.card) {
+            var live = st.card.querySelector('.s-live');
+            var badge = st.card.querySelector('.s-badge');
+            var time = st.card.querySelector('.s-time');
+            if (live) live.textContent = st.liveOrg;
+            if (badge) { badge.className = st.badgeCls; badge.textContent = st.badgeText; }
+            if (time) time.innerHTML = st.timeOrg;
+          }
+          delete states[key];
+          if (Object.keys(states).length === 0) setSay(sayOrg);
+        }
+
+        kernel.onActivity(function (act) {
+          if (!act || typeof act !== 'object') return;
+          var key = staffOfSession(act.session) || 'any';
+          if (act.kind === 'turn') {
+            if (act.phase === 'end') leave(key);
+            else if (act.phase === 'start' && key !== 'any') enter(key, '正在准备…');
+            return;
+          }
+          if (act.kind === 'tool' && act.phase === 'call') {
+            enter(key, ACT_LABEL[act.tool] || '正在干活');
+          }
+        });
+      })();
+
+      /* ---------- 员工统计真化（M5）：右上角的小统计跟着卡上徽章的实际状态走 ---------- */
+      (function rosterLive() {
+        var hasKernel = (typeof window.jco !== 'undefined' && window.jco && window.jco.kernel);
+        if (!hasKernel) return; // 浏览器直开：保留静态演示
+        var rosterEl = document.querySelector('.roster');
+        var staffsEl = document.querySelector('.staffs');
+        if (!rosterEl || !staffsEl) return;
+        function paint() {
+          var counts = { busy: 0, wait: 0, done: 0, free: 0, sched: 0 };
+          var badges = staffsEl.querySelectorAll('.s-badge');
+          for (var i = 0; i < badges.length; i++) {
+            var t = (badges[i].textContent || '').trim();
+            if (t.indexOf('在忙') !== -1) counts.busy += 1;
+            else if (t.indexOf('有产出') !== -1) counts.done += 1;
+            else if (t.indexOf('在等') !== -1) counts.wait += 1;
+            else if (t.indexOf('排期') !== -1) counts.sched += 1;
+            else counts.free += 1;
+          }
+          var parts = [];
+          if (counts.busy > 0) parts.push('<span class="r-item"><i class="r-dot busy"></i>' + counts.busy + ' 在忙</span>');
+          if (counts.wait > 0) parts.push('<span class="r-item"><i class="r-dot wait"></i>' + counts.wait + ' 在等你</span>');
+          if (counts.done > 0) parts.push('<span class="r-item"><i class="r-dot busy"></i>' + counts.done + ' 有产出</span>');
+          if (counts.free > 0) parts.push('<span class="r-item"><i class="r-dot free"></i>' + counts.free + ' 空闲</span>');
+          if (counts.sched > 0) parts.push('<span class="r-item"><i class="r-dot sched"></i>' + counts.sched + ' 已排期</span>');
+          rosterEl.innerHTML = parts.join('');
+        }
+        paint();
+        try {
+          new MutationObserver(paint).observe(staffsEl, { subtree: true, attributes: true, attributeFilter: ['class'], childList: true, characterData: true });
+        } catch (e) {}
+      })();
+
       /* ---------- 侧栏（图标栏 + 悬停展开 + 固定展开） ---------- */
       (function () {
         var sidebar = document.querySelector('.sidebar');
