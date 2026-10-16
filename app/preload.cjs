@@ -4,6 +4,27 @@
  */
 const { contextBridge, ipcRenderer } = require('electron')
 
+// 活动日志收编（M7 批 5）：任务跑完/没跑成 → 写全站动态（"干过的活"在动态里一处可查；
+// 收编在本层 = 一处代码覆盖所有页面、所有时刻，不依赖某个页面开着）
+ipcRenderer.on('kernel:task', (_event, ev) => {
+  try {
+    if (!ev || typeof ev !== 'object') return
+    if (ev.phase !== 'done' && ev.phase !== 'fail') return
+    const data = JSON.parse(localStorage.getItem('jco-log-v1') || '{"items":[]}')
+    if (!Array.isArray(data.items)) data.items = []
+    data.items.unshift({
+      t: Date.now(),
+      kind: 'task',
+      title: '任务「' + String(ev.name || '').slice(0, 40) + '」' + (ev.phase === 'done' ? '跑完了' : '没跑成'),
+      detail: String(ev.summary || '').slice(0, 120),
+    })
+    if (data.items.length > 200) data.items.length = 200
+    localStorage.setItem('jco-log-v1', JSON.stringify(data))
+  } catch (error) {
+    /* 记录失败无碍 */
+  }
+})
+
 contextBridge.exposeInMainWorld('jco', {
   kernel: {
     /** 发一句话，返回 { ok, text, streamed } 或 { ok:false, error } */

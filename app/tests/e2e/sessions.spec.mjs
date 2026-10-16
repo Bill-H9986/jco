@@ -105,3 +105,72 @@ test('总管页：侧栏收起态也能开新会话（图标按钮可用，展�
     await app.close()
   }
 })
+
+test('总管页：老版本聊天数据兼容（带员工标签会话 + 旧单会话迁移，与任务分区并存）', async () => {
+  const app = await electron.launch({ executablePath: ELECTRON_BIN, args: [APP_DIR, '--jco-test'] })
+  try {
+    const win = await app.firstWindow()
+    const errors = []
+    win.on('pageerror', (e) => errors.push(String(e.message).slice(0, 200)))
+    await win.waitForTimeout(2500)
+    // 场景一：新格式里一条"老派活时代"的会话（带 staff 标签——M5 handoff 产物）
+    await win.evaluate(() => {
+      try {
+        localStorage.setItem(
+          'jco-chats-v1',
+          JSON.stringify({
+            activeId: 'cold1',
+            chats: [
+              {
+                id: 'cold1',
+                title: '老派活会话',
+                staff: 'publish',
+                updatedAt: Date.now(),
+                messages: [
+                  { role: 'user', text: '把这条发到抖音', t: Date.now() },
+                  { role: 'ai', text: '好的，收到。', t: Date.now() },
+                ],
+              },
+            ],
+          }),
+        )
+        localStorage.removeItem('jco-side-pinned')
+      } catch {}
+    })
+    await win.evaluate(() => {
+      window.location.href = 'J.Co总管.html'
+    })
+    await win.waitForTimeout(1500)
+    await win.locator('.side-toggle').click()
+    await win.waitForTimeout(400)
+    // 老会话：列表在位、点开内容正常（不破坏老数据）
+    const names1 = await win.locator('.convos:not(#taskList) .convo .name').allInnerTexts()
+    expect(names1.join('｜')).toContain('老派活会话')
+    await expect(win.locator('#chat .stream .msg.user .bubble').last()).toContainText('把这条发到抖音')
+    // 任务分区空态并存（还没派活）
+    await expect(win.locator('#taskList')).toContainText('还没有派出去的任务')
+    // 场景二：更老的单会话格式（无 jco-chats-v1）自动迁移为「之前的对话」
+    await win.evaluate(() => {
+      try {
+        localStorage.removeItem('jco-chats-v1')
+        localStorage.setItem(
+          'jco-chat-v1',
+          JSON.stringify({
+            items: [
+              { role: 'user', text: '老话一句：把昨天的视频准备好' },
+              { role: 'ai', text: '好的，收到。' },
+            ],
+          }),
+        )
+      } catch {}
+    })
+    await win.reload()
+    await win.waitForTimeout(1500)
+    const names2 = await win.locator('.convos:not(#taskList) .convo .name').allInnerTexts()
+    expect(names2.join('｜')).toContain('之前的对话')
+    await expect(win.locator('#chat .stream .msg.user .bubble').last()).toContainText('老话一句')
+    expect(errors, `JS 错误：\n${errors.join('\n')}`).toEqual([])
+  } finally {
+    await app.close()
+  }
+})

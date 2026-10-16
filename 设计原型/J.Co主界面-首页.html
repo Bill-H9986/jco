@@ -348,11 +348,13 @@
         var nCreate = today.filter(function (x) { return x.kind === 'create'; }).length;
         var nShot = today.filter(function (x) { return x.kind === 'shot'; }).length;
         var nChat = today.filter(function (x) { return x.kind === 'chat'; }).length;
+        var nTask = today.filter(function (x) { return x.kind === 'task'; }).length;
         var parts = [];
+        if (nTask) parts.push(nTask + ' 件活');
         if (nCreate) parts.push(nCreate + ' 篇稿');
         if (nShot) parts.push(nShot + ' 条分镜');
         if (nChat) parts.push(nChat + ' 次对话');
-        text = '今天已经干了 ' + parts.join('、') + '，点这里接着干';
+        text = parts.length ? '今天已经干了 ' + parts.join('、') + '，点这里接着干' : '今天开工过了，点这里接着干';
         go = function () { location.href = 'J.Co总管.html'; };
       } else {
         text = '今天还没开工，说一句话我就动';

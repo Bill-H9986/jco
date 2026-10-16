@@ -428,7 +428,7 @@
     }
 
     /* ---------- J.Co 本地状态层：活动日志 / 对话历史 / 面板真数据 ---------- */
-    const KIND_ICON = { chat: 'ti-messages', create: 'ti-file-text', shot: 'ti-video', topic: 'ti-bulb', material: 'ti-photo', publish: 'ti-upload' };
+    const KIND_ICON = { task: 'ti-clock-hour-3', chat: 'ti-messages', create: 'ti-file-text', shot: 'ti-video', topic: 'ti-bulb', material: 'ti-photo', publish: 'ti-upload' };
     function jcoLogAdd(kind, title, detail) {
       try {
         var data = JSON.parse(localStorage.getItem('jco-log-v1') || '{"items":[]}');
@@ -527,6 +527,8 @@
       }
       refreshBoard();
       renderConvoList();
+      // 切到会话视图即离开任务视图（批 5 修复：真实会话按钮 stopPropagation，容器委托收不到）
+      if (typeof window.__jcoTaskViewClear === 'function') window.__jcoTaskViewClear();
     }
     function switchChat(id) {
       if (!chatData.chats.some(function (x) { return x.id === id; })) return;
@@ -633,7 +635,8 @@
     }
     function renderConvoList() {
       if (!JCO_KERNEL) return; // 浏览器直开：保留演示列表
-      var box = document.querySelector('.convos');
+      // 注意：侧栏有两个 .convos（#taskList 任务分区在前）；会话列表必须取"非任务"的那个（批 5 修复）
+      var box = document.querySelector('.convos:not(#taskList)');
       if (!box) return;
       box.innerHTML = '';
       var add = document.createElement('button');
@@ -764,6 +767,8 @@
       // 点左侧「对话」区的任一会话 = 回到会话视图（清任务视图标记）
       var convoBox = document.querySelector('.convos:not(#taskList)');
       if (convoBox) convoBox.addEventListener('click', function () { viewingId = null; renderTasks(); });
+      // 供会话切换路径（按钮内 stopPropagation，冒泡委托收不到）直接清任务视图标记
+      window.__jcoTaskViewClear = function () { viewingId = null; renderTasks(); };
       // 派活跳转（批 1b）：别的页放 jco-open-task → 落地后自动打开该任务视图
       function consumeOpenTask() {
         var want = '';
