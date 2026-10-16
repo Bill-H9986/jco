@@ -104,8 +104,8 @@ export function apply(ctx, config) {
 
   define(
     'jco_upload_file',
-    '向快照里的一个"文件选择"控件上传本机文件（如视频、图片）。' +
-      '用法：找到 file 类型元素（通常在"上传视频"区域附近），传入文件的绝对路径。' +
+    '上传本机文件（如视频、图片）。两种目标都支持：① 快照里带"隐藏的文件选择控件"标记的元素（首选，直路）；' +
+      '② "上传视频"之类的按钮（工具会自动处理随之弹出的文件选择对话框，像真人一样）。' +
       '例：jco_upload_file(3, "C:/Users/me/video.mp4")。',
     {
       ref: { type: 'number', required: true, description: '快照编号（指向文件选择控件）' },

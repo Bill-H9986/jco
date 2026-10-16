@@ -90,14 +90,19 @@ async function formatSnapshot() {
   lines.push(`可交互元素（共 ${snap.elements.length} 个）：`)
   for (const el of snap.elements) {
     const parts = [`[${el.ref}]`]
-    const kind = `${el.tag}${el.type ? `:${el.type}` : ''}${el.editable ? '·可输入' : ''}${el.checked ? '·已选' : ''}`
+    const kind = `${el.tag}${el.type ? `:${el.type}` : ''}${el.editable ? '·可输入' : ''}${el.checked ? '·已选' : ''}${
+      el.hidden ? '·隐藏' : ''
+    }`
     parts.push(`<${kind}>`)
+    if (el.hidden) parts.push('（隐藏的文件选择控件，可直接用于上传文件）')
     if (el.text) parts.push(`「${el.text}」`)
     if (el.placeholder) parts.push(`占位「${el.placeholder}」`)
     if (el.aria) parts.push(`aria「${el.aria}」`)
     lines.push(`  ${parts.join(' ')}`)
   }
-  lines.push('提示：click / type_text / upload_file 请使用上面的编号（ref）。')
+  lines.push(
+    '提示：click / type_text / upload_file 请使用上面的编号（ref）；上传文件可优先用"隐藏的文件选择控件"，也可用"上传视频"按钮（工具会自动处理文件对话框）。',
+  )
   return lines.join('\n')
 }
 

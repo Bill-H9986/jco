@@ -63,6 +63,14 @@ export async function snapshot(page) {
         y: Math.round(r.top + window.scrollY),
       })
     }
+    // 隐藏的文件选择控件：单独列出（上传文件的直路——即使不可见，也值得 AI 知道）
+    for (const el of document.querySelectorAll('input[type="file"]')) {
+      if (visible(el)) continue
+      ref += 1
+      el.setAttribute('data-jco-ref', String(ref))
+      elements.push({ ref, tag: 'input', type: 'file', hidden: true, y: -1 })
+    }
+    elements.sort((a, b) => a.y - b.y)
     const headings = [...document.querySelectorAll('h1, h2, h3, h4')]
       .filter(visible)
       .map((el) => (el.innerText || '').replace(/\s+/g, ' ').trim().slice(0, 50))
@@ -96,9 +104,21 @@ export async function typeText(page, ref, text) {
   }
 }
 
-/** 上传文件（给 file input） */
+/** 上传文件（两种真人模式）：
+ *  - ref 指向真的 <input type=file>：直接选定文件；
+ *  - ref 指向按钮等其它元素：点击它，并拦截系统"文件选择"对话框，把文件递给对话框。 */
 export async function uploadFile(page, ref, filePath) {
-  await page.locator(`[data-jco-ref="${Number(ref)}"]`).setInputFiles(resolve(String(filePath)))
+  const locator = page.locator(`[data-jco-ref="${Number(ref)}"]`)
+  const file = resolve(String(filePath))
+  const isFileInput = await locator.evaluate(
+    (el) => el.tagName === 'INPUT' && (el.getAttribute('type') || '').toLowerCase() === 'file',
+  )
+  if (isFileInput) {
+    await locator.setInputFiles(file)
+    return
+  }
+  const [chooser] = await Promise.all([page.waitForEvent('filechooser', { timeout: 15000 }), locator.click()])
+  await chooser.setFiles(file)
 }
 
 /** 滚动（down / up / top / bottom） */
