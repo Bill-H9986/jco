@@ -353,7 +353,7 @@
 
           <div class="brief">
             <span class="ti ti-info-circle"></span>
-            <span>任务存在本机，随时能停。到点自动执行会在内核调度接管后开跑；现在每个任务都能「马上跑」，等于先把活跑顺。</span>
+            <span>任务存在本机，随时能停。到点它自己跑，跑完通知你；发布、回复这类要紧的事，它会停在最后一步等你。</span>
           </div>
 
           <div class="sec-head"><h2>我的任务</h2><span class="hint" id="tCount"></span></div>
@@ -896,23 +896,30 @@
     })();
   
   </script>
+<script src="./assets/jco-auto-tasks.js"></script>
 <script>
   (function () {
     var KEY = 'jco-tasks-v1'
-    var DEFAULTS = [
-      { id: 't1', name: '对标雷达', desc: '盯 4 个对标账号，新爆款自动拆解入库', when: '每天 09:12', icon: 'ti-flame', on: true },
-      { id: 't2', name: '晚间发布检查', desc: '到点提醒你确认今晚的发布', when: '每天 19:20', icon: 'ti-bell', on: true },
-      { id: 't3', name: '评论自动跟进', desc: '扫一遍评论，拟好回复等你放行', when: '每天 12:00', icon: 'ti-message-dots', on: true },
-      { id: 't4', name: '每周数据周报', desc: '汇总上周播放和涨粉，写成一页纸', when: '每周一 10:00', icon: 'ti-chart-bar', on: false }
-    ]
-    function load() { try { var d = JSON.parse(localStorage.getItem(KEY) || 'null'); if (d && Array.isArray(d.items)) return d.items } catch (e) {} return DEFAULTS.slice() }
+    // 出厂任务表见 assets/jco-auto-tasks.js（单一事实源）；这里不再内置副本
+    function load() {
+      var raw = null
+      try { var d = JSON.parse(localStorage.getItem(KEY) || 'null'); if (d && Array.isArray(d.items)) raw = d.items } catch (e) {}
+      return JCO_AUTO_TASKS.migrate(raw) // 老任务平滑升级；旧「对标雷达」（做不到的活）换成本版本能跑的
+    }
     function save(items) { try { localStorage.setItem(KEY, JSON.stringify({ items: items })) } catch (e) {} }
     var tostEl = document.getElementById('toast')
     function toast(msg) { if (!tostEl) return; tostEl.textContent = msg; tostEl.classList.add('show'); clearTimeout(toast._t); toast._t = setTimeout(function () { tostEl.classList.remove('show') }, 2600) }
     var items = load()
+    save(items) // 迁移结果写回
     var list = document.getElementById('taskList')
+    var runs = {}
+    function syncTasks() { try { if (window.jco && window.jco.tasks && window.jco.tasks.sync) window.jco.tasks.sync(items) } catch (e) {} }
+    syncTasks()
+    // 执行记录（调度器写、这里只读）：拿到后重画一次「上次执行」
+    if (window.jco && window.jco.tasks && window.jco.tasks.runs) {
+      window.jco.tasks.runs().then(function (r) { runs = (r && r.runs) || {}; render() }).catch(function () {})
+    }
     var countEl = document.getElementById('tCount')
-    var WHEN_LABEL = { daily: '每天一次', morning: '每天早上', evening: '每天傍晚', weekly: '每周一次' }
     function render() {
       list.innerHTML = ''
       items.forEach(function (t) {
@@ -926,6 +933,16 @@
         el.querySelector('.tk-name').appendChild(badge)
         el.querySelector('.tk-desc').textContent = t.desc
         el.querySelector('.tk-when').appendChild(document.createTextNode(t.when))
+        var run = runs[t.id]
+        if (run && typeof run.lastRunAt === 'number') {
+          var age = Date.now() - run.lastRunAt
+          if (age <= 48 * 3600000) {
+            var runDate = new Date(run.lastRunAt)
+            var pad2 = function (n) { return String(n).padStart(2, '0') }
+            var dayWord = age > 24 * 3600000 ? '昨天 ' : ''
+            el.querySelector('.tk-when').appendChild(document.createTextNode(' · 上次 ' + dayWord + pad2(runDate.getHours()) + ':' + pad2(runDate.getMinutes()) + (run.ok ? ' ✓' : ' ✗')))
+          }
+        }
         var tg = el.querySelector('.tg')
         if (t.on) tg.classList.add('on')
         tg.setAttribute('aria-label', '启用任务')
@@ -935,6 +952,7 @@
           badge.className = 'tk-badge' + (t.on ? ' on' : '')
           badge.textContent = t.on ? '运行中' : '已暂停'
           save(items)
+          syncTasks()
           toast(t.on ? '「' + t.name + '」已启动' : '「' + t.name + '」先暂停了')
         })
         el.querySelector('.tk-run').addEventListener('click', function () {
@@ -963,8 +981,10 @@
       var name = document.getElementById('tName').value.trim()
       var what = document.getElementById('tWhat').value.trim()
       if (!name) { toast('先给任务起个名字'); return }
-      items.push({ id: 't' + Date.now().toString(36), name: name, desc: what || '等细节补上后就能跑', when: WHEN_LABEL[when], icon: 'ti-sparkles', on: true })
+      var ms = JCO_AUTO_TASKS.makeSchedule(when)
+      items.push({ id: 't' + Date.now().toString(36), name: name, desc: what || '等细节补上后就能跑', when: ms.when, icon: 'ti-sparkles', on: true, schedule: ms.schedule, createdAt: Date.now() })
       save(items)
+      syncTasks()
       render()
       document.getElementById('tName').value = ''
       document.getElementById('tWhat').value = ''

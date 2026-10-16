@@ -294,6 +294,15 @@ function kernelUnpackedPath(p) {
   return p.includes(marker) ? p.replace(marker, 'app.asar.unpacked' + path.sep) : p
 }
 const SKILLS_FILE = kernelUnpackedPath(path.join(__dirname, 'kernel', 'skills.json'))
+/** 自动任务（M6）：任务表（页面同步，调度器只读）与执行记录（调度器写，页面只读） */
+const AUTO_TASKS_FILE = kernelUnpackedPath(path.join(__dirname, 'kernel', 'auto-tasks.json'))
+const AUTO_RUNS_FILE = kernelUnpackedPath(path.join(__dirname, 'kernel', 'auto-runs.json'))
+/** 自动任务纪律尾注（逐字，与《M6 接口契约》一致）：不可逆动作一律停下等用户 */
+const AUTO_DISCIPLINE = [
+  '（自动任务纪律：这是定时触发的任务，用户正在别处忙。准备工作照做；',
+  '但任何"点发布""发送回复"之类不可逆的动作一律停下——准备好后等用户来确认。',
+  '做完把结果说清楚：干了什么、结果如何、接下来等用户做什么。）',
+].join('\n')
 
 // 内核对话：渲染进程 ask → 内核 → 增量推回
 ipcMain.handle('kernel:ask', async (event, payload) => {
@@ -498,6 +507,126 @@ ipcMain.handle('publish:data:get', () => {
   return { report: read('report-latest.json'), comments: read('comments-latest.json') }
 })
 
+// ---------- 自动任务调度器（M6：到点自己干活） ----------
+const autoRuns = { runs: {} }
+try {
+  Object.assign(autoRuns, JSON.parse(fs.readFileSync(AUTO_RUNS_FILE, 'utf8')) || {})
+  if (!autoRuns.runs || typeof autoRuns.runs !== 'object') autoRuns.runs = {}
+} catch (error) {
+  /* 无记录：从空开始 */
+}
+function readAutoTasks() {
+  try {
+    const data = JSON.parse(fs.readFileSync(AUTO_TASKS_FILE, 'utf8'))
+    return Array.isArray(data && data.items) ? data.items : []
+  } catch (error) {
+    return []
+  }
+}
+function saveAutoRun(taskId, record) {
+  autoRuns.runs[taskId] = record
+  try {
+    fs.writeFileSync(AUTO_RUNS_FILE, JSON.stringify(autoRuns), 'utf8')
+  } catch (error) {
+    /* 写失败不阻断调度 */
+  }
+}
+/** 执行前确保发布会话就绪（≤60 秒）；起不来也照常发任务（AI 会如实说，我们不装成功） */
+async function ensurePublishReady() {
+  if (!publishSessionManager) return false
+  try {
+    const st = publishSessionManager.status()
+    if (!st || !st.active) publishSessionManager.start('douyin')
+    for (let i = 0; i < 40; i++) {
+      const s = publishSessionManager.status()
+      if (s && s.ready) return true
+      if (s && !s.active) return false
+      await new Promise((resolveWait) => setTimeout(resolveWait, 1500))
+    }
+  } catch (error) {
+    /* 起不来：照常发任务 */
+  }
+  return false
+}
+async function runAutoTask(task) {
+  await ensurePublishReady()
+  const bridge = await getBridge()
+  const prompt = '现在就跑一遍「' + task.name + '」：' + String(task.desc || '') + '。\n' + AUTO_DISCIPLINE
+  const result = await bridge.ask(prompt, null, {
+    sessionId: 'jco-chat-auto-' + task.id,
+    onActivity: (act) => {
+      BrowserWindow.getAllWindows().forEach((win) => {
+        try {
+          win.webContents.send('kernel:activity', { ...act, auto: true, taskName: task.name })
+        } catch (error) {
+          /* 窗口已关闭则忽略 */
+        }
+      })
+    },
+  })
+  return { ok: !!result.ok, summary: result.ok ? result.text : result.error }
+}
+function notifyAutoResult(task, record) {
+  try {
+    if (!Notification.isSupported()) return
+    new Notification({
+      title: record.ok ? '「' + task.name + '」跑完了' : '「' + task.name + '」这轮没跑成',
+      body: String(record.summary || '').slice(0, 120),
+    }).show()
+  } catch (error) {
+    /* 通知失败无碍 */
+  }
+}
+let autoScheduler = null
+async function startAutoScheduler() {
+  try {
+    const mod = await import(pathToFileURL(path.join(__dirname, 'kernel', 'auto-scheduler.mjs')).href)
+    autoScheduler = mod.createAutoScheduler({
+      getTasks: readAutoTasks,
+      getRuns: () => autoRuns.runs,
+      saveRun: saveAutoRun,
+      execute: runAutoTask,
+      notify: notifyAutoResult,
+    })
+    autoScheduler.start()
+    autoScheduler.tick().catch(() => {}) // 启动即检一遍（补跑语义）
+  } catch (error) {
+    console.warn('[auto] 调度器启动失败：' + String((error && error.message) || error))
+  }
+}
+
+// 自动任务 IPC：页面 → 主进程同步任务表；页面反查执行记录
+ipcMain.handle('tasks:sync', (_event, payload) => {
+  try {
+    const raw = payload && Array.isArray(payload.items) ? payload.items : []
+    const items = raw
+      .filter((t) => t && typeof t.id === 'string' && t.id !== '' && typeof t.name === 'string' && t.name !== '')
+      .map((t) => {
+        const s = t.schedule && typeof t.schedule === 'object' ? t.schedule : {}
+        const time = /^([01]\d|2[0-3]):[0-5]\d$/.test(String(s.time || '')) ? String(s.time) : '09:00'
+        const schedule =
+          s.kind === 'weekly'
+            ? { kind: 'weekly', weekday: Math.min(7, Math.max(1, parseInt(s.weekday, 10) || 1)), time }
+            : { kind: 'daily', time }
+        return {
+          id: String(t.id).slice(0, 24),
+          name: String(t.name).slice(0, 60),
+          desc: String(t.desc || '').slice(0, 300),
+          icon: String(t.icon || 'ti-sparkles').slice(0, 32),
+          on: t.on === true,
+          createdAt: Number.isFinite(t.createdAt) ? t.createdAt : Date.now(),
+          schedule,
+        }
+      })
+    fs.writeFileSync(AUTO_TASKS_FILE, JSON.stringify({ items }, null, 2), 'utf8')
+    return { ok: true, count: items.length }
+  } catch (error) {
+    return { ok: false, error: String((error && error.message) || error) }
+  }
+})
+
+ipcMain.handle('tasks:runs:get', () => ({ runs: autoRuns.runs || {} }))
+
 // 测试模式：用独立的临时数据目录，避免和正在使用的 J.Co 抢单实例锁
 // （名字加随机段：防 pid 复用时读到上一个测试实例残留的 profile——2026-10-16 全量 E2E 偶发"读到旧侧栏状态"的教训）
 if (process.argv.includes('--jco-test')) {
@@ -577,6 +706,8 @@ if (!gotLock) {
     getBridge()
       .then((bridge) => bridge.warmUp().catch(() => {}))
       .catch(() => {})
+    // 自动任务调度器（M6）：每分钟心跳；启动即补跑检查
+    startAutoScheduler().catch(() => {})
     app.on('activate', () => {
       if (BrowserWindow.getAllWindows().length === 0) createWindow()
     })

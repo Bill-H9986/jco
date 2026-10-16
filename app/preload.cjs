@@ -93,6 +93,25 @@ contextBridge.exposeInMainWorld('jco', {
       })),
     }),
   },
+  /** 自动任务（M6）：任务表同步给调度器；执行记录反查（页面只读展示"上次执行"） */
+  tasks: {
+    sync: (items) => ipcRenderer.invoke('tasks:sync', {
+      items: (Array.isArray(items) ? items : []).map((t) => ({
+        id: String((t && t.id) || ''),
+        name: String((t && t.name) || ''),
+        desc: String((t && t.desc) || ''),
+        icon: String((t && t.icon) || ''),
+        on: Boolean(t && t.on),
+        createdAt: Number(t && t.createdAt) || 0,
+        schedule: {
+          kind: String((t && t.schedule && t.schedule.kind) || 'daily'),
+          time: String((t && t.schedule && t.schedule.time) || '09:00'),
+          weekday: Number(t && t.schedule && t.schedule.weekday) || 0,
+        },
+      })),
+    }),
+    runs: () => ipcRenderer.invoke('tasks:runs:get'),
+  },
   /** 系统级开关：主题（真切换）/ 开机启动（系统登录项）/ 清缓存（真清理） */
   sys: {
     theme: (mode) => ipcRenderer.invoke('sys:theme', String(mode || 'system')),

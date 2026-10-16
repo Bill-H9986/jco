@@ -18,6 +18,9 @@ app/kernel/model-config.json
 app/kernel/publish-tools.patch.yml
 # 技能库同步副本（运行时生成、随界面走，不入库）
 app/kernel/skills.json
+# 自动任务表与执行记录（运行时生成：页面同步 / 调度器写，不入库）
+app/kernel/auto-tasks.json
+app/kernel/auto-runs.json
 # 视觉守门员的改前副本（临时对比用，不入库）
 设计原型/.verify-before-*
 

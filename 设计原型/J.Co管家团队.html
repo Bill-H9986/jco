@@ -643,6 +643,12 @@
           if (sayEl) sayEl.innerHTML = html;
         }
 
+        function esc(s) {
+          return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+            return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+          });
+        }
+
         function enter(key, label) {
           var st = states[key];
           if (!st) {
@@ -672,7 +678,7 @@
             var nameEl = st.card.querySelector('.s-name');
             setSay('<b>' + (nameEl ? nameEl.textContent : '员工') + '</b> 正在忙：' + label);
           } else {
-            setSay('我正在干活：<b>' + label + '</b>');
+            setSay(label);
           }
           clearTimeout(st.timer);
           st.timer = setTimeout(function () { leave(key); }, IDLE_MS);
@@ -700,10 +706,18 @@
           if (act.kind === 'turn') {
             if (act.phase === 'end') leave(key);
             else if (act.phase === 'start' && key !== 'any') enter(key, '正在准备…');
+            else if (act.phase === 'start' && act.auto && act.taskName) enter('any', '自动任务「<b>' + esc(act.taskName) + '</b>」开始干活…');
             return;
           }
           if (act.kind === 'tool' && act.phase === 'call') {
-            enter(key, ACT_LABEL[act.tool] || '正在干活');
+            var label = ACT_LABEL[act.tool] || '正在干活';
+            if (key === 'any') {
+              enter(key, act.auto && act.taskName
+                ? ('自动任务「<b>' + esc(act.taskName) + '</b>」正在忙：' + esc(label))
+                : ('我正在干活：<b>' + esc(label) + '</b>'));
+            } else {
+              enter(key, label);
+            }
           }
         });
       })();
