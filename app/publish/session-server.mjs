@@ -157,7 +157,7 @@ async function dispatch(toolName, args) {
       const chooser = await chooserPromise
       if (chooser) {
         // 点到了"文件选择"类按钮：取消对话框，并直接告诉 AI 正确的做法（可行动的错误）
-        await chooser.cancel().catch(() => {})
+        await chooser.setFiles([]).catch(() => {})
         throw new Error(
           `点击 [${Number(args.ref)}] 弹出的是"文件选择"对话框（这是个上传类按钮）。要传文件请改用 jco_upload_file(${Number(args.ref)}, "文件绝对路径")。`,
         )
