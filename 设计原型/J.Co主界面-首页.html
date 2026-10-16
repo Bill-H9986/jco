@@ -296,11 +296,18 @@
       if (send.disabled) return;
       var text = inp.value.trim();
       if (!text) return;
-      var hasKernel = typeof window.jco !== 'undefined' && window.jco && window.jco.kernel;
-      if (hasKernel) {
-        // 桌面应用：带着这句话去总管页，自动交给内核
-        try { sessionStorage.setItem('jco-handoff', text); } catch (e) {}
-        location.href = 'J.Co总管.html';
+      var engine = (typeof window.jco !== 'undefined' && window.jco && window.jco.tasks && window.jco.tasks.dispatch) ? window.jco : null;
+      if (engine) {
+        // 桌面应用：派活走唯一任务管道（跳总管自动打开任务视图，看 AI 怎么干）
+        send.disabled = true;
+        engine.tasks.dispatch({ name: text.slice(0, 20), prompt: text, staff: '' }).then(function (res) {
+          if (!res || !res.ok) { send.disabled = false; showToast((res && res.error) || '派活失败，稍后再试一次。'); return; }
+          try { sessionStorage.setItem('jco-open-task', res.taskId); } catch (e) {}
+          location.href = 'J.Co总管.html';
+        }).catch(function (err) {
+          send.disabled = false;
+          showToast('派活失败：' + ((err && err.message) || '稍后再试一次'));
+        });
         return;
       }
       showToast('（原型示意）正式版会带着这句话交给总管，总管开始安排。');
