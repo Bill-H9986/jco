@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.4.11](///compare/v0.4.10...v0.4.11) (2026-10-16)
+
+### Features
+
+* **m7:** 任务会话桥批 4（M9 单元⑥·旧物退休）——jco-handoff 代码路径全部删除（含总管页开场段消费分支）、jco-chat-auto- 前缀并入 jco-chat-task-；验收 grep：生产代码 0 命中（测试仅留 4 处迁移断言）；真机验证到点直跑 + 新前缀会话名生效；双门 0 差异 + 门禁全绿（26 条）+ 装机 0.4.11 冒烟通过 78c5392
+
 ## [0.4.10](///compare/v0.4.9...v0.4.10) (2026-10-16)
 
 ### Features
