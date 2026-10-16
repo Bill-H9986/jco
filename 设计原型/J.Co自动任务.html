@@ -956,8 +956,14 @@
           toast(t.on ? '「' + t.name + '」已启动' : '「' + t.name + '」先暂停了')
         })
         el.querySelector('.tk-run').addEventListener('click', function () {
-          try { sessionStorage.setItem('jco-handoff', '现在就跑一遍「' + t.name + '」：' + t.desc + '。') } catch (e) {}
-          location.href = 'J.Co总管.html'
+          if (!(window.jco && window.jco.tasks && window.jco.tasks.run)) {
+            toast('这个功能在桌面应用里可用（浏览器直开是演示模式）。');
+            return;
+          }
+          window.jco.tasks.run(t.id).then(function (r) {
+            if (r && r.ok) toast('「' + t.name + '」已开跑，跑完通知你。');
+            else toast((r && r.error) || '没跑起来，稍后再试。');
+          }).catch(function () { toast('没跑起来，稍后再试。'); });
         })
         list.appendChild(el)
       })

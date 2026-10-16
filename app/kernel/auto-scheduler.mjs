@@ -36,6 +36,48 @@ export function createAutoScheduler(deps) {
     return s.length > SUMMARY_MAX ? s.slice(0, SUMMARY_MAX) + '…' : s
   }
 
+  /**
+   * 启动一次执行（唯一执行管道）：fire-and-forget，跑完写记录 + 通知。
+   * tick（到点）与 runNow（马上跑）都走这里——同一件事，只有触发者不同。
+   */
+  function launch(task, due) {
+    running.add(task.id)
+    Promise.resolve()
+      .then(() => execute(task, due))
+      .then((result) => {
+        const ok = Boolean(result && result.ok)
+        const record = {
+          lastRunAt: now(),
+          dueAt: due,
+          ok,
+          summary: brief((result && result.summary) || (ok ? '跑完了' : '没跑成')),
+        }
+        saveRun(task.id, record)
+        try {
+          notify(task, record)
+        } catch (error) {
+          /* 通知失败不影响记录 */
+        }
+      })
+      .catch((error) => {
+        const message = String((error && error.message) || error)
+        const record = { lastRunAt: now(), dueAt: due, ok: false, summary: brief('调度出错：' + message) }
+        try {
+          saveRun(task.id, record)
+        } catch (saveError) {
+          /* 记录失败也不影响心跳 */
+        }
+        try {
+          notify(task, record)
+        } catch (notifyError) {
+          /* 忽略 */
+        }
+      })
+      .finally(() => {
+        running.delete(task.id)
+      })
+  }
+
   async function tick() {
     let tasks = []
     let runs = {}
@@ -50,43 +92,19 @@ export function createAutoScheduler(deps) {
       if (running.has(task.id)) continue
       const due = shouldRun(task, now(), runs[task.id] && runs[task.id].lastRunAt)
       if (due === null) continue
-      running.add(task.id)
-      // fire-and-forget：执行长跑不阻塞本 tick 的其它任务
-      Promise.resolve()
-        .then(() => execute(task, due))
-        .then((result) => {
-          const ok = Boolean(result && result.ok)
-          const record = {
-            lastRunAt: now(),
-            dueAt: due,
-            ok,
-            summary: brief((result && result.summary) || (ok ? '跑完了' : '没跑成')),
-          }
-          saveRun(task.id, record)
-          try {
-            notify(task, record)
-          } catch (error) {
-            /* 通知失败不影响记录 */
-          }
-        })
-        .catch((error) => {
-          const message = String((error && error.message) || error)
-          const record = { lastRunAt: now(), dueAt: due, ok: false, summary: brief('调度出错：' + message) }
-          try {
-            saveRun(task.id, record)
-          } catch (saveError) {
-            /* 记录失败也不影响心跳 */
-          }
-          try {
-            notify(task, record)
-          } catch (notifyError) {
-            /* 忽略 */
-          }
-        })
-        .finally(() => {
-          running.delete(task.id)
-        })
+      launch(task, due)
     }
+  }
+
+  /**
+   * 立即执行（「马上跑」）：与到点同一条管道。
+   * @returns true=已开跑；false=这个任务正在跑（拒绝并发）
+   */
+  function runNow(task) {
+    if (!task || typeof task !== 'object' || typeof task.id !== 'string' || task.id === '') return false
+    if (running.has(task.id)) return false
+    launch(task, now())
+    return true
   }
 
   function start() {
@@ -103,5 +121,5 @@ export function createAutoScheduler(deps) {
     }
   }
 
-  return { start, stop, tick }
+  return { start, stop, tick, runNow }
 }

@@ -627,6 +627,18 @@ ipcMain.handle('tasks:sync', (_event, payload) => {
 
 ipcMain.handle('tasks:runs:get', () => ({ runs: autoRuns.runs || {} }))
 
+// 「马上跑」（M7 统一）：与到点走同一条执行管道（TaskRunner）——不再跳总管聊天。
+// 立即返回"已开跑"；执行在后台进行（跑完写记录 + 通知），同一任务并发时拒绝。
+ipcMain.handle('tasks:run', (_event, payload) => {
+  const id = payload && typeof payload.id === 'string' ? payload.id : ''
+  if (id === '') return { ok: false, error: '没给任务' }
+  if (!autoScheduler) return { ok: false, error: '调度器还没就绪，稍后再试' }
+  const task = readAutoTasks().find((t) => t && t.id === id)
+  if (!task) return { ok: false, error: '任务不存在（先在自动任务页建好它）' }
+  const started = autoScheduler.runNow(task)
+  return started ? { ok: true } : { ok: false, error: '这个任务正在跑，跑完再看' }
+})
+
 // 测试模式：用独立的临时数据目录，避免和正在使用的 J.Co 抢单实例锁
 // （名字加随机段：防 pid 复用时读到上一个测试实例残留的 profile——2026-10-16 全量 E2E 偶发"读到旧侧栏状态"的教训）
 if (process.argv.includes('--jco-test')) {

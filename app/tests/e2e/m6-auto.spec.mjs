@@ -175,3 +175,41 @@ test('团队页：自动任务干活时汇报区显示任务名（员工卡不�
     await app.close()
   }
 })
+
+test('自动任务页：「马上跑」并入唯一执行管道（不跳页、提示已开跑）', async () => {
+  // 备份现场（进页会自动同步任务表；执行会写记录——测试后恢复）
+  let tasksBak = null
+  let runsBak = null
+  try {
+    tasksBak = fs.readFileSync(TASKS_FILE, 'utf8')
+  } catch {}
+  try {
+    runsBak = fs.readFileSync(RUNS_FILE, 'utf8')
+  } catch {}
+  const app = await electron.launch({ executablePath: ELECTRON_BIN, args: [APP_DIR, '--jco-test'] })
+  try {
+    const win = await app.firstWindow()
+    const errors = []
+    win.on('pageerror', (e) => errors.push(String(e.message).slice(0, 200)))
+    await win.waitForTimeout(2500)
+    await win.evaluate(() => {
+      window.location.href = 'J.Co自动任务.html'
+    })
+    await win.waitForTimeout(1300)
+    // 点第一个任务的「马上跑」→ 立即提示"已开跑"，且不跳页（M7：与到点同一条管道）
+    await win.locator('.task .tk-run').first().click()
+    await win.waitForTimeout(250)
+    const toastText = await win.locator('#toast').textContent()
+    expect(toastText).toContain('已开跑')
+    expect(decodeURIComponent(win.url())).toContain('自动任务') // 不再跳总管
+    expect(errors, `JS 错误：\n${errors.join('\n')}`).toEqual([])
+  } finally {
+    await app.close()
+    try {
+      if (tasksBak === null) fs.rmSync(TASKS_FILE, { force: true })
+      else fs.writeFileSync(TASKS_FILE, tasksBak, 'utf8')
+      if (runsBak === null) fs.rmSync(RUNS_FILE, { force: true })
+      else fs.writeFileSync(RUNS_FILE, runsBak, 'utf8')
+    } catch {}
+  }
+})
