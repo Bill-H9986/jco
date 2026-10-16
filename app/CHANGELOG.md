@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.4.14](///compare/v0.4.13...v0.4.14) (2026-10-16)
+
+### Features
+
+* **m7:** 首页收口·入口区文案统一——去"抖音和视频号"多平台旧承诺（对齐真实链路：抖音优先）、去时长承诺（"大约 2 分钟"）、去假数（"2 条视频已就绪"/"5 条待回复"）；E2E 断言加强 + 双门 0 差异 + preflight 0 违规 + 门禁全绿（27 条）+ 装机 0.4.14 冒烟通过；全站 17 页 16 页全真（仅后期待方向） d85e0ce
+
 ## [0.4.13](///compare/v0.4.12...v0.4.13) (2026-10-16)
 
 ### Bug Fixes
