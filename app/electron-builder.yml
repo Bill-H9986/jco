@@ -2,6 +2,8 @@
 # 完整打包（内置 DSH 运行时、首次启动引导）在 M3 完成。
 appId: com.jco.desktop
 productName: J.Co
+# 用本地已安装的 Electron（node_modules/electron/dist）：打包不再走网络下载，稳定可复现
+electronDist: node_modules/electron/dist
 # 不重编译原生模块：DSH 内核依赖（koffi / node-pty 等）使用随包预编译二进制，
 # 与开发模式（已验证可用）保持完全一致；重编译需要 VS 工具链且无必要。
 npmRebuild: false
