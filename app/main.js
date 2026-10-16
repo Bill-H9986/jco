@@ -626,10 +626,24 @@ function notifyTaskResult(rec) {
   try {
     if (process.argv.includes('--jco-test')) return // 测试模式不弹通知
     if (!Notification.isSupported()) return
-    new Notification({
+    const n = new Notification({
       title: rec.state === 'done' ? '「' + rec.name + '」跑完了' : '「' + rec.name + '」没跑成',
       body: clipSafe(String(rec.summary || ''), 120),
-    }).show()
+    })
+    // R7（对抗审查落地）：点击通知 → 唤醒窗口并直达该任务的"任务视图"
+    // 复用总管页的既有消费链：在总管页 → 直接调钩子打开；在其它页 → 走 jco-open-task + 跳转
+    n.on('click', () => {
+      try {
+        showMainWindow()
+        const win = BrowserWindow.getAllWindows()[0]
+        if (!win) return
+        const boot = `(function(){ try { var id = ${JSON.stringify(rec.id)}; if (typeof window.__jcoOpenTaskById === 'function') { window.__jcoOpenTaskById(id); } else { sessionStorage.setItem('jco-open-task', id); location.href = 'J.Co总管.html'; } } catch (e) {} })()`
+        win.webContents.executeJavaScript(boot).catch(() => {})
+      } catch (error) {
+        /* 打开失败无碍 */
+      }
+    })
+    n.show()
   } catch (error) {
     /* 通知失败无碍 */
   }

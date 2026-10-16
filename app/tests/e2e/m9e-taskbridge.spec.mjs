@@ -118,6 +118,10 @@ test('任务会话桥：jco-open-task 落地自动打开任务视图（发布页
     // 消费后 jco-open-task 已清（不会重复打开）
     const left = await win.evaluate(() => sessionStorage.getItem('jco-open-task'))
     expect(left).toBe(null)
+    // 系统通知点击路径（R7）：总管页钩子直接打开任务视图（不用重载）
+    await win.evaluate(() => window.__jcoOpenTaskById('f123'))
+    await win.waitForTimeout(700)
+    await expect(win.locator('#chat .stream .daymark').last()).toContainText('任务视图 · 发到「抖音」测试')
     expect(errors, `JS 错误：\n${errors.join('\n')}`).toEqual([])
   } finally {
     await app.close()

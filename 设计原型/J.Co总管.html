@@ -797,6 +797,8 @@
       }
       refreshTasks();
       consumeOpenTask();
+      // 供系统通知点击直达（主进程 executeJavaScript 调用；对抗审查 R7）
+      window.__jcoOpenTaskById = function (id) { if (id) openTaskView(String(id)); };
     })();
 
     /** 真模式：右侧「等你拍板」+「今天的安排」用本地真实状态渲染 */
