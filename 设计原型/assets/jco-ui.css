@@ -853,3 +853,14 @@ html:not(.side-pinned) .side-foot .icon-btn { opacity: 0; pointer-events: none; 
 
 .convo-rename:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
 
+
+/* ===== 演示标记条（M7：未真化页面的诚实声明；真化完成即摘除） ===== */
+.demo-note {
+    display: flex; align-items: center; gap: 8px;
+    margin-bottom: 14px; padding: 10px 14px;
+    border-radius: 12px;
+    background: var(--tint); color: var(--text-2);
+    font-size: 13px;
+  }
+
+.demo-note .ti { flex: none; font-size: 15px; color: var(--text-3); }
