@@ -133,3 +133,40 @@ test('创作页：接住「选题」带过来的主题 / 无题空态 / 真稿�
     await app.close()
   }
 })
+
+test('创作页：提词器（全屏照念 / 逐句 / Esc 退出）真功能回归', async () => {
+  const app = await electron.launch({ executablePath: ELECTRON_BIN, args: [APP_DIR, '--jco-test'] })
+  try {
+    const win = await app.firstWindow()
+    const errors = []
+    win.on('pageerror', (e) => errors.push(String(e.message).slice(0, 200)))
+    await win.waitForTimeout(2500)
+    await win.evaluate(() => {
+      localStorage.setItem(
+        'jco-script-v1',
+        JSON.stringify({
+          topic: '提词器测试',
+          lines: ['第一句：开场。', '第二句：展开。', '第三句：收尾。'],
+          xhs: false,
+          t: Date.now(),
+        }),
+      )
+    })
+    await win.evaluate(() => {
+      window.location.href = 'J.Co工作台-创作.html'
+    })
+    await win.waitForTimeout(1300)
+    await win.locator('button:has-text("送去提词器")').click()
+    await expect(win.locator('#prompter')).toBeVisible()
+    await expect(win.locator('#prView .pr-line')).toHaveCount(3)
+    await expect(win.locator('#prView .pr-line.now')).toContainText('第一句')
+    await expect(win.locator('#prProgress')).toContainText('1 / 3')
+    await win.locator('#prNext').click()
+    await expect(win.locator('#prView .pr-line.now')).toContainText('第二句')
+    await win.keyboard.press('Escape')
+    await expect(win.locator('#prompter')).toBeHidden()
+    expect(errors, `JS 错误：\n${errors.join('\n')}`).toEqual([])
+  } finally {
+    await app.close()
+  }
+})
