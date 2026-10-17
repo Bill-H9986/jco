@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.4.16](///compare/v0.4.15...v0.4.16) (2026-10-17)
+
+### Bug Fixes
+
+* **e2e:** 测试数据正本清源——--jco-test 的 kernel 运行数据（skills/auto-tasks/auto-runs/task-sessions）隔离到独立临时目录（main.js kernelDataPath，替代仅靠护栏兜底）；E2E 三 spec 预置路径同步迁移 + qa 真机脚本 9 个同步迁移（qa-9f 真机验证通过）+ teardown 清隔离目录；开发目录经核验零残留；门禁全绿（27 条）；产品行为零影响（0.4.15 不装机） cfa8c84
+* **e2e:** E2E 全局数据护栏（卫生修复）——测试经 tasks:sync/skills:sync 写开发目录 kernel 运行数据，曾把种子任务留在 auto-tasks.json（开发模式会被调度器误跑）；新增 globalSetup/globalTeardown 跑测前后备份/恢复（auto-tasks/auto-runs/skills/task-sessions 一次覆盖全部测试）+ 清理现存残留；门禁全绿（27 条，日志可见"已恢复"）；无产品代码改动保持 0.4.15 1efae40
+* **pack:** 打包排除运行时数据（防"装完即自动跑"）——electron-builder 曾把 kernel/auto-tasks.json 等运行时产物打进包，用户装完即带着 3 条启用中的出厂预设任务（09:00/12:00/19:20 到点自动跑）；现排除 auto-tasks/auto-runs/task-sessions（人工验证 0.4.16 包内无此三项）+ 本机固化数据已清（明早误跑风险解除）+ 出厂预设语义改"第一次打开该页才播种生效"；装机 0.4.16 冒烟通过 + 门禁全绿（28 条）；经验总结 +19、登记"预设是否默认启用"待拍板 644839c
+
 ## [0.4.15](///compare/v0.4.14...v0.4.15) (2026-10-16)
 
 ### Features
