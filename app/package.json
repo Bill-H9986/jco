@@ -1,7 +1,7 @@
 {
   "name": "jco",
   "productName": "J.Co",
-  "version": "0.4.17",
+  "version": "0.5.0-beta.1",
   "description": "J.Co · 自媒体管家（桌面版）",
   "author": "Jay",
   "main": "main.js",

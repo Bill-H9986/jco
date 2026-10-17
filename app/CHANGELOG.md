@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.5.0-beta.1](///compare/v0.4.16...v0.5.0-beta.1) (2026-10-17)
+
+### Features
+
+* **m9:** 后期页 AI 代劳落地（开发版验证轮）——AI 剪辑间：选成片→跟 AI 说怎么改→唯一任务管道（staff=post）→总管任务视图看它干活；新增 jco-edit-tools 插件六工具（列成片/看信息/烧字幕/配音乐/裁剪/拼接，ffmpeg，路径守卫+不覆盖原件），六工具真实 ffmpeg 端到端通过（字幕 3.02s/混音 3s/裁剪 2.04s/拼接 5.07s）；团队页 post 点亮+动作文案；全站零演示页 E2E、后期页结构 E2E；按产品负责人指令暂停自动推进与打包（开发版运行中） 2d35a2b
+
+### Bug Fixes
+
+* **beta:** 收口安全点击、发布页真实登录态与设置接线 0c45636
+
 ## [0.4.16](///compare/v0.4.15...v0.4.16) (2026-10-17)
 
 ### Bug Fixes
