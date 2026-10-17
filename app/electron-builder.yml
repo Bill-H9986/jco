@@ -28,6 +28,9 @@ files:
   - "!kernel/edit-tools.patch.yml"
   - publish/**
   - dist/**
+  # DSH 的部分运行时 peer 依赖不会被 electron-builder 的默认依赖树收进来；
+  # 这里显式纳入完整 @deepseek-ai 包集合，避免安装版内核启动缺包。
+  - node_modules/@deepseek-ai/**
 asarUnpack:
   - "kernel/**"
   - "node_modules/@deepseek-ai/**"
