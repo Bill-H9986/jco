@@ -17,6 +17,12 @@ files:
   - "!kernel/model-config.json"
   - "!kernel/dynamic-model.patch.yml"
   - "!kernel/publish-session.json"
+  # 运行时数据（运行中由应用/页面写入）——不进安装包。
+  # 2026-10-17 修复：曾把 E2E 写进开发目录的种子任务打进包，用户装完即带着
+  # 3 条启用中的自动任务（到点会真的自动跑）——教训：一切"运行时产物"必须排除。
+  - "!kernel/auto-tasks.json"
+  - "!kernel/auto-runs.json"
+  - "!kernel/task-sessions/**"
   - publish/**
   - dist/**
 asarUnpack:
