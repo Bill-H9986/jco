@@ -190,6 +190,46 @@ ipcMain.handle('sys:save-asset', async (_event, payload) => {
 })
 
 // 用系统浏览器打开链接（只放行 https；用于平台登录页等）
+/** 成片目录（素材库）——后期与做视频共用 */
+function assetsDirPath() {
+  const dir = readSettings().assetsDir || path.join(app.getPath('userData'), 'assets')
+  fs.mkdirSync(dir, { recursive: true })
+  return dir
+}
+/** 后期工具配置（M9 后期·AI 代劳）：成片目录 + ffmpeg 路径；bridge 生成 patch 时读 */
+function writeEditToolsConfig() {
+  try {
+    const ffmpegPath = kernelUnpackedPath(String(require('@ffmpeg-installer/ffmpeg').path || ''))
+    const file = kernelUnpackedPath(path.join(__dirname, 'kernel', 'edit-tools.json'))
+    fs.writeFileSync(file, JSON.stringify({ assetsDir: assetsDirPath(), ffmpeg: ffmpegPath }), 'utf8')
+  } catch (error) {
+    console.warn('[edit] 后期工具配置写入失败：' + String((error && error.message) || error))
+  }
+}
+/** 列成片目录（后期页「手头成片」/做视频「手头素材」共用） */
+ipcMain.handle('sys:list-assets', () => {
+  try {
+    const dir = assetsDirPath()
+    const files = fs
+      .readdirSync(dir)
+      .filter((f) => /\.(mp4|mov|m4v|mkv|webm|avi|mp3|m4a|wav|aac|flac|ogg)$/i.test(f))
+      .map((f) => {
+        try {
+          const st = fs.statSync(path.join(dir, f))
+          return { name: f, sizeKB: Math.round(st.size / 1024), modified: st.mtimeMs }
+        } catch {
+          return null
+        }
+      })
+      .filter(Boolean)
+      .sort((a, b) => b.modified - a.modified)
+      .slice(0, 100)
+    return { ok: true, dir, files }
+  } catch (error) {
+    return { ok: false, error: String((error && error.message) || error) }
+  }
+})
+// 用系统浏览器打开链接（只放行 https；用于平台登录页等）
 ipcMain.handle('sys:open-external', (_event, url) => {
   try {
     const u = String(url || '')
@@ -966,6 +1006,8 @@ if (!gotLock) {
     startAutoScheduler().catch(() => {})
     // 任务会话（M7 桥）：加载历史任务台账（重启后任务列表/回看不丢）
     loadTaskSessions()
+    // 后期工具（M9 后期·AI 代劳）：写成片目录与 ffmpeg 配置（bridge 生成工具 patch 时读）
+    writeEditToolsConfig()
     app.on('activate', () => {
       if (BrowserWindow.getAllWindows().length === 0) createWindow()
     })

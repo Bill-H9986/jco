@@ -524,7 +524,7 @@
           'J.Co工作台-创作.html': { kind: 'create', idle: '今天还没写稿，去创作页出一篇' },
           'J.Co工作台-做视频.html': { kind: 'shot', idle: '今天还没出分镜，去排一条' },
           'J.Co工作台-发布.html': { kind: 'publish', idle: '还没有发布记录' },
-          'J.Co工作台-后期.html': { kind: null, idle: '剪辑工具还没接上，暂时无活' },
+          'J.Co工作台-后期.html': { kind: null, idle: '等我改片：说一句要什么，我动手' },
           'J.Co工作台-运营.html': { kind: null, idle: '平台数据还没接上，暂时无活' },
         };
         document.querySelectorAll('.staff').forEach(function (card) {
@@ -599,7 +599,7 @@
         var kernel = (typeof window.jco !== 'undefined' && window.jco && window.jco.kernel) ? window.jco.kernel : null;
         if (!kernel || typeof kernel.onActivity !== 'function') return; // 浏览器直开：保留静态演示
 
-        var STAFF_HREF = { publish: 'J.Co工作台-发布.html', ops: 'J.Co工作台-运营.html' };
+        var STAFF_HREF = { publish: 'J.Co工作台-发布.html', ops: 'J.Co工作台-运营.html', post: 'J.Co工作台-后期.html' };
         var ACT_LABEL = {
           jco_open_page: '正在打开平台页面',
           jco_snapshot: '正在看页面元素',
@@ -611,7 +611,13 @@
           jco_wait_for: '正在操作页面',
           jco_screenshot: '正在截图诊断',
           jco_save_report: '正在整理战报',
-          jco_save_comments: '正在整理评论'
+          jco_save_comments: '正在整理评论',
+          jco_list_assets: '正在挑成片',
+          jco_probe_video: '正在看成片信息',
+          jco_add_subtitles: '正在烧字幕',
+          jco_add_music: '正在配音乐',
+          jco_trim: '正在剪片',
+          jco_concat: '正在拼接成片'
         };
         var IDLE_MS = 180000; // 3 分钟无事件自动回落（内核卡死 / 重启时防"假在忙"）
 

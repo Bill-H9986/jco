@@ -164,6 +164,8 @@ contextBridge.exposeInMainWorld('jco', {
     login: (enable) => ipcRenderer.invoke('sys:login', !!enable),
     getLogin: () => ipcRenderer.invoke('sys:login:get'),
     clean: () => ipcRenderer.invoke('sys:clean'),
+    /** 列成片目录（后期页「手头成片」用） */
+    listAssets: () => ipcRenderer.invoke('sys:list-assets'),
     pickFiles: () => ipcRenderer.invoke('sys:pick-files'),
     pickFolder: () => ipcRenderer.invoke('sys:pick-folder'),
     /** 生成物落盘：{ kind:'image'|'video', dataUrl? , url?, ext? } → { ok, path } */

@@ -1,7 +1,7 @@
 {
   "name": "jco",
   "productName": "J.Co",
-  "version": "0.4.16",
+  "version": "0.4.17",
   "description": "J.Co · 自媒体管家（桌面版）",
   "author": "Jay",
   "main": "main.js",
@@ -29,6 +29,8 @@
   "dependencies": {
     "@deepseek-ai/dsh": "^0.2.0-rc.2",
     "@deepseek-ai/dsh-sdk-client": "^0.2.0-rc.2",
+    "@ffmpeg-installer/ffmpeg": "^1.1.0",
+    "@ffmpeg-installer/win32-x64": "^4.1.0",
     "playwright": "^1.64.1"
   }
 }

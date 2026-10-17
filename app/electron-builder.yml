@@ -23,11 +23,15 @@ files:
   - "!kernel/auto-tasks.json"
   - "!kernel/auto-runs.json"
   - "!kernel/task-sessions/**"
+  # 后期工具（M9 后期）：patch 与配置由应用启动时生成，不进包
+  - "!kernel/edit-tools.json"
+  - "!kernel/edit-tools.patch.yml"
   - publish/**
   - dist/**
 asarUnpack:
   - "kernel/**"
   - "node_modules/@deepseek-ai/**"
+  - "node_modules/@ffmpeg-installer/**"
   - "node_modules/koffi/**"
   - "node_modules/node-pty/**"
   - "publish/**"

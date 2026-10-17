@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>J.Co · 后期（剪辑台）</title>
+<title>J.Co · 后期（AI 剪辑间）</title>
   <link rel="stylesheet" href="./assets/jco-ui.css">
   <style>
 /* ============ 剪辑台 ============ */
@@ -48,7 +48,7 @@
 .export-btn {
     display: inline-flex; align-items: center; gap: 8px;
     height: 38px; padding: 0 20px; border: none; border-radius: 999px;
-    background: var(--accent); color: #ffffff; font-family: inherit;
+    background: var(--accent); color: var(--on-accent); font-family: inherit;
     font-size: 14px; font-weight: 500; cursor: pointer;
     transition: background 0.15s ease, transform 0.1s ease;
   }
@@ -258,6 +258,38 @@ body.tl-dragging .tl-body, body.tl-dragging .tl-body * { cursor: grabbing !impor
     .tool-rail { display: none; }
     .panel { display: none; }
   }
+/* ===== 后期 · AI 剪辑间（M9：AI 代劳） ===== */
+  .post-left { flex: none; width: 252px; border-right: 0.5px solid var(--line); display: flex; flex-direction: column; min-height: 0; background: var(--card); }
+  .post-left .tl-head { padding: 12px 14px 8px; display: flex; align-items: baseline; gap: 8px; }
+  .post-left .tl-head b { font-size: 13px; }
+  .asset-list { flex: 1; overflow: auto; padding: 4px 10px 12px; }
+  .asset-row { display: flex; align-items: center; gap: 8px; width: 100%; text-align: left; border: 1px solid transparent; background: transparent; border-radius: 10px; padding: 9px 10px; cursor: pointer; color: var(--text-2); font-family: inherit; }
+  .asset-row:hover { background: var(--hover); }
+  .asset-row.active { border-color: var(--line); background: var(--bg); color: var(--text-1); }
+  .asset-row .arname { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13px; }
+  .asset-row .armeta { font-size: 11.5px; color: var(--text-3); }
+  .asset-empty { padding: 14px 10px; font-size: 12.5px; color: var(--text-3); line-height: 1.7; }
+  .pv-big#pvBig2 { position: relative; overflow: hidden; padding: 0; }
+  #pv { width: 100%; height: 100%; object-fit: contain; display: none; }
+  #pv.show { display: block; }
+  .pv-empty { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: var(--text-3); font-size: 13px; }
+  .post-panel { display: flex; flex-direction: column; gap: 8px; padding: 12px; height: 100%; box-sizing: border-box; overflow: auto; }
+  .pp-title { font-size: 13px; font-weight: 600; color: var(--text-1); }
+  .post-panel textarea { width: 100%; box-sizing: border-box; resize: vertical; min-height: 64px; border: 1px solid var(--line); border-radius: 10px; padding: 9px 10px; font: inherit; font-size: 13px; background: var(--bg); color: var(--text-1); outline: none; }
+  .post-panel textarea:focus { border-color: var(--accent); }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chip { border: 1px solid var(--line); background: transparent; color: var(--text-2); border-radius: 999px; padding: 4px 10px; font-size: 12px; cursor: pointer; font-family: inherit; }
+  .chip:hover { color: var(--text-1); border-color: var(--text-3); }
+  .go-btn { border: none; border-radius: 10px; padding: 9px 12px; font-size: 13px; cursor: pointer; background: var(--accent); color: var(--on-accent); font-family: inherit; }
+  .go-btn:hover { background: var(--accent-strong); }
+  .go-btn:disabled { opacity: 0.5; cursor: default; }
+  .pp-note { font-size: 12px; color: var(--text-3); line-height: 1.6; }
+  #recent { display: flex; gap: 10px; padding: 10px 14px; overflow-x: auto; min-height: 64px; align-items: flex-start; }
+  .recent-item { flex: none; width: 168px; border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; cursor: pointer; background: var(--card); text-align: left; font-family: inherit; }
+  .recent-item:hover { border-color: var(--text-3); }
+  .recent-item b { display: block; font-size: 12px; color: var(--text-1); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .recent-item span { font-size: 11px; color: var(--text-3); }
+
   </style>
 <script>
   /* 提前恢复侧栏展开状态，避免页面加载时闪一下 */
@@ -315,40 +347,45 @@ body.tl-dragging .tl-body, body.tl-dragging .tl-body * { cursor: grabbing !impor
     <div class="editor">
       <div class="toolbar">
         <span class="logo">J</span>
-        <span class="tname">后期 · 剪辑台</span>
-        <span class="tfile">《成人高考报名其实就 3 步，看完不踩坑》</span>
+        <span class="tname">后期 · AI 剪辑间</span>
+        <span class="tfile" id="postHint">你只说要什么，AI 动手改</span>
         <span class="sp"></span>
-        <button class="tbtn" onclick="showToast('（原型示意）撤销上一步操作。')"><span class="ti ti-arrow-back-up"></span>撤销</button>
-        <button class="tbtn" onclick="showToast('（原型示意）重做。')"><span class="ti ti-arrow-forward-up"></span>重做</button>
-        <button class="tbtn" onclick="splitSel()"><span class="ti ti-scissors"></span>分割</button>
-        <button class="tbtn danger" onclick="delSel()"><span class="ti ti-trash"></span>删除</button>
-        <button class="export-btn" onclick="showToast('（原型示意）导出终版，然后直接进入「发布」。')">导出终版<span class="ti ti-arrow-right"></span></button>
+        <button class="tbtn" id="refreshAssets"><span class="ti ti-refresh"></span>刷新成片</button>
+        <button class="export-btn" onclick="location.href='J.Co工作台-发布.html'">改完去发布<span class="ti ti-arrow-right"></span></button>
       </div>
 
-      <div class="demo-note"><span class="ti ti-info-circle"></span>演示版：这块还没接上真实数据（正在做）。做好后，这里就是真的。</div>
-
       <div class="mid">
-        <div class="tool-rail">
-          <button class="rail-btn" onclick="showToast('（原型示意）从素材箱拖视频素材进时间轴。')"><span class="ti ti-video"></span>视频</button>
-          <button class="rail-btn" onclick="showToast('（原型示意）从这里加配音、音乐、音效。')"><span class="ti ti-music"></span>音频</button>
-          <button class="rail-btn" onclick="showToast('（原型示意）加字幕/标题模板，或自动识别字幕。')"><span class="ti ti-file-text"></span>文本</button>
-          <button class="rail-btn" onclick="showToast('（原型示意）加贴纸（价格牌、招生标）。')"><span class="ti ti-sticker"></span>贴纸</button>
-          <button class="rail-btn" onclick="showToast('（原型示意）加特效。')"><span class="ti ti-sparkles"></span>特效</button>
-          <button class="rail-btn" onclick="showToast('（原型示意）套滤镜调色。')"><span class="ti ti-wand"></span>滤镜</button>
-          <button class="rail-btn" onclick="showToast('（原型示意）加转场。')"><span class="ti ti-arrows-shuffle"></span>转场</button>
+        <div class="post-left">
+          <div class="tl-head"><b>手头成片</b><span class="sp"></span><span class="tlhint" id="assetCount"></span></div>
+          <div class="asset-list" id="assetList"></div>
         </div>
-
         <div class="stage-c">
-          <div class="pv-big" id="pvBig" onclick="showToast('（原型示意）点这里从头播一遍。')">
-            <span class="ti ti-player-play"></span>
-            <span class="subline" id="pvSub">别被网上那些流程吓到。</span>
+          <div class="pv-big" id="pvBig2">
+            <video id="pv" controls playsinline></video>
+            <div class="pv-empty" id="pvEmpty">左边选一条成片，这里就能预览</div>
           </div>
-          <div class="timebar">
-            <button class="play-btn" onclick="showToast('（原型示意）从头播放整片。')" aria-label="播放"><span class="ti ti-player-play"></span></button>
-            <span class="num" id="nowTime">00:12</span>
-            <span>/</span>
-            <span class="num" id="totalTime">01:20</span>
+        </div>
+        <div class="panel" id="panel">
+          <div class="post-panel">
+            <div class="pp-title">跟 AI 说怎么改</div>
+            <textarea id="askInp" rows="3" placeholder="例如：加上字幕；配一段轻快的音乐；剪掉开头 2 秒；把这两条接起来"></textarea>
+            <div class="chips">
+              <button class="chip" type="button" data-fill="给这条片子加上字幕，字幕用分镜里的台词">加字幕</button>
+              <button class="chip" type="button" data-fill="给它配一段轻快的背景音乐，音量别盖过人声">配音乐</button>
+              <button class="chip" type="button" data-fill="剪掉开头 2 秒">剪掉开头</button>
+              <button class="chip" type="button" data-fill="把这条和另一条成片接成一条">拼接</button>
+            </div>
+            <button class="go-btn" id="askGo">让 AI 动手</button>
+            <div class="pp-note" id="postState">AI 全程代劳；你只看结果、不满意就继续说。</div>
           </div>
+        </div>
+      </div>
+
+      <div class="timeline">
+        <div class="tl-head"><b>最近产出</b><span class="sp"></span><span class="tlhint">AI 改完的成片在这里，点开可预览 / 继续改</span></div>
+        <div class="tl-body" id="recent"></div>
+      </div>
+    </div>
         </div>
 
         <div class="panel" id="panel"></div>
@@ -396,9 +433,6 @@ body.tl-dragging .tl-body, body.tl-dragging .tl-body * { cursor: grabbing !impor
   <script>
     const $ = (id) => document.getElementById(id);
     const toastEl = $('toast');
-    const TOTAL = 80; // 秒
-    let playheadPct = 15;
-
     function showToast(msg) {
       toastEl.textContent = msg;
       toastEl.classList.add('show');
@@ -406,283 +440,131 @@ body.tl-dragging .tl-body, body.tl-dragging .tl-body * { cursor: grabbing !impor
       showToast.timer = setTimeout(() => toastEl.classList.remove('show'), 2800);
     }
 
-    /* ---------- 数据：五条轨道 ---------- */
-    const TRACKS = [
-      { id: 'video', name: '视频', color: 'v', clips: [
-        { id: 'v1', label: '开头钩子', w: 10 },
-        { id: 'v2', label: '承诺：就三步', w: 16 },
-        { id: 'v3', label: '第一步 定学校', w: 18 },
-        { id: 'v4', label: '第二步 备材料', w: 16 },
-        { id: 'v5', label: '第三步 填报', w: 14 },
-        { id: 'v6', label: '提醒截止', w: 14 },
-        { id: 'v7', label: '结尾引导', w: 12 },
-      ] },
-      { id: 'sub', name: '字幕', color: 's', clips: [
-        { id: 's1', label: '别被流程吓到', w: 10 },
-        { id: 's2', label: '其实就三步', w: 16 },
-        { id: 's3', label: '第一步…', w: 18 },
-        { id: 's4', label: '第二步…', w: 16 },
-        { id: 's5', label: '第三步…', w: 14 },
-        { id: 's6', label: '提醒：早半个月', w: 14 },
-        { id: 's7', label: '我是 J.Co…', w: 12 },
-      ] },
-      { id: 'voice', name: '配音', color: 'a', clips: [
-        { id: 'vo', label: '标准女声 · 全片', w: 100, lock: true },
-      ] },
-      { id: 'music', name: '音乐', color: 'm', clips: [
-        { id: 'mu', label: '励志轻快 · 音量 30%', w: 100, lock: true },
-      ] },
-      { id: 'end', name: '片尾', color: 'e', clips: [] },
-    ];
+    /* ---------- 后期 · AI 剪辑间（M9 后期：AI 全代劳） ---------- */
+    (function postRoom() {
+      var live = (typeof window.jco !== 'undefined' && window.jco && window.jco.tasks && window.jco.tasks.dispatch && window.jco.sys && window.jco.sys.listAssets) ? window.jco : null;
+      var assetsDir = '';
+      var assets = [];
+      var selName = '';
+      var busy = false;
 
-    let sel = null; // { track, clip }
+      function fmtKB(k) { return k > 1024 ? (k / 1024).toFixed(1) + ' MB' : k + ' KB'; }
+      function setState(t) { $('postState').textContent = t; }
+      function fileUrl(name) { return 'file:///' + encodeURI(assetsDir.replace(/\\/g, '/') + '/' + name); }
 
-    function isSel(t, c) { return sel && sel.track.id === t.id && sel.clip.id === c.id; }
-
-    function renderTracks() {
-      const el = $('tracks');
-      el.innerHTML = '';
-      TRACKS.forEach((t) => {
-        const track = document.createElement('div');
-        track.className = 'track';
-        track.innerHTML = `<span class="tname">${t.name}</span>`;
-        const clipsBox = document.createElement('div');
-        clipsBox.className = 'tclips';
-
-        if (t.id === 'end' && t.clips.length === 0) {
-          const addb = document.createElement('button');
-          addb.className = 'clip-add';
-          addb.textContent = '＋ 加片尾（报名二维码 / 联系方式）';
-          addb.addEventListener('click', (e) => {
-            e.stopPropagation();
-            t.clips.push({ id: 'e1', label: '报名二维码', w: 14 });
-            renderTracks();
-            select(t.id, 'e1');
-            showToast('片尾加好了：报名二维码。评论区真的有人扫。');
-          });
-          clipsBox.appendChild(addb);
-        } else {
-          t.clips.forEach((c) => {
-            const clip = document.createElement('div');
-            clip.className = 'clip ' + t.color + (isSel(t, c) ? ' on' : '');
-            clip.textContent = c.label;
-            clip.style.flex = c.w;
-            clip.addEventListener('click', (e) => {
-              e.stopPropagation();
-              const r = clipsBox.getBoundingClientRect();
-              playheadPct = Math.min(Math.max((e.clientX - r.left) / r.width, 0), 1) * 100;
-              updateTime();
-              select(t.id, c.id);
-            });
-            clipsBox.appendChild(clip);
-          });
-        }
-
-        clipsBox.addEventListener('click', (e) => {
-          if (e.target.closest('.clip') || e.target.closest('.clip-add')) return;
-          const r = clipsBox.getBoundingClientRect();
-          playheadPct = Math.min(Math.max((e.clientX - r.left) / r.width, 0), 1) * 100;
-          updateTime();
-          renderTracks();
-        });
-
-        track.appendChild(clipsBox);
-        el.appendChild(track);
-      });
-      placePlayhead();
-    }
-
-    /* 播放头：单条贯穿 + 跟随轨道区对齐 */
-    function placePlayhead() {
-      const ph = $('playhead');
-      const box = document.querySelector('.tclips');
-      const body = document.querySelector('.tl-body');
-      if (!ph || !box || !body) return;
-      const br = body.getBoundingClientRect();
-      const cr = box.getBoundingClientRect();
-      const x = (cr.left - br.left) + (playheadPct / 100) * cr.width;
-      ph.style.left = (x - 1) + 'px';
-    }
-
-    /* 拖拽扫看：按住轨道左右拖 = 快速过一遍 */
-    let tlDrag = null;
-    let suppressClick = false;
-    const tlBodyEl = document.querySelector('.tl-body');
-    if (tlBodyEl) {
-      tlBodyEl.addEventListener('pointerdown', function (e) {
-        if (e.button !== 0) return;
-        suppressClick = false;
-        tlDrag = { x0: e.clientX, y0: e.clientY, moved: false };
-        // 不在按下时捕获指针：否则点击落点会被重定向，片段的点击选不中
-        
-      });
-      tlBodyEl.addEventListener('pointermove', function (e) {
-        if (!tlDrag) return;
-        if (!tlDrag.moved && Math.abs(e.clientX - tlDrag.x0) + Math.abs(e.clientY - tlDrag.y0) > 4) {
-          tlDrag.moved = true;
-          document.body.classList.add('tl-dragging');
-          try { tlBodyEl.setPointerCapture(e.pointerId); } catch (err) {}
-        }
-        if (!tlDrag.moved) return;
-        const box = document.querySelector('.tclips');
-        if (!box) return;
-        const r = box.getBoundingClientRect();
-        playheadPct = Math.min(Math.max((e.clientX - r.left) / r.width, 0), 1) * 100;
-        updateTime();
-      });
-      tlBodyEl.addEventListener('pointerup', function (e) {
-        if (!tlDrag) return;
-        const moved = tlDrag.moved;
-        tlDrag = null;
-        document.body.classList.remove('tl-dragging');
-        try { tlBodyEl.releasePointerCapture(e.pointerId); } catch (err) {}
-        if (moved) suppressClick = true; // 拖动结束后吞掉这次 click
-      });
-      tlBodyEl.addEventListener('click', function (e) {
-        if (!suppressClick) return;
-        suppressClick = false;
-        e.stopPropagation();
-        e.preventDefault();
-      }, true);
-      window.addEventListener('resize', placePlayhead);
-    }
-
-    function fmt(sec) {
-      const m = String(Math.floor(sec / 60)).padStart(2, '0');
-      const s = String(Math.floor(sec % 60)).padStart(2, '0');
-      return m + ':' + s;
-    }
-
-    function updateTime() {
-      const now = (playheadPct / 100) * TOTAL;
-      const txt = fmt(now) + ' / ' + fmt(TOTAL);
-      $('tlTime').textContent = txt;
-      $('nowTime').textContent = fmt(now);
-      placePlayhead();
-    }
-
-    function select(trackId, clipId) {
-      const track = TRACKS.find((t) => t.id === trackId);
-      const clip = track.clips.find((c) => c.id === clipId);
-      sel = { track, clip };
-      renderTracks();
-      renderPanel();
-    }
-
-    function clearSel() { sel = null; renderTracks(); renderPanel(); }
-
-    /* ---------- 右侧属性面板 ---------- */
-    const VOICES = ['标准女声', '沉稳男声', '我自己录'];
-    const MUSICS = ['励志轻快', '舒缓叙述', '欢快活力', '不要音乐'];
-
-    function renderPanel() {
-      const p = $('panel');
-      if (!sel) {
-        p.innerHTML = '<h3>属性</h3><div class="pempty">点时间轴上的片段，这里就能改它；<br>选中后还能直接对 AI 说一句（比如“这段换画面”“这句字幕改一下”）。</div>';
-        return;
-      }
-      const { track, clip } = sel;
-      p.innerHTML = '';
-      const title = document.createElement('h3');
-      title.textContent = track.name + '片段 · ' + clip.label;
-      p.appendChild(title);
-
-      const dur = document.createElement('div');
-      dur.className = 'prow';
-      dur.innerHTML = '大约 <b>' + Math.round((clip.w / 100) * TOTAL) + ' 秒</b>';
-      p.appendChild(dur);
-
-      if (track.id === 'voice') {
-        const seg = document.createElement('div');
-        seg.className = 'seg';
-        VOICES.forEach((v) => {
-          const b = document.createElement('button');
-          b.textContent = v;
-          b.addEventListener('click', () => {
-            seg.querySelectorAll('button').forEach((x) => x.classList.remove('on'));
-            b.classList.add('on');
-            clip.label = v + ' · 全片';
-            renderTracks();
-            showToast('配音换成「' + v + '」，全片生效。');
-          });
-          seg.appendChild(b);
-        });
-        p.appendChild(seg);
-      } else if (track.id === 'music') {
-        const seg = document.createElement('div');
-        seg.className = 'seg';
-        MUSICS.forEach((m) => {
-          const b = document.createElement('button');
-          b.textContent = m;
-          b.addEventListener('click', () => {
-            seg.querySelectorAll('button').forEach((x) => x.classList.remove('on'));
-            b.classList.add('on');
-            clip.label = m === '不要音乐' ? '已静音' : m + ' · 音量 30%';
-            renderTracks();
-            showToast(m === '不要音乐' ? '整片静音了。' : '音乐换成「' + m + '」。');
-          });
-          seg.appendChild(b);
-        });
-        p.appendChild(seg);
-      } else if (track.id === 'end') {
-        const row = document.createElement('div');
-        row.className = 'pbtn-row';
-        const b1 = document.createElement('button');
-        b1.className = 'ghost';
-        b1.textContent = '换成联系方式';
-        b1.addEventListener('click', () => { clip.label = '联系方式'; renderTracks(); showToast('片尾换成「联系方式」。'); });
-        row.appendChild(b1);
-        p.appendChild(row);
-      } else {
-        const row = document.createElement('div');
-        row.className = 'pbtn-row';
-        const b1 = document.createElement('button');
-        b1.className = 'ghost';
-        b1.textContent = '换画面';
-        b1.addEventListener('click', () => showToast('（原型示意）从素材箱挑一件，替换这一段画面。'));
-        row.appendChild(b1);
-        p.appendChild(row);
+      function refresh() {
+        if (!live) { setState('桌面应用内可用（浏览器直开是演示模式）。'); return; }
+        live.sys.listAssets().then(function (r) {
+          if (!r || !r.ok) { setState((r && r.error) || '读不到成片目录'); return; }
+          assetsDir = r.dir || '';
+          var all = r.files || [];
+          assets = all.filter(function (f) { return f.name && /\.(mp4|mov|m4v|mkv|webm|avi)$/i.test(f.name); });
+          var audio = all.filter(function (f) { return f.name && !/\.(mp4|mov|m4v|mkv|webm|avi)$/i.test(f.name); }).length;
+          $('assetCount').textContent = assets.length ? assets.length + ' 条' + (audio ? ' · 音乐 ' + audio + ' 首' : '') : '还没有成片';
+          renderList();
+          renderRecent();
+        }).catch(function () { setState('读成片目录失败'); });
       }
 
-      const fix = document.createElement('div');
-      fix.className = 'fix-bar';
-      fix.innerHTML = '<span class="ti ti-wand"></span><input placeholder="对这段说一句：画面换掉 / 字幕改一下"><button class="ghost">改这里</button>';
-      fix.querySelector('button').addEventListener('click', () => {
-        const inp = fix.querySelector('input');
-        const v = inp.value.trim();
-        if (!v) { showToast('说一句想怎么改这段，比如：画面换成教室'); return; }
-        inp.value = '';
-        showToast('（原型示意）只改选中的这一段，其它段不动。');
-      });
-      p.appendChild(fix);
-    }
+      function renderList() {
+        var box = $('assetList');
+        box.innerHTML = '';
+        if (!assets.length) {
+          var empty = document.createElement('div');
+          empty.className = 'asset-empty';
+          empty.textContent = '成片目录还是空的。先去「做视频」出一条，或把视频文件放进成片目录。';
+          box.appendChild(empty);
+          return;
+        }
+        assets.forEach(function (a) {
+          var b = document.createElement('button');
+          b.type = 'button';
+          b.className = 'asset-row' + (a.name === selName ? ' active' : '');
+          b.innerHTML = '<span class="ti ti-video"></span><span class="arname"></span><span class="armeta"></span>';
+          b.querySelector('.arname').textContent = a.name;
+          b.querySelector('.armeta').textContent = fmtKB(a.sizeKB || 0);
+          b.addEventListener('click', function () { select(a.name); });
+          box.appendChild(b);
+        });
+      }
 
-    /* ---------- 顶栏操作 ---------- */
-    function splitSel() {
-      if (!sel) { showToast('先点选一个片段，再分割'); return; }
-      const { track, clip } = sel;
-      if (clip.lock) { showToast('配音和音乐是整条，不能切开'); return; }
-      const half = clip.w / 2;
-      clip.w = half;
-      const copy = { id: clip.id + '-b' + Date.now(), label: clip.label, w: half };
-      const arr = track.clips;
-      arr.splice(arr.indexOf(clip) + 1, 0, copy);
-      renderTracks();
-      select(track.id, copy.id);
-      showToast('已从这儿分割成两段，可以分别处理了。');
-    }
+      function select(name) {
+        selName = name;
+        renderList();
+        var pv = $('pv');
+        pv.src = fileUrl(name);
+        pv.classList.add('show');
+        $('pvEmpty').style.display = 'none';
+        setState('已选中「' + name + '」。跟 AI 说你想怎么改，它动手。');
+      }
 
-    function delSel() {
-      if (!sel) { showToast('先点选一个片段，再删除'); return; }
-      const arr = sel.track.clips;
-      arr.splice(arr.indexOf(sel.clip), 1);
-      clearSel();
-      showToast('删掉了。点上面的「撤销」能找回来。');
-    }
+      function renderRecent() {
+        var box = $('recent');
+        box.innerHTML = '';
+        if (!assets.length) {
+          var e = document.createElement('div');
+          e.className = 'asset-empty';
+          e.textContent = 'AI 改完的成片会出现在这里。';
+          box.appendChild(e);
+          return;
+        }
+        assets.slice(0, 10).forEach(function (a) {
+          var b = document.createElement('button');
+          b.type = 'button';
+          b.className = 'recent-item';
+          b.innerHTML = '<b></b><span></span>';
+          b.querySelector('b').textContent = a.name;
+          b.querySelector('span').textContent = fmtKB(a.sizeKB || 0) + ' · 点开预览';
+          b.addEventListener('click', function () { select(a.name); });
+          box.appendChild(b);
+        });
+      }
 
-    updateTime();
-    renderTracks();
-    renderPanel();
+      function dispatchEdit(text) {
+        if (busy || !live) return;
+        if (!text) { showToast('先说一句想怎么改'); return; }
+        if (!selName) { showToast('先在左边选一条成片'); return; }
+        var prompt = [
+          '这是后期任务（用户动嘴、你动手做视频后期）。用户想对成片「' + selName + '」做：' + text + '。',
+          '你有本地后期工具：jco_list_assets（列成片目录）、jco_probe_video（看时长/分辨率/有无音轨）、' +
+            'jco_add_subtitles（加字幕：file + lines 按顺序的句子数组；v1 时间按片长均分）、' +
+            'jco_add_music（配音乐：file + music + volume 0~1）、jco_trim（裁剪：file + start/end 秒）、' +
+            'jco_concat（拼接：files 数组）。',
+          '成片目录里的文件直接用文件名操作。音乐若用户还没提供，先在成片目录里找音频文件；没有就问用户要一首（放进成片目录）。',
+          '流程：先 probe 看清素材 → 按用户要求选工具（每次产出新文件、不覆盖原件）→ 做完用一句话说清改了什么、产物文件名。用户没要求的事不要做。'
+        ].join('\n');
+        busy = true;
+        $('askGo').disabled = true;
+        setState('已经派给 AI 了——自动跳到总管，你能看到它一步步干。');
+        live.tasks.dispatch({ name: '后期：' + text.slice(0, 16), prompt: prompt, staff: 'post' }).then(function (res) {
+          if (!res || !res.ok) { busy = false; $('askGo').disabled = false; showToast((res && res.error) || '派活失败，稍后再试'); return; }
+          try { sessionStorage.setItem('jco-open-task', res.taskId); } catch (e) {}
+          location.href = 'J.Co总管.html';
+        }).catch(function (err) {
+          busy = false;
+          $('askGo').disabled = false;
+          showToast('派活失败：' + ((err && err.message) || '稍后再试'));
+        });
+      }
+
+      var askGo = $('askGo');
+      var askInp = $('askInp');
+      if (askGo && askInp) {
+        askGo.addEventListener('click', function () { dispatchEdit(askInp.value.trim()); });
+        askInp.addEventListener('keydown', function (e) {
+          if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); dispatchEdit(askInp.value.trim()); }
+        });
+        document.querySelectorAll('.chip').forEach(function (chip) {
+          chip.addEventListener('click', function () {
+            askInp.value = chip.getAttribute('data-fill') || chip.textContent;
+            askInp.focus();
+          });
+        });
+      }
+      var refreshBtn = $('refreshAssets');
+      if (refreshBtn) refreshBtn.addEventListener('click', function () { refresh(); showToast('已刷新成片目录'); });
+      refresh();
+    })();
   </script>
   <script>
     /* ---------- 侧栏导航（原型可点通） ---------- */

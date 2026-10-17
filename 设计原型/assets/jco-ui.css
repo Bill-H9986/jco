@@ -401,6 +401,8 @@ html:not(.side-pinned) .side-foot .icon-btn { opacity: 0; pointer-events: none; 
     --line: rgba(0, 0, 0, 0.08);
     --accent: #0080ff;
     --accent-strong: #1a8cff;
+    /* accent（强调色）之上的文字色（按钮白字等）——设计 token，避免页面里硬编码 #fff */
+    --on-accent: #ffffff;
     --hover: rgba(15, 15, 15, 0.06);
     --picked: rgba(15, 15, 15, 0.10);
     --btn-2nd: rgba(0, 0, 0, 0.05);

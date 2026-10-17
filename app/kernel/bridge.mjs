@@ -32,6 +32,9 @@ const PATCH_PATH = toUnpacked(join(HERE, 'dynamic-model.patch.yml'))
 /** 固定携带：对话链路的工具面收口（禁掉 shell/文件/网页等干活工具） */
 const CHAT_PATCH_PATH = toUnpacked(join(HERE, 'jco-chat.patch.yml'))
 const PUBLISH_TOOLS_PATCH_PATH = toUnpacked(join(HERE, 'publish-tools.patch.yml'))
+/** 后期工具（M9 后期·AI 代劳）：patch 动态生成，配置来自 main.js 启动时写的 edit-tools.json */
+const EDIT_TOOLS_PATCH_PATH = toUnpacked(join(HERE, 'edit-tools.patch.yml'))
+const EDIT_TOOLS_CONFIG_PATH = toUnpacked(join(HERE, 'edit-tools.json'))
 /** 技能库同步来的清单（M5：界面为准、这里是从属）；缺失时技能段整体省略 */
 const SKILLS_PATH = toUnpacked(join(HERE, 'skills.json'))
 
@@ -54,6 +57,32 @@ function writePublishToolsPatch() {
   )
 }
 writePublishToolsPatch()
+
+/** 生成后期工具 patch：插件地址 + 成片目录 + ffmpeg 路径（每次 init 前刷新） */
+function writeEditToolsPatch() {
+  let cfg = {}
+  try {
+    cfg = JSON.parse(readFileSync(EDIT_TOOLS_CONFIG_PATH, 'utf8')) || {}
+  } catch {
+    cfg = {}
+  }
+  const pluginUrl = pathToFileURL(toUnpacked(join(HERE, 'edit-tools', 'index.mjs'))).href
+  const posix = (p) => String(p || '').replace(/\\/g, '/')
+  writeFileSync(
+    EDIT_TOOLS_PATCH_PATH,
+    [
+      '# J.Co 后期工具（AI 代劳）——由 J.Co 自动生成，勿手改',
+      '- insert:',
+      '    - id: jco-edit-tools',
+      `      name: '${pluginUrl}'`,
+      '      config:',
+      `        assetsDir: '${posix(cfg.assetsDir)}'`,
+      `        ffmpeg: '${posix(cfg.ffmpeg)}'`,
+      '',
+    ].join('\n'),
+    'utf8',
+  )
+}
 
 /** 内置 Agnes（全模态平台）的固定端点与默认模型 */
 export const AGNES_BUILTIN = {
@@ -372,6 +401,7 @@ async function ensure() {
     if (route.patch) writePatch(route.patch)
     currentRoute = route
     sessionId = makeSessionId()
+    writeEditToolsPatch()
     harness = new DeepSeekHarness({
       profile: 'sdk',
       provider: route.provider,
@@ -380,8 +410,8 @@ async function ensure() {
       // 传了会被拒绝：实测 "does not support reasoning effort"）
       ...(route.provider === 'deepseek-official' ? { reasoningEffort: 'low' } : {}),
       patches: route.patch
-        ? [CHAT_PATCH_PATH, PUBLISH_TOOLS_PATCH_PATH, PATCH_PATH]
-        : [CHAT_PATCH_PATH, PUBLISH_TOOLS_PATCH_PATH],
+        ? [CHAT_PATCH_PATH, PUBLISH_TOOLS_PATCH_PATH, EDIT_TOOLS_PATCH_PATH, PATCH_PATH]
+        : [CHAT_PATCH_PATH, PUBLISH_TOOLS_PATCH_PATH, EDIT_TOOLS_PATCH_PATH],
       initializeTimeoutMs: 60000,
       env: {
         ...process.env,
