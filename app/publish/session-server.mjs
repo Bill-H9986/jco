@@ -187,7 +187,10 @@ async function dispatch(toolName, args) {
       await page.waitForTimeout(350).catch(() => {})
       const escaped = externalPages()
       if (escaped.length > 0) {
-        const urls = escaped.map((item) => item.url()).slice(0, 3).join(' | ')
+        const urls = escaped
+          .map((item) => item.url())
+          .slice(0, 3)
+          .join(' | ')
         for (const item of escaped) {
           await item.close().catch(() => {})
         }

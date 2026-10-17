@@ -52,7 +52,9 @@ export const ALLOWED_UPLOAD_EXTS = Object.freeze(
 
 /** 返回拒绝原因；空串表示允许点击。 */
 export function clickGuardReason(label) {
-  const text = String(label || '').replace(/\s+/g, ' ').trim()
+  const text = String(label || '')
+    .replace(/\s+/g, ' ')
+    .trim()
   if (text === '') return ''
   if (DANGEROUS_CLICK_TEXT.test(text)) {
     return `为了安全，不能点击「${text.slice(0, 40)}」：发布 / 删除 / 支付类动作必须由用户亲手完成。`
