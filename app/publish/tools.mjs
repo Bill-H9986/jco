@@ -1,9 +1,9 @@
 // J.Co 发布引擎 · AI 操作工具集（AI 的"手"）
 // 设计依据：《AI 员工方法论与系统提示词规范》《AI 安全与数据安全规范》
 // 原则：白名单 + 原子化 + 最小权限。
-// 红线：本文件不提供"发布 / 删除 / 支付"类能力，也没有"执行任意代码"的能力——
-//       AI 再被诱导，能用的也只有下面 TOOLS 里这些。
-import { resolve } from 'node:path'
+// 红线：工具集不提供"发布 / 删除 / 支付"专用能力；通用 click 另做目标拦截，
+//       不能把安全只交给提示词。
+import { extname, resolve } from 'node:path'
 
 /** 白名单工具清单——增删必须过"安全评审清单"（见《AI 安全与数据安全规范》） */
 export const TOOLS = Object.freeze([
@@ -22,6 +22,48 @@ export const TOOLS = Object.freeze([
 export const DATA_TOOLS = Object.freeze(['save_report', 'save_comments'])
 
 const WAIT_MAX_MS = 10_000
+
+/** 不可逆 / 高风险点击目标：即使页面把按钮给了 AI，也不允许通用 click 点下去。 */
+const DANGEROUS_CLICK_TEXT = /发布|删除|移除|注销|解绑|支付|购买|确认订单|提交订单/
+
+/** 只允许上传媒体文件，避免模型被诱导把任意本机文件传上平台。 */
+export const ALLOWED_UPLOAD_EXTS = Object.freeze(
+  new Set([
+    '.mp4',
+    '.mov',
+    '.m4v',
+    '.mkv',
+    '.webm',
+    '.avi',
+    '.mp3',
+    '.m4a',
+    '.wav',
+    '.aac',
+    '.flac',
+    '.ogg',
+    '.jpg',
+    '.jpeg',
+    '.png',
+    '.webp',
+    '.bmp',
+    '.gif',
+  ]),
+)
+
+/** 返回拒绝原因；空串表示允许点击。 */
+export function clickGuardReason(label) {
+  const text = String(label || '').replace(/\s+/g, ' ').trim()
+  if (text === '') return ''
+  if (DANGEROUS_CLICK_TEXT.test(text)) {
+    return `为了安全，不能点击「${text.slice(0, 40)}」：发布 / 删除 / 支付类动作必须由用户亲手完成。`
+  }
+  return ''
+}
+
+/** 上传文件扩展名白名单（大小写不敏感）。 */
+export function isAllowedUploadPath(filePath) {
+  return ALLOWED_UPLOAD_EXTS.has(extname(String(filePath || '')).toLowerCase())
+}
 
 /** URL 是否在允许的域名白名单内（AI 只许在指定平台域名里活动） */
 export function isAllowedUrl(url, allowedDomains) {
@@ -93,7 +135,17 @@ export async function snapshot(page) {
 
 /** 按快照引用点击（Playwright 真实鼠标事件 + 自动滚动 + 可操作性检查） */
 export async function click(page, ref) {
-  await page.locator(`[data-jco-ref="${Number(ref)}"]`).click({ timeout: 8_000 })
+  const locator = page.locator(`[data-jco-ref="${Number(ref)}"]`)
+  const label = await locator.evaluate((el) =>
+    [el.innerText, el.textContent, el.getAttribute('aria-label'), el.getAttribute('title')]
+      .filter(Boolean)
+      .join(' ')
+      .replace(/\s+/g, ' ')
+      .trim(),
+  )
+  const reason = clickGuardReason(label)
+  if (reason !== '') throw new Error(reason)
+  await locator.click({ timeout: 8_000 })
 }
 
 /** 按快照引用输入文字（对 contenteditable 逐字键入，更像人） */
@@ -114,6 +166,9 @@ export async function typeText(page, ref, text) {
 export async function uploadFile(page, ref, filePath) {
   const locator = page.locator(`[data-jco-ref="${Number(ref)}"]`)
   const file = resolve(String(filePath))
+  if (!isAllowedUploadPath(file)) {
+    throw new Error('只允许上传视频、音频或图片文件；其他类型的本机文件不能交给 AI 上传。')
+  }
   const isFileInput = await locator.evaluate(
     (el) => el.tagName === 'INPUT' && (el.getAttribute('type') || '').toLowerCase() === 'file',
   )

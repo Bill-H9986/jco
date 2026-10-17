@@ -153,6 +153,7 @@ contextBridge.exposeInMainWorld('jco', {
         name: String((payload && payload.name) || ''),
         prompt: String((payload && payload.prompt) || ''),
         staff: String((payload && payload.staff) || ''),
+        platform: String((payload && payload.platform) || ''),
       }),
     sessions: () => ipcRenderer.invoke('tasks:sessions'),
     session: (id) => ipcRenderer.invoke('tasks:session:get', { id: String(id || '') }),

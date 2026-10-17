@@ -342,7 +342,7 @@
         <span class="no">3</span>
         <span class="tx">完成<small>登录态只留在这台电脑，长期有效</small></span>
       </div>
-      <div class="safe"><span class="ti ti-shield-lock"></span>你的账号密码我们从头到尾看不到，只保存"已登录"的状态。</div>
+      <div class="safe"><span class="ti ti-shield-lock"></span>你的账号密码我们从头到尾看不到，只保存你亲手确认过的本机登录登记。</div>
       <div class="sheet-acts">
         <button class="btn-cancel" id="sheetCancel">先不了</button>
         <button class="btn-cancel" id="sheetOpen">打开平台登录页</button>
@@ -388,7 +388,7 @@
       const login = loginLoad();
       const ok = PLATFORMS.filter((p) => login[p.id] && login[p.id].ok).length;
       const row = document.getElementById('statsRow');
-      row.innerHTML = '<b>' + PLATFORMS.length + ' 个平台</b><span class="sep">·</span><b>已登录 ' + ok + ' 个</b>' +
+      row.innerHTML = '<b>' + PLATFORMS.length + ' 个平台</b><span class="sep">·</span><b>已登记 ' + ok + ' 个</b>' +
         (ok < PLATFORMS.length
           ? '<span class="sep">|</span><span class="st warn">还有 ' + (PLATFORMS.length - ok) + ' 个没登录</span>'
           : '<span class="sep">|</span><span class="st ok">都能干活了</span>');
@@ -407,7 +407,7 @@
           '<div class="pf-head">' +
           '<span class="pf-logo ' + p.logo + '">' + p.ch + '</span>' +
           '<span><div class="pf-title">' + p.name + '</div>' +
-          '<div class="pf-count">' + (isOk ? '已登录' : '还没登录') + '</div></span>' +
+          '<div class="pf-count">' + (isOk ? '已登记' : '还没登录') + '</div></span>' +
           '<button class="pf-add" data-act="login" data-p="' + p.id + '">' + (isOk ? '重新登录' : '去登录') + '</button>' +
           '</div>' +
           '<div class="acct">' +
@@ -418,7 +418,7 @@
             ? ('你确认于 ' + fmtAt(rec.at) + '；哪天失效，AI 干活时会如实告诉你')
             : '点右边「去登录」：打开 J.Co 专属浏览器，扫码登录') +
           '</div></span>' +
-          '<span class="a-state ' + (isOk ? 'ok' : 'warn') + '">' + (isOk ? '登录正常' : '未登录') + '</span>' +
+          '<span class="a-state ' + (isOk ? 'ok' : 'warn') + '">' + (isOk ? '已登记' : '未登录') + '</span>' +
           '</div>';
         box.appendChild(card);
       });

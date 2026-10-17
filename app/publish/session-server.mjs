@@ -124,6 +124,21 @@ async function formatSnapshot() {
   return lines.join('\n')
 }
 
+/** 点击 / 重定向后重新校验域名；open_page 的白名单不能只保护第一次导航。 */
+function assertAllowedPage(url) {
+  if (!tools.isAllowedUrl(url, allowedDomains)) {
+    throw new Error(`当前页面已离开平台白名单：${String(url)}`)
+  }
+}
+
+function externalPages() {
+  if (!context) return []
+  return context.pages().filter((item) => {
+    const url = item.url()
+    return url !== '' && url !== 'about:blank' && !tools.isAllowedUrl(url, allowedDomains)
+  })
+}
+
 async function dispatch(toolName, args) {
   if (!TOOL_NAMES.includes(toolName) && !tools.DATA_TOOLS.includes(toolName)) {
     throw new Error(`未知工具：${toolName}`)
@@ -131,6 +146,7 @@ async function dispatch(toolName, args) {
   switch (toolName) {
     case 'open_page': {
       await tools.openPage(page, args.url, allowedDomains)
+      assertAllowedPage(page.url())
       return `已打开：${String(args.url)}`
     }
     case 'snapshot':
@@ -167,6 +183,18 @@ async function dispatch(toolName, args) {
           `点击 [${Number(args.ref)}] 弹出的是"文件选择"对话框（这是个上传类按钮）。要传文件请改用 jco_upload_file(${Number(args.ref)}, "文件绝对路径")。`,
         )
       }
+      // 点击可能触发跳转或新窗口；这里再校验一次，防止白名单被一次点击绕过。
+      await page.waitForTimeout(350).catch(() => {})
+      const escaped = externalPages()
+      if (escaped.length > 0) {
+        const urls = escaped.map((item) => item.url()).slice(0, 3).join(' | ')
+        for (const item of escaped) {
+          await item.close().catch(() => {})
+        }
+        await page.goBack({ waitUntil: 'domcontentloaded', timeout: 5000 }).catch(() => {})
+        throw new Error(`点击后跳到了平台白名单以外：${urls}；已拦截并尝试返回。`)
+      }
+      assertAllowedPage(page.url())
       return `已点击 [${Number(args.ref)}]`
     }
     case 'type_text': {

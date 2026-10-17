@@ -16,6 +16,10 @@ test('发布页：让 AI 发到抖音入口就位（存在性与文案）', asyn
     const errors = []
     win.on('pageerror', (e) => errors.push(String(e.message).slice(0, 200)))
     await win.waitForTimeout(2500)
+    // 发布页只认账号中心的真实登记；测试先登记抖音，避免旧硬编码假登录态。
+    await win.evaluate(() => {
+      localStorage.setItem('jco-login-v1', JSON.stringify({ dy: { ok: true, at: Date.now() } }))
+    })
     await win.evaluate(() => {
       window.location.href = 'J.Co工作台-发布.html'
     })
@@ -25,6 +29,8 @@ test('发布页：让 AI 发到抖音入口就位（存在性与文案）', asyn
     await expect(btn).toBeVisible()
     await expect(btn).toContainText('让 AI 发到「抖音」')
     await expect(win.locator('#aiDyState')).toHaveText(/待命|桌面应用内可用/)
+    await expect(win.locator('#platforms .pf', { hasText: '抖音' })).toContainText('已登记')
+    await expect(win.locator('#platforms .pf', { hasText: 'B站' })).toContainText('未登录')
     expect(errors, `JS 错误：\n${errors.join('\n')}`).toEqual([])
   } finally {
     await app.close()

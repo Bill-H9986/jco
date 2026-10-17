@@ -437,8 +437,8 @@
               </div>
             </div>
             <div class="row">
-              <div class="r-main"><div class="r-title">发布前必须我确认</div><div class="r-desc">AI 拟好的内容，永远等你点头才发出去（你的红线，默认开）</div></div>
-              <div class="r-ctl"><button class="tg on" aria-label="发布前必须我确认" id="tgConfirmPublish"></button></div>
+              <div class="r-main"><div class="r-title">发布动作必须我亲手点</div><div class="r-desc">安全红线：AI 只准备内容，发布按钮永远由你亲手点击（固定开启，不可关闭）</div></div>
+              <div class="r-ctl"><button class="tg on" aria-label="发布动作必须我亲手点" id="tgConfirmPublish"></button></div>
             </div>
           </div>
 
@@ -459,7 +459,7 @@
           <div class="grp-title"><span class="ti ti-database"></span>数据与账号</div>
           <div class="grp-card">
             <div class="row">
-              <div class="r-main"><div class="r-title">账号管理</div><div class="r-desc">5 个平台 · 5 个账号 · 1 个需要重新登录</div></div>
+              <div class="r-main"><div class="r-title">账号管理</div><div class="r-desc">5 个平台 · 登录状态以账号中心为准</div></div>
               <div class="r-ctl"><button class="btn-ghost primary" id="btnAccounts">去账号中心<span class="ti ti-arrow-right"></span></button></div>
             </div>
             <div class="row">
@@ -468,7 +468,7 @@
             </div>
             <div class="row">
               <div class="r-main"><div class="r-title">本地数据占用</div><div class="r-desc">素材索引、草稿和历史记录都只在这台电脑</div></div>
-              <div class="r-ctl"><span class="r-value">2.4 GB</span><button class="btn-ghost" id="btnCleanup">清理缓存</button></div>
+              <div class="r-ctl"><span class="r-value">仅本机</span><button class="btn-ghost" id="btnCleanup">清理缓存</button></div>
             </div>
           </div>
 
@@ -476,7 +476,7 @@
           <div class="grp-title"><span class="ti ti-info-circle"></span>关于</div>
           <div class="grp-card">
             <div class="row">
-              <div class="r-main"><div class="r-title">J.Co v0.1（原型）</div><div class="r-desc">驱动内核 · DeepSeek Harness（MIT 开源）</div></div>
+              <div class="r-main"><div class="r-title">J.Co 内测版</div><div class="r-desc">驱动内核 · DeepSeek Harness（MIT 开源）</div></div>
               <div class="r-ctl"><button class="btn-ghost" id="btnUpdate">检查更新</button></div>
             </div>
           </div>
@@ -555,7 +555,7 @@
       }
     })();
 
-    /* ---------- 本地偏好开关（真存）：完事提醒 / 账号提醒 / 发布前确认 ---------- */
+    /* ---------- 本地偏好开关（真存）：完事提醒 / 账号提醒；发布确认固定开启 ---------- */
     (function localSwitches() {
       const LOCAL_TG = { tgNotifyDone: 'jco-notify-done', tgNotifyAuth: 'jco-notify-auth', tgConfirmPublish: 'jco-confirm-publish' };
       Object.entries(LOCAL_TG).forEach(([id, key]) => {
@@ -563,15 +563,20 @@
         if (!el) return;
         let on = true;
         try { on = localStorage.getItem(key) !== '0'; } catch (e) {}
+        if (id === 'tgConfirmPublish') on = true;
         el.classList.toggle('on', on);
         el.addEventListener('click', () => {
+          if (id === 'tgConfirmPublish') {
+            el.classList.add('on');
+            showToast('安全红线：发布动作永远由你亲手点，这个开关不能关闭。');
+            return;
+          }
           const want = !el.classList.contains('on');
           el.classList.toggle('on');
           try { localStorage.setItem(key, want ? '1' : '0'); } catch (e) {}
           const MSG = {
             tgNotifyDone: want ? '好：活儿干完会弹系统通知叫你。' : '好：不打扰你，干完就在软件里等你。',
             tgNotifyAuth: want ? '好：有账号掉线马上叫你（接上平台账号后生效）。' : '好：不提醒账号问题。',
-            tgConfirmPublish: want ? '好：发之前一定等你点头。' : '注意：关了它，发布将不等你确认（建议保持开）。',
           };
           showToast(MSG[id] || '已记下。');
         });
@@ -625,7 +630,7 @@
         if (!res.path) return;
         document.getElementById('pathText').textContent = res.path;
         try { localStorage.setItem('jco-assets-dir', res.path); } catch (e) {}
-        showToast('记下了：素材和成片以后都放这儿。');
+        showToast('已保存：生成物会放这里；后期工具下次启动生效。');
       }, () => showToast('没打开选择框，再试一次。'));
     });
     (function pathInit() {
@@ -645,7 +650,7 @@
       }, () => showToast('没清成，再试一次。'));
     });
     document.getElementById('btnUpdate').addEventListener('click', () =>
-      showToast('当前是本地原版（v0.1），装好后更新会从服务器自动检查。'));
+      showToast('当前是内测版；更新包请找产品负责人获取，自动更新后续接入。'));
 
     /* ---------- 账号菜单（点头像弹出：设置 / 退出登录） ---------- */
     (function () {

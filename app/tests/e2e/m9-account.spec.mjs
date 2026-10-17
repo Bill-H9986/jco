@@ -22,7 +22,7 @@ test('账号中心：5 平台真状态 / 「我登录好了」登记并持久化
 
     // 初始：5 平台全未登录
     await expect(win.locator('.pf-card')).toHaveCount(5)
-    await expect(win.locator('#statsRow')).toContainText('已登录 0 个')
+    await expect(win.locator('#statsRow')).toContainText('已登记 0 个')
     await expect(win.locator('.pf-card', { hasText: '抖音' }).locator('.a-state')).toHaveText('未登录')
 
     // 打开登录弹层 → 点「我登录好了」→ 登记并更新
@@ -31,8 +31,8 @@ test('账号中心：5 平台真状态 / 「我登录好了」登记并持久化
     await expect(win.locator('#sheetTitle')).toHaveText('登录抖音')
     await win.locator('#sheetOk').click()
     await win.waitForTimeout(300)
-    await expect(win.locator('#statsRow')).toContainText('已登录 1 个')
-    await expect(win.locator('.pf-card', { hasText: '抖音' }).locator('.a-state')).toHaveText('登录正常')
+    await expect(win.locator('#statsRow')).toContainText('已登记 1 个')
+    await expect(win.locator('.pf-card', { hasText: '抖音' }).locator('.a-state')).toHaveText('已登记')
     const saved = await win.evaluate(() => JSON.parse(localStorage.getItem('jco-login-v1') || '{}'))
     expect(saved.dy && saved.dy.ok).toBe(true)
     expect(typeof saved.dy.at).toBe('number')
@@ -40,7 +40,7 @@ test('账号中心：5 平台真状态 / 「我登录好了」登记并持久化
     // 重启页面后状态保留（真持久化）
     await win.reload()
     await win.waitForTimeout(1300)
-    await expect(win.locator('#statsRow')).toContainText('已登录 1 个')
+    await expect(win.locator('#statsRow')).toContainText('已登记 1 个')
     await expect(win.locator('.pf-card', { hasText: '抖音' }).locator('button', { hasText: '重新登录' })).toBeVisible()
     expect(errors, `JS 错误：\n${errors.join('\n')}`).toEqual([])
   } finally {

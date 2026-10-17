@@ -1,13 +1,20 @@
 // AI 操作工具集的安全断言（对应 e2e 用例清单 A6"红线检查"）
 // 核心：工具白名单"不多不少"——未来任何人想加工具，必须先过测试与安全评审。
-import { readFileSync } from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import { describe, expect, it } from 'vitest'
-import { DATA_TOOLS, IMPLEMENTATIONS, isAllowedUrl, TOOLS } from '../../publish/tools.mjs'
+import {
+  click,
+  clickGuardReason,
+  DATA_TOOLS,
+  IMPLEMENTATIONS,
+  isAllowedUploadPath,
+  isAllowedUrl,
+  TOOLS,
+  uploadFile,
+} from '../../publish/tools.mjs'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
-const TOOLS_FILE = path.resolve(__dirname, '..', '..', 'publish', 'tools.mjs')
 
 describe('工具白名单（AI 的"手"）', () => {
   it('白名单恰好是契约中的 8 个工具', () => {
@@ -28,9 +35,42 @@ describe('工具白名单（AI 的"手"）', () => {
     }
   })
 
-  it('源码级红线：工具文件不包含点击"发布"按钮的能力（无相关实现痕迹）', () => {
-    const source = readFileSync(TOOLS_FILE, 'utf8')
-    expect(source).not.toMatch(/(发布按钮|clickPublish|publishButton|点发布)/)
+  it('危险点击目标被目标级拦截：发布 / 删除 / 支付', () => {
+    expect(clickGuardReason('发布')).toContain('不能点击')
+    expect(clickGuardReason('立即发布')).toContain('不能点击')
+    expect(clickGuardReason('删除这条作品')).toContain('不能点击')
+    expect(clickGuardReason('确认支付')).toContain('不能点击')
+    expect(clickGuardReason('设置封面')).toBe('')
+    expect(clickGuardReason('下一步')).toBe('')
+  })
+
+  it('上传只允许媒体文件，拒绝配置 / 密钥 / 可执行文件', () => {
+    expect(isAllowedUploadPath('C:/media/demo.mp4')).toBe(true)
+    expect(isAllowedUploadPath('C:/media/cover.PNG')).toBe(true)
+    expect(isAllowedUploadPath('C:/media/music.mp3')).toBe(true)
+    expect(isAllowedUploadPath('C:/secret/.env')).toBe(false)
+    expect(isAllowedUploadPath('C:/secret/key.pem')).toBe(false)
+    expect(isAllowedUploadPath('C:/tools/aoci.exe')).toBe(false)
+    expect(isAllowedUploadPath('C:/data/notes.txt')).toBe(false)
+  })
+
+  it('click 在触发真实点击前拦截“发布”目标', async () => {
+    let clicked = false
+    const page = {
+      locator: () => ({
+        evaluate: async () => '发布',
+        click: async () => {
+          clicked = true
+        },
+      }),
+    }
+    await expect(click(page, 1)).rejects.toThrow('不能点击')
+    expect(clicked).toBe(false)
+  })
+
+  it('uploadFile 对非媒体文件在接触页面前就拒绝', async () => {
+    const page = { locator: () => ({ evaluate: async () => true }) }
+    await expect(uploadFile(page, 1, 'C:/secret/.env')).rejects.toThrow('只允许上传')
   })
 })
 

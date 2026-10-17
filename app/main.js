@@ -158,7 +158,12 @@ ipcMain.handle('sys:pick-folder', async (event) => {
       properties: ['openDirectory', 'createDirectory'],
     })
     if (res.canceled || res.filePaths.length === 0) return { ok: true, path: '' }
-    return { ok: true, path: res.filePaths[0] }
+    const chosen = res.filePaths[0]
+    // 设置页选择目录后必须写进主进程设置；只写 localStorage = 生成物仍落默认目录。
+    writeSettings({ assetsDir: chosen })
+    // 刷新后期工具配置；已运行的内核要等下次启动/重建才读取新目录。
+    writeEditToolsConfig()
+    return { ok: true, path: chosen }
   } catch (error) {
     return { ok: false, error: String((error && error.message) || error) }
   }
@@ -624,15 +629,21 @@ function saveAutoRun(taskId, record) {
     /* 写失败不阻断调度 */
   }
 }
-/** 执行前确保发布会话就绪（≤60 秒）；起不来也照常发任务（AI 会如实说，我们不装成功） */
-async function ensurePublishReady() {
+/** 只有需要浏览器平台的活才预热发布会话，避免写稿/后期任务白等 60 秒。 */
+const PUBLISH_BROWSER_HINT = /发布|发到|抖音|视频号|小红书|快手|B站|评论|战报|运营|登录|扫码|创作者中心/
+function needsPublishBrowser(text) {
+  return PUBLISH_BROWSER_HINT.test(String(text || ''))
+}
+/** 执行前确保目标平台的发布会话就绪（≤60 秒）；起不来也照常发任务（AI 会如实说，我们不装成功） */
+async function ensurePublishReady(platformId) {
   if (!publishSessionManager) return false
   try {
+    const want = String(platformId || 'douyin')
     const st = publishSessionManager.status()
-    if (!st || !st.active) publishSessionManager.start('douyin')
+    if (!st || !st.active || st.platform !== want) publishSessionManager.start(want)
     for (let i = 0; i < 40; i++) {
       const s = publishSessionManager.status()
-      if (s && s.ready) return true
+      if (s && s.ready && s.platform === want) return true
       if (s && !s.active) return false
       await new Promise((resolveWait) => setTimeout(resolveWait, 1500))
     }
@@ -642,7 +653,7 @@ async function ensurePublishReady() {
   return false
 }
 async function runAutoTask(task) {
-  await ensurePublishReady()
+  if (needsPublishBrowser(task.name + ' ' + String(task.desc || ''))) await ensurePublishReady('douyin')
   const bridge = await getBridge()
   const prompt = '现在就跑一遍「' + task.name + '」：' + String(task.desc || '') + '。\n' + AUTO_DISCIPLINE
   const result = await bridge.ask(prompt, null, {
@@ -821,7 +832,7 @@ const clipSafe = (s, n) => Array.from(String(s == null ? '' : s)).slice(0, n).jo
 async function runDispatchedTask(id, prompt) {
   const rec = taskSessions.get(id)
   try {
-    await ensurePublishReady()
+    if (rec.staff !== 'post' && needsPublishBrowser(prompt)) await ensurePublishReady(rec.platform || 'douyin')
     const bridge = await getBridge()
     // 过程行（对抗审查 R1）：运行中任务视图的实时反馈（人话短语，不携带工具参数）
     const { liveLineOf } = await import(pathToFileURL(path.join(__dirname, 'kernel', 'activity.mjs')).href)
@@ -877,6 +888,7 @@ ipcMain.handle('tasks:dispatch', (_event, payload) => {
     const name = clipSafe(String((payload && payload.name) || '').trim(), 60)
     const prompt = clipSafe(String((payload && payload.prompt) || '').trim(), 4000)
     const staff = String((payload && payload.staff) || '').slice(0, 20)
+    const platform = String((payload && payload.platform) || '').slice(0, 32)
     if (name === '' || prompt === '') return { ok: false, error: '没给任务名或内容' }
     const id = 't' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6)
     // 上限保护（对抗审查 R4）：>50 条时清最旧的已完成记录（台账文件保留，内存只留活跃 + 最近）
@@ -886,7 +898,18 @@ ipcMain.handle('tasks:dispatch', (_event, payload) => {
         .sort((a, b) => (a.startedAt || 0) - (b.startedAt || 0))
       while (taskSessions.size > 50 && finished.length > 0) taskSessions.delete(finished.shift().id)
     }
-    taskSessions.set(id, { id, name, staff, state: 'running', startedAt: Date.now(), endedAt: 0, summary: '', messages: [], live: [] })
+    taskSessions.set(id, {
+      id,
+      name,
+      staff,
+      platform,
+      state: 'running',
+      startedAt: Date.now(),
+      endedAt: 0,
+      summary: '',
+      messages: [],
+      live: [],
+    })
     saveTaskSession(id)
     void runDispatchedTask(id, prompt + '\n' + DISPATCH_DISCIPLINE)
     BrowserWindow.getAllWindows().forEach((win) => {
@@ -909,6 +932,7 @@ ipcMain.handle('tasks:sessions', () => {
       id: r.id,
       name: r.name,
       staff: r.staff,
+      platform: r.platform || '',
       state: r.state,
       startedAt: r.startedAt,
       endedAt: r.endedAt,

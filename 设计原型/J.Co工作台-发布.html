@@ -552,15 +552,36 @@
     }
 
     /* ---------- 平台 ---------- */
+    const HAS_DESKTOP = typeof window.jco !== 'undefined' && !!window.jco;
     const PLATFORMS = [
-      { id: 'dy', name: '抖音', logo: 'dy', ch: '抖', logged: true, acc: 'J.Co 招生号', on: true },
-      { id: 'sph', name: '视频号', logo: 'sph', ch: '视', logged: true, acc: 'J.Co 招生号', on: true },
-      { id: 'xhs', name: '小红书', logo: 'xhs', ch: '红', logged: true, acc: 'J.Co 学历规划', on: true },
-      { id: 'bili', name: 'B站', logo: 'bili', ch: 'B', logged: false, acc: '未登录', on: false },
-      { id: 'ks', name: '快手', logo: 'ks', ch: '快', logged: true, acc: 'J.Co 招生号', on: false },
+      { id: 'dy', kern: 'douyin', name: '抖音', logo: 'dy', ch: '抖', logged: false, acc: '未登录', on: true },
+      { id: 'sph', kern: 'shipinhao', name: '视频号', logo: 'sph', ch: '视', logged: false, acc: '未登录', on: true },
+      { id: 'xhs', kern: 'xiaohongshu', name: '小红书', logo: 'xhs', ch: '红', logged: false, acc: '未登录', on: true },
+      { id: 'bili', kern: 'bilibili', name: 'B站', logo: 'bili', ch: 'B', logged: false, acc: '未登录', on: false },
+      { id: 'ks', kern: 'kuaishou', name: '快手', logo: 'ks', ch: '快', logged: false, acc: '未登录', on: false },
     ];
 
+    function syncLoginState() {
+      // 浏览器直开：保留演示态；桌面应用：只认账号中心的本机登记。
+      if (!HAS_DESKTOP) {
+        PLATFORMS.forEach((p) => {
+          p.logged = p.id !== 'bili';
+          p.acc = p.logged ? '演示账号' : '未登录';
+        });
+        return;
+      }
+      let state = {};
+      try { state = JSON.parse(localStorage.getItem('jco-login-v1') || '{}') || {}; } catch (e) {}
+      PLATFORMS.forEach((p) => {
+        p.logged = !!(state[p.id] && state[p.id].ok);
+        p.acc = p.logged ? '已登记' : '未登录';
+        if (!p.logged) p.on = false;
+      });
+    }
+    syncLoginState();
+
     function renderPlatforms() {
+      syncLoginState();
       const el = $('platforms');
       el.innerHTML = '';
       PLATFORMS.forEach((p) => {
@@ -568,10 +589,20 @@
         b.className = 'pf' + (p.on ? ' on' : '') + (p.logged ? '' : ' off');
         b.innerHTML = `
           <span class="pf-logo ${p.logo}">${p.ch}</span>
-          <span class="pfi"><span class="pfn">${p.name}</span><span class="pfs">${p.logged ? '已登录 · ' + p.acc : p.acc}</span></span>
+          <span class="pfi"><span class="pfn">${p.name}</span><span class="pfs">${p.acc}</span></span>
           <span class="pfck ti ti-check"></span>`;
         b.addEventListener('click', () => {
           if (!p.logged) {
+            const session = (window.jco && window.jco.publish && window.jco.publish.session) ? window.jco.publish.session : null;
+            if (session && session.login) {
+              showToast('正在打开 J.Co 专属浏览器……登录后回账号中心点「我登录好了」。');
+              session.login(p.kern).then(
+                (res) => showToast(res && res.ok ? '浏览器已打开：扫码登录，完成后回账号中心登记。' : ('没打开：' + ((res && res.error) || '稍后再试'))),
+                () => showToast('没打开，再试一次。'),
+              );
+              return;
+            }
+            // 浏览器直开的演示模式才使用普通链接；桌面应用绝不拿系统浏览器冒充 AI 浏览器。
             const URLs = {
               dy: 'https://creator.douyin.com/',
               sph: 'https://channels.weixin.qq.com/',
@@ -580,14 +611,6 @@
               bili: 'https://member.bilibili.com/',
             };
             const url = URLs[p.id] || ('https://www.baidu.com/s?wd=' + encodeURIComponent(p.name + ' 创作者中心 登录'));
-            const sys = (typeof window.jco !== 'undefined' && window.jco && window.jco.sys) ? window.jco.sys : null;
-            if (sys && sys.openExternal) {
-              sys.openExternal(url).then(
-                (res) => showToast(res && res.ok ? '拿系统浏览器打开了。在那边登录一次，长期有效；回来点一下这个平台就行。' : ('没打开：' + ((res && res.error) || '未知错误'))),
-                () => showToast('没打开，再试一次。')
-              );
-              return;
-            }
             window.open(url, '_blank');
             return;
           }
@@ -603,7 +626,7 @@
 
     function updateEta() {
       const n = selected().length;
-      $('pubEta').textContent = n === 0 ? '至少勾一个平台' : '发布到 ' + n + ' 个平台 · 约 ' + (n * 2) + ' 秒';
+      $('pubEta').textContent = n === 0 ? '至少登录并勾选一个平台' : '已选 ' + n + ' 个平台 · AI 准备内容，发布由你亲手点';
       $('pubBtn').disabled = n === 0;
       $('pubBtn').firstChild.textContent = n === 0 ? '开始发布' : '开始发布（' + n + ' 个平台）';
     }
@@ -656,7 +679,7 @@
     async function startPublish() {
       if (publishing) return;
       const list = selected();
-      if (list.length === 0) { showToast('至少勾一个平台'); return; }
+      if (list.length === 0) { showToast('先在账号中心登录，并勾选一个平台'); return; }
       publishing = true;
       renderExec(list);
       const whenTxt = when === 'now' ? '刚刚' : (when === '1930' ? '今天 19:30' : '明早 8:00');
@@ -709,20 +732,37 @@
       var busy = false;
       function setState(t, ok) { stateEl.textContent = t; stateEl.classList.toggle('ok', !!ok); }
       function currentPlatform() {
-        for (var i = 0; i < PLATFORMS.length; i++) { if (PLATFORMS[i].on) return PLATFORMS[i]; }
-        return PLATFORMS[0] || null;
+        for (var i = 0; i < PLATFORMS.length; i++) {
+          if (PLATFORMS[i].on && PLATFORMS[i].logged) return PLATFORMS[i];
+        }
+        return null;
       }
       function refreshAiGo() {
         var p = currentPlatform();
-        if (p) btn.innerHTML = '<span class="ti ti-sparkles"></span>让 AI 发到「' + p.name + '」';
+        if (p) {
+          btn.disabled = !live;
+          btn.innerHTML = '<span class="ti ti-sparkles"></span>让 AI 发到「' + p.name + '」';
+          setState(live ? '待命' : '桌面应用内可用');
+          return;
+        }
+        btn.disabled = true;
+        btn.innerHTML = '<span class="ti ti-lock"></span>先登录一个平台';
+        setState(live ? '先在账号中心登录并登记' : '桌面应用内可用');
       }
       window.__refreshAiGo = refreshAiGo;
-      refreshAiGo();
       (function () {
         var wrap = document.getElementById('platforms');
         if (wrap) wrap.addEventListener('click', function () { setTimeout(refreshAiGo, 60); });
       })();
       setState(live ? '待命' : '桌面应用内可用');
+      refreshAiGo();
+      // 从 AI 浏览器登录回来时，窗口重新获得焦点：刷新账号中心登记状态。
+      window.addEventListener('focus', function () {
+        syncLoginState();
+        renderPlatforms();
+        updateEta();
+        refreshAiGo();
+      });
 
       /* 数据层接线：从草稿里找"最近出的一段成片"（做视频页落盘的真实路径） */
       function lastVideoPath() {
@@ -781,7 +821,12 @@
           var task = '帮我发一条视频到' + (target ? target.name : '抖音') + '：标题「' + title + '」，话题：' + tags + '。' +
             videoLine() + coverLine() +
             '全部就绪后停在发布前等我确认。千万不要点「发布」。';
-          var res = await window.jco.tasks.dispatch({ name: name, prompt: task, staff: 'publish' });
+          var res = await window.jco.tasks.dispatch({
+            name: name,
+            prompt: task,
+            staff: 'publish',
+            platform: target && target.kern ? target.kern : 'douyin',
+          });
           if (!res || !res.ok) { setState('没派出去'); showToast((res && res.error) || '派活失败，稍后再试一次。'); return; }
           try { sessionStorage.setItem('jco-open-task', res.taskId); } catch (e) {}
           location.href = 'J.Co总管.html';
