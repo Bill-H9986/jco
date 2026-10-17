@@ -129,7 +129,7 @@ html:not(.side-pinned) .side-foot .icon-btn { opacity: 0; pointer-events: none; 
 
 .search input::placeholder { color: var(--text-3); }
 
-.nav { display: flex; flex-direction: column; gap: 1px; overflow-y: auto; flex: 0 1 auto; }
+.nav { display: flex; flex-direction: column; gap: 1px; }
 
 .nav-item {
     display: flex; align-items: center; gap: 11px;
@@ -876,3 +876,10 @@ html:not(.side-pinned) .side-foot .icon-btn { opacity: 0; pointer-events: none; 
 html:not(.side-pinned) .convo.new-btn { font-size: 0; gap: 0; border-radius: 12px; }
 
 html:not(.side-pinned) .convo.new-btn .ti { font-size: 18px; }
+
+/* ==== 侧栏滚动修复（2026-10-17）：内容超过窗口高度时整侧栏可滚，滚条可见 ==== */
+.sidebar-inner { overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; scrollbar-color: rgba(0, 0, 0, 0.16) transparent; }
+.sidebar-inner::-webkit-scrollbar { width: 5px; }
+.sidebar-inner::-webkit-scrollbar-thumb { background: rgba(0, 0, 0, 0.16); border-radius: 999px; }
+.sidebar-inner::-webkit-scrollbar-track { background: transparent; }
+.side-foot { position: sticky; bottom: 0; background: var(--sidebar); z-index: 2; }
