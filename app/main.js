@@ -370,9 +370,9 @@ ipcMain.handle('kernel:ask', async (event, payload) => {
   const sender = event.sender
   try {
     const text = typeof payload === 'string' ? payload : String((payload && payload.text) || '')
-    const sessionId = (payload && typeof payload === 'object' && payload.sessionId) ? ('jco-chat-' + String(payload.sessionId)) : undefined
+    const sessionId = (payload && typeof payload === 'object' && payload.sessionId) ? ('chat:' + String(payload.sessionId)) : undefined
     const bridge = await getBridge()
-    const options = {}
+    const options = { profile: 'chat' }
     if (sessionId) options.sessionId = sessionId
     // 干活活动（M5 员工实时状态）：广播给所有窗口——团队页/总管页谁开着谁能看
     options.onActivity = (act) => {
@@ -462,6 +462,10 @@ ipcMain.handle('skills:sync', (_event, payload) => {
         on: i.on === true,
       }))
     fs.writeFileSync(SKILLS_FILE, JSON.stringify({ items }, null, 2), 'utf8')
+    // 技能段属于 chat 的系统 persona：变更后重建已存在的 chat Harness，下一轮生效。
+    void getBridge()
+      .then((bridge) => bridge.reloadProfile('chat'))
+      .catch(() => {})
     return { ok: true, count: items.length }
   } catch (error) {
     return { ok: false, error: String((error && error.message) || error) }
@@ -642,6 +646,20 @@ const PUBLISH_BROWSER_HINT = /发布|发到|抖音|视频号|小红书|快手|B�
 function needsPublishBrowser(text) {
   return PUBLISH_BROWSER_HINT.test(String(text || ''))
 }
+/**
+ * 岗位 → 内核 profile（M11 W0-05 最小接线）。
+ * 结构化 staff 优先；旧数据没有 staff 时按任务文字保守判断。
+ * W1-04 统一 TaskService 后由任务卡显式字段决定，不再靠关键词猜。
+ */
+function profileOfTask(staff, prompt) {
+  if (staff === 'post') return 'editor'
+  if (staff === 'publish') return 'publisher'
+  if (staff === 'ops') return 'operator'
+  const text = String(prompt || '')
+  if (/(后期|剪辑|字幕|配乐|裁剪|拼接|ffmpeg)/i.test(text)) return 'editor'
+  if (needsPublishBrowser(text)) return 'operator'
+  return 'writer'
+}
 /** 执行前确保目标平台的发布会话就绪（≤60 秒）；起不来也照常发任务（AI 会如实说，我们不装成功） */
 async function ensurePublishReady(platformId) {
   if (!publishSessionManager) return false
@@ -665,7 +683,8 @@ async function runAutoTask(task) {
   const bridge = await getBridge()
   const prompt = '现在就跑一遍「' + task.name + '」：' + String(task.desc || '') + '。\n' + AUTO_DISCIPLINE
   const result = await bridge.ask(prompt, null, {
-      sessionId: 'jco-chat-task-' + task.id,
+    profile: profileOfTask('', prompt),
+    sessionId: 'task:auto-' + task.id,
     onActivity: (act) => {
       BrowserWindow.getAllWindows().forEach((win) => {
         try {
@@ -846,7 +865,8 @@ async function runDispatchedTask(id, prompt) {
     const { liveLineOf } = await import(pathToFileURL(path.join(__dirname, 'kernel', 'activity.mjs')).href)
     let streamedText = ''
     const result = await bridge.ask(prompt, (delta) => { streamedText += delta }, {
-      sessionId: 'jco-chat-task-' + id,
+      profile: profileOfTask(rec.staff, prompt),
+      sessionId: 'task:' + id,
       onActivity: (act) => {
         try {
           const line = liveLineOf(act)

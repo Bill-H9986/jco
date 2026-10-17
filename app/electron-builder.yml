@@ -33,6 +33,7 @@ files:
   - node_modules/@deepseek-ai/**
 asarUnpack:
   - "kernel/**"
+  - "dist/**"
   - "node_modules/@deepseek-ai/**"
   - "node_modules/@ffmpeg-installer/**"
   - "node_modules/koffi/**"

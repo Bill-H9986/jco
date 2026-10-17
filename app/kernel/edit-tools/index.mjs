@@ -79,6 +79,7 @@ export function apply(ctx, config) {
   const cfg = config || {}
   const assetsDir = resolve(String(cfg.assetsDir || ''))
   const ffmpeg = String(cfg.ffmpeg || '')
+  const allow = Array.isArray(cfg.allowedTools) ? new Set(cfg.allowedTools) : null
 
   const ensure = () => {
     if (!cfg.assetsDir) return '后期引擎未就绪：没有成片目录（先启动一次 J.Co 应用）。'
@@ -93,6 +94,8 @@ export function apply(ctx, config) {
   const outName = (base, tag, ext) => base + '-' + tag + '-' + Date.now().toString(36) + '.' + ext
 
   const register = (toolName, description, parameters, execute) => {
+    // profile 工具白名单：未列出的工具不注册，模型看不到也调不到。
+    if (allow && !allow.has(toolName)) return
     ctx.tools.register(
       defineTool({
         name: toolName,

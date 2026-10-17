@@ -43,7 +43,10 @@ async function callTool(config, tool, args) {
 
 export function apply(ctx, config) {
   const host = { sessionFile: String((config && config.sessionFile) || '') }
+  const allow = Array.isArray(config && config.allowedTools) ? new Set(config.allowedTools) : null
   const define = (toolName, description, parameters, forwardName) => {
+    // profile 工具白名单：未列出的工具不注册，模型看不到也调不到。
+    if (allow && !allow.has(toolName)) return
     ctx.tools.register(
       defineTool({
         name: toolName,

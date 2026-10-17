@@ -16,6 +16,10 @@ app/tests/report/
 app/kernel/model-config.json
 # 发布工具 patch（自动生成，含本机路径，不入库）
 app/kernel/publish-tools.patch.yml
+# 岗位系统提示词与按 profile 生成的工具 patch（运行时生成，含本机路径）
+app/kernel/jco-persona-*.patch.yml
+app/kernel/jco-publish-tools-*.patch.yml
+app/kernel/jco-edit-tools-*.patch.yml
 # 技能库同步副本（运行时生成、随界面走，不入库）
 app/kernel/skills.json
 # 自动任务表与执行记录（运行时生成：页面同步 / 调度器写，不入库）
