@@ -889,7 +889,7 @@
       { v: '5 张', tip: '整篇图文都用它' },
     ];
 
-    /* 技能排（M5）：数据来自技能库单一事实源——启用的手艺才出现（停用时少一个按钮，不动已做好的东西） */
+    /* 技能排（M5）：数据来自技能库单一事实源：启用的手艺才出现（停用时少一个按钮，不动已做好的东西） */
     var MV_ORDER = ['s1', 's2', 's13', 's4', 's3', 's14', 's15', 's16']; // 保持做视频页既有排布顺序（原 8 按钮的次序）
     function loadMakeVideoSkills() {
       var local = null;
@@ -1700,7 +1700,7 @@
       pop.hidden = false;
       v.play().catch(() => {});
     }
-    /* 整片连播（分段顺序播；自动拼接还没接上——如实标"分段连播"） */
+    /* 整片连播（分段顺序播；自动拼接还没接上：如实标"分段连播"） */
     let wholeQueue = [];
     let wholeIdx = 0;
     function playWhole() {
@@ -1709,7 +1709,7 @@
       const keys = Object.keys(videos).filter((k) => videos[k] && videos[k].status === 'done' && videos[k].url);
       keys.sort((a, b) => Number(a) - Number(b));
       wholeQueue = keys.map((k) => videos[k].url);
-      if (wholeQueue.length === 0) { showToast('这段还没有出片——先点「全部出片」或每段的「出这段」。'); return; }
+      if (wholeQueue.length === 0) { showToast('这段还没有出片：先点「全部出片」或每段的「出这段」。'); return; }
       wholeIdx = 0;
       openWholeVideo();
     }
@@ -1898,7 +1898,7 @@
       $('ibFixInp').value = '';
       const sel = $('ibSel');
       if (!JCO_KERNEL || !currentDraft || !Array.isArray(currentDraft.images) || currentDraft.images.length === 0) {
-        showToast('这版还没有真图可改——先在底部写要求生成一版图。');
+        showToast('这版还没有真图可改：先在底部写要求生成一版图。');
         return;
       }
       sel.classList.add('working');
@@ -1916,7 +1916,7 @@
         markAdjusted();
         jcoLogAdd('material', 'AI 重画一版', String(v).slice(0, 30));
         jcoNotifyDone('重画好了', '按你说的改了一版（整图重绘）');
-        showToast('按你说的重画了一张（整图重绘，不是局部修改）——在新缩略图里。');
+        showToast('按你说的重画了一张（整图重绘，不是局部修改）：在新缩略图里。');
       } else {
         showToast('没画成：' + ((r && r.error) || '再试一次'));
       }
@@ -2219,7 +2219,7 @@
       try { data = JSON.parse(localStorage.getItem('jco-chats-v1') || 'null'); } catch (e) {}
       var box = document.querySelector('.convos');
       if (!box) return
-      // M7：数据缺失也渲染——「新会话」按钮常驻，不依赖"总管页先初始化"
+      // M7：数据缺失也渲染：「新会话」按钮常驻，不依赖"总管页先初始化"
       if (!data || !Array.isArray(data.chats)) { data = { activeId: null, chats: [] } };
       var here = decodeURIComponent(location.pathname.split('/').pop());
       function go(req) {

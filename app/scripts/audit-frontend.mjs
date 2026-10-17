@@ -4,7 +4,8 @@
  *
  * 防的就是"只改一页、忘掉全站"的蠢问题（2026-10-16 教训：新会话按钮只改了总管页）。
  * 双检查：
- *   A. 组件矩阵：15 个页面 × 公共组件/功能块 逐项核对——任何一页缺项即失败；
+ *   A. 组件矩阵：15 个内容页 × 公共组件/功能块 逐项核对——任何一页缺项即失败；
+ *      应用壳单独做“常驻壳”检查（iframe / 首页 / 任务会话刷新 / 通知回壳）；
  *   B. 产品目录干净：设计原型/ 只允许页面（*.html）与 assets/——验证副本/临时文件一律放开发工作区。
  *
  * 豁免（写明白理由，不静默放过）：
@@ -37,6 +38,7 @@ const PAGES = [
   'J.Co设计系统.html',
 ]
 const MATERIAL_PAGE = 'J.Co设计系统.html' // 物料样张豁免
+const SHELL_PAGE = 'J.Co应用壳.html'
 const COPILOT_ALLOWED_MISSING = new Set([
   'J.Co总管.html', // 聊天本体
   'J.Co主界面-首页.html', // 总览
@@ -49,6 +51,22 @@ const COPILOT_ALLOWED_MISSING = new Set([
 const PER_PAGE_EXEMPT = {
   'J.Co总管.html': ['新会话按钮常驻（数据缺失也渲染）'],
 }
+
+// 应用壳不是内容页：检查它是否真的是“唯一外壳”，而不是再抄一套内容页组件。
+const SHELL_CHECKS = [
+  ['内容 iframe', /id="jcoFrame"/],
+  ['首页入口', /data-page="J\.Co主界面-首页\.html"/],
+  ['新会话入口', /id="newChatSlot"/],
+  ['侧栏导航', /class="nav-item"/],
+  ['通知入口', /id="bellBtn"/],
+  ['通知回壳钩子', /__jcoOpenTaskById/],
+]
+const SHELL_JS_CHECKS = [
+  ['任务/会话刷新', /function refreshSidebarLists/],
+  ['任务列表读取', /jco\.tasks\.sessions|tasksApi\.sessions\(\)/],
+  ['任务事件订阅', /onTask/],
+  ['刷新钩子', /__refreshJcoSidebar/],
+]
 
 // [键, 说明, 正则, 期望出现]
 const CHECKS = [
@@ -113,6 +131,18 @@ if (junk.length > 0) {
   failed = true
 }
 
+// —— C. 应用壳常驻检查 ——
+const shellMissing = []
+const shellSrc = readFileSync(path.join(UI, SHELL_PAGE), 'utf8')
+const shellJs = readFileSync(path.join(UI, 'assets', 'jco-shell.js'), 'utf8')
+for (const [label, re] of SHELL_CHECKS) {
+  if (!re.test(shellSrc)) shellMissing.push(label)
+}
+for (const [label, re] of SHELL_JS_CHECKS) {
+  if (!re.test(shellJs)) shellMissing.push(label)
+}
+if (shellMissing.length > 0) failed = true
+
 console.log('===== 全站一致性审计（机器门）=====')
 console.log('页面矩阵：' + PAGES.length + ' 页 × ' + (CHECKS.length + 4) + ' 项检查')
 if (missingPerPage.length > 0) {
@@ -131,5 +161,10 @@ if (junk.length > 0) {
 } else {
   console.log('  ✅ 产品目录干净（设计原型/ 仅页面 + assets/）')
 }
+console.log(
+  shellMissing.length > 0
+    ? '  ❌ 应用壳缺少：' + shellMissing.join('、')
+    : '  ✅ 应用壳常驻检查通过（iframe / 首页 / 任务会话刷新 / 通知回壳）',
+)
 console.log(failed ? '❌ 审计未通过' : '✅ 审计通过')
 process.exit(failed ? 1 : 0)

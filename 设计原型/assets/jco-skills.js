@@ -3,7 +3,7 @@
  *
  * 技能库页是"编辑入口"（开关真存 localStorage jco-skills-v1），
  * 做视频页的技能排、以及注入 AI 的"手艺清单"都从这一份数据来：
- * - merge(local)：按 id 合并用户开关——已存在项以用户为准，新项按默认补入；
+ * - merge(local)：按 id 合并用户开关：已存在项以用户为准，新项按默认补入；
  * - makeVideoSkills(items)：做视频页要显示的（scenes 含 make-video 且已启用）。
  *
  * 来源说明：s1–s12 原样来自《J.Co技能库.html》定稿；s13–s16 原样来自
@@ -16,7 +16,7 @@
   if (root) root.JCO_SKILLS = api
 })(typeof window !== 'undefined' ? window : (typeof globalThis !== 'undefined' ? globalThis : null), function () {
   var DEFAULTS = [
-    // —— 技能库定稿 12 项（s1–s12）——
+    // ： 技能库定稿 12 项（s1–s12）：
     { id: 's1', name: '爆款复刻', desc: '拆爆款的结构、换成你的内容，照着跑', kind: 'video', icon: 'ti-flame', on: true,
       scenes: ['make-video'], entry: '做视频页 →「爆款复刻」',
       action: { icon: 'ti-repeat', fill: '帮我复刻这条爆款视频，链接：', method: 't2v', toast: '把爆款链接粘在后面就行，AI 拆它的结构，做你的内容' } },
@@ -45,7 +45,7 @@
       scenes: [], entry: '（还没接入，先别答应用户）' },
     { id: 's12', name: '周报生成器', desc: '每周数据汇成一页纸，发给谁都能看', kind: 'data', icon: 'ti-chart-bar', on: true,
       scenes: [], entry: '（还没接入，先别答应用户）' },
-    // —— 做视频页（侧栏「创作」）在用的 4 项（s13–s16），本次统一进技能库 ——
+    // ： 做视频页（侧栏「创作」）在用的 4 项（s13–s16），本次统一进技能库 ：
     { id: 's13', name: '照片会说话', desc: '让静态照片开口念稿，像真人一样说话', kind: 'video', icon: 'ti-photo', on: true,
       scenes: ['make-video'], entry: '做视频页 →「照片会说话」',
       action: { fill: '让这张照片开口说话，念这段稿子：', method: 'i2v', toast: '从素材里选照片，让它像真人一样开口' } },
@@ -73,7 +73,7 @@
 
   /**
    * 按 id 合并：共享表是权威清单（名称/描述以表为准），
-   * 本地存的只有"开关状态"说话——已存在的项沿用本地 on，新项按默认补入。
+   * 本地存的只有"开关状态"说话：已存在的项沿用本地 on，新项按默认补入。
    */
   function merge(localItems) {
     var local = Array.isArray(localItems) ? localItems : []

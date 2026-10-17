@@ -162,6 +162,16 @@ contextBridge.exposeInMainWorld('jco', {
   sys: {
     theme: (mode) => ipcRenderer.invoke('sys:theme', String(mode || 'system')),
     getTheme: () => ipcRenderer.invoke('sys:theme:get'),
+    onTheme: (callback) => {
+      if (typeof callback !== 'function') return
+      ipcRenderer.on('sys:theme', (_event, payload) => {
+        try {
+          callback(payload || null)
+        } catch (error) {
+          /* 页面回调异常不扩散 */
+        }
+      })
+    },
     login: (enable) => ipcRenderer.invoke('sys:login', !!enable),
     getLogin: () => ipcRenderer.invoke('sys:login:get'),
     clean: () => ipcRenderer.invoke('sys:clean'),

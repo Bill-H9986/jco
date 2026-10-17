@@ -278,6 +278,7 @@ body.tl-dragging .tl-body, body.tl-dragging .tl-body * { cursor: grabbing !impor
   .pp-title { font-size: 13px; font-weight: 600; color: var(--text-1); }
   .post-panel textarea { width: 100%; box-sizing: border-box; resize: vertical; min-height: 64px; border: 1px solid var(--line); border-radius: 10px; padding: 9px 10px; font: inherit; font-size: 13px; background: var(--bg); color: var(--text-1); outline: none; }
   .post-panel textarea:focus { border-color: var(--accent); }
+  .post-panel textarea:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   .chips { display: flex; flex-wrap: wrap; gap: 6px; }
   .chip { border: 1px solid var(--line); background: transparent; color: var(--text-2); border-radius: 999px; padding: 4px 10px; font-size: 12px; cursor: pointer; font-family: inherit; }
   .chip:hover { color: var(--text-1); border-color: var(--text-3); }
@@ -536,7 +537,7 @@ body.tl-dragging .tl-body, body.tl-dragging .tl-body * { cursor: grabbing !impor
         ].join('\n');
         busy = true;
         $('askGo').disabled = true;
-        setState('已经派给 AI 了——自动跳到总管，你能看到它一步步干。');
+        setState('已经派给 AI 了：自动跳到总管，你能看到它一步步干。');
         live.tasks.dispatch({ name: '后期：' + text.slice(0, 16), prompt: prompt, staff: 'post' }).then(function (res) {
           if (!res || !res.ok) { busy = false; $('askGo').disabled = false; showToast((res && res.error) || '派活失败，稍后再试'); return; }
           try { sessionStorage.setItem('jco-open-task', res.taskId); } catch (e) {}
@@ -825,7 +826,7 @@ body.tl-dragging .tl-body, body.tl-dragging .tl-body * { cursor: grabbing !impor
       try { data = JSON.parse(localStorage.getItem('jco-chats-v1') || 'null'); } catch (e) {}
       var box = document.querySelector('.convos');
       if (!box) return
-      // M7：数据缺失也渲染——「新会话」按钮常驻，不依赖"总管页先初始化"
+      // M7：数据缺失也渲染：「新会话」按钮常驻，不依赖"总管页先初始化"
       if (!data || !Array.isArray(data.chats)) { data = { activeId: null, chats: [] } };
       var here = decodeURIComponent(location.pathname.split('/').pop());
       function go(req) {

@@ -401,7 +401,7 @@ html:not(.side-pinned) .side-foot .icon-btn { opacity: 0; pointer-events: none; 
     --line: rgba(0, 0, 0, 0.08);
     --accent: #0080ff;
     --accent-strong: #1a8cff;
-    /* accent（强调色）之上的文字色（按钮白字等）——设计 token，避免页面里硬编码 #fff */
+    /* accent（强调色）之上的文字色（按钮白字等）：设计 token，避免页面里硬编码 #fff */
     --on-accent: #ffffff;
     --hover: rgba(15, 15, 15, 0.06);
     --picked: rgba(15, 15, 15, 0.10);
@@ -450,6 +450,65 @@ html:not(.side-pinned) .side-foot .icon-btn { opacity: 0; pointer-events: none; 
       --shadow-modal: 0 10px 22px rgba(0, 0, 0, 0.4), 0 39px 39px rgba(0, 0, 0, 0.3), 0 88px 53px rgba(0, 0, 0, 0.2);
     }
   }
+
+/* 显式主题：外壳和 iframe 共用同一套 token；系统主题由主进程解析后写入 data 属性 */
+html[data-jco-theme="light"] {
+  --bg: #f7f7f7;
+  --sidebar: #f5f5f7;
+  --card: #ffffff;
+  --tint: #f0f0f2;
+  --text-1: rgba(0, 0, 0, 0.75);
+  --text-2: rgba(0, 0, 0, 0.55);
+  --text-3: rgba(0, 0, 0, 0.38);
+  --line: rgba(0, 0, 0, 0.08);
+  --accent: #0080ff;
+  --accent-strong: #1a8cff;
+  --on-accent: #ffffff;
+  --hover: rgba(15, 15, 15, 0.06);
+  --picked: rgba(15, 15, 15, 0.10);
+  --btn-2nd: rgba(0, 0, 0, 0.05);
+  --btn-2nd-hover: rgba(0, 0, 0, 0.09);
+  --green: #248a3d;
+  --green-tint: rgba(36, 138, 61, 0.12);
+  --red: #d70015;
+  --red-tint: rgba(215, 0, 21, 0.1);
+  --amber: #b26800;
+  --amber-tint: rgba(178, 104, 0, 0.12);
+  --rail: #f5f5f7;
+  --shadow: 0 8px 16px rgba(0, 0, 0, 0.08);
+  --shadow-card: 0 4px 10px rgba(0, 0, 0, 0.03);
+  --shadow-float: 0 0 1px rgba(0, 0, 0, 0.3), 0 4px 14px rgba(0, 0, 0, 0.1);
+  --shadow-modal: 0 10px 22px rgba(0, 0, 0, 0.06), 0 39px 39px rgba(0, 0, 0, 0.05), 0 88px 53px rgba(0, 0, 0, 0.03);
+}
+
+html[data-jco-theme="dark"] {
+  --bg: #1c1c1e;
+  --sidebar: #242426;
+  --card: #2c2c2e;
+  --tint: #3a3a3c;
+  --text-1: #e8e8ed;
+  --text-2: #a8a8af;
+  --text-3: #82828a;
+  --line: rgba(255, 255, 255, 0.1);
+  --accent: #0a84ff;
+  --accent-strong: #3d9bff;
+  --on-accent: #ffffff;
+  --hover: rgba(255, 255, 255, 0.07);
+  --picked: rgba(255, 255, 255, 0.12);
+  --btn-2nd: #3a3a3c;
+  --btn-2nd-hover: #46464a;
+  --green: #30d158;
+  --green-tint: rgba(48, 209, 88, 0.16);
+  --red: #ff6961;
+  --red-tint: rgba(255, 105, 97, 0.16);
+  --amber: #ffb340;
+  --amber-tint: rgba(255, 179, 64, 0.16);
+  --rail: #242426;
+  --shadow: 0 8px 16px rgba(0, 0, 0, 0.45);
+  --shadow-card: 0 4px 10px rgba(0, 0, 0, 0.4);
+  --shadow-float: 0 0 1px rgba(255, 255, 255, 0.12), 0 4px 14px rgba(0, 0, 0, 0.5);
+  --shadow-modal: 0 10px 22px rgba(0, 0, 0, 0.4), 0 39px 39px rgba(0, 0, 0, 0.3), 0 88px 53px rgba(0, 0, 0, 0.2);
+}
 
 .sidebar-inner {
     position: absolute; left: 10px; top: 10px;

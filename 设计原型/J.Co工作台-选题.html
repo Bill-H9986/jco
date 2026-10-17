@@ -536,11 +536,11 @@
         el.querySelector('.who').textContent = '你贴的爆款 · ' + (h.text || '').slice(0, 24);
         el.querySelector('.title').textContent = (h.text || '').slice(0, 40) || '（贴入的爆款）';
         el.querySelector('.mt-line').textContent = h.myTitle || '待拆解';
-        el.querySelector('.why').textContent = h.why || '—';
-        el.querySelector('.st').textContent = h.structure || '—';
-        el.querySelector('.mt').textContent = h.myTitle || '—';
-        el.querySelector('.hk').textContent = h.hook || '—';
-        el.querySelector('.wh').textContent = h.who || '—';
+        el.querySelector('.why').textContent = h.why || '暂无';
+        el.querySelector('.st').textContent = h.structure || '暂无';
+        el.querySelector('.mt').textContent = h.myTitle || '暂无';
+        el.querySelector('.hk').textContent = h.hook || '暂无';
+        el.querySelector('.wh').textContent = h.who || '暂无';
         var useBtn = el.querySelector('.use-btn');
         useBtn.addEventListener('click', function () {
           var opening = !el.classList.contains('open');
@@ -613,7 +613,7 @@
         var data = live ? await live.get() : null;
         var items = (data && data.comments && data.comments.items) || [];
         if (items.length === 0) {
-          radarEl.innerHTML = '<div class="empty">还没有评论数据——去「运营」页点一次「取评论」，这里就有题了。</div>';
+          radarEl.innerHTML = '<div class="empty">还没有评论数据：去「运营」页点一次「取评论」，这里就有题了。</div>';
           return;
         }
         var texts = items.slice(0, 20).map(function (c) { return '「' + String(c.text || '').slice(0, 60) + '」'; }).join('\n');
@@ -691,7 +691,7 @@
         if (hotTab) hotTab.classList.add('active');
         renderRadar('hot');
         jcoLogAdd('topic', 'AI 热点', titles.length + ' 条新方向');
-        showToast('出了 ' + titles.length + ' 条，在下面列表里——点卡片就开写，点 ☆ 收藏。');
+        showToast('出了 ' + titles.length + ' 条，在下面列表里：点卡片就开写，点 ☆ 收藏。');
       } else {
         showToast('没扫成：' + ((res && res.error) || '未知错误'));
       }
@@ -995,7 +995,7 @@
       try { data = JSON.parse(localStorage.getItem('jco-chats-v1') || 'null'); } catch (e) {}
       var box = document.querySelector('.convos');
       if (!box) return
-      // M7：数据缺失也渲染——「新会话」按钮常驻，不依赖"总管页先初始化"
+      // M7：数据缺失也渲染：「新会话」按钮常驻，不依赖"总管页先初始化"
       if (!data || !Array.isArray(data.chats)) { data = { activeId: null, chats: [] } };
       var here = decodeURIComponent(location.pathname.split('/').pop());
       function go(req) {

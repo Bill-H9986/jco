@@ -82,6 +82,12 @@ test('总管页：侧栏收起态也能开新会话（图标按钮可用，展�
     })
     await win.reload()
     await win.waitForTimeout(1000)
+    // 测试窗口隐藏时 CSS 过渡会冻结；关掉过渡，只验证布局状态本身。
+    await win.evaluate(() => {
+      const style = document.createElement('style')
+      style.textContent = '*, *::before, *::after { transition: none !important; animation: none !important; }'
+      document.head.appendChild(style)
+    })
 
     const btn = win.locator('#newChatSlot .convo.new-btn')
     await btn.waitFor()

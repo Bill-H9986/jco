@@ -83,9 +83,17 @@ ipcMain.handle('sys:theme', (_event, mode) => {
   nativeTheme.themeSource = m
   writeSettings({ theme: m })
   applyThemeToAll()
-  return { ok: true, theme: m }
+  const payload = { theme: m, resolved: nativeTheme.shouldUseDarkColors ? 'dark' : 'light' }
+  BrowserWindow.getAllWindows().forEach((win) => {
+    try { win.webContents.send('sys:theme', payload) } catch (error) { /* 窗口已关闭则忽略 */ }
+  })
+  return { ok: true, ...payload }
 })
-ipcMain.handle('sys:theme:get', () => ({ ok: true, theme: readSettings().theme || 'system' }))
+ipcMain.handle('sys:theme:get', () => ({
+  ok: true,
+  theme: readSettings().theme || 'system',
+  resolved: nativeTheme.shouldUseDarkColors ? 'dark' : 'light',
+}))
 
 // 开机自动启动（真开关：写系统登录项注册表；可读回、可复位）
 const RUN_KEY = 'HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run'
@@ -975,11 +983,16 @@ function createWindow() {
       contextIsolation: true,
       nodeIntegration: false,
       sandbox: true,
+      // 测试窗口隐藏时仍要推进 CSS 过渡，否则侧栏宽度会停在展开值。
+      backgroundThrottling: false,
       spellcheck: false
     }
   })
 
-  win.once('ready-to-show', () => win.show())
+  win.once('ready-to-show', () => {
+    // E2E 默认隐藏窗口：测试照常跑，但不抢用户桌面。
+    if (!JCO_TEST_MODE) win.show()
+  })
   // 每次页面导航完成：按当前主题偏好重新注入覆盖（页面切换后主题不丢）
   win.webContents.on('did-finish-load', () => applyThemeToWindow(win))
   // 托盘开启时：关窗口=缩到托盘（不退出）；托盘菜单「退出」才真退出

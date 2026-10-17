@@ -996,7 +996,7 @@
       try { data = JSON.parse(localStorage.getItem('jco-chats-v1') || 'null'); } catch (e) {}
       var box = document.querySelector('.convos');
       if (!box) return
-      // M7：数据缺失也渲染——「新会话」按钮常驻，不依赖"总管页先初始化"
+      // M7：数据缺失也渲染：「新会话」按钮常驻，不依赖"总管页先初始化"
       if (!data || !Array.isArray(data.chats)) { data = { activeId: null, chats: [] } };
       var here = decodeURIComponent(location.pathname.split('/').pop());
       function go(req) {
