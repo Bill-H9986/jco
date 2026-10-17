@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>J.Co</title>
+  <link rel="stylesheet" href="./assets/jco-ui.css">
+  <script src="./assets/jco-shell.js"></script>
+  <style>
+    /* 应用壳（2026-10-17 · M10 前端一壳化）：侧栏常驻，内容区只换视图——切页不重绘外壳 */
+    html, body { height: 100%; overflow: hidden; }
+    .app { height: 100dvh; display: flex; }
+    .frame-wrap { flex: 1; min-width: 0; position: relative; }
+    #jcoFrame { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; background: var(--bg); }
+    .frame-fade { position: absolute; inset: 0; background: var(--bg); pointer-events: none; opacity: 0; transition: opacity 0.16s ease; }
+    .frame-fade.on { opacity: 1; }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="sidebar-inner">
+        <div class="side-top">
+          <div class="wordmark">J.Co</div>
+          <button class="side-toggle" aria-label="固定展开侧栏" title="点一下固定展开，再点收起"><span class="ti ti-layout-sidebar-left-expand"></span></button>
+        </div>
+        <div class="search"><span class="ti ti-search"></span><input placeholder="搜索"></div>
+        <div class="newchat" id="newChatSlot">
+          <button class="convo new-btn" title="新会话"><span class="ti ti-plus"></span>新会话</button>
+        </div>
+        <nav class="nav">
+          <button class="nav-item active" data-page="J.Co总管.html"><span class="ti ti-message-plus"></span>总管</button>
+          <button class="group-label" type="button"><span class="ti ti-layout-grid"></span>工作台<span class="ti ti-chevron-down"></span></button>
+          <button class="nav-item" data-page="J.Co工作台-选题.html"><span class="ti ti-bulb"></span>选题</button>
+          <button class="nav-item" data-page="J.Co工作台-素材.html"><span class="ti ti-photo"></span>素材</button>
+          <button class="nav-item" data-page="J.Co工作台-创作.html"><span class="ti ti-file-text"></span>文案</button>
+          <button class="nav-item" data-page="J.Co工作台-做视频.html"><span class="ti ti-video"></span>创作</button>
+          <button class="nav-item" data-page="J.Co工作台-后期.html"><span class="ti ti-wand"></span>后期</button>
+          <button class="nav-item" data-page="J.Co工作台-发布.html"><span class="ti ti-upload"></span>发布</button>
+          <button class="nav-item" data-page="J.Co工作台-运营.html"><span class="ti ti-chart-bar"></span>运营</button>
+          <button class="group-label" type="button"><span class="ti ti-tool"></span>工具<span class="ti ti-chevron-down"></span></button>
+          <button class="nav-item" data-page="J.Co自动任务.html"><span class="ti ti-clock-play"></span>自动任务</button>
+          <button class="nav-item" data-page="J.Co技能库.html"><span class="ti ti-sparkles"></span>技能库</button>
+          <button class="nav-item" data-page="J.Co管家团队.html"><span class="ti ti-users-group"></span>管家团队</button>
+          <button class="nav-item" data-page="J.Co账号中心.html"><span class="ti ti-key"></span>账号中心</button>
+        </nav>
+        <div class="side-foot">
+          <div class="me" id="meBtn" role="button" tabindex="0" aria-haspopup="menu" aria-expanded="false"><div class="ava">J</div><span>Jay</span></div>
+          <button class="icon-btn" aria-label="通知" id="bellBtn"><span class="ti ti-bell"></span></button>
+        </div>
+      </div>
+    </aside>
+    <div class="frame-wrap">
+      <iframe id="jcoFrame" src="J.Co主界面-首页.html" title="J.Co 内容区"></iframe>
+      <div class="frame-fade" id="frameFade"></div>
+    </div>
+  </div>
+
+  <script>
+    /* 壳：切页只换内容视图；侧栏常驻（jco-shell.js 负责导航接管/任务/对话/折叠/通知） */
+    (function shellHost() {
+      var frame = document.getElementById('jcoFrame');
+      var fade = document.getElementById('frameFade');
+      window.__jcoGo = function (target) {
+        if (!target) return;
+        var here = decodeURIComponent((frame.getAttribute('src') || '').split('?')[0]);
+        if (here === target) return;
+        if (fade) { fade.classList.add('on'); }
+        setTimeout(function () {
+          frame.src = target;
+        }, 90);
+      };
+      frame.addEventListener('load', function () {
+        setTimeout(function () { if (fade) fade.classList.remove('on'); }, 60);
+      });
+      // 新会话：去总管页并触发新会话
+      var newBtn = document.querySelector('#newChatSlot .new-btn');
+      if (newBtn) newBtn.addEventListener('click', function () {
+        window.__jcoGo('J.Co总管.html?new=1');
+      });
+      // 头像 → 设置；铃铛 → 通知面板（jco-shell 提供 jcoToggleNotif）
+      var me = document.getElementById('meBtn');
+      if (me) me.addEventListener('click', function () { window.__jcoGo('J.Co设置.html'); });
+      var bell = document.getElementById('bellBtn');
+      if (bell) bell.addEventListener('click', function () {
+        if (typeof window.jcoToggleNotif === 'function') window.jcoToggleNotif(bell);
+      });
+    })();
+  </script>
+</body>
+</html>

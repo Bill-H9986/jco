@@ -1200,6 +1200,17 @@
       });
     })();
 
+    /* 应用壳模式：?new=1 → 自动新建会话（壳的「新会话」按钮直达） */
+    (function shellNewChat() {
+      try {
+        if (!/[?&]new=1/.test(location.search)) return;
+        setTimeout(function () {
+          var b = document.querySelector('#newChatSlot .new-btn');
+          if (b) b.click();
+        }, 350);
+      } catch (e) {}
+    })();
+
     /* ---------- 侧栏导航 ---------- */
     (function () {
       var here = decodeURIComponent(location.pathname.split('/').pop());
