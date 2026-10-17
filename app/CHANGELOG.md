@@ -11,6 +11,7 @@ All notable changes to this project will be documented in this file. See [commit
 ### Bug Fixes
 
 * **beta:** 收口安全点击、发布页真实登录态与设置接线 0c45636
+* **pack:** 补齐 DSH 运行时依赖树，修复安装版内核缺包（安装版实测“安装正常”） e23cfe9
 
 ## [0.4.16](///compare/v0.4.15...v0.4.16) (2026-10-17)
 
