@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.6.0-beta.1](///compare/v0.5.0-beta.1...v0.6.0-beta.1) (2026-10-17)
+
+### Features
+
+* **shell:** 收口唯一应用壳、无头测试与侧栏双态验证 9b29be4
+* **shell:** 应用壳——前端一壳化（M10 第一步）：侧栏/导航/任务/对话常驻于唯一外壳（J.Co应用壳.html），切换只换内容视图（iframe），外壳全程不重绘；内嵌页自动隐藏自身侧栏并桥接 parent IPC（window.jco 全功能可用）；任务/会话/新会话经 URL 意图（?task=/?chat=/?new=1）直达；修复侧栏溢出（可滚）与跨页等长；E2E +1（壳常驻/桥接/高亮）+ 全量门禁 30 条全绿；附修复前/整页重载/壳模式三段对比录屏 343e2eb
+
+### Bug Fixes
+
+* **shell:** 侧栏溢出与跨页一致——①侧栏整体可滚并显示滚动条（工具组/对话列表不再被挤出可视区——"工具板块没了"的真因）②全站侧栏统一注入任务/对话两区（与总管页同款，跨页等长=切页不再跳）③共享外壳 jco-shell.js 接管导航（唯一映射）+ 切换淡出淡入过渡 ④对话列表跨页同口径（空会话只留一个）；附修复前/后录屏对比 fbf427d
+
 ## [0.5.0-beta.1](///compare/v0.4.16...v0.5.0-beta.1) (2026-10-17)
 
 ### Features
