@@ -67,6 +67,11 @@ test('首页：卡片文案真化（无假数）+「说一句话」走唯一管�
     const errors = []
     win.on('pageerror', (e) => errors.push(String(e.message).slice(0, 200)))
     await win.waitForTimeout(3000)
+    // 启动页现在是应用壳：显式跳到首页（直开模式）再断言
+    await win.evaluate(() => {
+      window.location.href = 'J.Co主界面-首页.html'
+    })
+    await win.waitForTimeout(1800)
     const text = await win.evaluate(() => document.body.innerText)
     expect(text.includes('2 条视频已就绪')).toBe(false)
     expect(text.includes('抖音和视频号')).toBe(false) // 入口区文案统一：不再有多平台旧承诺

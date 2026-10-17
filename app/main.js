@@ -6,7 +6,7 @@ const { pathToFileURL } = require('url')
 
 // 界面文件在 J.Co\设计原型 里（和本工程是邻居），整个 J.Co 文件夹搬走也能正常打开
 const UI_DIR = path.join(__dirname, '..', '设计原型')
-const ENTRY = 'J.Co主界面-首页.html'
+const ENTRY = 'J.Co应用壳.html' // 应用壳（M10 前端一壳化）：侧栏常驻，内容区只换视图
 
 // ---------- 应用级设置（主进程持有：主题偏好等；开机启动由系统记录） ----------
 // 打包版：设置写入用户数据目录（安装目录只读）；开发版：沿用工程内文件

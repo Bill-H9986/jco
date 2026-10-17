@@ -883,3 +883,5 @@ html:not(.side-pinned) .convo.new-btn .ti { font-size: 18px; }
 .sidebar-inner::-webkit-scrollbar-thumb { background: rgba(0, 0, 0, 0.16); border-radius: 999px; }
 .sidebar-inner::-webkit-scrollbar-track { background: transparent; }
 .side-foot { position: sticky; bottom: 0; background: var(--sidebar); z-index: 2; }
+/* 应用壳内嵌页面：隐藏页面自己的侧栏（外壳常驻，页面只负责内容区） */
+.embedded .sidebar { display: none; }

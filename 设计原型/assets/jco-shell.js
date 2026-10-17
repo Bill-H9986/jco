@@ -4,6 +4,28 @@
 // 所有页面在 <head> 的 jco-ui.css 之后引用本文件；页面内重复的导航逻辑逐步退休。
 (function () {
   'use strict'
+  var IS_SHELL = !!document.getElementById ? !!document.getElementById('jcoFrame') : false
+  var IS_EMBEDDED = false
+  try {
+    IS_EMBEDDED = window.self !== window.top
+  } catch (err) {
+    IS_EMBEDDED = true
+  }
+  if (IS_EMBEDDED) {
+    try {
+      document.documentElement.classList.add('embedded')
+    } catch (err) {}
+    // 子 frame 没有 preload：借用外壳（父窗口）的 IPC 通道（同源直接引用，方法与原有完全一致）
+    try {
+      if (!window.jco && window.parent && window.parent.jco) window.jco = window.parent.jco
+    } catch (err) {}
+  }
+  // 外壳传来的意图（?task= / ?chat=）→ 写进本页会话意图（各页原有消费逻辑照常）
+  try {
+    var usp = new URLSearchParams(location.search)
+    if (usp.get('task')) sessionStorage.setItem('jco-open-task', usp.get('task'))
+    if (usp.get('chat')) sessionStorage.setItem('jco-open-chat', usp.get('chat'))
+  } catch (err) {}
   var PAGES = {
     总管: 'J.Co总管.html',
     选题: 'J.Co工作台-选题.html',
@@ -58,6 +80,14 @@
       e.stopPropagation()
       if (leaving) return
       leaving = true
+      // 壳模式：只换内容视图（侧栏常驻不重绘）；iframe/独立页：本页内导航
+      if (typeof window.__jcoGo === 'function') {
+        window.__jcoGo(target)
+        setTimeout(function () {
+          leaving = false
+        }, 400)
+        return
+      }
       try {
         document.body.classList.add('shell-leaving')
       } catch (err) {}
@@ -139,9 +169,11 @@
               b.innerHTML = '<span class="name"></span>'
               b.querySelector('.name').textContent = t.name + ' ' + (t.state === 'done' ? '✓' : t.state === 'failed' ? '✗' : '…')
               b.addEventListener('click', function () {
-                try {
-                  sessionStorage.setItem('jco-open-task', t.id)
-                } catch (e) {}
+                if (typeof window.__jcoGo === 'function') {
+                  window.__jcoGo('J.Co总管.html?task=' + encodeURIComponent(t.id))
+                  return
+                }
+                try { sessionStorage.setItem('jco-open-task', t.id) } catch (e) {}
                 location.href = 'J.Co总管.html'
               })
               taskBox.appendChild(b)
@@ -174,9 +206,11 @@
           b.innerHTML = '<span class="name"></span>'
           b.querySelector('.name').textContent = c.title || '新会话'
           b.addEventListener('click', function () {
-            try {
-              sessionStorage.setItem('jco-open-chat', c.id)
-            } catch (e) {}
+            if (typeof window.__jcoGo === 'function') {
+              window.__jcoGo('J.Co总管.html?chat=' + encodeURIComponent(c.id))
+              return
+            }
+            try { sessionStorage.setItem('jco-open-chat', c.id) } catch (e) {}
             location.href = 'J.Co总管.html'
           })
           chatBox.appendChild(b)
@@ -184,9 +218,136 @@
       } catch (e) {}
     } catch (e) {}
   }
+  // 4) 壳模式专用：统一组折叠（壳里没有页面内联逻辑）+ 侧栏固定展开 + 当前页高亮
+  function applyFold(label, hide) {
+    label.classList.toggle('folded', hide)
+    var el = label.nextElementSibling
+    while (el && !el.classList.contains('group-label')) {
+      if (el.classList.contains('nav-item') || el.classList.contains('convos')) el.style.display = hide ? 'none' : ''
+      el = el.nextElementSibling
+    }
+  }
+  function pageName() {
+    try {
+      return decodeURIComponent(location.pathname.split('/').pop())
+    } catch (err) {
+      return ''
+    }
+  }
+  function highlight(page) {
+    document.querySelectorAll('.nav .nav-item').forEach(function (b) {
+      var t = PAGES[b.textContent.trim()]
+      b.classList.toggle('active', !!t && t === page)
+    })
+  }
+  function bindAllLabels() {
+    document.querySelectorAll('.group-label').forEach(function (label) {
+      if (label.getAttribute('data-shell-bound') === '1') return
+      label.setAttribute('data-shell-bound', '1')
+      label.addEventListener('click', function () {
+        var hide = !label.classList.contains('folded')
+        applyFold(label, hide)
+        redecorate()
+      })
+    })
+  }
+  function initShellChrome() {
+    var pinBtn = document.querySelector('.side-toggle')
+    if (pinBtn) {
+      pinBtn.addEventListener('click', function () {
+        var v = !document.documentElement.classList.contains('side-pinned')
+        document.documentElement.classList.toggle('side-pinned', v)
+        pinBtn.querySelector('.ti').className = 'ti ' + (v ? 'ti-layout-sidebar-left-collapse' : 'ti-layout-sidebar-left-expand')
+        try {
+          localStorage.setItem('jco-side-pinned', v ? '1' : '0')
+        } catch (err) {}
+      })
+      try {
+        if (localStorage.getItem('jco-side-pinned') === '1') {
+          document.documentElement.classList.add('side-pinned')
+          pinBtn.querySelector('.ti').className = 'ti ti-layout-sidebar-left-collapse'
+        }
+      } catch (err) {}
+    }
+    var frame = document.getElementById('jcoFrame')
+    if (frame) {
+      try {
+        highlight(decodeURIComponent((frame.getAttribute('src') || '').split('?')[0]))
+      } catch (err) {}
+    }
+  }
+  // iframe 页面把"当前页"告诉壳（壳据此点亮侧栏）
+  window.addEventListener('message', function (e) {
+    var pg = e.data && e.data.__jcoPage
+    if (pg) highlight(pg)
+  })
+  // 5) 统一通知面板（壳的铃铛/各页可用；各页内联同名函数存在时以本职实现为准）
+  window.jcoToggleNotif = window.jcoToggleNotif || function (anchor) {
+    try {
+      var old = document.querySelector('.notif-pop')
+      if (old) {
+        old.remove()
+        return
+      }
+      var items = []
+      try {
+        items = JSON.parse(localStorage.getItem('jco-log-v1') || '{"items":[]}').items || []
+      } catch (err) {}
+      var pop = document.createElement('div')
+      pop.className = 'notif-pop'
+      var r = anchor.getBoundingClientRect()
+      pop.style.position = 'fixed'
+      pop.style.left = Math.min(r.right + 10, window.innerWidth - 296) + 'px'
+      pop.style.bottom = Math.max(12, window.innerHeight - r.bottom) + 'px'
+      var head = document.createElement('div')
+      head.className = 'np-head'
+      head.textContent = '最近动态'
+      pop.appendChild(head)
+      if (!items.length) {
+        var empty = document.createElement('div')
+        empty.className = 'np-empty'
+        empty.textContent = '还没有记录。干一句活，这里就开始记。'
+        pop.appendChild(empty)
+      } else {
+        items.slice(0, 8).forEach(function (x) {
+          var row = document.createElement('div')
+          row.className = 'np-row'
+          var d = new Date(x.t)
+          var time = document.createElement('span')
+          time.className = 'np-time'
+          time.textContent = String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0')
+          var txt = document.createElement('span')
+          txt.className = 'np-txt'
+          txt.textContent = x.title + (x.detail ? '（' + x.detail + '）' : '')
+          row.appendChild(time)
+          row.appendChild(txt)
+          pop.appendChild(row)
+        })
+      }
+      document.body.appendChild(pop)
+      var closer = function (ev) {
+        if (!pop.contains(ev.target)) {
+          pop.remove()
+          document.removeEventListener('click', closer, true)
+        }
+      }
+      setTimeout(function () {
+        document.addEventListener('click', closer, true)
+      }, 0)
+    } catch (err) {}
+  }
   function init() {
     injectSidebarLists()
     decorate()
+    if (document.getElementById('jcoFrame')) {
+      bindAllLabels()
+      initShellChrome()
+    }
+    if (IS_EMBEDDED) {
+      try {
+        parent.postMessage({ __jcoPage: pageName() }, '*')
+      } catch (err) {}
+    }
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init)
   else init()
