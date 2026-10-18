@@ -690,6 +690,35 @@ function readAutoTasks() {
     return []
   }
 }
+function normalizeAutoTasks(raw) {
+  return (Array.isArray(raw) ? raw : [])
+    .filter((t) => t && typeof t.id === 'string' && t.id !== '' && typeof t.name === 'string' && t.name !== '')
+    .map((t) => {
+      const s = t.schedule && typeof t.schedule === 'object' ? t.schedule : {}
+      const time = /^([01]\d|2[0-3]):[0-5]\d$/.test(String(s.time || '')) ? String(s.time) : '09:00'
+      const schedule =
+        s.kind === 'weekly'
+          ? { kind: 'weekly', weekday: Math.min(7, Math.max(1, parseInt(s.weekday, 10) || 1)), time }
+          : { kind: 'daily', time }
+      return {
+        id: String(t.id).slice(0, 24),
+        name: String(t.name).slice(0, 60),
+        desc: String(t.desc || '').slice(0, 300),
+        icon: String(t.icon || 'ti-sparkles').slice(0, 32),
+        when: String(t.when || (schedule.kind === 'weekly'
+          ? '每周' + ['一', '二', '三', '四', '五', '六', '日'][schedule.weekday - 1] + ' ' + time
+          : '每天 ' + time)).slice(0, 40),
+        on: t.on === true,
+        createdAt: Number.isFinite(t.createdAt) ? t.createdAt : Date.now(),
+        schedule,
+      }
+    })
+}
+function writeAutoTasks(raw) {
+  const items = normalizeAutoTasks(raw)
+  fs.writeFileSync(AUTO_TASKS_FILE, JSON.stringify({ items }, null, 2), 'utf8')
+  return items
+}
 function emptyTopics() {
   return { version: 1, inspos: [], radar: [], favs: [] }
 }
@@ -1387,28 +1416,16 @@ async function startAutoScheduler() {
 // 自动任务 IPC：页面 → 主进程同步任务表；页面反查执行记录
 ipcMain.handle('tasks:sync', (_event, payload) => {
   try {
-    const raw = payload && Array.isArray(payload.items) ? payload.items : []
-    const items = raw
-      .filter((t) => t && typeof t.id === 'string' && t.id !== '' && typeof t.name === 'string' && t.name !== '')
-      .map((t) => {
-        const s = t.schedule && typeof t.schedule === 'object' ? t.schedule : {}
-        const time = /^([01]\d|2[0-3]):[0-5]\d$/.test(String(s.time || '')) ? String(s.time) : '09:00'
-        const schedule =
-          s.kind === 'weekly'
-            ? { kind: 'weekly', weekday: Math.min(7, Math.max(1, parseInt(s.weekday, 10) || 1)), time }
-            : { kind: 'daily', time }
-        return {
-          id: String(t.id).slice(0, 24),
-          name: String(t.name).slice(0, 60),
-          desc: String(t.desc || '').slice(0, 300),
-          icon: String(t.icon || 'ti-sparkles').slice(0, 32),
-          on: t.on === true,
-          createdAt: Number.isFinite(t.createdAt) ? t.createdAt : Date.now(),
-          schedule,
-        }
-      })
-    fs.writeFileSync(AUTO_TASKS_FILE, JSON.stringify({ items }, null, 2), 'utf8')
+    const items = writeAutoTasks(payload && payload.items)
     return { ok: true, count: items.length }
+  } catch (error) {
+    return { ok: false, error: String((error && error.message) || error) }
+  }
+})
+ipcMain.handle('tasks:get', () => ({ ok: true, items: readAutoTasks() }))
+ipcMain.handle('tasks:save', (_event, payload) => {
+  try {
+    return { ok: true, items: writeAutoTasks(payload && payload.items) }
   } catch (error) {
     return { ok: false, error: String((error && error.message) || error) }
   }

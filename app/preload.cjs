@@ -135,6 +135,24 @@ contextBridge.exposeInMainWorld('jco', {
         name: String((t && t.name) || ''),
         desc: String((t && t.desc) || ''),
         icon: String((t && t.icon) || ''),
+        when: String((t && t.when) || ''),
+        on: Boolean(t && t.on),
+        createdAt: Number(t && t.createdAt) || 0,
+        schedule: {
+          kind: String((t && t.schedule && t.schedule.kind) || 'daily'),
+          time: String((t && t.schedule && t.schedule.time) || '09:00'),
+          weekday: Number(t && t.schedule && t.schedule.weekday) || 0,
+        },
+      })),
+    }),
+    get: () => ipcRenderer.invoke('tasks:get'),
+    save: (items) => ipcRenderer.invoke('tasks:save', {
+      items: (Array.isArray(items) ? items : []).map((t) => ({
+        id: String((t && t.id) || ''),
+        name: String((t && t.name) || ''),
+        desc: String((t && t.desc) || ''),
+        icon: String((t && t.icon) || ''),
+        when: String((t && t.when) || ''),
         on: Boolean(t && t.on),
         createdAt: Number(t && t.createdAt) || 0,
         schedule: {

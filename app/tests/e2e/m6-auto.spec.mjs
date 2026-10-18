@@ -77,12 +77,23 @@ test('自动任务页：旧数据迁移（对标雷达→今日战报）+ 结构
     await win.locator('#tWhat').fill('扫一遍评论，拟好回复等我放行')
     await win.locator('#tSave').click()
     await win.waitForTimeout(500)
-    const stored = await win.evaluate(() => JSON.parse(localStorage.getItem('jco-tasks-v1') || '{}'))
-    const created = (stored.items || []).find((t) => t.name === '每晚评论扫描')
-    expect(created, '新建任务应写入存储').toBeTruthy()
-    expect(created.schedule).toEqual({ kind: 'daily', time: '18:30' })
-    expect(created.when).toBe('每天 18:30')
+    await expect
+      .poll(
+        async () =>
+          await win.evaluate(async () => {
+            const data = await window.jco.tasks.get()
+            return (data.items || []).find((t) => t.name === '每晚评论扫描') || null
+          }),
+        { timeout: 5000 },
+      )
+      .toMatchObject({ schedule: { kind: 'daily', time: '18:30' }, when: '每天 18:30' })
+    const created = await win.evaluate(async () => {
+      const data = await window.jco.tasks.get()
+      return (data.items || []).find((t) => t.name === '每晚评论扫描') || null
+    })
     expect(typeof created.createdAt).toBe('number')
+    const legacy = await win.evaluate(() => JSON.parse(localStorage.getItem('jco-tasks-v1') || '{}'))
+    expect((legacy.items || []).some((t) => t.name === '每晚评论扫描')).toBe(false)
 
     // 同步落盘（tasks:sync → kernel/auto-tasks.json）
     await expect.poll(() => fs.existsSync(TASKS_FILE), { timeout: 5000 }).toBe(true)

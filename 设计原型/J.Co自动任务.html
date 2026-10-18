@@ -912,20 +912,42 @@
   (function () {
     var KEY = 'jco-tasks-v1'
     // 出厂任务表见 assets/jco-auto-tasks.js（单一事实源）；这里不再内置副本
-    function load() {
+    function loadLegacy() {
       var raw = null
       try { var d = JSON.parse(localStorage.getItem(KEY) || 'null'); if (d && Array.isArray(d.items)) raw = d.items } catch (e) {}
       return JCO_AUTO_TASKS.migrate(raw) // 老任务平滑升级；旧「对标雷达」（做不到的活）换成本版本能跑的
     }
-    function save(items) { try { localStorage.setItem(KEY, JSON.stringify({ items: items })) } catch (e) {} }
+    function save(items) {
+      if (window.jco && window.jco.tasks && window.jco.tasks.save) {
+        return window.jco.tasks.save(items).then(function (res) {
+          if (!res || !res.ok) toast((res && res.error) || '自动任务没存上');
+          return res;
+        }, function () {
+          toast('自动任务没存上，再试一次。');
+          return { ok: false };
+        });
+      }
+      // 浏览器直开的降级路径；桌面应用不走这里。
+      try { localStorage.setItem(KEY, JSON.stringify({ items: items })) } catch (e) {}
+      return Promise.resolve({ ok: true });
+    }
     var tostEl = document.getElementById('toast')
     function toast(msg) { if (!tostEl) return; tostEl.textContent = msg; tostEl.classList.add('show'); clearTimeout(toast._t); toast._t = setTimeout(function () { tostEl.classList.remove('show') }, 2600) }
-    var items = load()
-    save(items) // 迁移结果写回
+    var items = loadLegacy()
     var list = document.getElementById('taskList')
     var runs = {}
-    function syncTasks() { try { if (window.jco && window.jco.tasks && window.jco.tasks.sync) window.jco.tasks.sync(items) } catch (e) {} }
-    syncTasks()
+    async function hydrateTasksStore() {
+      if (!window.jco || !window.jco.tasks || !window.jco.tasks.get) return;
+      try {
+        const res = await window.jco.tasks.get();
+        if (res && res.ok && Array.isArray(res.items) && res.items.length > 0) {
+          items = res.items;
+          render();
+          return;
+        }
+        await save(items);
+      } catch (e) {}
+    }
     // 执行记录（调度器写、这里只读）：拿到后重画一次「上次执行」
     if (window.jco && window.jco.tasks && window.jco.tasks.runs) {
       window.jco.tasks.runs().then(function (r) { runs = (r && r.runs) || {}; render() }).catch(function () {})
@@ -962,8 +984,7 @@
           tg.classList.toggle('on', t.on)
           badge.className = 'tk-badge' + (t.on ? ' on' : '')
           badge.textContent = t.on ? '运行中' : '已暂停'
-          save(items)
-          syncTasks()
+          void save(items)
           toast(t.on ? '「' + t.name + '」已启动' : '「' + t.name + '」先暂停了')
         })
         el.querySelector('.tk-run').addEventListener('click', function () {
@@ -1000,14 +1021,14 @@
       if (!name) { toast('先给任务起个名字'); return }
       var ms = JCO_AUTO_TASKS.makeSchedule(when)
       items.push({ id: 't' + Date.now().toString(36), name: name, desc: what || '等细节补上后就能跑', when: ms.when, icon: 'ti-sparkles', on: true, schedule: ms.schedule, createdAt: Date.now() })
-      save(items)
-      syncTasks()
+      void save(items)
       render()
       document.getElementById('tName').value = ''
       document.getElementById('tWhat').value = ''
       ov.classList.remove('show')
       toast('建好了：「' + name + '」已加入')
     })
+    void hydrateTasksStore()
   })();
 </script>
   
