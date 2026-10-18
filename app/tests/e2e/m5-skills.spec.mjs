@@ -17,8 +17,8 @@ async function goto(win, page) {
 }
 
 async function setSkills(win, items) {
-  await win.evaluate((list) => {
-    localStorage.setItem('jco-skills-v1', JSON.stringify({ items: list }))
+  await win.evaluate(async (list) => {
+    await window.jco.skills.save(list)
   }, items)
   await win.reload()
 }
@@ -75,9 +75,12 @@ test('技能库页：16 项合一（12 + 4）；启停真存回存储', async ()
     await firstToggle.click()
     const after = await firstToggle.textContent()
     expect(after).not.toBe(before)
-    const stored = await win.evaluate(() => JSON.parse(localStorage.getItem('jco-skills-v1') || '{}'))
+    const stored = await win.evaluate(() => window.jco.skills.get())
     expect(Array.isArray(stored.items)).toBe(true)
     expect(stored.items.length).toBe(16)
+    const oneShot = stored.items.find((item) => item.id === 's4')
+    expect(oneShot.role).toBe('editor')
+    expect(oneShot.allowedTools).toContain('jco_trim')
 
     // 内核侧副本已自动写入（B2：skills:sync 落盘）
     await expect.poll(() => fs.existsSync(skillsFile), { timeout: 5000 }).toBe(true)

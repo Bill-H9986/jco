@@ -936,7 +936,30 @@
         return { id: s.id, icon: a.icon || s.icon, nm: s.name, fill: a.fill || '', method: a.method, toast: a.toast, type: a.type, duration: a.duration };
       });
     }
-    const SKILLS = loadMakeVideoSkills();
+    let SKILLS = loadMakeVideoSkills();
+    async function hydrateSkillsStore() {
+      if (!window.jco || !window.jco.skills || !window.jco.skills.get) return;
+      try {
+        const res = await window.jco.skills.get();
+        if (!res || !res.ok || !Array.isArray(res.items) || res.items.length === 0) return;
+        const base = (typeof window.JCO_SKILLS !== 'undefined' && window.JCO_SKILLS) ? window.JCO_SKILLS : null;
+        if (!base) return;
+        const local = res.items;
+        const list = base.makeVideoSkills(base.merge(local));
+        list.sort(function (a, b) {
+          var ia = MV_ORDER.indexOf(a.id);
+          var ib = MV_ORDER.indexOf(b.id);
+          if (ia === -1) ia = 99;
+          if (ib === -1) ib = 99;
+          return ia - ib;
+        });
+        SKILLS = list.map(function (s) {
+          var a = s.action || {};
+          return { id: s.id, icon: a.icon || s.icon, nm: s.name, fill: a.fill || '', method: a.method, toast: a.toast, type: a.type, duration: a.duration };
+        });
+        render();
+      } catch (e) {}
+    }
 
     const TEMPLATES = [
       { icon: 'ti-file-text', nm: '政策解读', ds: '新规出来，第一时间讲清楚', fill: '做一条政策解读视频：把最新的变化讲清楚' },
@@ -2056,6 +2079,7 @@
       }
     })();
     render();
+    void hydrateSkillsStore();
     renderTemplates();
     function hydrateDraftsStore() {
       if (!window.jco || !window.jco.drafts || !window.jco.drafts.get) {

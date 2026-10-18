@@ -506,24 +506,70 @@ ipcMain.handle('kernel:video', async (_event, payload) => {
 
 // 技能库 → 内核侧同步（M5）：写 kernel/skills.json，供系统提示词注入技能段。
 // 纪律：界面是单一事实源，这个文件是从属副本；只收约定字段并截断长度（防脏数据进内核）。
-ipcMain.handle('skills:sync', (_event, payload) => {
-  try {
-    const raw = payload && Array.isArray(payload.items) ? payload.items : []
-    const items = raw
-      .filter((i) => i && typeof i.id === 'string' && i.id !== '')
-      .map((i) => ({
+const SKILL_TOOL_MAP = {
+  writer: [],
+  editor: ['jco_list_assets', 'jco_probe_video', 'jco_add_subtitles', 'jco_add_music', 'jco_trim', 'jco_concat'],
+  operator: [
+    'jco_open_page', 'jco_snapshot', 'jco_click', 'jco_type_text', 'jco_upload_file',
+    'jco_scroll', 'jco_screenshot', 'jco_wait', 'jco_save_report', 'jco_save_comments',
+  ],
+  publisher: ['jco_open_page', 'jco_snapshot', 'jco_click', 'jco_type_text', 'jco_upload_file', 'jco_scroll', 'jco_screenshot', 'jco_wait'],
+}
+function normalizeSkills(raw) {
+  return (Array.isArray(raw) ? raw : [])
+    .filter((i) => i && typeof i.id === 'string' && i.id !== '')
+    .map((i) => {
+      const kind = ['video', 'graphic', 'social', 'data'].includes(i.kind) ? i.kind : 'video'
+      const scenes = Array.isArray(i.scenes) ? i.scenes.map(String).slice(0, 10) : []
+      const role = kind === 'social' || kind === 'data'
+        ? 'operator'
+        : (kind === 'video' || scenes.includes('make-video'))
+          ? 'editor'
+          : 'writer'
+      return {
         id: String(i.id).slice(0, 24),
         name: String(i.name || '').slice(0, 40),
         desc: String(i.desc || '').slice(0, 200),
         entry: String(i.entry || '').slice(0, 160),
+        icon: String(i.icon || 'ti-sparkles').slice(0, 32),
+        kind,
+        scenes,
+        role,
+        allowedTools: SKILL_TOOL_MAP[role] || [],
         on: i.on === true,
-      }))
-    fs.writeFileSync(SKILLS_FILE, JSON.stringify({ items }, null, 2), 'utf8')
-    // 技能段属于 chat 的系统 persona：变更后重建已存在的 chat Harness，下一轮生效。
-    void getBridge()
-      .then((bridge) => bridge.reloadProfile('chat'))
-      .catch(() => {})
+      }
+    })
+}
+function readSkills() {
+  try {
+    const data = JSON.parse(fs.readFileSync(SKILLS_FILE, 'utf8'))
+    return normalizeSkills(data && data.items)
+  } catch (error) {
+    return []
+  }
+}
+function writeSkills(raw) {
+  const items = normalizeSkills(raw)
+  fs.mkdirSync(path.dirname(SKILLS_FILE), { recursive: true })
+  fs.writeFileSync(SKILLS_FILE, JSON.stringify({ items }, null, 2), 'utf8')
+  // 技能段属于 chat 的系统 persona：变更后重建已存在的 chat Harness，下一轮生效。
+  void getBridge()
+    .then((bridge) => bridge.reloadProfile('chat'))
+    .catch(() => {})
+  return items
+}
+ipcMain.handle('skills:sync', (_event, payload) => {
+  try {
+    const items = writeSkills(payload && payload.items)
     return { ok: true, count: items.length }
+  } catch (error) {
+    return { ok: false, error: String((error && error.message) || error) }
+  }
+})
+ipcMain.handle('skills:get', () => ({ ok: true, items: readSkills() }))
+ipcMain.handle('skills:save', (_event, payload) => {
+  try {
+    return { ok: true, items: writeSkills(payload && payload.items) }
   } catch (error) {
     return { ok: false, error: String((error && error.message) || error) }
   }

@@ -900,19 +900,42 @@
     var JSK = (typeof window.JCO_SKILLS !== 'undefined' && window.JCO_SKILLS) ? window.JCO_SKILLS : null;
     var DEFAULTS = JSK ? JSK.DEFAULTS : [];
     var KIND_LABEL = { video: '视频', graphic: '图文', social: '互动', data: '数据' }
-    function load() {
+    function loadLegacy() {
       var local = null;
       try { var d = JSON.parse(localStorage.getItem(KEY) || 'null'); if (d && Array.isArray(d.items)) local = d.items } catch (e) {}
       if (JSK) return JSK.merge(local); // 合并：已存在项以用户为准，新技能按默认补入
       return local || DEFAULTS.slice();
     }
-    function save(items) { try { localStorage.setItem(KEY, JSON.stringify({ items: items })) } catch (e) {} }
+    function save(items) {
+      if (window.jco && window.jco.skills && window.jco.skills.save) {
+        return window.jco.skills.save(items).then(function (res) {
+          if (!res || !res.ok) toast((res && res.error) || '技能没存上');
+          return res;
+        }, function () {
+          toast('技能没存上，再试一次。');
+          return { ok: false };
+        });
+      }
+      // 浏览器直开的降级路径；桌面应用不走这里。
+      try { localStorage.setItem(KEY, JSON.stringify({ items: items })) } catch (e) {}
+      return Promise.resolve({ ok: true });
+    }
     var tostEl = document.getElementById('toast')
     function toast(msg) { if (!tostEl) return; tostEl.textContent = msg; tostEl.classList.add('show'); clearTimeout(toast._t); toast._t = setTimeout(function () { tostEl.classList.remove('show') }, 2600) }
-    var items = load()
-    save(items)   // 合并结果写回（新技能补入、数据以共享表为准）
-    function syncKernel() { try { if (window.jco && window.jco.skills && window.jco.skills.sync) window.jco.skills.sync(items) } catch (e) {} }
-    syncKernel()  // 同步给内核侧（系统提示词注入「手艺清单」用；浏览器直开时静默跳过）
+    var items = loadLegacy()
+    async function hydrateSkillsStore() {
+      if (!window.jco || !window.jco.skills || !window.jco.skills.get) return;
+      try {
+        const res = await window.jco.skills.get();
+        if (res && res.ok && Array.isArray(res.items) && res.items.length > 0) {
+          items = JSK ? JSK.merge(res.items) : res.items;
+          render();
+          void save(items);
+          return;
+        }
+        await save(items);
+      } catch (e) {}
+    }
     var grid = document.getElementById('skillGrid')
     var countEl = document.getElementById('skCount')
     var filter = 'all'
@@ -934,8 +957,7 @@
         btn.addEventListener('click', function () {
           s.on = !s.on
           paint()
-          save(items)
-          syncKernel()
+          void save(items)
           toast(s.on ? '「' + s.name + '」启用了，去创作页就能叫它' : '「' + s.name + '」先收起来了')
         })
         grid.appendChild(el)
@@ -951,6 +973,7 @@
         render()
       })
     })
+    void hydrateSkillsStore()
   })();
 </script>
   

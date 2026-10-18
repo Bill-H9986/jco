@@ -117,12 +117,28 @@ contextBridge.exposeInMainWorld('jco', {
   },
   /** 技能库（M5）：启用状态同步给内核侧（系统提示词注入"手艺清单"用；界面是单一事实源） */
   skills: {
+    get: () => ipcRenderer.invoke('skills:get'),
     sync: (items) => ipcRenderer.invoke('skills:sync', {
       items: (Array.isArray(items) ? items : []).map((i) => ({
         id: String((i && i.id) || ''),
         name: String((i && i.name) || ''),
         desc: String((i && i.desc) || ''),
         entry: String((i && i.entry) || ''),
+        icon: String((i && i.icon) || ''),
+        kind: String((i && i.kind) || 'video'),
+        scenes: Array.isArray(i && i.scenes) ? i.scenes.map(String) : [],
+        on: Boolean(i && i.on),
+      })),
+    }),
+    save: (items) => ipcRenderer.invoke('skills:save', {
+      items: (Array.isArray(items) ? items : []).map((i) => ({
+        id: String((i && i.id) || ''),
+        name: String((i && i.name) || ''),
+        desc: String((i && i.desc) || ''),
+        entry: String((i && i.entry) || ''),
+        icon: String((i && i.icon) || ''),
+        kind: String((i && i.kind) || 'video'),
+        scenes: Array.isArray(i && i.scenes) ? i.scenes.map(String) : [],
         on: Boolean(i && i.on),
       })),
     }),
