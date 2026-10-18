@@ -391,6 +391,7 @@ const MATERIALS_FILE = kernelDataPath('materials.json')
 const SCRIPTS_FILE = kernelDataPath('scripts.json')
 const DRAFTS_FILE = kernelDataPath('drafts.json')
 const OPS_FILE = kernelDataPath('ops.json')
+const ACCOUNTS_FILE = kernelDataPath('accounts.json')
 /** 自动任务纪律尾注（逐字，与《M6 接口契约》一致）：不可逆动作一律停下等用户 */
 const AUTO_DISCIPLINE = [
   '（自动任务纪律：这是定时触发的任务，用户正在别处忙。准备工作照做；',
@@ -999,6 +1000,38 @@ function updateOpsCommentRecord(id, patch) {
   writeOps(data)
   return comment
 }
+function emptyAccounts() {
+  return { version: 1, platforms: {} }
+}
+function normalizeAccounts(input) {
+  const data = input && typeof input === 'object' ? input : {}
+  const source = data.platforms && typeof data.platforms === 'object' ? data.platforms : {}
+  const platforms = {}
+  Object.keys(source).slice(0, 20).forEach((id) => {
+    const record = source[id]
+    if (!record || typeof record !== 'object') return
+    platforms[String(id).slice(0, 40)] = {
+      ok: record.ok === true,
+      at: Number(record.at) || 0,
+    }
+  })
+  return { version: 1, platforms }
+}
+function readAccounts() {
+  try {
+    return normalizeAccounts(JSON.parse(fs.readFileSync(ACCOUNTS_FILE, 'utf8')))
+  } catch (error) {
+    return emptyAccounts()
+  }
+}
+function writeAccounts(data) {
+  const normalized = normalizeAccounts(data)
+  fs.mkdirSync(path.dirname(ACCOUNTS_FILE), { recursive: true })
+  const temp = ACCOUNTS_FILE + '.tmp-' + process.pid
+  fs.writeFileSync(temp, JSON.stringify(normalized, null, 2), 'utf8')
+  fs.renameSync(temp, ACCOUNTS_FILE)
+  return normalized
+}
 ipcMain.handle('topics:get', () => ({ ok: true, data: readTopics(), brand: readBrandProfile() }))
 ipcMain.handle('topics:save', (_event, payload) => {
   try {
@@ -1083,6 +1116,23 @@ ipcMain.handle('ops:update-comment', (_event, payload) => {
     const comment = updateOpsCommentRecord(payload && payload.id, payload && payload.patch)
     if (!comment) return { ok: false, code: 'NOT_FOUND', error: '评论不存在' }
     return { ok: true, comment }
+  } catch (error) {
+    return { ok: false, error: String((error && error.message) || error) }
+  }
+})
+ipcMain.handle('accounts:get', () => ({ ok: true, data: readAccounts() }))
+ipcMain.handle('accounts:save', (_event, payload) => {
+  try {
+    return { ok: true, data: writeAccounts(payload || {}) }
+  } catch (error) {
+    return { ok: false, error: String((error && error.message) || error) }
+  }
+})
+ipcMain.handle('accounts:migrate', (_event, payload) => {
+  try {
+    const current = readAccounts()
+    if (Object.keys(current.platforms).length > 0) return { ok: true, data: current, migrated: false }
+    return { ok: true, data: writeAccounts(payload || {}), migrated: true }
   } catch (error) {
     return { ok: false, error: String((error && error.message) || error) }
   }

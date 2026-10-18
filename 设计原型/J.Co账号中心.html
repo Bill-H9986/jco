@@ -355,7 +355,7 @@
   <div class="toast" id="toast" role="status"></div>
 
   <script>
-    /* ---------- 数据（真）：平台元数据 + 本机登录登记（jco-login-v1，你亲手确认） ---------- */
+    /* ---------- 数据（真）：平台元数据 + 本机登录登记（accounts.json；旧 jco-login-v1 只读迁移） ---------- */
     const PLATFORMS = [
       { id: 'dy', name: '抖音', logo: 'dy', ch: '抖', kern: 'douyin' },
       { id: 'sph', name: '视频号', logo: 'sph', ch: '视', kern: 'shipinhao' },
@@ -364,11 +364,51 @@
       { id: 'bili', name: 'B站', logo: 'bili', ch: 'B', kern: 'bilibili' },
     ];
     const LOGIN_KEY = 'jco-login-v1';
-    function loginLoad() {
+    function loginLoadLegacy() {
       try { return JSON.parse(localStorage.getItem(LOGIN_KEY) || '{}') || {}; } catch (e) { return {}; }
     }
-    function loginSave(d) {
-      try { localStorage.setItem(LOGIN_KEY, JSON.stringify(d)); } catch (e) {}
+    let loginState = loginLoadLegacy();
+    function loginSave(next) {
+      loginState = next || {};
+      if (window.jco && window.jco.accounts && window.jco.accounts.save) {
+        return window.jco.accounts.save({ platforms: loginState }).then(function (res) {
+          if (!res || !res.ok) showToast('登录登记没存上：' + ((res && res.error) || '未知错误'));
+          return res;
+        }, function () {
+          showToast('登录登记没存上，再试一次。');
+          return { ok: false };
+        });
+      }
+      // 浏览器直开的降级路径；桌面应用不走这里。
+      try { localStorage.setItem(LOGIN_KEY, JSON.stringify(loginState)); } catch (e) {}
+      return Promise.resolve({ ok: true });
+    }
+    async function hydrateAccountsStore() {
+      if (!window.jco || !window.jco.accounts || !window.jco.accounts.get) return;
+      try {
+        const res = await window.jco.accounts.get();
+        if (!res || !res.ok) return;
+        let platforms = (res.data && res.data.platforms) || {};
+        const legacy = loginLoadLegacy();
+        let changed = false;
+        Object.keys(legacy).forEach(function (id) {
+          const rec = legacy[id];
+          if (!rec || typeof rec !== 'object') return;
+          const current = platforms[id];
+          if (!current || (Number(rec.at) || 0) > (Number(current.at) || 0)) {
+            platforms[id] = { ok: rec.ok === true, at: Number(rec.at) || Date.now() };
+            changed = true;
+          }
+        });
+        if (Object.keys(platforms).length === 0 && Object.keys(legacy).length > 0) {
+          const migrated = await window.jco.accounts.migrate({ platforms: legacy });
+          if (migrated && migrated.ok && migrated.data) platforms = migrated.data.platforms || {};
+        } else if (changed) {
+          await window.jco.accounts.save({ platforms: platforms });
+        }
+        loginState = platforms;
+        renderAll();
+      } catch (e) {}
     }
     function fmtAt(t) {
       const d = new Date(t);
@@ -386,7 +426,7 @@
 
     /* ---------- 渲染（全部读真数据） ---------- */
     function renderStats() {
-      const login = loginLoad();
+      const login = loginState;
       const ok = PLATFORMS.filter((p) => login[p.id] && login[p.id].ok).length;
       const row = document.getElementById('statsRow');
       row.innerHTML = '<b>' + PLATFORMS.length + ' 个平台</b><span class="sep">·</span><b>已登记 ' + ok + ' 个</b>' +
@@ -397,7 +437,7 @@
 
     function renderPlatforms() {
       const box = document.getElementById('pfList');
-      const login = loginLoad();
+      const login = loginState;
       box.innerHTML = '';
       PLATFORMS.forEach((p) => {
         const rec = login[p.id];
@@ -438,7 +478,7 @@
       const p = PLATFORMS.find((x) => x.id === pid);
       if (!p) return;
       sheetCtx = { pid };
-      const rec = loginLoad()[pid];
+      const rec = loginState[pid];
       document.getElementById('sheetTitle').textContent = '登录' + p.name + (rec && rec.ok ? '（重新登录）' : '');
       overlay.classList.add('show');
     }
@@ -460,12 +500,12 @@
         function () { showToast('没打开，稍后再试。'); },
       );
     });
-    document.getElementById('sheetOk').addEventListener('click', () => {
+    document.getElementById('sheetOk').addEventListener('click', async () => {
       const p = PLATFORMS.find((x) => x.id === sheetCtx.pid);
       if (!p) return;
-      const login = loginLoad();
+      const login = Object.assign({}, loginState);
       login[p.id] = { ok: true, at: Date.now() };
-      loginSave(login);
+      await loginSave(login);
       closeSheet();
       renderAll();
       showToast('登记好了：「' + p.name + '」可以干活了；哪天失效，AI 会如实告诉你。');
@@ -570,6 +610,7 @@
     })();
 
     renderAll();
+    void hydrateAccountsStore();
   
     /* ---------- 账号菜单（点头像弹出：设置 / 退出登录） ---------- */
     (function () {

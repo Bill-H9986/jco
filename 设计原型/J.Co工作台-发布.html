@@ -687,6 +687,41 @@
       { id: 'ks', kern: 'kuaishou', name: '快手', logo: 'ks', ch: '快', logged: false, acc: '未登录', on: false },
     ];
 
+    function loginLoadLegacy() {
+      try { return JSON.parse(localStorage.getItem('jco-login-v1') || '{}') || {}; } catch (e) { return {}; }
+    }
+    let loginState = loginLoadLegacy();
+    async function hydrateLoginState() {
+      if (!HAS_DESKTOP) return;
+      if (!window.jco.accounts || !window.jco.accounts.get) return;
+      try {
+        const res = await window.jco.accounts.get();
+        if (!res || !res.ok) return;
+        let platforms = (res.data && res.data.platforms) || {};
+        const legacy = loginLoadLegacy();
+        let changed = false;
+        Object.keys(legacy).forEach((id) => {
+          const rec = legacy[id];
+          if (!rec || typeof rec !== 'object') return;
+          const current = platforms[id];
+          if (!current || (Number(rec.at) || 0) > (Number(current.at) || 0)) {
+            platforms[id] = { ok: rec.ok === true, at: Number(rec.at) || Date.now() };
+            changed = true;
+          }
+        });
+        if (Object.keys(platforms).length === 0 && Object.keys(legacy).length > 0) {
+          const migrated = await window.jco.accounts.migrate({ platforms: legacy });
+          if (migrated && migrated.ok && migrated.data) platforms = migrated.data.platforms || {};
+        } else if (changed) {
+          await window.jco.accounts.save({ platforms: platforms });
+        }
+        loginState = platforms;
+        renderPlatforms();
+        updateEta();
+        if (window.__refreshAiGo) window.__refreshAiGo();
+      } catch (e) {}
+    }
+
     function syncLoginState() {
       // 浏览器直开：保留演示态；桌面应用：只认账号中心的本机登记。
       if (!HAS_DESKTOP) {
@@ -696,12 +731,12 @@
         });
         return;
       }
-      let state = {};
-      try { state = JSON.parse(localStorage.getItem('jco-login-v1') || '{}') || {}; } catch (e) {}
       PLATFORMS.forEach((p) => {
-        p.logged = !!(state[p.id] && state[p.id].ok);
+        const wasLogged = p.logged;
+        p.logged = !!(loginState[p.id] && loginState[p.id].ok);
         p.acc = p.logged ? '已登记' : '未登录';
         if (!p.logged) p.on = false;
+        else if (!wasLogged) p.on = true;
       });
     }
     syncLoginState();
@@ -859,10 +894,7 @@
       refreshAiGo();
       // 从 AI 浏览器登录回来时，窗口重新获得焦点：刷新账号中心登记状态。
       window.addEventListener('focus', function () {
-        syncLoginState();
-        renderPlatforms();
-        updateEta();
-        refreshAiGo();
+        void hydrateLoginState();
       });
 
       btn.addEventListener('click', async function () {
@@ -890,6 +922,7 @@
 
     renderPlatforms();
     updateEta();
+    void hydrateLoginState();
   </script>
   <script>
     /* ---------- 侧栏导航（原型可点通） ---------- */

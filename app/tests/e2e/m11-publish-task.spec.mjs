@@ -11,10 +11,12 @@ const APP_DIR = path.resolve(__dirname, '..', '..')
 const ELECTRON_BIN = path.join(APP_DIR, 'node_modules', 'electron', 'dist', 'electron.exe')
 const TEST_KERNEL_DIR = path.join(os.tmpdir(), 'jco-test-kernel-data')
 const DRAFTS_FILE = path.join(TEST_KERNEL_DIR, 'drafts.json')
+const ACCOUNTS_FILE = path.join(TEST_KERNEL_DIR, 'accounts.json')
 const WORK_TASKS = path.join(TEST_KERNEL_DIR, 'work-tasks')
 
 test('M11 W3-01：发布页走 Task + Approval，拒绝后不启动真实发布', async () => {
   fs.rmSync(DRAFTS_FILE, { force: true })
+  fs.rmSync(ACCOUNTS_FILE, { force: true })
   fs.rmSync(WORK_TASKS, { recursive: true, force: true })
   const app = await electron.launch({ executablePath: ELECTRON_BIN, args: [APP_DIR, '--jco-test'] })
   try {
@@ -41,7 +43,7 @@ test('M11 W3-01：发布页走 Task + Approval，拒绝后不启动真实发布'
           },
         ],
       })
-      localStorage.setItem('jco-login-v1', JSON.stringify({ dy: { ok: true, at: Date.now() } }))
+      await window.jco.accounts.save({ platforms: { dy: { ok: true, at: Date.now() } } })
       window.location.href = 'J.Co工作台-发布.html'
     })
     await win.waitForTimeout(1500)
@@ -90,6 +92,7 @@ test('M11 W3-01：发布页走 Task + Approval，拒绝后不启动真实发布'
   } finally {
     await app.close()
     fs.rmSync(DRAFTS_FILE, { force: true })
+    fs.rmSync(ACCOUNTS_FILE, { force: true })
     fs.rmSync(WORK_TASKS, { recursive: true, force: true })
   }
 })

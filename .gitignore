@@ -45,6 +45,7 @@ app/kernel/materials.json
 app/kernel/scripts.json
 app/kernel/drafts.json
 app/kernel/ops.json
+app/kernel/accounts.json
 # 后期工具配置与 patch（运行时生成：main/bridge 写入，不入库）
 app/kernel/edit-tools.json
 app/kernel/edit-tools.patch.yml

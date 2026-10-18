@@ -17,8 +17,8 @@ test('发布页：让 AI 准备抖音发布入口就位（存在性与文案）'
     win.on('pageerror', (e) => errors.push(String(e.message).slice(0, 200)))
     await win.waitForTimeout(2500)
     // 发布页只认账号中心的真实登记；测试先登记抖音，避免旧硬编码假登录态。
-    await win.evaluate(() => {
-      localStorage.setItem('jco-login-v1', JSON.stringify({ dy: { ok: true, at: Date.now() } }))
+    await win.evaluate(async () => {
+      await window.jco.accounts.save({ platforms: { dy: { ok: true, at: Date.now() } } })
     })
     await win.evaluate(() => {
       window.location.href = 'J.Co工作台-发布.html'

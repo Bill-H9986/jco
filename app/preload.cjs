@@ -228,6 +228,15 @@ contextBridge.exposeInMainWorld('jco', {
       patch: patch && typeof patch === 'object' ? patch : {},
     }),
   },
+  accounts: {
+    get: () => ipcRenderer.invoke('accounts:get'),
+    save: (data) => ipcRenderer.invoke('accounts:save', {
+      platforms: data && data.platforms && typeof data.platforms === 'object' ? data.platforms : {},
+    }),
+    migrate: (data) => ipcRenderer.invoke('accounts:migrate', {
+      platforms: data && data.platforms && typeof data.platforms === 'object' ? data.platforms : {},
+    }),
+  },
   /** 系统级开关：主题（真切换）/ 开机启动（系统登录项）/ 清缓存（真清理） */
   sys: {
     theme: (mode) => ipcRenderer.invoke('sys:theme', String(mode || 'system')),

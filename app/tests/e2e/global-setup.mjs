@@ -20,6 +20,7 @@ export const FILES = [
   'scripts.json',
   'drafts.json',
   'ops.json',
+  'accounts.json',
 ]
 export const DIRS = ['task-sessions', 'work-tasks']
 
