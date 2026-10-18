@@ -488,6 +488,32 @@
       '- 口播稿 8~14 行；小红书版 8~12 行短句、段间空行、结尾引导评论。',
     ].join('\n');
     let genBusy = false;
+    let brandProfile = null;
+    let currentScript = null;
+    let scriptReady = false;
+    let editSaveTimer = null;
+
+    function brandLine() {
+      if (!brandProfile || typeof brandProfile !== 'object') return '';
+      var parts = [];
+      if (brandProfile.industry) parts.push('行业：' + brandProfile.industry);
+      if (brandProfile.audience) parts.push('受众：' + brandProfile.audience);
+      if (Array.isArray(brandProfile.platforms) && brandProfile.platforms.length) parts.push('平台：' + brandProfile.platforms.join('、'));
+      if (brandProfile.tone) parts.push('语气：' + brandProfile.tone);
+      if (Array.isArray(brandProfile.forbidden) && brandProfile.forbidden.length) parts.push('禁用表达：' + brandProfile.forbidden.join('、'));
+      return parts.length ? parts.join('；') : '';
+    }
+    function writerSystemPrompt() {
+      var brand = brandLine();
+      return brand ? GEN_SYSTEM + '\n品牌档案：' + brand : GEN_SYSTEM;
+    }
+    async function hydrateBrandProfile() {
+      if (!window.jco || !window.jco.brand || !window.jco.brand.get) return;
+      try {
+        var res = await window.jco.brand.get();
+        if (res && res.ok) brandProfile = res.data || null;
+      } catch (e) {}
+    }
 
     /* ---------- J.Co 本地状态层：活动日志 ---------- */
     function jcoLogAdd(kind, title, detail) {
@@ -536,7 +562,9 @@
     }
 
     /** 带着当前主题去「做视频」页（交接给下一页） */
-    function toMakeVideo() {
+    async function toMakeVideo() {
+      const saved = await persistEditedScript();
+      if (!saved) return;
       if (JCO_KERNEL) {
         try { sessionStorage.setItem('jco-make-topic', topicText()); } catch (e) {}
         location.href = 'J.Co工作台-做视频.html';
@@ -665,14 +693,15 @@
         '请写一版。',
       ].join('\n');
       const res = await Promise.race([
-        JCO_KERNEL.task({ system: GEN_SYSTEM, input: input }),
+        JCO_KERNEL.task({ system: writerSystemPrompt(), input: input }),
         new Promise((resolve) => setTimeout(() => resolve({ ok: false, error: '这次写太久了（超过 100 秒），再点一次试试。' }), 100000)),
       ]);
       setGenBusy(false);
       if (res && res.ok && res.text) {
-        paint({ lines: cleanLines(res.text) });
-        saveScript(topicText(), cleanLines(res.text), isXhs);
-        showToast(isXhs ? '小红书版写好了，点着还能改。' : '新一版写好了，点着还能改。');
+        const lines = cleanLines(res.text);
+        paint({ lines: lines });
+        const saved = await saveScript(topicText(), lines, isXhs, 'generate');
+        if (saved) showToast(isXhs ? '小红书版写好了，点着还能改。' : '新一版写好了，点着还能改。');
         jcoLogAdd('create', topicText().slice(0, 40), isXhs ? '小红书版写好了' : '口播稿写好了');
         jcoNotifyDone('稿子写好了', topicText().slice(0, 30));
         void evaluateChecks(res.text); // 体检徽章：后台真评估，不阻塞
@@ -750,11 +779,13 @@
         '用户要求：' + request,
         '请按用户要求改一版，保持原来的形态和风格，直接输出改后的完整稿子。',
       ].join('\n');
-      const res = await JCO_KERNEL.task({ system: GEN_SYSTEM, input: input });
+      const res = await JCO_KERNEL.task({ system: writerSystemPrompt(), input: input });
       setGenBusy(false);
       if (res && res.ok && res.text) {
-        paint({ lines: cleanLines(res.text) });
-        showToast('改好了，你看看。不满意就再说一句。');
+        const lines = cleanLines(res.text);
+        paint({ lines: lines });
+        const saved = await saveScript(topicText(), lines, xhsMode, 'revise');
+        if (saved) showToast('改好了，你看看。不满意就再说一句。');
       } else {
         showToast('没改成：' + ((res && res.error) || '未知错误'));
       }
@@ -790,6 +821,7 @@
       if (!v) { showToast('写一句你想拍什么，AI 就按这个写。'); return; }
       document.getElementById('ownInp').value = '';
       closeOwn();
+      currentScript = null;
       document.getElementById('topicName').textContent = '《' + v + '》';
       document.getElementById('topicSrc').innerHTML = '这条主题是<b>你自己出的</b>（想怎么写，你说了算）';
       paperTitle.textContent = v;
@@ -808,13 +840,52 @@
     });
 
     /* ---------- M8 收尾：接住「选题」带过来的主题；稿子真持久化；没有就空态 ---------- */
-    function saveScript(topic, lines, xhs) {
+    function saveScript(topic, lines, xhs, source) {
+      var payload = {
+        id: currentScript && currentScript.id ? currentScript.id : '',
+        topic: topic,
+        lines: lines,
+        xhs: !!xhs,
+        source: source || 'manual',
+        createdAt: currentScript && currentScript.createdAt ? currentScript.createdAt : Date.now(),
+      };
+      if (window.jco && window.jco.scripts && window.jco.scripts.save) {
+        return window.jco.scripts.save(payload).then(function (res) {
+          if (res && res.ok && res.data && res.data.current) {
+            currentScript = res.data.current;
+            return true;
+          }
+          showToast('稿子没存上：' + ((res && res.error) || '未知错误'));
+          return false;
+        }, function () {
+          showToast('稿子没存上，再试一次。');
+          return false;
+        });
+      }
+      // 浏览器直开的降级路径；桌面应用不走这里。
       try { localStorage.setItem('jco-script-v1', JSON.stringify({ topic: topic, lines: lines, xhs: !!xhs, t: Date.now() })); } catch (e) {}
+      return Promise.resolve(true);
     }
     function restoreScript() {
       try { return JSON.parse(localStorage.getItem('jco-script-v1') || 'null'); } catch (e) { return null; }
     }
+    function currentLinesFromEditor() {
+      return Array.from(scriptEl.querySelectorAll('p')).map(function (p) {
+        return p.textContent === '\u00A0' ? '' : p.textContent;
+      });
+    }
+    async function persistEditedScript() {
+      if (!scriptReady || scriptEl.querySelector('.empty-script')) return true;
+      var lines = currentLinesFromEditor();
+      if (!lines.join('').trim()) return true;
+      return await saveScript(topicText(), lines, xhsMode, 'manual');
+    }
+    scriptEl.addEventListener('input', function () {
+      clearTimeout(editSaveTimer);
+      editSaveTimer = setTimeout(function () { void persistEditedScript(); }, 700);
+    });
     function setTopic(topic, srcHtml) {
+      if (currentScript && currentScript.topic !== topic) currentScript = null;
       document.getElementById('topicName').textContent = '《' + topic + '》';
       document.getElementById('topicSrc').innerHTML = srcHtml;
       paperTitle.textContent = topic;
@@ -826,10 +897,67 @@
       p.textContent = '还没有稿子。选好主题后，点下面「重新生成一版」，我就开写。';
       scriptEl.appendChild(p);
     }
+    function applyScriptRecord(record, srcText) {
+      if (!record) return false;
+      if (bootPickedTopic && record.topic !== bootPickedTopic) {
+        currentScript = null;
+        return false;
+      }
+      currentScript = record;
+      xhsMode = !!record.xhs;
+      setTopic(record.topic || '上次的稿子', srcText);
+      paint({ lines: record.lines });
+      return true;
+    }
+    function legacyIsNewer(legacy, current) {
+      if (!legacy || !Array.isArray(legacy.lines) || legacy.lines.length === 0) return false;
+      var legacyTime = Number(legacy.t) || 0;
+      var storeTime = Number(current.updatedAt || current.createdAt) || 0;
+      return legacyTime > storeTime;
+    }
+    async function hydrateScriptStore() {
+      if (!window.jco || !window.jco.scripts || !window.jco.scripts.get) {
+        scriptReady = true;
+        return;
+      }
+      try {
+        var res = await window.jco.scripts.get();
+        if (!res || !res.ok) return;
+        var data = res.data || {};
+        var current = data.current;
+        var legacy = restoreScript();
+        if (current && Array.isArray(current.lines) && current.lines.length) {
+          if (legacyIsNewer(legacy, current)) {
+            var saved = await window.jco.scripts.save({
+              topic: legacy.topic || current.topic || '上次的稿子',
+              lines: legacy.lines,
+              xhs: !!legacy.xhs,
+              source: 'migrate',
+            });
+            if (saved && saved.ok && saved.data && saved.data.current) {
+              applyScriptRecord(saved.data.current, '旧版本刚写的稿子（已迁入）');
+            }
+            return;
+          }
+          applyScriptRecord(current, '上次写的稿子（点着还能改）');
+          return;
+        }
+        if (legacy && Array.isArray(legacy.lines) && legacy.lines.length) {
+          var migrated = await window.jco.scripts.migrate(legacy);
+          if (migrated && migrated.ok && migrated.data && migrated.data.current) {
+            applyScriptRecord(migrated.data.current, '上次写的稿子（点着还能改）');
+          }
+        }
+      } catch (e) {} finally {
+        scriptReady = true;
+      }
+    }
+    let bootPickedTopic = null;
     (function boot() {
-      if (!JCO_KERNEL) { paint(VERSIONS[0]); return; } // 浏览器直开：保留演示预览
+      if (!JCO_KERNEL) { paint(VERSIONS[0]); scriptReady = true; return; } // 浏览器直开：保留演示预览
       let picked = null;
       try { picked = sessionStorage.getItem('jco-pick-topic'); if (picked) sessionStorage.removeItem('jco-pick-topic'); } catch (e) {}
+      bootPickedTopic = picked;
       const last = restoreScript();
       if (picked) {
         setTopic(picked, '主题来自「选题」· 点【重新生成一版】我就开写');
@@ -848,6 +976,8 @@
       paperTitle.textContent = '还没有主题';
       emptyScript();
     })();
+    void hydrateScriptStore();
+    void hydrateBrandProfile();
     document.querySelectorAll('.anim').forEach((el, i) => {
       setTimeout(() => el.classList.add('in'), 60 + i * 90);
     });

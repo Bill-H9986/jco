@@ -369,6 +369,7 @@ const AUTO_RUNS_FILE = kernelDataPath('auto-runs.json')
 const TOPICS_FILE = kernelDataPath('topics.json')
 const BRAND_PROFILE_FILE = kernelDataPath('brand-profile.json')
 const MATERIALS_FILE = kernelDataPath('materials.json')
+const SCRIPTS_FILE = kernelDataPath('scripts.json')
 /** 自动任务纪律尾注（逐字，与《M6 接口契约》一致）：不可逆动作一律停下等用户 */
 const AUTO_DISCIPLINE = [
   '（自动任务纪律：这是定时触发的任务，用户正在别处忙。准备工作照做；',
@@ -718,6 +719,63 @@ function writeMaterials(data) {
   fs.renameSync(temp, MATERIALS_FILE)
   return normalized
 }
+function emptyScripts() {
+  return { version: 1, current: null, artifacts: [] }
+}
+function normalizeScriptRecord(input) {
+  if (!input || typeof input !== 'object') return null
+  const lines = Array.isArray(input.lines) ? input.lines.map((line) => String(line ?? '')).slice(0, 500) : []
+  if (!lines.some((line) => line.trim())) return null
+  const now = Date.now()
+  return {
+    id: String(input.id || '').slice(0, 120),
+    topic: String(input.topic || '').slice(0, 300),
+    lines,
+    xhs: input.xhs === true,
+    source: ['generate', 'revise', 'manual', 'migrate'].includes(input.source) ? input.source : 'manual',
+    createdAt: Number(input.createdAt) || now,
+    updatedAt: Number(input.updatedAt) || now,
+  }
+}
+function normalizeScripts(input) {
+  const data = input && typeof input === 'object' ? input : {}
+  const current = normalizeScriptRecord(data.current)
+  const artifacts = Array.isArray(data.artifacts)
+    ? data.artifacts.map(normalizeScriptRecord).filter(Boolean).slice(0, 50)
+    : []
+  if (current && !artifacts.some((item) => item.id === current.id)) artifacts.unshift(current)
+  return { version: 1, current, artifacts: artifacts.slice(0, 50) }
+}
+function readScripts() {
+  try {
+    return normalizeScripts(JSON.parse(fs.readFileSync(SCRIPTS_FILE, 'utf8')))
+  } catch (error) {
+    return emptyScripts()
+  }
+}
+function writeScripts(data) {
+  const normalized = normalizeScripts(data)
+  fs.mkdirSync(path.dirname(SCRIPTS_FILE), { recursive: true })
+  const temp = SCRIPTS_FILE + '.tmp-' + process.pid
+  fs.writeFileSync(temp, JSON.stringify(normalized, null, 2), 'utf8')
+  fs.renameSync(temp, SCRIPTS_FILE)
+  return normalized
+}
+function saveScriptRecord(payload) {
+  const incoming = normalizeScriptRecord(payload && payload.current ? payload.current : payload)
+  if (!incoming) return readScripts()
+  const data = readScripts()
+  const now = Date.now()
+  const id = incoming.id || 'script-' + now + '-' + Math.random().toString(36).slice(2, 8)
+  const record = {
+    ...incoming,
+    id,
+    createdAt: incoming.createdAt || now,
+    updatedAt: now,
+  }
+  const artifacts = [record, ...data.artifacts.filter((item) => item.id !== id)].slice(0, 50)
+  return writeScripts({ version: 1, current: record, artifacts })
+}
 ipcMain.handle('topics:get', () => ({ ok: true, data: readTopics(), brand: readBrandProfile() }))
 ipcMain.handle('topics:save', (_event, payload) => {
   try {
@@ -754,6 +812,24 @@ ipcMain.handle('materials:migrate', (_event, payload) => {
   }
 })
 ipcMain.handle('brand:get', () => ({ ok: true, data: readBrandProfile() }))
+ipcMain.handle('scripts:get', () => ({ ok: true, data: readScripts() }))
+ipcMain.handle('scripts:save', (_event, payload) => {
+  try {
+    return { ok: true, data: saveScriptRecord(payload || {}) }
+  } catch (error) {
+    return { ok: false, error: String((error && error.message) || error) }
+  }
+})
+ipcMain.handle('scripts:migrate', (_event, payload) => {
+  try {
+    const current = readScripts()
+    if (current.current) return { ok: true, data: current, migrated: false }
+    const record = payload && payload.current ? { ...payload.current, source: 'migrate' } : null
+    return { ok: true, data: saveScriptRecord({ current: record }), migrated: true }
+  } catch (error) {
+    return { ok: false, error: String((error && error.message) || error) }
+  }
+})
 function saveAutoRun(taskId, record) {
   // W1-04：执行结果统一写 work-tasks；auto-runs.json 只作为历史迁移来源读取，不再新增写入。
   void taskId

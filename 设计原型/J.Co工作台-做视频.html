@@ -1941,19 +1941,31 @@
       try { script = JSON.parse(localStorage.getItem('jco-script-v1') || 'null'); } catch (e) {}
       let mats = 0;
       try { mats = (JSON.parse(localStorage.getItem('jco-materials-v1') || '{"items":[]}').items || []).length; } catch (e) {}
-      function paint(materialCount) {
+      function paint() {
         const parts = [];
         if (script && script.topic && Array.isArray(script.lines) && script.lines.length > 0) parts.push('《' + String(script.topic).slice(0, 18) + '》稿子 ' + script.lines.length + ' 句');
         else parts.push('还没有稿子（去「文案」页写一篇）');
-        parts.push(materialCount > 0 ? ('素材 ' + materialCount + ' 件') : '素材还没导入');
+        parts.push(mats > 0 ? ('素材 ' + mats + ' 件') : '素材还没导入');
         el.textContent = parts.join(' · ');
       }
-      paint(mats);
+      paint();
+      if (window.jco && window.jco.scripts && window.jco.scripts.get) {
+        window.jco.scripts.get().then(function (res) {
+          if (!res || !res.ok) return;
+          var current = res.data && res.data.current;
+          if (current) {
+            var storeTime = Number(current.updatedAt || current.createdAt) || 0;
+            var legacyTime = Number(script && script.t) || 0;
+            if (!script || storeTime >= legacyTime) script = current;
+          }
+          paint();
+        }, function () {});
+      }
       if (window.jco && window.jco.materials && window.jco.materials.get) {
         window.jco.materials.get().then(function (res) {
           if (!res || !res.ok) return;
-          var items = (res.data && res.data.items) || [];
-          paint(items.length);
+          mats = ((res.data && res.data.items) || []).length;
+          paint();
         }, function () {});
       }
     })();

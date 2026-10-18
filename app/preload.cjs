@@ -203,6 +203,11 @@ contextBridge.exposeInMainWorld('jco', {
   brand: {
     get: () => ipcRenderer.invoke('brand:get'),
   },
+  scripts: {
+    get: () => ipcRenderer.invoke('scripts:get'),
+    save: (data) => ipcRenderer.invoke('scripts:save', { current: data || null }),
+    migrate: (data) => ipcRenderer.invoke('scripts:migrate', { current: data || null }),
+  },
   /** 系统级开关：主题（真切换）/ 开机启动（系统登录项）/ 清缓存（真清理） */
   sys: {
     theme: (mode) => ipcRenderer.invoke('sys:theme', String(mode || 'system')),
