@@ -10,6 +10,7 @@
 </script>
   <link rel="stylesheet" href="./assets/jco-ui.css">
   <script src="./assets/jco-shell.js"></script>
+  <script src="./assets/message.js"></script>
   <style>
 /* ============ 主区（聊天 + 待办面板） ============ */
   .main { flex: 1; display: flex; min-width: 0; }
@@ -76,18 +77,45 @@
     font-size: 14px; font-weight: 600; margin-top: 2px;
   }
 
-.msg.ai .body { min-width: 0; max-width: 84%; }
+.msg.ai .body { min-width: 0; max-width: min(100%, 760px); flex: 1; }
 
 .msg.ai .name { font-size: 13px; color: var(--text-3); margin-bottom: 7px; }
 
 .msg.ai + .msg.ai .name { display: none; }
 
 .msg.ai .bubble {
-    background: var(--card); color: var(--text-1);
-    border-radius: 20px; padding: 13px 17px;
-    font-size: 16px; line-height: 1.65;
-    box-shadow: var(--shadow);
+    background: transparent; color: var(--text-1);
+    border-radius: 0; padding: 0;
+    font-size: 15.5px; line-height: 1.75;
+    box-shadow: none;
   }
+
+.msg.ai .bubble p { margin: 0 0 10px; }
+
+.msg.ai .bubble p:last-child { margin-bottom: 0; }
+
+.msg.ai .bubble ul, .msg.ai .bubble ol { margin: 8px 0 12px; padding-left: 22px; }
+
+.msg.ai .bubble li { margin: 3px 0; }
+
+.msg.ai .bubble h3, .msg.ai .bubble h4, .msg.ai .bubble h5 { margin: 14px 0 8px; line-height: 1.35; }
+
+.msg.ai .bubble pre {
+    margin: 10px 0 12px; padding: 12px 14px; overflow-x: auto;
+    border-radius: 12px; background: var(--tint); color: var(--text-1);
+    font-size: 13px; line-height: 1.6;
+  }
+
+.msg.ai .bubble code {
+    padding: 1px 5px; border-radius: 5px;
+    background: var(--tint); font-size: 0.9em;
+  }
+
+.msg.ai .bubble pre code { padding: 0; background: transparent; font-size: inherit; }
+
+.msg.ai .bubble a { color: var(--accent); text-decoration: none; }
+
+.msg.ai .bubble a:hover { text-decoration: underline; }
 
 .msg.ai .bubble b { font-weight: 600; }
 
@@ -422,10 +450,7 @@
     }
 
     function mdToHtml(text) {
-      return String(text)
-        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-        .replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>')
-        .replace(/\n/g, '<br>');
+      return window.JcoMessage ? window.JcoMessage.mdToHtml(text) : String(text).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, '<br>');
     }
 
     /* ---------- J.Co 本地状态层：活动日志 / 对话历史 / 面板真数据 ---------- */
@@ -453,7 +478,7 @@
       try {
         var legacy = JSON.parse(localStorage.getItem('jco-chat-v1') || 'null');
         if (legacy && Array.isArray(legacy.items) && legacy.items.length > 0) {
-          migrated = legacy.items.map(function (m) { return { role: m.role, text: String(m.text || '').slice(0, 2000), t: Date.now() }; });
+          migrated = legacy.items.map(function (m) { return { role: m.role, text: String(m.text || ''), t: m.t || Date.now() }; });
         }
       } catch (e) {}
       var first = { id: 'c' + Date.now().toString(36), title: migrated.length ? '之前的对话' : '新会话', updatedAt: Date.now(), messages: migrated };
@@ -496,8 +521,7 @@
     }
     function chatPush(role, text) {
       var c = activeChat();
-      c.messages.push({ role: role, text: String(text || '').slice(0, 2000), t: Date.now() });
-      if (c.messages.length > 120) c.messages = c.messages.slice(-120);
+      c.messages.push({ role: role, text: String(text || ''), t: Date.now() });
       c.updatedAt = Date.now();
       if (role === 'user' && (!c.title || c.title === '新会话')) {
         c.title = String(text || '').slice(0, 14) || '新会话';
@@ -512,13 +536,7 @@
         addAI('在的。今天起我是真在跑了：你说一句，我真回答。试试？', false);
       } else {
         // 历史消息：不带入场动画、批量插入、最多渲染最近 80 条（防长会话卡顿）
-        var list = c.messages.slice(-80);
-        if (c.messages.length > list.length) {
-          var more = document.createElement('div');
-          more.className = 'daymark';
-          more.textContent = '更早的 ' + (c.messages.length - list.length) + ' 条已省略';
-          stream.appendChild(more);
-        }
+        var list = c.messages;
         var actionsHTML = '<div class="msg-actions"><button aria-label="复制"><span class="ti ti-copy"></span></button><button aria-label="赞"><span class="ti ti-thumb-up"></span></button><button aria-label="踩"><span class="ti ti-thumb-down"></span></button><button aria-label="转发"><span class="ti ti-share-3"></span></button></div>';
         var frag = document.createDocumentFragment();
         list.forEach(function (m) {
