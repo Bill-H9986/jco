@@ -730,6 +730,73 @@
         });
       })();
 
+      /* ---------- TaskEvent → 员工状态：结构化 Task/Run 的实时工位 ---------- */
+      (function staffTasks() {
+        var tasks = (typeof window.jco !== 'undefined' && window.jco && window.jco.tasks) ? window.jco.tasks : null;
+        var kernel = (typeof window.jco !== 'undefined' && window.jco && window.jco.kernel) ? window.jco.kernel : null;
+        if (!tasks || typeof tasks.sessions !== 'function') return;
+        var ROLE_HREF = {
+          writer: 'J.Co工作台-创作.html',
+          editor: 'J.Co工作台-后期.html',
+          operator: 'J.Co工作台-运营.html',
+          publisher: 'J.Co工作台-发布.html',
+        };
+        var base = {};
+        document.querySelectorAll('.staff').forEach(function (card) {
+          var href = card.getAttribute('href');
+          var badge = card.querySelector('.s-badge');
+          var live = card.querySelector('.s-live');
+          base[href] = {
+            badgeCls: badge ? badge.className : '',
+            badgeText: badge ? badge.textContent : '',
+            live: live ? live.textContent : '',
+          };
+        });
+        function restore(card) {
+          var href = card.getAttribute('href');
+          var old = base[href];
+          if (!old) return;
+          var badge = card.querySelector('.s-badge');
+          var live = card.querySelector('.s-live');
+          if (badge) { badge.className = old.badgeCls; badge.textContent = old.badgeText; }
+          if (live) live.textContent = old.live;
+        }
+        function apply(next) {
+          document.querySelectorAll('.staff').forEach(function (card) {
+            var state = next[card.getAttribute('href')];
+            if (!state) { restore(card); return; }
+            var badge = card.querySelector('.s-badge');
+            var live = card.querySelector('.s-live');
+            if (badge) {
+              badge.className = 's-badge ' + (state.waiting ? 'wait' : 'busy');
+              badge.textContent = state.waiting ? '在等你' : '在忙';
+            }
+            if (live) live.textContent = (state.waiting ? '等你确认：' : '正在：') + state.name;
+          });
+        }
+        async function refresh() {
+          try {
+            const res = await tasks.sessions();
+            const next = {};
+            for (const task of (res && res.tasks) || []) {
+              if (!task || !task.structured) continue;
+              if (task.state !== 'running' && task.state !== 'waiting_user') continue;
+              const href = ROLE_HREF[task.staff];
+              if (!href) continue;
+              const waiting = task.state === 'waiting_user';
+              const previous = next[href];
+              if (!previous || (waiting && !previous.waiting)) {
+                next[href] = { name: task.name || '任务', waiting };
+              }
+            }
+            apply(next);
+          } catch (e) {}
+        }
+        if (kernel && typeof kernel.onTask === 'function') kernel.onTask(function () { void refresh(); });
+        void refresh();
+        setInterval(function () { void refresh(); }, 3000);
+      })();
+
       /* ---------- 员工统计真化（M5）：右上角的小统计跟着卡上徽章的实际状态走 ---------- */
       (function rosterLive() {
         var hasKernel = (typeof window.jco !== 'undefined' && window.jco && window.jco.kernel);
