@@ -325,6 +325,8 @@ export interface SessionHostConfig {
   shotsDir: string
   /** 运营数据目录（战报/评论落盘处，运营页读取） */
   dataDir: string
+  /** 素材 / 成片目录；上传工具只允许这里的媒体文件 */
+  assetsDir?: string
   /** 测试/无人值守时可使用无头浏览器；生产默认有头。 */
   headless?: boolean
 }
@@ -381,6 +383,7 @@ export class PublishSessionManager {
         '--data-dir',
         this.host.dataDir,
       ]
+      if (this.host.assetsDir) args.push('--assets-dir', this.host.assetsDir)
       if (this.host.headless) args.push('--headless')
       const child = spawn(this.host.execPath, args, {
         env: { ...process.env, ELECTRON_RUN_AS_NODE: '1' },

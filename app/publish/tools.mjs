@@ -3,7 +3,9 @@
 // 原则：白名单 + 原子化 + 最小权限。
 // 红线：工具集不提供"发布 / 删除 / 支付"专用能力；通用 click 另做目标拦截，
 //       不能把安全只交给提示词。
-import { extname, resolve } from 'node:path'
+
+import { realpathSync } from 'node:fs'
+import { extname, isAbsolute, relative, resolve } from 'node:path'
 
 /** 白名单工具清单——增删必须过"安全评审清单"（见《AI 安全与数据安全规范》） */
 export const TOOLS = Object.freeze([
@@ -53,6 +55,8 @@ export const ALLOWED_UPLOAD_EXTS = Object.freeze(
 /** 返回拒绝原因；空串表示允许点击。 */
 export function clickGuardReason(label) {
   const text = String(label || '')
+    .normalize('NFKC')
+    .replace(/[\u200B-\u200D\u2060\uFEFF\u00AD]/g, '')
     .replace(/\s+/g, ' ')
     .trim()
   if (text === '') return ''
@@ -65,6 +69,43 @@ export function clickGuardReason(label) {
 /** 上传文件扩展名白名单（大小写不敏感）。 */
 export function isAllowedUploadPath(filePath) {
   return ALLOWED_UPLOAD_EXTS.has(extname(String(filePath || '')).toLowerCase())
+}
+
+function sameOrInside(root, target) {
+  const base = process.platform === 'win32' ? resolve(root).toLowerCase() : resolve(root)
+  const value = process.platform === 'win32' ? resolve(target).toLowerCase() : resolve(target)
+  const rel = relative(base, value)
+  return rel === '' || (!rel.startsWith('..') && !isAbsolute(rel))
+}
+
+/** 上传路径守卫：媒体扩展名 + 真实路径必须位于调用方允许的素材/成片目录。 */
+export function uploadGuardReason(filePath, allowedRoots = []) {
+  if (!isAllowedUploadPath(filePath)) {
+    return '只允许上传视频、音频或图片文件；其他类型的本机文件不能交给 AI 上传。'
+  }
+  if (!Array.isArray(allowedRoots) || allowedRoots.length === 0) {
+    return '没有配置可上传的素材/成片目录，已拒绝上传。'
+  }
+  let target
+  try {
+    target = realpathSync(resolve(String(filePath || '')))
+  } catch {
+    return '要上传的文件不存在或不可读，已拒绝上传。'
+  }
+  const roots = allowedRoots
+    .map((root) => String(root || '').trim())
+    .filter(Boolean)
+    .map((root) => {
+      try {
+        return realpathSync(resolve(root))
+      } catch {
+        return resolve(root)
+      }
+    })
+  if (roots.length === 0 || !roots.some((root) => sameOrInside(root, target))) {
+    return '只允许上传素材/成片目录内的媒体文件；越界路径已拒绝。'
+  }
+  return ''
 }
 
 /** URL 是否在允许的域名白名单内（AI 只许在指定平台域名里活动） */
@@ -165,12 +206,11 @@ export async function typeText(page, ref, text) {
 /** 上传文件（两种真人模式）：
  *  - ref 指向真的 <input type=file>：直接选定文件；
  *  - ref 指向按钮等其它元素：点击它，并拦截系统"文件选择"对话框，把文件递给对话框。 */
-export async function uploadFile(page, ref, filePath) {
+export async function uploadFile(page, ref, filePath, allowedRoots = []) {
   const locator = page.locator(`[data-jco-ref="${Number(ref)}"]`)
   const file = resolve(String(filePath))
-  if (!isAllowedUploadPath(file)) {
-    throw new Error('只允许上传视频、音频或图片文件；其他类型的本机文件不能交给 AI 上传。')
-  }
+  const reason = uploadGuardReason(file, allowedRoots)
+  if (reason !== '') throw new Error(reason)
   const isFileInput = await locator.evaluate(
     (el) => el.tagName === 'INPUT' && (el.getAttribute('type') || '').toLowerCase() === 'file',
   )

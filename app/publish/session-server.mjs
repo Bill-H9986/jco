@@ -20,6 +20,7 @@ const profileDir = arg('--profile-dir')
 const sessionFile = arg('--session-file')
 const shotsDir = arg('--shots-dir', join(process.cwd(), 'shots'))
 const dataDir = arg('--data-dir', join(process.cwd(), 'publish-data'))
+const assetsDir = arg('--assets-dir', '')
 const platformId = arg('--platform', 'douyin')
 const headless = argv.includes('--headless')
 const platformConf = PLATFORMS[platformId]
@@ -210,7 +211,7 @@ async function dispatch(toolName, args) {
       return `已输入到 [${Number(args.ref)}]（${String(args.text).slice(0, 40)}）`
     }
     case 'upload_file': {
-      await tools.uploadFile(page, args.ref, args.file_path)
+      await tools.uploadFile(page, args.ref, args.file_path, assetsDir ? [assetsDir] : [])
       return `已向 [${Number(args.ref)}] 提交文件：${String(args.file_path)}`
     }
     case 'scroll': {

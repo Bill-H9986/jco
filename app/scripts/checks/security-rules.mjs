@@ -34,6 +34,7 @@ export function runSecurityChecks(root = APP_ROOT) {
   const budget = read(root, 'src/agent/run-budget.ts')
   const ignore = read(root, '../.gitignore')
   const pkg = read(root, 'package.json')
+  const browserTools = read(root, 'publish/tools.mjs')
   const publishTools = read(root, 'kernel/publish-tools/index.mjs')
   const editTools = read(root, 'kernel/edit-tools/index.mjs')
 
@@ -105,11 +106,14 @@ export function runSecurityChecks(root = APP_ROOT) {
       'LLM06',
       '过度代理：最小权限 + 发布/删除/支付审批',
       profileViolations.length === 0 &&
+        browserTools.includes('clickGuardReason') &&
+        browserTools.includes('uploadGuardReason') &&
+        publishTools.includes('allowedTools') &&
         contracts.includes('requirePublishApproval') &&
         contracts.includes('requireDeleteApproval') &&
         contracts.includes('requirePaymentApproval') &&
         contracts.includes('APPROVAL_REQUIRED'),
-      'chat/writer 工具为空；发布/删除/支付在 IPC 契约中强制审批',
+      'chat/writer 工具为空；危险点击/上传路径有工具级守卫；发布/删除/支付在 IPC 契约中强制审批',
     ),
   )
 

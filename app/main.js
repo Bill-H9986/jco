@@ -638,6 +638,7 @@ const publishSessionManager = publishEngine
         sessionFile: publishEngine.unpackedPath(path.join(__dirname, 'kernel', 'publish-session.json')),
         shotsDir: path.join(app.getPath('userData'), 'publish', 'shots'),
         dataDir: path.join(app.getPath('userData'), 'publish', 'data'),
+        assetsDir: assetsDirPath(),
       },
       (event) => {
         BrowserWindow.getAllWindows().forEach((win) => {

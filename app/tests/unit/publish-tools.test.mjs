@@ -1,5 +1,7 @@
 // AI 操作工具集的安全断言（对应 e2e 用例清单 A6"红线检查"）
 // 核心：工具白名单"不多不少"——未来任何人想加工具，必须先过测试与安全评审。
+import fs from 'node:fs'
+import os from 'node:os'
 import path from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import { describe, expect, it } from 'vitest'
@@ -12,6 +14,7 @@ import {
   isAllowedUrl,
   TOOLS,
   uploadFile,
+  uploadGuardReason,
 } from '../../publish/tools.mjs'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -44,6 +47,12 @@ describe('工具白名单（AI 的"手"）', () => {
     expect(clickGuardReason('下一步')).toBe('')
   })
 
+  it('危险点击目标不能靠零宽字符绕过', () => {
+    expect(clickGuardReason('发\u200b布')).toContain('不能点击')
+    expect(clickGuardReason('支\u200d付')).toContain('不能点击')
+    expect(clickGuardReason('删\u2060除')).toContain('不能点击')
+  })
+
   it('上传只允许媒体文件，拒绝配置 / 密钥 / 可执行文件', () => {
     expect(isAllowedUploadPath('C:/media/demo.mp4')).toBe(true)
     expect(isAllowedUploadPath('C:/media/cover.PNG')).toBe(true)
@@ -71,6 +80,23 @@ describe('工具白名单（AI 的"手"）', () => {
   it('uploadFile 对非媒体文件在接触页面前就拒绝', async () => {
     const page = { locator: () => ({ evaluate: async () => true }) }
     await expect(uploadFile(page, 1, 'C:/secret/.env')).rejects.toThrow('只允许上传')
+  })
+
+  it('媒体文件也必须位于允许的素材/成片目录内', () => {
+    const root = fs.mkdtempSync(path.join(os.tmpdir(), 'jco-upload-root-'))
+    const outside = fs.mkdtempSync(path.join(os.tmpdir(), 'jco-upload-outside-'))
+    try {
+      const inside = path.join(root, 'clip.mp4')
+      const escaped = path.join(outside, 'secret.mp4')
+      fs.writeFileSync(inside, 'x')
+      fs.writeFileSync(escaped, 'x')
+      expect(uploadGuardReason(inside, [root])).toBe('')
+      expect(uploadGuardReason(escaped, [root])).toContain('只允许上传')
+      expect(uploadGuardReason(inside, [])).toContain('没有配置')
+    } finally {
+      fs.rmSync(root, { recursive: true, force: true })
+      fs.rmSync(outside, { recursive: true, force: true })
+    }
   })
 })
 

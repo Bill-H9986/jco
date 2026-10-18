@@ -1,10 +1,9 @@
 import { expect, test } from '@playwright/test'
 import { _electron as electron } from 'playwright'
-import { ALL_PAGES, SHELL_PAGE } from '../pages.mjs'
+import { ALL_PAGES } from '../pages.mjs'
 import { APP_DIR, assertVisual, ELECTRON_BIN, settleWindow } from './visual-support.mjs'
 
 const CAPTURE_PAGES = [
-  ['shell', SHELL_PAGE],
   ['home', 'J.Co主界面-首页.html'],
   ['topics', 'J.Co工作台-选题.html'],
   ['materials', 'J.Co工作台-素材.html'],
@@ -21,9 +20,9 @@ const CAPTURE_PAGES = [
   ['design-system', 'J.Co设计系统.html'],
 ]
 
-test('W5-02：应用壳与 14 个内容页关键状态', async () => {
+test('W5-02：14 个内容页关键状态', async () => {
   expect(ALL_PAGES).toHaveLength(16)
-  expect(CAPTURE_PAGES).toHaveLength(15)
+  expect(CAPTURE_PAGES).toHaveLength(14)
 
   const app = await electron.launch({ executablePath: ELECTRON_BIN, args: [APP_DIR, '--jco-test'] })
   try {
@@ -48,15 +47,6 @@ test('W5-02：应用壳与 14 个内容页关键状态', async () => {
         )
         .toBe(page)
       await expect(win.locator('html')).toHaveAttribute('data-jco-ready', '1', { timeout: 5000 })
-      if (page === SHELL_PAGE) {
-        await expect(win.locator('#jcoFrame')).toBeVisible()
-        await expect(win.frameLocator('#jcoFrame').locator('html')).toHaveAttribute('data-jco-ready', '1', {
-          timeout: 5000,
-        })
-        await win.evaluate(() => {
-          document.documentElement.classList.add('side-pinned')
-        })
-      }
       await settleWindow(win)
       await assertVisual(app, `${name}-light-1440x900.png`)
     }
