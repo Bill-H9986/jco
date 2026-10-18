@@ -60,7 +60,7 @@ test('运营页：AI 运营入口就位（马上跑 / 取评论走唯一管道�
   }
 })
 
-test('首页：卡片文案真化（无假数）+「说一句话」走唯一管道', async () => {
+test('首页：卡片文案真化（无假数）+ 发送改为新会话', async () => {
   const app = await electron.launch({ executablePath: ELECTRON_BIN, args: [APP_DIR, '--jco-test'] })
   try {
     const win = await app.firstWindow()
@@ -77,10 +77,11 @@ test('首页：卡片文案真化（无假数）+「说一句话」走唯一管�
     expect(text.includes('抖音和视频号')).toBe(false) // 入口区文案统一：不再有多平台旧承诺
     expect(text.includes('大约 2 分钟')).toBe(false) // 不再有时长承诺
     expect(text).toContain('把做好的视频发出去')
-    // 批 3：派活已走唯一管道（无 handoff 残留、走 tasks.dispatch）
+    // W1-01：首页发送改为新会话，不再直接派活
     const homeSrc = await win.evaluate(() => [...document.scripts].map((s) => s.textContent || '').join('\n'))
     expect(homeSrc.includes('jco-handoff')).toBe(false)
-    expect(homeSrc.includes('tasks.dispatch')).toBe(true)
+    expect(homeSrc.includes('tasks.dispatch')).toBe(false)
+    expect(homeSrc.includes('__jcoStartChat') || homeSrc.includes('new=1&seed=')).toBe(true)
     // 空态时：通知条点击 → 填入输入框（fillAndFocus 动线；有记录后会变为"跳总管"）
     await win.locator('.notice').click()
     await win.waitForTimeout(300)

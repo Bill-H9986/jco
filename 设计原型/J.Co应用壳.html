@@ -62,22 +62,98 @@
     (function shellHost() {
       var frame = document.getElementById('jcoFrame');
       var fade = document.getElementById('frameFade');
-      window.__jcoGo = function (target) {
-        if (!target) return;
-        var here = decodeURIComponent((frame.getAttribute('src') || '').split('?')[0]);
-        if (here === target) return;
+
+      function routeOfHash() {
+        var raw = String(location.hash || '').replace(/^#\/?/, '');
+        if (!raw || raw === 'home') return { kind: 'home' };
+        if (raw.indexOf('chat/') === 0) return { kind: 'chat', id: decodeURIComponent(raw.slice(5)) };
+        if (raw.indexOf('task/') === 0) return { kind: 'task', id: decodeURIComponent(raw.slice(5)) };
+        if (raw.indexOf('page/') === 0) return { kind: 'page', file: decodeURIComponent(raw.slice(5)) };
+        return { kind: 'home' };
+      }
+      function hashOfRoute(route) {
+        if (route.kind === 'chat') return '#/chat/' + encodeURIComponent(route.id || 'last');
+        if (route.kind === 'task') return '#/task/' + encodeURIComponent(route.id || '');
+        if (route.kind === 'page') return '#/page/' + encodeURIComponent(route.file || '');
+        return '#/home';
+      }
+      function targetOfRoute(route) {
+        if (route.kind === 'home') return 'J.Co主界面-首页.html';
+        if (route.kind === 'task') return 'J.Co总管.html?task=' + encodeURIComponent(route.id || '');
+        if (route.kind === 'chat') {
+          if (route.id === 'new') return 'J.Co总管.html?new=1';
+          if (!route.id || route.id === 'last') return 'J.Co总管.html';
+          return 'J.Co总管.html?chat=' + encodeURIComponent(route.id);
+        }
+        if (route.kind === 'page') return String(route.file || 'J.Co主界面-首页.html');
+        return 'J.Co主界面-首页.html';
+      }
+      function navPageOfRoute(route) {
+        if (route.kind === 'home') return 'J.Co主界面-首页.html';
+        if (route.kind === 'chat' || route.kind === 'task') return 'J.Co总管.html';
+        if (route.kind === 'page') return route.file;
+        return 'J.Co主界面-首页.html';
+      }
+      function rememberHash(route) {
+        try {
+          history.replaceState(null, '', hashOfRoute(route));
+        } catch (err) {}
+      }
+      function loadFrame(target) {
+        if (!target || frame.getAttribute('src') === target) return;
         if (fade) { fade.classList.add('on'); }
         setTimeout(function () {
           frame.src = target;
         }, 90);
+      }
+      function applyRoute(route, remember) {
+        if (!route) return;
+        loadFrame(targetOfRoute(route));
+        if (remember) rememberHash(route);
+        if (typeof window.__jcoHighlightPage === 'function') {
+          window.__jcoHighlightPage(navPageOfRoute(route));
+        }
+      }
+      window.__jcoGo = function (target) {
+        if (!target) return;
+        var text = decodeURIComponent(String(target));
+        if (text === 'J.Co主界面-首页.html') {
+          applyRoute({ kind: 'home' }, true);
+          return;
+        }
+        if (text.indexOf('J.Co总管.html') !== -1) {
+          var query = text.split('?')[1] || '';
+          var params = new URLSearchParams(query);
+          if (params.get('task')) {
+            applyRoute({ kind: 'task', id: params.get('task') }, true);
+          } else if (params.get('chat')) {
+            applyRoute({ kind: 'chat', id: params.get('chat') }, true);
+          } else if (params.get('new') === '1') {
+            applyRoute({ kind: 'chat', id: 'new' }, true);
+          } else {
+            applyRoute({ kind: 'chat', id: 'last' }, true);
+          }
+          return;
+        }
+        applyRoute({ kind: 'page', file: text.split('?')[0] }, true);
+      };
+      // 首页发送：进入 chat/new，seed 由总管页消费；不创建任务、不启动浏览器。
+      window.__jcoStartChat = function (text) {
+        var seed = String(text || '').trim();
+        if (!seed) return;
+        rememberHash({ kind: 'chat', id: 'new' });
+        loadFrame('J.Co总管.html?new=1&seed=' + encodeURIComponent(seed));
+        if (typeof window.__jcoHighlightPage === 'function') {
+          window.__jcoHighlightPage('J.Co总管.html');
+        }
       };
       // 系统通知点击 → 壳内切到对应任务视图，而不是把整个壳导航走
       window.__jcoOpenTaskById = function (id) {
-        if (id) window.__jcoGo('J.Co总管.html?task=' + encodeURIComponent(String(id)));
+        if (id) applyRoute({ kind: 'task', id: String(id) }, true);
       };
       var wordmark = document.querySelector('.wordmark');
       if (wordmark) wordmark.addEventListener('click', function () {
-        window.__jcoGo('J.Co主界面-首页.html');
+        applyRoute({ kind: 'home' }, true);
       });
       frame.addEventListener('load', function () {
         setTimeout(function () { if (fade) fade.classList.remove('on'); }, 60);
@@ -85,7 +161,7 @@
       // 新会话：去总管页并触发新会话
       var newBtn = document.querySelector('#newChatSlot .new-btn');
       if (newBtn) newBtn.addEventListener('click', function () {
-        window.__jcoGo('J.Co总管.html?new=1');
+        applyRoute({ kind: 'chat', id: 'new' }, true);
       });
       // 头像 → 设置；铃铛 → 通知面板（jco-shell 提供 jcoToggleNotif）
       var me = document.getElementById('meBtn');
@@ -94,6 +170,18 @@
       if (bell) bell.addEventListener('click', function () {
         if (typeof window.jcoToggleNotif === 'function') window.jcoToggleNotif(bell);
       });
+      // 总管页创建/切换会话后回传 id，地址栏稳定在 #/chat/:id
+      window.addEventListener('message', function (event) {
+        if (event.source !== frame.contentWindow) return;
+        var id = event.data && event.data.__jcoConversation;
+        if (id) rememberHash({ kind: 'chat', id: String(id) });
+      });
+      window.addEventListener('hashchange', function () {
+        applyRoute(routeOfHash(), false);
+      });
+      var initial = location.hash ? routeOfHash() : { kind: 'home' };
+      if (!location.hash) rememberHash(initial);
+      applyRoute(initial, false);
     })();
   </script>
 </body>

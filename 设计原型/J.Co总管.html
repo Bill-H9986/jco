@@ -477,6 +477,13 @@
     function chatsSave() {
       try { localStorage.setItem(CHATS_KEY, JSON.stringify(chatData)); } catch (e) {}
     }
+    function notifyShellChat() {
+      try {
+        if (window.parent && window.parent !== window) {
+          window.parent.postMessage({ __jcoConversation: chatData.activeId }, '*');
+        }
+      } catch (e) {}
+    }
     function activeChat() {
       var c = chatData.chats.find(function (x) { return x.id === chatData.activeId; });
       if (!c) {
@@ -535,15 +542,21 @@
       if (!chatData.chats.some(function (x) { return x.id === id; })) return;
       chatData.activeId = id;
       chatsSave();
+      notifyShellChat();
       renderActiveChat();
     }
     function newChat() {
       var empty = chatData.chats.find(function (c) { return c.messages.length === 0 });
-      if (empty) { if (empty.id !== chatData.activeId) switchChat(empty.id); return; }
+      if (empty) {
+        if (empty.id !== chatData.activeId) switchChat(empty.id);
+        else notifyShellChat();
+        return;
+      }
       var c = { id: 'c' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5), title: '新会话', updatedAt: Date.now(), messages: [] };
       chatData.chats.unshift(c);
       chatData.activeId = c.id;
       chatsSave();
+      notifyShellChat();
       renderActiveChat();
       var inpEl = document.getElementById('inp');
       if (inpEl) inpEl.focus();
@@ -1203,10 +1216,20 @@
     /* 应用壳模式：?new=1 → 自动新建会话（壳的「新会话」按钮直达） */
     (function shellNewChat() {
       try {
-        if (!/[?&]new=1/.test(location.search)) return;
+        var params = new URLSearchParams(location.search);
+        if (params.get('new') !== '1') return;
+        var seed = String(params.get('seed') || '').trim();
         setTimeout(function () {
           var b = document.querySelector('#newChatSlot .new-btn');
           if (b) b.click();
+          if (seed) {
+            var inpEl = document.getElementById('inp');
+            if (inpEl) {
+              inpEl.value = seed;
+              inputChanged();
+              sendUser();
+            }
+          }
         }, 350);
       } catch (e) {}
     })();

@@ -1,7 +1,7 @@
 {
   "version": 1,
   "note": "W0-06 存量欠账。只允许删除，不允许新增；新增违规会让 npm run gate 失败。",
-  "generatedAt": "2026-10-18T03:36:10.987Z",
+  "generatedAt": "2026-10-18T04:48:28.437Z",
   "entries": [
     {
       "ruleId": "no-direct-business-localstorage",
@@ -916,12 +916,6 @@
       "excerpt": "tasks.dispatch("
     },
     {
-      "ruleId": "no-direct-tasks-dispatch",
-      "file": "设计原型/J.Co主界面-首页.html",
-      "fingerprint": "no-direct-tasks-dispatch|设计原型/J.Co主界面-首页.html|tasks.dispatch(|#0",
-      "excerpt": "tasks.dispatch("
-    },
-    {
       "ruleId": "no-duplicate-sidebar",
       "file": "设计原型/J.Co工作台-创作.html",
       "fingerprint": "no-duplicate-sidebar|设计原型/J.Co工作台-创作.html|<aside class=\"sidebar\"|#0",
@@ -1447,30 +1441,6 @@
       "ruleId": "no-hardcoded-industry",
       "file": "设计原型/J.Co账号中心.html",
       "fingerprint": "no-hardcoded-industry|设计原型/J.Co账号中心.html|招生|#0",
-      "excerpt": "招生"
-    },
-    {
-      "ruleId": "no-hardcoded-industry",
-      "file": "设计原型/J.Co主界面-首页.html",
-      "fingerprint": "no-hardcoded-industry|设计原型/J.Co主界面-首页.html|招生|#0",
-      "excerpt": "招生"
-    },
-    {
-      "ruleId": "no-hardcoded-industry",
-      "file": "设计原型/J.Co主界面-首页.html",
-      "fingerprint": "no-hardcoded-industry|设计原型/J.Co主界面-首页.html|招生|#1",
-      "excerpt": "招生"
-    },
-    {
-      "ruleId": "no-hardcoded-industry",
-      "file": "设计原型/J.Co主界面-首页.html",
-      "fingerprint": "no-hardcoded-industry|设计原型/J.Co主界面-首页.html|招生|#2",
-      "excerpt": "招生"
-    },
-    {
-      "ruleId": "no-hardcoded-industry",
-      "file": "设计原型/J.Co主界面-首页.html",
-      "fingerprint": "no-hardcoded-industry|设计原型/J.Co主界面-首页.html|招生|#3",
       "excerpt": "招生"
     },
     {

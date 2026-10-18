@@ -173,7 +173,7 @@
       </nav>
       <button class="group-label" type="button"><span class="ti ti-messages"></span>对话<span class="ti ti-chevron-down"></span></button>
       <div class="convos">
-        <button class="convo"><span class="name">暑期招生 · 今日发布</span></button>
+        <button class="convo"><span class="name">短视频 · 今日发布</span></button>
         <button class="convo"><span class="name">评论跟进（5 条）</span></button>
         <button class="convo"><span class="name">上周数据复盘</span></button>
         <button class="convo"><span class="name">引流名单 · 待跟进</span></button>
@@ -206,7 +206,7 @@
     </header>
 
     <section class="ask">
-      <textarea id="inp" rows="2" placeholder="说说你要干什么，比如：帮我做一条暑期招生视频"></textarea>
+      <textarea id="inp" rows="2" placeholder="说说你要干什么，比如：帮我做一条短视频"></textarea>
       <div class="bar">
         <button class="ghost"><span class="ti ti-paperclip"></span>选择素材</button>
         <div class="right">
@@ -231,7 +231,7 @@
 
   <script>
     const CARDS = [
-      { kind: 'quick', icon: 'ti-video', title: '做一条招生视频', desc: '说一句话，AI 出片', fill: '帮我做一条暑期招生的短视频' },
+      { kind: 'quick', icon: 'ti-video', title: '做一条短视频', desc: '说一句话，AI 出片', fill: '帮我做一条短视频' },
       { kind: 'quick', icon: 'ti-upload', title: '去发布', desc: '把做好的视频发出去', fill: '把做好的视频发到抖音' },
       { kind: 'quick', icon: 'ti-chart-bar', title: '看数据', desc: '昨天的播放数据，AI 都记好了', fill: '帮我看昨天视频的数据，并给出建议' },
       { kind: 'quick', icon: 'ti-message-circle', title: '回评论', desc: '看看评论区有什么要回的', fill: '帮我把没回的评论拟好回复草稿' },
@@ -267,7 +267,7 @@
       inputChanged();
       inp.focus();
       inp.setSelectionRange(text.length, text.length);
-      showToast('已填入输入框。按发送或回车，就交给 AI 去干。');
+      showToast('已填入。发送后会开一个新会话。');
     }
 
     function inputChanged() { send.disabled = inp.value.trim().length === 0; }
@@ -297,21 +297,12 @@
       if (send.disabled) return;
       var text = inp.value.trim();
       if (!text) return;
-      var engine = (typeof window.jco !== 'undefined' && window.jco && window.jco.tasks && window.jco.tasks.dispatch) ? window.jco : null;
-      if (engine) {
-        // 桌面应用：派活走唯一任务管道（跳总管自动打开任务视图，看 AI 怎么干）
-        send.disabled = true;
-        engine.tasks.dispatch({ name: Array.from(text).slice(0, 20).join(''), prompt: text, staff: '' }).then(function (res) {
-          if (!res || !res.ok) { send.disabled = false; showToast((res && res.error) || '派活失败，稍后再试一次。'); return; }
-          try { sessionStorage.setItem('jco-open-task', res.taskId); } catch (e) {}
-          location.href = 'J.Co总管.html';
-        }).catch(function (err) {
-          send.disabled = false;
-          showToast('派活失败：' + ((err && err.message) || '稍后再试一次'));
-        });
+      // 首页发送只开新会话，不创建任务、不启动浏览器。
+      if (window.parent && window.parent !== window && typeof window.parent.__jcoStartChat === 'function') {
+        window.parent.__jcoStartChat(text);
         return;
       }
-      showToast('（原型示意）正式版会带着这句话交给总管，总管开始安排。');
+      location.href = 'J.Co总管.html?new=1&seed=' + encodeURIComponent(text);
     }
 
     document.querySelectorAll('.tab').forEach((tab) => {
@@ -359,7 +350,7 @@
         go = function () { location.href = 'J.Co总管.html'; };
       } else {
         text = '今天还没开工，说一句话我就动';
-        go = function () { fillAndFocus('帮我做一条暑期招生的口播视频'); };
+        go = function () { fillAndFocus('帮我做一条短视频的口播稿'); };
       }
       btn.innerHTML = text + ' <span class="ti ti-chevron-right"></span>';
       btn.onclick = go;

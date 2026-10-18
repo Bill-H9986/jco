@@ -331,6 +331,8 @@
       b.classList.toggle('active', !!t && t === page)
     })
   }
+  // 壳内原生/路由视图也可主动点亮侧栏（首页、chat/:id、task/:id）
+  window.__jcoHighlightPage = highlight
   function bindAllLabels() {
     document.querySelectorAll('.group-label').forEach(function (label) {
       if (label.getAttribute('data-shell-bound') === '1') return
