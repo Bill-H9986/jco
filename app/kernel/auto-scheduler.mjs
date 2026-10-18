@@ -42,8 +42,14 @@ export function createAutoScheduler(deps) {
    */
   function launch(task, due) {
     running.add(task.id)
-    Promise.resolve()
-      .then(() => execute(task, due))
+    let started
+    try {
+      // 同步进入 execute：真正的执行器会在这里先登记 Task，runNow 才能立刻拿到 taskId。
+      started = Promise.resolve(execute(task, due))
+    } catch (error) {
+      started = Promise.reject(error)
+    }
+    started
       .then((result) => {
         const ok = Boolean(result && result.ok)
         const record = {
@@ -104,7 +110,7 @@ export function createAutoScheduler(deps) {
     if (!task || typeof task !== 'object' || typeof task.id !== 'string' || task.id === '') return false
     if (running.has(task.id)) return false
     launch(task, now())
-    return true
+    return task.__workTaskId || true
   }
 
   function start() {

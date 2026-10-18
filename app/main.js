@@ -634,12 +634,30 @@ function readAutoTasks() {
   }
 }
 function saveAutoRun(taskId, record) {
-  autoRuns.runs[taskId] = record
-  try {
-    fs.writeFileSync(AUTO_RUNS_FILE, JSON.stringify(autoRuns), 'utf8')
-  } catch (error) {
-    /* 写失败不阻断调度 */
+  // W1-04：执行结果统一写 work-tasks；auto-runs.json 只作为历史迁移来源读取，不再新增写入。
+  void taskId
+  void record
+}
+/**
+ * 自动任务的历史执行索引：以 work-tasks 为唯一事实源，旧 auto-runs.json 只做兼容读取。
+ */
+function autoRunIndex() {
+  const runs = Object.assign({}, autoRuns.runs || {})
+  for (const task of workTasks.values()) {
+    if (!task || !task.sourceAutomationId) continue
+    const id = task.sourceAutomationId
+    const previous = runs[id]
+    const stamp = Number(task.updatedAt || task.createdAt || 0)
+    if (!previous || stamp >= Number(previous.lastRunAt || 0)) {
+      runs[id] = {
+        lastRunAt: stamp,
+        dueAt: Number(task.createdAt || stamp),
+        ok: task.status === 'done',
+        summary: String(task.summary || task.goal || '').slice(0, 140),
+      }
+    }
   }
+  return runs
 }
 /** 只有需要浏览器平台的活才预热发布会话，避免写稿/后期任务白等 60 秒。 */
 const PUBLISH_BROWSER_HINT = /发布|发到|抖音|视频号|小红书|快手|B站|评论|战报|运营|登录|扫码|创作者中心/
@@ -678,24 +696,81 @@ async function ensurePublishReady(platformId) {
   }
   return false
 }
+function autoTaskShape(task) {
+  const text = task.name + ' ' + String(task.desc || '')
+  const type = /(发到|发布|上传)/.test(text) ? 'publish' : /(剪辑|后期|字幕|配乐|裁剪|拼接)/.test(text) ? 'edit' : /(评论|战报|数据|运营)/.test(text) ? 'operate' : 'content'
+  const ownerRole = type === 'publish' ? 'publisher' : type === 'edit' ? 'editor' : type === 'operate' ? 'operator' : 'writer'
+  return { type, ownerRole }
+}
+function createAutoWorkTask(task) {
+  const shape = autoTaskShape(task)
+  const id = 'w' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6)
+  const now = Date.now()
+  const workTask = {
+    id,
+    title: String(task.name || '自动任务').slice(0, 80),
+    goal: String(task.desc || task.name || '执行自动任务'),
+    type: shape.type,
+    ownerRole: shape.ownerRole,
+    status: 'running',
+    inputs: [{ kind: 'text', ref: String(task.id || ''), label: '自动任务模板' }],
+    constraints: ['自动任务执行；发布、删除、支付等不可逆动作仍需用户确认'],
+    deliverables: ['执行结果与任务记录'],
+    approvalPolicy: { requirePublishApproval: true, requireDeleteApproval: true, requirePaymentApproval: true, requireFinalApproval: true },
+    sourceAutomationId: String(task.id || ''),
+    createdAt: now,
+    updatedAt: now,
+    runId: id + '-run1',
+    events: [],
+    approvals: [],
+    artifacts: [],
+    messages: [],
+    summary: '',
+  }
+  workTaskEvent(workTask, 'state_changed', '自动任务已启动')
+  workTasks.set(id, workTask)
+  saveWorkTask(id)
+  broadcastWorkTask(workTask, 'start')
+  task.__workTaskId = id
+  return workTask
+}
 async function runAutoTask(task) {
-  if (needsPublishBrowser(task.name + ' ' + String(task.desc || ''))) await ensurePublishReady('douyin')
-  const bridge = await getBridge()
-  const prompt = '现在就跑一遍「' + task.name + '」：' + String(task.desc || '') + '。\n' + AUTO_DISCIPLINE
-  const result = await bridge.ask(prompt, null, {
-    profile: profileOfTask('', prompt),
-    sessionId: 'task:auto-' + task.id,
-    onActivity: (act) => {
-      BrowserWindow.getAllWindows().forEach((win) => {
-        try {
-          win.webContents.send('kernel:activity', { ...act, auto: true, taskName: task.name })
-        } catch (error) {
-          /* 窗口已关闭则忽略 */
-        }
-      })
-    },
-  })
-  return { ok: !!result.ok, summary: result.ok ? result.text : result.error }
+  const workTask = createAutoWorkTask(task)
+  try {
+    if (needsPublishBrowser(task.name + ' ' + String(task.desc || ''))) await ensurePublishReady('douyin')
+    const bridge = await getBridge()
+    const prompt = '现在就跑一遍「' + task.name + '」：' + String(task.desc || '') + '。\n' + AUTO_DISCIPLINE
+    const result = await bridge.ask(prompt, null, {
+      profile: profileOfTask('', prompt),
+      sessionId: 'task:auto-' + task.id,
+      onActivity: (act) => {
+        BrowserWindow.getAllWindows().forEach((win) => {
+          try {
+            win.webContents.send('kernel:activity', { ...act, auto: true, taskName: task.name, taskId: workTask.id })
+          } catch (error) {
+            /* 窗口已关闭则忽略 */
+          }
+        })
+      },
+    })
+    workTask.status = result.ok ? 'done' : 'failed'
+    workTask.summary = clipSafe(String((result.ok ? result.text : result.error) || ''), 300)
+    workTask.messages = [
+      { role: 'user', text: prompt, t: workTask.createdAt },
+      { role: 'assistant', text: workTask.summary, t: Date.now() },
+    ]
+    workTaskEvent(workTask, result.ok ? 'state_changed' : 'error', result.ok ? '自动任务完成' : '自动任务失败：' + workTask.summary)
+    saveWorkTask(workTask.id)
+    broadcastWorkTask(workTask, result.ok ? 'done' : 'fail')
+    return { ok: !!result.ok, summary: workTask.summary, taskId: workTask.id }
+  } catch (error) {
+    workTask.status = 'failed'
+    workTask.summary = '调度出错：' + clipSafe(String((error && error.message) || error), 200)
+    workTaskEvent(workTask, 'error', workTask.summary)
+    saveWorkTask(workTask.id)
+    broadcastWorkTask(workTask, 'fail')
+    return { ok: false, summary: workTask.summary, taskId: workTask.id }
+  }
 }
 function notifyAutoResult(task, record) {
   try {
@@ -740,7 +815,7 @@ async function startAutoScheduler() {
     const mod = await import(pathToFileURL(path.join(__dirname, 'kernel', 'auto-scheduler.mjs')).href)
     autoScheduler = mod.createAutoScheduler({
       getTasks: readAutoTasks,
-      getRuns: () => autoRuns.runs,
+      getRuns: autoRunIndex,
       saveRun: saveAutoRun,
       execute: runAutoTask,
       notify: notifyAutoResult,
@@ -782,7 +857,7 @@ ipcMain.handle('tasks:sync', (_event, payload) => {
   }
 })
 
-ipcMain.handle('tasks:runs:get', () => ({ runs: autoRuns.runs || {} }))
+ipcMain.handle('tasks:runs:get', () => ({ runs: autoRunIndex() }))
 
 // 「马上跑」（M7 统一）：与到点走同一条执行管道（TaskRunner）——不再跳总管聊天。
 // 立即返回"已开跑"；执行在后台进行（跑完写记录 + 通知），同一任务并发时拒绝。
@@ -793,7 +868,9 @@ ipcMain.handle('tasks:run', (_event, payload) => {
   const task = readAutoTasks().find((t) => t && t.id === id)
   if (!task) return { ok: false, error: '任务不存在（先在自动任务页建好它）' }
   const started = autoScheduler.runNow(task)
-  return started ? { ok: true } : { ok: false, error: '这个任务正在跑，跑完再看' }
+  return started
+    ? { ok: true, ...(typeof started === 'string' ? { taskId: started } : {}) }
+    : { ok: false, error: '这个任务正在跑，跑完再看' }
 })
 
 // ---------- 任务会话桥（M7 批 1a：派活任务的后端与台账；发布页接入在批 1b） ----------
@@ -1155,6 +1232,7 @@ ipcMain.handle('tasks:sessions', () => {
     endedAt: task.status === 'done' || task.status === 'cancelled' ? task.updatedAt : 0,
     summary: String(task.goal || '').slice(0, 120),
     structured: true,
+    sourceAutomationId: task.sourceAutomationId || '',
   }))
   const legacy = Array.from(taskSessions.values()).map((r) => ({
     id: r.id,

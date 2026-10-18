@@ -14,6 +14,13 @@ const TEST_KERNEL_DIR = path.join(os.tmpdir(), 'jco-test-kernel-data')
 const TASKS_FILE = path.join(TEST_KERNEL_DIR, 'auto-tasks.json')
 const RUNS_FILE = path.join(TEST_KERNEL_DIR, 'auto-runs.json')
 
+test.afterEach(() => {
+  // m6 的自动任务测试会通过统一台账创建 work 任务；每个用例结束清理临时测试台账。
+  try {
+    fs.rmSync(path.join(TEST_KERNEL_DIR, 'work-tasks'), { recursive: true, force: true })
+  } catch {}
+})
+
 test('自动任务页：旧数据迁移（对标雷达→今日战报）+ 结构化新建 + 同步落盘', async () => {
   try {
     fs.rmSync(TASKS_FILE, { force: true })
