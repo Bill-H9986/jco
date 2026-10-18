@@ -848,6 +848,34 @@
       clearTimeout(showToast.timer);
       showToast.timer = setTimeout(() => toastEl.classList.remove('show'), 2800);
     }
+    let brandProfile = null;
+    function brandLine() {
+      if (!brandProfile || typeof brandProfile !== 'object') return '';
+      var parts = [];
+      if (brandProfile.industry) parts.push('行业：' + brandProfile.industry);
+      if (brandProfile.audience) parts.push('受众：' + brandProfile.audience);
+      if (Array.isArray(brandProfile.platforms) && brandProfile.platforms.length) parts.push('平台：' + brandProfile.platforms.join('、'));
+      if (brandProfile.tone) parts.push('语气：' + brandProfile.tone);
+      if (Array.isArray(brandProfile.forbidden) && brandProfile.forbidden.length) parts.push('禁用表达：' + brandProfile.forbidden.join('、'));
+      return parts.length ? parts.join('；') : '';
+    }
+    function withBrand(base) {
+      var brand = brandLine();
+      return brand ? base + '\n品牌档案：' + brand : base;
+    }
+    function shotSystemPrompt() {
+      return withBrand('你是短视频分镜师，服务通用自媒体创作者；行业、受众、平台由品牌档案决定。只输出 JSON 数组。');
+    }
+    function imageSystemPrompt() {
+      return withBrand('你是短视频画面策划，只输出画面描述行，不要解释。');
+    }
+    async function hydrateBrandProfile() {
+      if (!window.jco || !window.jco.brand || !window.jco.brand.get) return;
+      try {
+        var res = await window.jco.brand.get();
+        if (res && res.ok) brandProfile = res.data || null;
+      } catch (e) {}
+    }
 
     /* ================= 数据 ================= */
     const RATIOS = {
@@ -1094,23 +1122,71 @@
         if (sys && sys.notify) sys.notify({ title: title, body: body });
       } catch (e) {}
     }
-    function jcoDraftsSave() {
-      try {
-        var items = drafts.slice(0, 12).map(function (d) {
-          return {
-            id: d.id, idea: d.idea, status: d.status, type: d.type, ratio: d.ratio,
-            duration: d.duration, res: d.res, voice: d.voice, method: d.method, fixNote: d.fixNote || '',
-            shots: (d.shots || []).slice(0, 20),
-            videos: d.videos || {},
-            images: (d.images || []).slice(0, 6).map(function (im) {
-              if (!im) return null;
-              var src = String(im.src || '');
-              // 旧版内嵌大图（dataUrl）：不入存储，避免撑爆（新图都走素材文件夹落盘）
-              if (src.length > 300000 && !im.path) return { src: '', path: '', prompt: (im.prompt || '') + '（旧版大图未入草稿）' };
-              return { src: src, path: im.path || '', prompt: im.prompt || '' };
-            }).filter(Boolean),
+    let draftsReady = false;
+    let draftSaveWarned = false;
+    function draftToStore(d) {
+      var videos = {};
+      if (d.videos && typeof d.videos === 'object') {
+        Object.keys(d.videos).slice(0, 50).forEach(function (key) {
+          var v = d.videos[key];
+          if (!v || typeof v !== 'object') return;
+          videos[key] = {
+            status: v.status || 'failed',
+            url: v.url || '',
+            path: v.path || '',
+            videoId: v.videoId || '',
+            error: v.error || '',
           };
         });
+      }
+      return {
+        id: d.id,
+        idea: d.idea || '',
+        status: d.status || 'review',
+        type: d.type || 'video',
+        ratio: d.ratio || '9:16',
+        duration: d.duration || '30 秒',
+        res: d.res || '1080P',
+        voice: d.voice || '标准女声',
+        method: d.method || 'assemble',
+        fixNote: d.fixNote || '',
+        shots: (d.shots || []).slice(0, 50).map(function (s) {
+          return { line: (s && s.line) || '', pic: (s && s.pic) || '' };
+        }),
+        videos: videos,
+        images: (d.images || []).slice(0, 20).map(function (im) {
+          if (!im) return null;
+          var src = String(im.src || '');
+          var imagePath = String(im.path || '');
+          // 旧版内嵌大图：没有落盘路径时不入 store，避免把 JSON 撑爆
+          if (src.length > 300000 && !imagePath) {
+            return { src: '', path: '', prompt: (im.prompt || '') + '（旧版大图未入草稿）' };
+          }
+          return { src: src, path: imagePath, prompt: im.prompt || '' };
+        }).filter(Boolean),
+        createdAt: Number(d.createdAt) || Date.now(),
+        updatedAt: Date.now(),
+      };
+    }
+    function warnDraftSave(msg) {
+      if (draftSaveWarned) return;
+      draftSaveWarned = true;
+      showToast(msg);
+      setTimeout(function () { draftSaveWarned = false; }, 5000);
+    }
+    function jcoDraftsSave() {
+      if (!draftsReady) return;
+      var items = drafts.filter(function (d) { return d.status !== 'generating'; }).slice(0, 30).map(draftToStore);
+      if (window.jco && window.jco.drafts && window.jco.drafts.save) {
+        window.jco.drafts.save({ items: items }).then(function (res) {
+          if (!res || !res.ok) warnDraftSave('草稿没存上：' + ((res && res.error) || '未知错误'));
+        }, function () {
+          warnDraftSave('草稿没存上，再试一次。');
+        });
+        return;
+      }
+      // 浏览器直开的降级路径；桌面应用不走这里。
+      try {
         localStorage.setItem('jco-drafts-v1', JSON.stringify({ items: items }));
       } catch (e) {}
     }
@@ -1121,6 +1197,8 @@
           d.progress = 100;
           if (d.status === 'generating') d.status = 'review'; // 中断的生成不复活成假进度，落成待检查
           d.stepText = '';
+          d.createdAt = Number(d.createdAt) || 0;
+          d.updatedAt = Number(d.updatedAt) || 0;
           // 中断的"出片中"段：复位为可重试，不装成还在跑
           if (d.videos && typeof d.videos === 'object') {
             Object.keys(d.videos).forEach(function (k) {
@@ -1245,6 +1323,8 @@
         res: state.res,
         voice: state.voice,
         method: state.method,
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
       };
       drafts.unshift(d);
       if (drafts.length > 30) drafts.pop();
@@ -1460,7 +1540,7 @@
       ].join('\n');
       const res = await Promise.race([
         JCO_KERNEL.task({
-          system: '你是短视频分镜师，服务通用自媒体创作者；行业、受众、平台由品牌档案决定。只输出 JSON 数组。',
+          system: shotSystemPrompt(),
           input: input,
         }),
         new Promise((resolve) => setTimeout(() => resolve({ ok: false, error: '这次想太久了（超过 100 秒），再点一次试试。' }), 100000)),
@@ -1506,7 +1586,7 @@
       let prompts = []
       try {
         const planRes = await JCO_KERNEL.task({
-          system: '你是短视频画面策划，只输出画面描述行，不要解释。',
+          system: imageSystemPrompt(),
           input: '视频想法：' + idea + '\n为这条视频设计 ' + wanted + ' 个镜头的画面（' + ratioWord + '，当前品牌主题），每行一条简短描述，不要序号。',
         })
         if (planRes && planRes.ok && planRes.text) prompts = cleanLines(planRes.text).filter((l) => l.length > 3).slice(0, wanted)
@@ -1971,17 +2051,66 @@
     })();
     render();
     renderTemplates();
+    function hydrateDraftsStore() {
+      if (!window.jco || !window.jco.drafts || !window.jco.drafts.get) {
+        draftsReady = true;
+        return Promise.resolve();
+      }
+      return window.jco.drafts.get().then(function (res) {
+        if (!res || !res.ok) {
+          draftsReady = true;
+          return;
+        }
+        var storeItems = (res.data && res.data.items) || [];
+        var legacy = jcoDraftsLoad();
+        var migrate = Promise.resolve();
+        if (storeItems.length === 0 && legacy.length > 0) {
+          migrate = window.jco.drafts.migrate({ items: legacy.map(draftToStore) }).then(function (migrated) {
+            if (migrated && migrated.ok && migrated.data) storeItems = migrated.data.items || [];
+          });
+        }
+        return migrate.then(function () {
+          if (legacy.length > 0) {
+            var byId = {};
+            storeItems.forEach(function (d) { byId[String(d.id)] = d; });
+            legacy.forEach(function (d) {
+              var key = String(d.id);
+              var existing = byId[key];
+              if (!existing || (Number(d.updatedAt) || 0) > (Number(existing.updatedAt) || 0)) byId[key] = draftToStore(d);
+            });
+            storeItems = Object.keys(byId).map(function (key) { return byId[key]; }).sort(function (a, b) {
+              return (Number(b.updatedAt) || 0) - (Number(a.updatedAt) || 0);
+            });
+          }
+          drafts.length = 0;
+          storeItems.forEach(function (d) {
+            drafts.push(d);
+            draftSeq = Math.max(draftSeq, Number(d.id) || 0);
+          });
+          draftsReady = true;
+          renderDrafts();
+          if (storeItems.length > 0) jcoDraftsSave();
+        });
+      }, function () {
+        draftsReady = true;
+      }).then(function () {
+        draftsReady = true;
+      });
+    }
     // 恢复上次的草稿（真模式：草稿不丢，回来接着改）
     (function restoreDrafts() {
       var saved = jcoDraftsLoad();
-      if (saved.length === 0) return;
-      saved.forEach(function (d) {
-        drafts.push(d);
-        draftSeq = Math.max(draftSeq, d.id || 0);
-      });
-      renderDrafts();
+      if (saved.length > 0) {
+        saved.forEach(function (d) {
+          drafts.push(d);
+          draftSeq = Math.max(draftSeq, d.id || 0);
+        });
+        renderDrafts();
+      }
     })();
     renderDrafts();
+    void hydrateDraftsStore();
+    void hydrateBrandProfile();
   </script>
   <script>
     /* ---------- 侧栏导航（原型可点通） ---------- */

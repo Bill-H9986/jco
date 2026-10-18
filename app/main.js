@@ -370,6 +370,7 @@ const TOPICS_FILE = kernelDataPath('topics.json')
 const BRAND_PROFILE_FILE = kernelDataPath('brand-profile.json')
 const MATERIALS_FILE = kernelDataPath('materials.json')
 const SCRIPTS_FILE = kernelDataPath('scripts.json')
+const DRAFTS_FILE = kernelDataPath('drafts.json')
 /** 自动任务纪律尾注（逐字，与《M6 接口契约》一致）：不可逆动作一律停下等用户 */
 const AUTO_DISCIPLINE = [
   '（自动任务纪律：这是定时触发的任务，用户正在别处忙。准备工作照做；',
@@ -776,6 +777,93 @@ function saveScriptRecord(payload) {
   const artifacts = [record, ...data.artifacts.filter((item) => item.id !== id)].slice(0, 50)
   return writeScripts({ version: 1, current: record, artifacts })
 }
+function emptyDrafts() {
+  return { version: 1, items: [] }
+}
+function normalizeDraft(input) {
+  if (!input || typeof input !== 'object') return null
+  const id = Number(input.id)
+  if (!Number.isFinite(id)) return null
+  const status = ['generating', 'review', 'adjusted', 'approved'].includes(input.status)
+    ? input.status
+    : 'review'
+  const shots = Array.isArray(input.shots)
+    ? input.shots
+        .filter((shot) => shot && typeof shot === 'object')
+        .slice(0, 50)
+        .map((shot) => ({ line: String(shot.line || ''), pic: String(shot.pic || '') }))
+    : []
+  const videos = {}
+  if (input.videos && typeof input.videos === 'object') {
+    Object.keys(input.videos).slice(0, 50).forEach((key) => {
+      const video = input.videos[key]
+      if (!video || typeof video !== 'object') return
+      const videoStatus = ['done', 'failed', 'doing'].includes(video.status) ? video.status : 'failed'
+      videos[key] = {
+        status: videoStatus === 'doing' ? 'failed' : videoStatus,
+        url: String(video.url || ''),
+        path: String(video.path || ''),
+        videoId: String(video.videoId || ''),
+        error: String(video.error || (videoStatus === 'doing' ? '上次出片被中断，点「重试」。' : '')),
+      }
+    })
+  }
+  const images = Array.isArray(input.images)
+    ? input.images
+        .filter((image) => image && typeof image === 'object')
+        .slice(0, 20)
+        .map((image) => {
+          const src = String(image.src || '')
+          const imagePath = String(image.path || '')
+          const prompt = String(image.prompt || '')
+          if (src.length > 300000 && !imagePath) {
+            return { src: '', path: '', prompt: prompt + '（旧版大图未入草稿）' }
+          }
+          return { src, path: imagePath, prompt }
+        })
+    : []
+  const now = Date.now()
+  return {
+    id,
+    idea: String(input.idea || ''),
+    status: status === 'generating' ? 'review' : status,
+    type: input.type === 'image' ? 'image' : 'video',
+    ratio: String(input.ratio || '9:16'),
+    duration: String(input.duration || '30 秒'),
+    res: String(input.res || '1080P'),
+    voice: String(input.voice || '标准女声'),
+    method: String(input.method || 'assemble'),
+    fixNote: String(input.fixNote || ''),
+    shots,
+    videos,
+    images,
+    createdAt: Number(input.createdAt) || now,
+    updatedAt: Number(input.updatedAt) || now,
+  }
+}
+function normalizeDrafts(input) {
+  const data = input && typeof input === 'object' ? input : {}
+  const items = Array.isArray(data.items) ? data.items : []
+  return {
+    version: 1,
+    items: items.map(normalizeDraft).filter(Boolean).slice(0, 30),
+  }
+}
+function readDrafts() {
+  try {
+    return normalizeDrafts(JSON.parse(fs.readFileSync(DRAFTS_FILE, 'utf8')))
+  } catch (error) {
+    return emptyDrafts()
+  }
+}
+function writeDrafts(data) {
+  const normalized = normalizeDrafts(data)
+  fs.mkdirSync(path.dirname(DRAFTS_FILE), { recursive: true })
+  const temp = DRAFTS_FILE + '.tmp-' + process.pid
+  fs.writeFileSync(temp, JSON.stringify(normalized, null, 2), 'utf8')
+  fs.renameSync(temp, DRAFTS_FILE)
+  return normalized
+}
 ipcMain.handle('topics:get', () => ({ ok: true, data: readTopics(), brand: readBrandProfile() }))
 ipcMain.handle('topics:save', (_event, payload) => {
   try {
@@ -826,6 +914,23 @@ ipcMain.handle('scripts:migrate', (_event, payload) => {
     if (current.current) return { ok: true, data: current, migrated: false }
     const record = payload && payload.current ? { ...payload.current, source: 'migrate' } : null
     return { ok: true, data: saveScriptRecord({ current: record }), migrated: true }
+  } catch (error) {
+    return { ok: false, error: String((error && error.message) || error) }
+  }
+})
+ipcMain.handle('drafts:get', () => ({ ok: true, data: readDrafts() }))
+ipcMain.handle('drafts:save', (_event, payload) => {
+  try {
+    return { ok: true, data: writeDrafts(payload || {}) }
+  } catch (error) {
+    return { ok: false, error: String((error && error.message) || error) }
+  }
+})
+ipcMain.handle('drafts:migrate', (_event, payload) => {
+  try {
+    const current = readDrafts()
+    if (current.items.length > 0) return { ok: true, data: current, migrated: false }
+    return { ok: true, data: writeDrafts(payload || {}), migrated: true }
   } catch (error) {
     return { ok: false, error: String((error && error.message) || error) }
   }

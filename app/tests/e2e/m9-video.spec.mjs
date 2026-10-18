@@ -75,8 +75,16 @@ test('做视频页：成片连播 / 按我说的改（fixNote）/ 重出按钮 /
     await win.waitForTimeout(300)
     const toast = await win.locator('#toast').textContent()
     expect(toast).toContain('记下了')
-    const saved = await win.evaluate(() => JSON.parse(localStorage.getItem('jco-drafts-v1') || '{}'))
-    expect(saved.items[0].fixNote).toBe('配音换男声')
+    await expect
+      .poll(
+        async () =>
+          await win.evaluate(async () => {
+            const data = await window.jco.drafts.get()
+            return data.data.items.find((item) => item.id === 91)?.fixNote || ''
+          }),
+        { timeout: 5000 },
+      )
+      .toBe('配音换男声')
     expect(errors, `JS 错误：\n${errors.join('\n')}`).toEqual([])
   } finally {
     await app.close()

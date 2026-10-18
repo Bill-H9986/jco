@@ -208,6 +208,15 @@ contextBridge.exposeInMainWorld('jco', {
     save: (data) => ipcRenderer.invoke('scripts:save', { current: data || null }),
     migrate: (data) => ipcRenderer.invoke('scripts:migrate', { current: data || null }),
   },
+  drafts: {
+    get: () => ipcRenderer.invoke('drafts:get'),
+    save: (data) => ipcRenderer.invoke('drafts:save', {
+      items: Array.isArray(data && data.items) ? data.items : [],
+    }),
+    migrate: (data) => ipcRenderer.invoke('drafts:migrate', {
+      items: Array.isArray(data && data.items) ? data.items : [],
+    }),
+  },
   /** 系统级开关：主题（真切换）/ 开机启动（系统登录项）/ 清缓存（真清理） */
   sys: {
     theme: (mode) => ipcRenderer.invoke('sys:theme', String(mode || 'system')),

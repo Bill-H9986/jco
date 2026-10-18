@@ -18,6 +18,7 @@ export const FILES = [
   'brand-profile.json',
   'materials.json',
   'scripts.json',
+  'drafts.json',
 ]
 export const DIRS = ['task-sessions', 'work-tasks']
 
