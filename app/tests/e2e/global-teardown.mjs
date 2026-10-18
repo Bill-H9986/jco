@@ -8,7 +8,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const APP_DIR = path.resolve(__dirname, '..', '..')
 const KERNEL = path.join(APP_DIR, 'kernel')
 const SNAPSHOT = path.join(APP_DIR, 'node_modules', '.cache', 'jco-e2e-kernel-snapshot')
-const FILES = ['auto-tasks.json', 'auto-runs.json', 'skills.json']
+const FILES = ['auto-tasks.json', 'auto-runs.json', 'skills.json', 'topics.json', 'brand-profile.json']
 const DIRS = ['task-sessions', 'work-tasks']
 
 export default async function globalTeardown() {

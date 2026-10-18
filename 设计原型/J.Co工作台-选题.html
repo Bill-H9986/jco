@@ -382,7 +382,7 @@
   <script>
     /* ============================================================
        M8 选题环（真化）：三条真能力 = AI 出题（热点/想题） + 评论里挖题 + 你贴爆款我拆结构。
-       数据全部持久化在本机（jco-inspo-v1 / jco-radar-v1 / jco-favs-v1）；不爬取、不搬运。
+       数据持久化在本机统一数据层；旧 jco-inspo-v1 / jco-radar-v1 / jco-favs-v1 只做一次性迁移；不爬取、不搬运。
        ============================================================ */
     const toastEl = document.getElementById('toast');
 
@@ -425,11 +425,63 @@
     let inspos = loadJSON('jco-inspo-v1', []);   // 你贴的爆款 + 拆解
     let radar = loadJSON('jco-radar-v1', []);    // 雷达题（hot/ai/cmt）
     let favs = loadJSON('jco-favs-v1', []);      // 收藏的题目
-    function saveInspos() { saveJSON('jco-inspo-v1', inspos.slice(0, 10)); }
-    function saveRadar() { saveJSON('jco-radar-v1', radar.slice(0, 60)); }
-    function saveFavs() { saveJSON('jco-favs-v1', favs.slice(0, 100)); }
+    let brandProfile = null;
+    function persistTopics() {
+      var payload = { inspos: inspos.slice(0, 10), radar: radar.slice(0, 60), favs: favs.slice(0, 100) };
+      if (window.jco && window.jco.topics && window.jco.topics.save) {
+        window.jco.topics.save(payload).catch(function () {});
+        return;
+      }
+      // 浏览器直开的降级路径；桌面应用不走这里。
+      saveJSON('jco-inspo-v1', payload.inspos);
+      saveJSON('jco-radar-v1', payload.radar);
+      saveJSON('jco-favs-v1', payload.favs);
+    }
+    function saveInspos() { inspos = inspos.slice(0, 10); persistTopics(); }
+    function saveRadar() { radar = radar.slice(0, 60); persistTopics(); }
+    function saveFavs() { favs = favs.slice(0, 100); persistTopics(); }
 
-    const TOPIC_SYSTEM = '你是短视频选题策划，服务通用自媒体创作者；具体行业、受众、平台由品牌档案决定。要求：实用、能直接拍、不夸大承诺、不碰"包过"这类违规说法。只输出要求的行，不要解释。';
+    function brandLine() {
+      if (!brandProfile || typeof brandProfile !== 'object') return '';
+      var parts = [];
+      if (brandProfile.industry) parts.push('行业：' + brandProfile.industry);
+      if (brandProfile.audience) parts.push('受众：' + brandProfile.audience);
+      if (Array.isArray(brandProfile.platforms) && brandProfile.platforms.length) parts.push('平台：' + brandProfile.platforms.join('、'));
+      if (brandProfile.tone) parts.push('语气：' + brandProfile.tone);
+      if (Array.isArray(brandProfile.forbidden) && brandProfile.forbidden.length) parts.push('禁用表达：' + brandProfile.forbidden.join('、'));
+      return parts.length ? parts.join('；') : '';
+    }
+    function topicSystemPrompt() {
+      var base = '你是短视频选题策划，服务通用自媒体创作者。要求：实用、能直接拍、不夸大承诺、不碰违规说法。只输出要求的行，不要解释。';
+      var brand = brandLine();
+      return brand ? base + '\n品牌档案：' + brand : base;
+    }
+    async function hydrateTopicStore() {
+      if (!window.jco || !window.jco.topics || !window.jco.topics.get) return;
+      try {
+        var res = await window.jco.topics.get();
+        if (!res || !res.ok) return;
+        brandProfile = res.brand || null;
+        var data = res.data || {};
+        var hasData = (data.inspos || []).length + (data.radar || []).length + (data.favs || []).length > 0;
+        if (hasData) {
+          inspos = Array.isArray(data.inspos) ? data.inspos : inspos;
+          radar = Array.isArray(data.radar) ? data.radar : radar;
+          favs = Array.isArray(data.favs) ? data.favs : favs;
+        } else {
+          var migrated = await window.jco.topics.migrate({ inspos: inspos, radar: radar, favs: favs });
+          if (migrated && migrated.ok && migrated.data) {
+            inspos = migrated.data.inspos || inspos;
+            radar = migrated.data.radar || radar;
+            favs = migrated.data.favs || favs;
+          }
+        }
+        var active = document.querySelector('.tab.active');
+        var filter = active && active.dataset && active.dataset.f ? active.dataset.f : 'hot';
+        renderInspo();
+        renderRadar(filter);
+      } catch (e) {}
+    }
 
     /* ---------- 拿去开写（交接给「创作」页） / 开始做视频（交接给「创作」页-做视频） ---------- */
     function goWrite(title) {
@@ -619,7 +671,7 @@
         var texts = items.slice(0, 20).map(function (c) { return '「' + String(c.text || '').slice(0, 60) + '」'; }).join('\n');
         var res = await Promise.race([
           JCO_KERNEL.task({
-            system: TOPIC_SYSTEM,
+            system: topicSystemPrompt(),
             input: '下面是观众在我视频下的评论和问题：\n' + texts + '\n\n把它们变成 3~5 条我该做的选题。每行一条，格式：题目|为什么（一句）',
           }),
           new Promise(function (r) { setTimeout(function () { r({ ok: false, error: '这次想太久了（超过 100 秒），再试一次。' }); }, 100000); }),
@@ -678,7 +730,7 @@
       if (!JCO_KERNEL) { showToast('这个功能在桌面应用里可用（浏览器直开是演示模式）。'); return; }
       showToast('正在看今天的风向……');
       var res = await JCO_KERNEL.task({
-        system: TOPIC_SYSTEM,
+        system: topicSystemPrompt(),
         input: '今天是 ' + todayWord() + '。给 3 条最近该蹭的热点/节点选题，每行一条标题（带一点钩子）。',
       });
       if (res && res.ok && res.text) {
@@ -713,7 +765,7 @@
       if (!JCO_KERNEL) { showToast('这个功能在桌面应用里可用（浏览器直开是演示模式）。'); return; }
       showToast('想选题中……');
       var res = await JCO_KERNEL.task({
-        system: TOPIC_SYSTEM,
+        system: topicSystemPrompt(),
         input: '我想拍的方向：' + v + '\n给我 3 个具体的选题标题，直接给标题，每个一行，不要序号、不要解释。',
       });
       if (res && res.ok && res.text) {
@@ -736,6 +788,7 @@
     /* ---------- 初始化 ---------- */
     renderInspo();
     renderRadar('hot');
+    void hydrateTopicStore();
   </script>
   <script>
     /* ---------- 侧栏导航（原型可点通） ---------- */

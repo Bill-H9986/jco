@@ -38,6 +38,9 @@ Thumbs.db
 app/kernel/task-sessions/
 # W1-03 结构化任务卡台账（运行时生成：任务卡确认后写入）
 app/kernel/work-tasks/
+# 选题统一数据层与品牌档案（运行时生成/用户配置）
+app/kernel/topics.json
+app/kernel/brand-profile.json
 # 后期工具配置与 patch（运行时生成：main/bridge 写入，不入库）
 app/kernel/edit-tools.json
 app/kernel/edit-tools.patch.yml

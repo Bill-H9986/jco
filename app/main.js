@@ -358,6 +358,8 @@ const SKILLS_FILE = kernelDataPath('skills.json')
 /** 自动任务（M6）：任务表（页面同步，调度器只读）与执行记录（调度器写，页面只读） */
 const AUTO_TASKS_FILE = kernelDataPath('auto-tasks.json')
 const AUTO_RUNS_FILE = kernelDataPath('auto-runs.json')
+const TOPICS_FILE = kernelDataPath('topics.json')
+const BRAND_PROFILE_FILE = kernelDataPath('brand-profile.json')
 /** 自动任务纪律尾注（逐字，与《M6 接口契约》一致）：不可逆动作一律停下等用户 */
 const AUTO_DISCIPLINE = [
   '（自动任务纪律：这是定时触发的任务，用户正在别处忙。准备工作照做；',
@@ -633,6 +635,59 @@ function readAutoTasks() {
     return []
   }
 }
+function emptyTopics() {
+  return { version: 1, inspos: [], radar: [], favs: [] }
+}
+function normalizeTopics(input) {
+  const data = input && typeof input === 'object' ? input : {}
+  return {
+    version: 1,
+    inspos: Array.isArray(data.inspos) ? data.inspos.filter((item) => item && typeof item === 'object').slice(0, 10) : [],
+    radar: Array.isArray(data.radar) ? data.radar.filter((item) => item && typeof item === 'object').slice(0, 60) : [],
+    favs: Array.isArray(data.favs) ? data.favs.map((item) => String(item || '').slice(0, 200)).filter(Boolean).slice(0, 100) : [],
+  }
+}
+function readTopics() {
+  try {
+    return normalizeTopics(JSON.parse(fs.readFileSync(TOPICS_FILE, 'utf8')))
+  } catch (error) {
+    return emptyTopics()
+  }
+}
+function writeTopics(data) {
+  const normalized = normalizeTopics(data)
+  fs.mkdirSync(path.dirname(TOPICS_FILE), { recursive: true })
+  const temp = TOPICS_FILE + '.tmp-' + process.pid
+  fs.writeFileSync(temp, JSON.stringify(normalized, null, 2), 'utf8')
+  fs.renameSync(temp, TOPICS_FILE)
+  return normalized
+}
+function readBrandProfile() {
+  try {
+    const data = JSON.parse(fs.readFileSync(BRAND_PROFILE_FILE, 'utf8'))
+    return data && typeof data === 'object' ? data : {}
+  } catch (error) {
+    return {}
+  }
+}
+ipcMain.handle('topics:get', () => ({ ok: true, data: readTopics(), brand: readBrandProfile() }))
+ipcMain.handle('topics:save', (_event, payload) => {
+  try {
+    return { ok: true, data: writeTopics(payload || {}) }
+  } catch (error) {
+    return { ok: false, error: String((error && error.message) || error) }
+  }
+})
+ipcMain.handle('topics:migrate', (_event, payload) => {
+  try {
+    const current = readTopics()
+    const hasData = current.inspos.length + current.radar.length + current.favs.length > 0
+    if (hasData) return { ok: true, data: current, migrated: false }
+    return { ok: true, data: writeTopics(payload || {}), migrated: true }
+  } catch (error) {
+    return { ok: false, error: String((error && error.message) || error) }
+  }
+})
 function saveAutoRun(taskId, record) {
   // W1-04：执行结果统一写 work-tasks；auto-runs.json 只作为历史迁移来源读取，不再新增写入。
   void taskId
