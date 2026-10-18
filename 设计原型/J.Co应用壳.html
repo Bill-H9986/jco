@@ -16,35 +16,7 @@
     .frame-fade.on { opacity: 1; }
     .task-view { position: absolute; inset: 0; z-index: 8; overflow-y: auto; background: var(--bg); padding: 28px 34px 40px; }
     .task-view[hidden] { display: none; }
-    .tv-head { display: flex; align-items: flex-start; gap: 18px; margin-bottom: 24px; }
-    .tv-head h2 { margin: 4px 0 6px; font-size: 24px; line-height: 1.25; letter-spacing: -0.02em; }
-    .tv-meta { font-size: 13px; color: var(--text-3); }
-    .tv-status { margin-left: auto; flex: none; padding: 5px 10px; border-radius: 999px; background: var(--tint); color: var(--text-2); font-size: 12px; }
-    .tv-status.running { color: var(--accent); background: var(--accent-soft, var(--tint)); }
-    .tv-status.waiting { color: var(--amber); background: var(--amber-tint); }
-    .tv-status.done { color: var(--green); background: var(--green-tint); }
-    .tv-status.failed, .tv-status.cancelled { color: var(--red); background: var(--red-tint); }
-    .tv-grid { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 28px; max-width: 1120px; }
-    .tv-main, .tv-side { min-width: 0; }
-    .tv-section { padding: 18px 0; border-top: 0.5px solid var(--line); }
-    .tv-section h3 { margin: 0 0 9px; font-size: 13px; font-weight: 600; color: var(--text-3); }
-    .tv-section p { margin: 0; font-size: 15px; line-height: 1.7; white-space: pre-wrap; }
-    .tv-list { display: flex; flex-direction: column; gap: 7px; }
-    .tv-list-item { font-size: 14px; line-height: 1.6; color: var(--text-2); }
-    .tv-list-item::before { content: "·"; margin-right: 8px; color: var(--text-3); }
-    .tv-timeline { display: flex; flex-direction: column; gap: 12px; margin: 0; padding: 0; list-style: none; }
-    .tv-event { display: grid; grid-template-columns: 48px 1fr; gap: 12px; font-size: 13.5px; line-height: 1.55; }
-    .tv-event time { color: var(--text-3); font-size: 12px; }
-    .tv-event span { color: var(--text-1); }
-    .tv-empty { color: var(--text-3); font-size: 13px; }
-    .tv-approval { margin-top: 4px; padding: 14px; border: 0.5px solid var(--line); border-radius: 12px; background: var(--tint); }
-    .tv-approval p { margin: 0 0 12px; font-size: 14px; line-height: 1.6; }
-    .tv-approval .tv-actions { margin-top: 0; }
-    .tv-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 14px; }
-    .tv-actions .ghost { height: 34px; font-size: 13px; }
-    .tv-actions .danger { color: var(--red); }
-    .tv-small { margin-top: 8px; font-size: 12.5px; color: var(--text-3); }
-    @media (max-width: 900px) { .tv-grid { grid-template-columns: 1fr; } .task-view { padding: 22px; } }
+    @media (max-width: 900px) { .task-view { padding: 22px; } }
   </style>
 </head>
 <body>

@@ -116,6 +116,37 @@ for (const page of PAGES) {
   }
 }
 
+// —— A2. 设计系统与产品组件同源（W4-05） ——
+const sharedCss = readFileSync(path.join(UI, 'assets', 'jco-ui.css'), 'utf8')
+const materialSrc = readFileSync(path.join(UI, MATERIAL_PAGE), 'utf8')
+const productSources = {
+  master: readFileSync(path.join(UI, 'J.Co总管.html'), 'utf8'),
+  shell: readFileSync(path.join(UI, SHELL_PAGE), 'utf8'),
+  auto: readFileSync(path.join(UI, 'J.Co自动任务.html'), 'utf8'),
+  skills: readFileSync(path.join(UI, 'J.Co技能库.html'), 'utf8'),
+  team: readFileSync(path.join(UI, 'J.Co管家团队.html'), 'utf8'),
+}
+const DESIGN_CHECKS = [
+  ['共享消息样式', /\.msg\.user \.bubble\s*\{/.test(sharedCss) && /\.msg\.ai \.bubble\s*\{/.test(sharedCss)],
+  ['共享任务卡样式', /\.task-card\s*\{/.test(sharedCss)],
+  ['共享任务状态样式', /\.tv-status\.waiting\s*\{/.test(sharedCss)],
+  ['共享员工状态样式', /\.s-badge\.busy\s*\{/.test(sharedCss)],
+  ['设计系统消息样例', /id="dsMessages"/.test(materialSrc)],
+  ['设计系统任务卡样例', /id="dsTaskCard"/.test(materialSrc)],
+  ['设计系统状态样例', /id="dsTaskStates"/.test(materialSrc) && /id="dsStaffStates"/.test(materialSrc)],
+  ['设计系统消息渲染器', /assets\/message\.js/.test(materialSrc)],
+  ['总管不再重画消息样式', !/\n\.msg\.user\s*\{/.test(productSources.master)],
+  ['应用壳不再重画任务状态样式', !/\n\s*\.tv-status\s*\{/.test(productSources.shell)],
+  [
+    '状态页不再重画员工徽标样式',
+    !/\n\.s-badge\s*\{/.test(productSources.auto) &&
+      !/\n\.s-badge\s*\{/.test(productSources.skills) &&
+      !/\n\.s-badge\s*\{/.test(productSources.team),
+  ],
+]
+const designMissing = DESIGN_CHECKS.filter(([, ok]) => !ok).map(([label]) => label)
+if (designMissing.length > 0) failed = true
+
 // —— B. 产品目录干净 ——
 const junk = []
 for (const name of readdirSync(UI)) {
@@ -145,6 +176,11 @@ if (shellMissing.length > 0) failed = true
 
 console.log('===== 全站一致性审计（机器门）=====')
 console.log('页面矩阵：' + PAGES.length + ' 页 × ' + (CHECKS.length + 4) + ' 项检查')
+console.log(
+  designMissing.length > 0
+    ? '  ❌ 设计系统与产品组件不同源：' + designMissing.join('、')
+    : '  ✅ 设计系统消息 / 任务卡 / 状态 / 表单样例与产品组件同源',
+)
 if (missingPerPage.length > 0) {
   console.log('组件分叉：')
   for (const line of missingPerPage) console.log(line)

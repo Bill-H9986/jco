@@ -5,12 +5,13 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>J.Co · 设计系统</title>
   <link rel="stylesheet" href="./assets/jco-ui.css">
+  <script src="./assets/message.js"></script>
   <style>
   .dsx-head { padding: 56px 0 8px; }
   .dsx-head h1 { font-size: 30px; font-weight: 600; letter-spacing: -0.02em; }
   .dsx-head p { margin-top: 10px; font-size: 14px; color: var(--text-2); line-height: 1.7; }
   .dsx-head code { font-size: 13px; color: var(--text-1); background: var(--tint); border-radius: 6px; padding: 2px 7px; font-family: "SF Mono", "Cascadia Code", "Consolas", monospace; }
-  .dsx-main { max-width: 1060px; margin: 0 auto; padding: 0 36px 110px; }
+  .dsx-main { max-width: 1060px; height: 100dvh; margin: 0 auto; padding: 0 36px 110px; overflow-y: auto; }
   .dsx-sec { margin-top: 58px; }
   .dsx-sec > h2 { font-size: 20px; font-weight: 600; letter-spacing: -0.01em; }
   .dsx-sec > p { margin-top: 6px; font-size: 13px; color: var(--text-3); line-height: 1.7; }
@@ -54,13 +55,25 @@
   .dsx-foot p { font-size: 13px; line-height: 1.8; color: var(--text-2); }
   .dsx-foot p + p { margin-top: 8px; }
   .dsx-foot b { font-weight: 500; color: var(--text-1); }
+  .dsx-component-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 18px; margin-top: 20px; }
+  .dsx-component-card { min-width: 0; background: var(--card); border-radius: 20px; box-shadow: var(--shadow-card); padding: 22px; }
+  .dsx-component-card .dsx-tag { position: static; display: block; margin-bottom: 18px; font-size: 11px; color: var(--text-3); }
+  .dsx-message-demo { display: flex; flex-direction: column; gap: 18px; min-height: 190px; }
+  .dsx-message-demo .msg { min-width: 0; }
+  .dsx-task-preview .task-card { max-width: none; margin: 0; }
+  .dsx-task-preview .task-card-actions { margin-top: 10px; }
+  .dsx-status-row { display: flex; align-items: center; gap: 9px; flex-wrap: wrap; }
+  .dsx-status-row .tv-status, .dsx-status-row .s-badge,
+  .dsx-status-line .tv-status, .dsx-status-line .s-badge { margin-left: 0; }
+  .dsx-status-label { width: 92px; flex: none; font-size: 12px; color: var(--text-3); }
+  .dsx-status-line { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 12px; }
   </style>
 </head>
 <body>
   <main class="dsx-main">
     <header class="dsx-head">
       <h1>J.Co 设计系统</h1>
-      <p>全站唯一来源：<code>assets/jco-ui.css</code>。改一处，12 个页面同时生效。<br>
+      <p>全站唯一来源：<code>assets/jco-ui.css</code>。改一处，16 个现有页面同时生效。<br>
       本页是"零件橱窗"：所有界面元素都从这份模具里来，页面里不允许再出现新的画法。</p>
     </header>
 
@@ -149,7 +162,106 @@
     </section>
 
     <section class="dsx-sec">
-      <h2>五 · 侧栏零件</h2>
+      <h2>五 · 消息、任务与状态</h2>
+      <p>这些不是“示意图”，而是产品页正在使用的同一批 HTML class：消息、任务卡、任务状态和员工状态全部从 <code>assets/jco-ui.css</code> 取样式。</p>
+      <div class="dsx-component-grid">
+        <div class="dsx-component-card">
+          <span class="dsx-tag">对话消息（总管同款）</span>
+          <div class="dsx-message-demo" id="dsMessages">
+            <div class="msg user">
+              <div class="bubble">把这条内容整理成发布任务</div>
+            </div>
+            <div class="msg ai">
+              <div class="ava">J</div>
+              <div class="body">
+                <div class="name">J.Co</div>
+                <div class="bubble" id="dsAiBubble">我先整理任务卡，确认前不会创建 Task。</div>
+                <div class="msg-actions">
+                  <button type="button" aria-label="复制"><span class="ti ti-copy"></span></button>
+                  <button type="button" aria-label="赞"><span class="ti ti-thumb-up"></span></button>
+                  <button type="button" aria-label="踩"><span class="ti ti-thumb-down"></span></button>
+                  <button type="button" aria-label="转发"><span class="ti ti-share-3"></span></button>
+                  <button type="button" aria-label="派活"><span class="ti ti-user-plus"></span></button>
+                </div>
+                <div class="acts">
+                  <button class="act primary" type="button">确认任务</button>
+                  <button class="act" type="button">继续修改</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="dsx-component-card dsx-task-preview" id="dsTaskCard">
+          <span class="dsx-tag">任务卡草稿（总管同款）</span>
+          <section class="task-card" aria-label="任务卡草稿示例">
+            <h3>任务卡草稿</h3>
+            <p class="task-card-note">确认前不会创建 Task，也不会启动浏览器。</p>
+            <div class="task-field">
+              <label for="dsTaskTitle">标题</label>
+              <input id="dsTaskTitle" value="准备一条产品更新说明" />
+            </div>
+            <div class="task-field">
+              <label for="dsTaskGoal">目标</label>
+              <textarea id="dsTaskGoal">整理成用户能看懂的更新说明，并准备好发布素材。</textarea>
+            </div>
+            <div class="task-field">
+              <label for="dsTaskDeliverable">交付物</label>
+              <input id="dsTaskDeliverable" value="发布文案 + 封面" />
+            </div>
+            <div class="task-card-error" role="status">示例：标题、目标和交付物都要填。</div>
+            <div class="task-card-actions">
+              <button class="go-btn" type="button">确认派活</button>
+              <button class="ghost" type="button">修改</button>
+              <button class="ghost" type="button">取消</button>
+            </div>
+          </section>
+        </div>
+
+        <div class="dsx-component-card">
+          <span class="dsx-tag">任务状态 / 员工状态</span>
+          <div class="dsx-status-line" id="dsTaskStates">
+            <span class="dsx-status-label">任务</span>
+            <span class="tv-status">待确认</span>
+            <span class="tv-status running">执行中</span>
+            <span class="tv-status waiting">等你确认</span>
+            <span class="tv-status done">已完成</span>
+            <span class="tv-status failed">失败</span>
+            <span class="tv-status cancelled">已取消</span>
+          </div>
+          <div class="dsx-status-line" id="dsStaffStates">
+            <span class="dsx-status-label">员工</span>
+            <span class="s-badge busy">在忙</span>
+            <span class="s-badge wait">在等你</span>
+            <span class="s-badge free">空闲</span>
+            <span class="s-badge sched">已排期</span>
+          </div>
+          <p class="task-card-note" style="margin: 16px 0 0">任务卡字段、聚焦描边、错误提示和禁用态都由共享层定义；页面不再复制一套。</p>
+        </div>
+
+        <div class="dsx-component-card">
+          <span class="dsx-tag">表单状态</span>
+          <div class="task-card" style="margin: 0; border: 0; padding: 0">
+            <div class="task-field">
+              <label for="dsTaskDefault">默认 / 聚焦</label>
+              <input id="dsTaskDefault" placeholder="点一下看聚焦描边" />
+            </div>
+            <div class="task-field">
+              <label for="dsTaskFilled">已填</label>
+              <input id="dsTaskFilled" value="这一项已经填写" />
+            </div>
+            <div class="task-field">
+              <label for="dsTaskDisabled">不可用</label>
+              <input id="dsTaskDisabled" value="当前不可编辑" disabled />
+            </div>
+            <div class="task-card-error">错误提示使用 --red，不另造颜色。</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="dsx-sec">
+      <h2>六 · 侧栏零件</h2>
       <p>搜索框、分组标签（悬停试着划过）、导航项（默认 / 选中）、会话项（默认 / 选中）。选中一律不加粗。</p>
       <div class="dsx-stage">
         <div class="dsx-box" style="padding-top: 30px">
@@ -170,7 +282,7 @@
     </section>
 
     <section class="dsx-sec">
-      <h2>六 · 菜单与浮层</h2>
+      <h2>七 · 菜单与浮层</h2>
       <p>下拉菜单、通知面板、模式选择。全部使用“发丝 + 投影”的浮层阴影。</p>
       <div class="dsx-stage">
         <div class="dsx-box" style="min-width: 250px; padding-top: 30px">
@@ -202,7 +314,7 @@
     </section>
 
     <section class="dsx-sec">
-      <h2>七 · 图标</h2>
+      <h2>八 · 图标</h2>
       <p>Tabler Icons 单一图标库（本地字体，不用 emoji 当图标）。全站图标全集如下，缺一个都不行。</p>
       <div class="dsx-icons" id="iconWall"></div>
     </section>
@@ -215,6 +327,10 @@
     </div>
   </main>
   <script>
+    var aiBubble = document.getElementById('dsAiBubble')
+    if (aiBubble && window.JcoMessage) {
+      aiBubble.innerHTML = window.JcoMessage.mdToHtml('我先整理**任务卡**，确认前不会创建 Task。\n\n- 你确认后才进入任务台账\n- 发布仍然要你点头')
+    }
     var ICONS = ['ti-layout-grid','ti-tool','ti-messages','ti-search','ti-bell','ti-settings','ti-bulb','ti-video','ti-photo','ti-music','ti-upload','ti-chart-bar','ti-message-circle','ti-message-dots','ti-rocket','ti-book','ti-clock-play','ti-sparkles','ti-users-group','ti-wand','ti-arrow-up','ti-chevron-down','ti-chevron-right','ti-plus','ti-check','ti-x','ti-refresh','ti-copy','ti-eye','ti-star','ti-trash','ti-key','ti-logout','ti-player-play','ti-microphone','ti-flame','ti-at','ti-flag','ti-id','ti-cpu']
     var wall = document.getElementById('iconWall')
     ICONS.forEach(function (name) {

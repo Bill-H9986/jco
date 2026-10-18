@@ -147,28 +147,6 @@
 
 .s-name { font-size: 14px; font-weight: 600; }
 
-.s-badge { margin-left: auto; display: inline-flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 600; border-radius: 999px; padding: 3.5px 11px; }
-
-.s-badge::before { content: ""; width: 6px; height: 6px; border-radius: 50%; }
-
-.s-badge.busy { background: var(--green-tint); color: var(--green); }
-
-.s-badge.busy::before { background: var(--green); animation: pulse 1.8s ease infinite; }
-
-.s-badge.wait { background: rgba(0, 128, 255, 0.12); color: var(--accent); }
-
-.s-badge.wait::before { background: var(--accent); }
-
-.s-badge.free { background: var(--tint); color: var(--text-3); }
-
-.s-badge.free::before { background: var(--text-3); }
-
-.s-badge.sched { background: rgba(120, 120, 128, 0.14); color: var(--text-2); }
-
-.s-badge.sched::before { background: var(--text-2); }
-
-@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
-
 .s-live { margin-top: 10px; font-size: 13px; color: var(--text-2); line-height: 1.65; }
 
 .s-foot { margin-top: auto; padding-top: 14px; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
