@@ -988,6 +988,61 @@ function workTaskView(task) {
     live: [],
   }
 }
+function profileOfWorkTask(task) {
+  if (task.type === 'publish') return 'publisher'
+  if (task.type === 'edit') return 'editor'
+  if (task.type === 'operate') return 'operator'
+  return 'writer'
+}
+/** W1-05：审批通过后，用真实内核执行任务；事件进入同一任务详情时间线。 */
+async function runWorkTask(task) {
+  if (!task || task.status !== 'running') return
+  try {
+    const profile = profileOfWorkTask(task)
+    const promptBuilder = await import(pathToFileURL(path.join(__dirname, 'dist', 'kernel', 'prompt-builder.js')).href)
+    const prompt = promptBuilder.buildTaskPrompt({
+      profile,
+      task: {
+        title: task.title,
+        goal: task.goal,
+        ownerRole: task.ownerRole,
+        inputs: task.inputs,
+        constraints: task.constraints,
+        deliverables: task.deliverables,
+      },
+    })
+    workTaskEvent(task, 'note', '任务执行已交给「' + task.ownerRole + '」岗位')
+    saveWorkTask(task.id)
+    const bridge = await getBridge()
+    const result = await bridge.ask(prompt, null, {
+      profile,
+      sessionId: 'task:' + task.id,
+      onActivity: (act) => {
+        if (act && act.kind === 'tool' && act.phase === 'call') {
+          workTaskEvent(task, 'tool_call', '调用工具：' + String(act.tool || '未知工具'))
+          saveWorkTask(task.id)
+          broadcastWorkTask(task, 'update')
+        }
+      },
+    })
+    task.status = result.ok ? 'done' : 'failed'
+    task.summary = clipSafe(String((result.ok ? result.text : result.error) || ''), 300)
+    task.messages = [
+      { role: 'user', text: prompt, t: Date.now() },
+      { role: 'assistant', text: task.summary || '（没有返回内容）', t: Date.now() },
+    ]
+    workTaskEvent(task, result.ok ? 'state_changed' : 'error', result.ok ? '任务执行完成' : '任务执行失败：' + task.summary)
+    saveWorkTask(task.id)
+    broadcastWorkTask(task, result.ok ? 'done' : 'fail')
+  } catch (error) {
+    task.status = 'failed'
+    task.summary = '执行出错：' + clipSafe(String((error && error.message) || error), 200)
+    task.messages = [{ role: 'assistant', text: task.summary, t: Date.now() }]
+    workTaskEvent(task, 'error', task.summary)
+    saveWorkTask(task.id)
+    broadcastWorkTask(task, 'fail')
+  }
+}
 ipcMain.handle('tasks:propose', (_event, payload) => {
   try {
     const draft = (payload && payload.task) || payload || {}
@@ -1096,6 +1151,7 @@ ipcMain.handle('tasks:approval', (_event, payload) => {
     task.updatedAt = Date.now()
     saveWorkTask(id)
     broadcastWorkTask(task, decision === 'approve' ? 'update' : 'fail')
+    if (decision === 'approve') void runWorkTask(task)
     return { ok: true, task: workTaskView(task) }
   } catch (error) {
     return { ok: false, error: String((error && error.message) || error) }

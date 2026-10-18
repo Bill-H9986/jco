@@ -51,7 +51,7 @@ test('M11 W1-03：任务卡 → 确认 → 独立详情 → 审批门', async ()
     await win.screenshot({ path: path.join(APP_DIR, 'test-results', 'm11-w1-03-task-detail.png') })
 
     await win.locator('#tvApproval button', { hasText: '确认继续' }).click()
-    await expect(win.locator('#tvStatus')).toHaveText('执行中')
+    await expect(win.locator('#tvStatus')).not.toHaveText('等你确认')
     await expect(win.locator('#tvApproval')).toContainText('当前没有待审批事项')
 
     const taskId = await win.evaluate(() => decodeURIComponent((location.hash.match(/^#\/task\/(.+)$/) || [])[1] || ''))

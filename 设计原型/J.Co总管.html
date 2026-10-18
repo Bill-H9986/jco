@@ -936,6 +936,7 @@
         bubble.innerHTML = '<div class="err-box"><div class="err-title"><span class="dot"></span>本轮没答上来</div><div class="err-desc">' + mdToHtml((res && res.error) || '未知错误') + '</div></div>';
       }
       busy = false;
+      inputChanged();
       bottom();
       chatPush('ai', (res && res.ok) ? (res.text || liveText || '（这轮没有内容）') : ('没答上来：' + ((res && res.error) || '未知错误')));
       maybeProposeTask(text, res);
@@ -1141,13 +1142,14 @@
       inputChanged();
       addUser(text);
       busy = true;
+      inputChanged();
       if (JCO_KERNEL) { askKernel(text); return; }
       setTimeout(() => {
         addAI(`收到。「${text}」<br>原型阶段我先记住这句话，正式版我会直接去干，干完把结果端给你。`).then(() => { busy = false; });
       }, 280);
     }
 
-    function inputChanged() { send.disabled = inp.value.trim().length === 0; }
+    function inputChanged() { send.disabled = busy || inp.value.trim().length === 0; }
     inp.addEventListener('input', () => {
       inputChanged();
       inp.style.height = 'auto';
