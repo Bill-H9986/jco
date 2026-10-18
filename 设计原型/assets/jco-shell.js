@@ -446,6 +446,7 @@
         parent.postMessage({ __jcoPage: pageName() }, '*')
       } catch (err) {}
     }
+    document.documentElement.setAttribute('data-jco-ready', '1')
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init)
   else init()
