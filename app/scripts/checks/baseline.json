@@ -1,0 +1,1537 @@
+{
+  "version": 1,
+  "note": "W0-06 存量欠账。只允许删除，不允许新增；新增违规会让 npm run gate 失败。",
+  "generatedAt": "2026-10-18T03:36:10.987Z",
+  "entries": [
+    {
+      "ruleId": "no-direct-business-localstorage",
+      "file": "设计原型/J.Co工作台-创作.html",
+      "fingerprint": "no-direct-business-localstorage|设计原型/J.Co工作台-创作.html|localStorage.getItem('jco-chats-v1'|#0",
+      "excerpt": "localStorage.getItem('jco-chats-v1'"
+    },
+    {
+      "ruleId": "no-direct-business-localstorage",
+      "file": "设计原型/J.Co工作台-创作.html",
+      "fingerprint": "no-direct-business-localstorage|设计原型/J.Co工作台-创作.html|localStorage.getItem('jco-log-v1'|#0",
+      "excerpt": "localStorage.getItem('jco-log-v1'"
+    },
+    {
+      "ruleId": "no-direct-business-localstorage",
+      "file": "设计原型/J.Co工作台-创作.html",
+      "fingerprint": "no-direct-business-localstorage|设计原型/J.Co工作台-创作.html|localStorage.getItem('jco-log-v1'|#1",
+      "excerpt": "localStorage.getItem('jco-log-v1'"
+    },
+    {
+      "ruleId": "no-direct-business-localstorage",
+      "file": "设计原型/J.Co工作台-创作.html",
+      "fingerprint": "no-direct-business-localstorage|设计原型/J.Co工作台-创作.html|localStorage.getItem('jco-mode-v1'|#0",
+      "excerpt": "localStorage.getItem('jco-mode-v1'"
+    },
+    {
+      "ruleId": "no-direct-business-localstorage",
+      "file": "设计原型/J.Co工作台-创作.html",
+      "fingerprint": "no-direct-business-localstorage|设计原型/J.Co工作台-创作.html|localStorage.getItem('jco-notify-done'|#0",
+      "excerpt": "localStorage.getItem('jco-notify-done'"
+    },
+    {
+      "ruleId": "no-direct-business-localstorage",
+      "file": "设计原型/J.Co工作台-创作.html",
+      "fingerprint": "no-direct-business-localstorage|设计原型/J.Co工作台-创作.html|localStorage.getItem('jco-script-v1'|#0",
+      "excerpt": "localStorage.getItem('jco-script-v1'"
+    },
+    {
+      "ruleId": "no-direct-business-localstorage",
+      "file": "设计原型/J.Co工作台-创作.html",
+      "fingerprint": "no-direct-business-localstorage|设计原型/J.Co工作台-创作.html|localStorage.getItem('jco-side-pinned'|#0",
+      "excerpt": "localStorage.getItem('jco-side-pinned'"
+    },
+    {
+      "ruleId": "no-direct-business-localstorage",
+      "file": "设计原型/J.Co工作台-创作.html",
+      "fingerprint": "no-direct-business-localstorage|设计原型/J.Co工作台-创作.html|localStorage.getItem('jco-side-pinned'|#1",
+      "excerpt": "localStorage.getItem('jco-side-pinned'"
+    },
+    {
+      "ruleId": "no-direct-business-localstorage",
+      "file": "设计原型/J.Co工作台-创作.html",
+      "fingerprint": "no-direct-business-localstorage|设计原型/J.Co工作台-创作.html|localStorage.setItem('jco-chats-v1'|#0",
+      "excerpt": "localStorage.setItem('jco-chats-v1'"
+    },
+    {
+      "ruleId": "no-direct-business-localstorage",
+      "file": "设计原型/J.Co工作台-创作.html",
+      "fingerprint": "no-direct-business-localstorage|设计原型/J.Co工作台-创作.html|localStorage.setItem('jco-log-v1'|#0",
+      "excerpt": "localStorage.setItem('jco-log-v1'"
+    },
+    {
+      "ruleId": "no-direct-business-localstorage",
+      "file": "设计原型/J.Co工作台-创作.html",
+      "fingerprint": "no-direct-business-localstorage|设计原型/J.Co工作台-创作.html|localStorage.setItem('jco-script-v1'|#0",
+      "excerpt": "localStorage.setItem('jco-script-v1'"
+    },
+    {
+      "ruleId": "no-direct-business-localstorage",
+      "file": "设计原型/J.Co工作台-创作.html",
+      "fingerprint": "no-direct-business-localstorage|设计原型/J.Co工作台-创作.html|localStorage.setItem('jco-side-pinned'|#0",
+      "excerpt": "localStorage.setItem('jco-side-pinned'"
+    },
+    {
+      "ruleId": "no-direct-business-localstorage",
+      "file": "设计原型/J.Co工作台-发布.html",
+      "fingerprint": "no-direct-business-localstorage|设计原型/J.Co工作台-发布.html|localStorage.getItem('jco-chats-v1'|#0",
+      "excerpt": "localStorage.getItem('jco-chats-v1'"
+    },
+    {
+      "ruleId": "no-direct-business-localstorage",
+      "file": "设计原型/J.Co工作台-发布.html",
+      "fingerprint": "no-direct-business-localstorage|设计原型/J.Co工作台-发布.html|localStorage.getItem('jco-drafts-v1'|#0",
+      "excerpt": "localStorage.getItem('jco-drafts-v1'"
+    },
+    {
+      "ruleId": "no-direct-business-localstorage",
+      "file": "设计原型/J.Co工作台-发布.html",
+      "fingerprint": "no-direct-business-localstorage|设计原型/J.Co工作台-发布.html|localStorage.getItem('jco-drafts-v1'|#1",
+      "excerpt": "localStorage.getItem('jco-drafts-v1'"
+    },
+    {
+      "ruleId": "no-direct-business-localstorage",
+      "file": "设计原型/J.Co工作台-发布.html",
+      "fingerprint": "no-direct-business-localstorage|设计原型/J.Co工作台-发布.html|localStorage.getItem('jco-log-v1'|#0",
+      "excerpt": "localStorage.getItem('jco-log-v1'"
+    },
+    {
+      "ruleId": "no-direct-business-localstorage",
+      "file": "设计原型/J.Co工作台-发布.html",
+      "fingerprint": "no-direct-business-localstorage|设计原型/J.Co工作台-发布.html|localStorage.getItem('jco-log-v1'|#1",
+      "excerpt": "localStorage.getItem('jco-log-v1'"
+    },
+    {
+      "ruleId": "no-direct-business-localstorage",
+      "file": "设计原型/J.Co工作台-发布.html",
+      "fingerprint": "no-direct-business-localstorage|设计原型/J.Co工作台-发布.html|localStorage.getItem('jco-log-v1'|#2",
+      "excerpt": "localStorage.getItem('jco-log-v1'"
+    },
+    {
+      "ruleId": "no-direct-business-localstorage",
+      "file": "设计原型/J.Co工作台-发布.html",
+      "fingerprint": "no-direct-business-localstorage|设计原型/J.Co工作台-发布.html|localStorage.getItem('jco-log-v1'|#3",
+      "excerpt": "localStorage.getItem('jco-log-v1'"
+    },
+    {
+      "ruleId": "no-direct-business-localstorage",
+      "file": "设计原型/J.Co工作台-发布.html",
+      "fingerprint": "no-direct-business-localstorage|设计原型/J.Co工作台-发布.html|localStorage.getItem('jco-login-v1'|#0",
+      "excerpt": "localStorage.getItem('jco-login-v1'"
+    },
+    {
+      "ruleId": "no-direct-business-localstorage",
+      "file": "设计原型/J.Co工作台-发布.html",
+      "fingerprint": "no-direct-business-localstorage|设计原型/J.Co工作台-发布.html|localStorage.getItem('jco-notify-done'|#0",
+      "excerpt": "localStorage.getItem('jco-notify-done'"
+    },
+    {
+      "ruleId": "no-direct-business-localstorage",
+      "file": "设计原型/J.Co工作台-发布.html",
+      "fingerprint": "no-direct-business-localstorage|设计原型/J.Co工作台-发布.html|localStorage.getItem('jco-publish-v1'|#0",
+      "excerpt": "localStorage.getItem('jco-publish-v1'"
+    },
+    {
+      "ruleId": "no-direct-business-localstorage",
+      "file": "设计原型/J.Co工作台-发布.html",
+      "fingerprint": "no-direct-business-localstorage|设计原型/J.Co工作台-发布.html|localStorage.getItem('jco-side-pinned'|#0",
+      "excerpt": "localStorage.getItem('jco-side-pinned'"
+    },
+    {
+      "ruleId": "no-direct-business-localstorage",
+      "file": "设计原型/J.Co工作台-发布.html",
+      "fingerprint": "no-direct-business-localstorage|设计原型/J.Co工作台-发布.html|localStorage.getItem('jco-side-pinned'|#1",
+      "excerpt": "localStorage.getItem('jco-side-pinned'"
+    },
+    {
+      "ruleId": "no-direct-business-localstorage",
+      "file": "设计原型/J.Co工作台-发布.html",
+      "fingerprint": "no-direct-business-localstorage|设计原型/J.Co工作台-发布.html|localStorage.setItem('jco-chats-v1'|#0",
+      "excerpt": "localStorage.setItem('jco-chats-v1'"
+    },
+    {
+      "ruleId": "no-direct-business-localstorage",
+      "file": "设计原型/J.Co工作台-发布.html",
+      "fingerprint": "no-direct-business-localstorage|设计原型/J.Co工作台-发布.html|localStorage.setItem('jco-log-v1'|#0",
+      "excerpt": "localStorage.setItem('jco-log-v1'"
+    },
+    {
+      "ruleId": "no-direct-business-localstorage",
+      "file": "设计原型/J.Co工作台-发布.html",
+      "fingerprint": "no-direct-business-localstorage|设计原型/J.Co工作台-发布.html|localStorage.setItem('jco-log-v1'|#1",
+      "excerpt": "localStorage.setItem('jco-log-v1'"
+    },
+    {
+      "ruleId": "no-direct-business-localstorage",
+      "file": "设计原型/J.Co工作台-发布.html",
+      "fingerprint": "no-direct-business-localstorage|设计原型/J.Co工作台-发布.html|localStorage.setItem('jco-publish-v1'|#0",
+      "excerpt": "localStorage.setItem('jco-publish-v1'"
+    },
+    {
+      "ruleId": "no-direct-business-localstorage",
+      "file": "设计原型/J.Co工作台-发布.html",
+      "fingerprint": "no-direct-business-localstorage|设计原型/J.Co工作台-发布.html|localStorage.setItem('jco-side-pinned'|#0",
+      "excerpt": "localStorage.setItem('jco-side-pinned'"
+    },
+    {
+      "ruleId": "no-direct-business-localstorage",
+      "file": "设计原型/J.Co工作台-后期.html",
+      "fingerprint": "no-direct-business-localstorage|设计原型/J.Co工作台-后期.html|localStorage.getItem('jco-chats-v1'|#0",
+      "excerpt": "localStorage.getItem('jco-chats-v1'"
+    },
+    {
+      "ruleId": "no-direct-business-localstorage",
+      "file": "设计原型/J.Co工作台-后期.html",
+      "fingerprint": "no-direct-business-localstorage|设计原型/J.Co工作台-后期.html|localStorage.getItem('jco-log-v1'|#0",
+      "excerpt": "localStorage.getItem('jco-log-v1'"
+    },
+    {
+      "ruleId": "no-direct-business-localstorage",
+      "file": "设计原型/J.Co工作台-后期.html",
+      "fingerprint": "no-direct-business-localstorage|设计原型/J.Co工作台-后期.html|localStorage.getItem('jco-side-pinned'|#0",
+      "excerpt": "localStorage.getItem('jco-side-pinned'"
+    },
+    {
+      "ruleId": "no-direct-business-localstorage",
+      "file": "设计原型/J.Co工作台-后期.html",
+      "fingerprint": "no-direct-business-localstorage|设计原型/J.Co工作台-后期.html|localStorage.getItem('jco-side-pinned'|#1",
+      "excerpt": "localStorage.getItem('jco-side-pinned'"
+    },
+    {
+      "ruleId": "no-direct-business-localstorage",
+      "file": "设计原型/J.Co工作台-后期.html",
+      "fingerprint": "no-direct-business-localstorage|设计原型/J.Co工作台-后期.html|localStorage.setItem('jco-chats-v1'|#0",
+      "excerpt": "localStorage.setItem('jco-chats-v1'"
+    },
+    {
+      "ruleId": "no-direct-business-localstorage",
+      "file": "设计原型/J.Co工作台-后期.html",
+      "fingerprint": "no-direct-business-localstorage|设计原型/J.Co工作台-后期.html|localStorage.setItem('jco-side-pinned'|#0",
+      "excerpt": "localStorage.setItem('jco-side-pinned'"
+    },
+    {
+      "ruleId": "no-direct-business-localstorage",
+      "file": "设计原型/J.Co工作台-素材.html",
+      "fingerprint": "no-direct-business-localstorage|设计原型/J.Co工作台-素材.html|localStorage.getItem('jco-chats-v1'|#0",
+      "excerpt": "localStorage.getItem('jco-chats-v1'"
+    },
+    {
+      "ruleId": "no-direct-business-localstorage",
+      "file": "设计原型/J.Co工作台-素材.html",
+      "fingerprint": "no-direct-business-localstorage|设计原型/J.Co工作台-素材.html|localStorage.getItem('jco-log-v1'|#0",
+      "excerpt": "localStorage.getItem('jco-log-v1'"
+    },
+    {
+      "ruleId": "no-direct-business-localstorage",
+      "file": "设计原型/J.Co工作台-素材.html",
+      "fingerprint": "no-direct-business-localstorage|设计原型/J.Co工作台-素材.html|localStorage.getItem('jco-log-v1'|#1",
+      "excerpt": "localStorage.getItem('jco-log-v1'"
+    },
+    {
+      "ruleId": "no-direct-business-localstorage",
+      "file": "设计原型/J.Co工作台-素材.html",
+      "fingerprint": "no-direct-business-localstorage|设计原型/J.Co工作台-素材.html|localStorage.getItem('jco-materials-v1'|#0",
+      "excerpt": "localStorage.getItem('jco-materials-v1'"
+    },
+    {
+      "ruleId": "no-direct-business-localstorage",
+      "file": "设计原型/J.Co工作台-素材.html",
+      "fingerprint": "no-direct-business-localstorage|设计原型/J.Co工作台-素材.html|localStorage.getItem('jco-side-pinned'|#0",
+      "excerpt": "localStorage.getItem('jco-side-pinned'"
+    },
+    {
+      "ruleId": "no-direct-business-localstorage",
+      "file": "设计原型/J.Co工作台-素材.html",
+      "fingerprint": "no-direct-business-localstorage|设计原型/J.Co工作台-素材.html|localStorage.getItem('jco-side-pinned'|#1",
+      "excerpt": "localStorage.getItem('jco-side-pinned'"
+    },
+    {
+      "ruleId": "no-direct-business-localstorage",
+      "file": "设计原型/J.Co工作台-素材.html",
+      "fingerprint": "no-direct-business-localstorage|设计原型/J.Co工作台-素材.html|localStorage.setItem('jco-chats-v1'|#0",
+      "excerpt": "localStorage.setItem('jco-chats-v1'"
+    },
+    {
+      "ruleId": "no-direct-business-localstorage",
+      "file": "设计原型/J.Co工作台-素材.html",
+      "fingerprint": "no-direct-business-localstorage|设计原型/J.Co工作台-素材.html|localStorage.setItem('jco-log-v1'|#0",
+      "excerpt": "localStorage.setItem('jco-log-v1'"
+    },
+    {
+      "ruleId": "no-direct-business-localstorage",
+      "file": "设计原型/J.Co工作台-素材.html",
+      "fingerprint": "no-direct-business-localstorage|设计原型/J.Co工作台-素材.html|localStorage.setItem('jco-materials-v1'|#0",
+      "excerpt": "localStorage.setItem('jco-materials-v1'"
+    },
+    {
+      "ruleId": "no-direct-business-localstorage",
+      "file": "设计原型/J.Co工作台-素材.html",
+      "fingerprint": "no-direct-business-localstorage|设计原型/J.Co工作台-素材.html|localStorage.setItem('jco-side-pinned'|#0",
+      "excerpt": "localStorage.setItem('jco-side-pinned'"
+    },
+    {
+      "ruleId": "no-direct-business-localstorage",
+      "file": "设计原型/J.Co工作台-选题.html",
+      "fingerprint": "no-direct-business-localstorage|设计原型/J.Co工作台-选题.html|localStorage.getItem('jco-chats-v1'|#0",
+      "excerpt": "localStorage.getItem('jco-chats-v1'"
+    },
+    {
+      "ruleId": "no-direct-business-localstorage",
+      "file": "设计原型/J.Co工作台-选题.html",
+      "fingerprint": "no-direct-business-localstorage|设计原型/J.Co工作台-选题.html|localStorage.getItem('jco-log-v1'|#0",
+      "excerpt": "localStorage.getItem('jco-log-v1'"
+    },
+    {
+      "ruleId": "no-direct-business-localstorage",
+      "file": "设计原型/J.Co工作台-选题.html",
+      "fingerprint": "no-direct-business-localstorage|设计原型/J.Co工作台-选题.html|localStorage.getItem('jco-log-v1'|#1",
+      "excerpt": "localStorage.getItem('jco-log-v1'"
+    },
+    {
+      "ruleId": "no-direct-business-localstorage",
+      "file": "设计原型/J.Co工作台-选题.html",
+      "fingerprint": "no-direct-business-localstorage|设计原型/J.Co工作台-选题.html|localStorage.getItem('jco-side-pinned'|#0",
+      "excerpt": "localStorage.getItem('jco-side-pinned'"
+    },
+    {
+      "ruleId": "no-direct-business-localstorage",
+      "file": "设计原型/J.Co工作台-选题.html",
+      "fingerprint": "no-direct-business-localstorage|设计原型/J.Co工作台-选题.html|localStorage.getItem('jco-side-pinned'|#1",
+      "excerpt": "localStorage.getItem('jco-side-pinned'"
+    },
+    {
+      "ruleId": "no-direct-business-localstorage",
+      "file": "设计原型/J.Co工作台-选题.html",
+      "fingerprint": "no-direct-business-localstorage|设计原型/J.Co工作台-选题.html|localStorage.setItem('jco-chats-v1'|#0",
+      "excerpt": "localStorage.setItem('jco-chats-v1'"
+    },
+    {
+      "ruleId": "no-direct-business-localstorage",
+      "file": "设计原型/J.Co工作台-选题.html",
+      "fingerprint": "no-direct-business-localstorage|设计原型/J.Co工作台-选题.html|localStorage.setItem('jco-log-v1'|#0",
+      "excerpt": "localStorage.setItem('jco-log-v1'"
+    },
+    {
+      "ruleId": "no-direct-business-localstorage",
+      "file": "设计原型/J.Co工作台-选题.html",
+      "fingerprint": "no-direct-business-localstorage|设计原型/J.Co工作台-选题.html|localStorage.setItem('jco-side-pinned'|#0",
+      "excerpt": "localStorage.setItem('jco-side-pinned'"
+    },
+    {
+      "ruleId": "no-direct-business-localstorage",
+      "file": "设计原型/J.Co工作台-运营.html",
+      "fingerprint": "no-direct-business-localstorage|设计原型/J.Co工作台-运营.html|localStorage.getItem('jco-chats-v1'|#0",
+      "excerpt": "localStorage.getItem('jco-chats-v1'"
+    },
+    {
+      "ruleId": "no-direct-business-localstorage",
+      "file": "设计原型/J.Co工作台-运营.html",
+      "fingerprint": "no-direct-business-localstorage|设计原型/J.Co工作台-运营.html|localStorage.getItem('jco-log-v1'|#0",
+      "excerpt": "localStorage.getItem('jco-log-v1'"
+    },
+    {
+      "ruleId": "no-direct-business-localstorage",
+      "file": "设计原型/J.Co工作台-运营.html",
+      "fingerprint": "no-direct-business-localstorage|设计原型/J.Co工作台-运营.html|localStorage.getItem('jco-side-pinned'|#0",
+      "excerpt": "localStorage.getItem('jco-side-pinned'"
+    },
+    {
+      "ruleId": "no-direct-business-localstorage",
+      "file": "设计原型/J.Co工作台-运营.html",
+      "fingerprint": "no-direct-business-localstorage|设计原型/J.Co工作台-运营.html|localStorage.getItem('jco-side-pinned'|#1",
+      "excerpt": "localStorage.getItem('jco-side-pinned'"
+    },
+    {
+      "ruleId": "no-direct-business-localstorage",
+      "file": "设计原型/J.Co工作台-运营.html",
+      "fingerprint": "no-direct-business-localstorage|设计原型/J.Co工作台-运营.html|localStorage.setItem('jco-chats-v1'|#0",
+      "excerpt": "localStorage.setItem('jco-chats-v1'"
+    },
+    {
+      "ruleId": "no-direct-business-localstorage",
+      "file": "设计原型/J.Co工作台-运营.html",
+      "fingerprint": "no-direct-business-localstorage|设计原型/J.Co工作台-运营.html|localStorage.setItem('jco-side-pinned'|#0",
+      "excerpt": "localStorage.setItem('jco-side-pinned'"
+    },
+    {
+      "ruleId": "no-direct-business-localstorage",
+      "file": "设计原型/J.Co工作台-做视频.html",
+      "fingerprint": "no-direct-business-localstorage|设计原型/J.Co工作台-做视频.html|localStorage.getItem('jco-chats-v1'|#0",
+      "excerpt": "localStorage.getItem('jco-chats-v1'"
+    },
+    {
+      "ruleId": "no-direct-business-localstorage",
+      "file": "设计原型/J.Co工作台-做视频.html",
+      "fingerprint": "no-direct-business-localstorage|设计原型/J.Co工作台-做视频.html|localStorage.getItem('jco-drafts-v1'|#0",
+      "excerpt": "localStorage.getItem('jco-drafts-v1'"
+    },
+    {
+      "ruleId": "no-direct-business-localstorage",
+      "file": "设计原型/J.Co工作台-做视频.html",
+      "fingerprint": "no-direct-business-localstorage|设计原型/J.Co工作台-做视频.html|localStorage.getItem('jco-log-v1'|#0",
+      "excerpt": "localStorage.getItem('jco-log-v1'"
+    },
+    {
+      "ruleId": "no-direct-business-localstorage",
+      "file": "设计原型/J.Co工作台-做视频.html",
+      "fingerprint": "no-direct-business-localstorage|设计原型/J.Co工作台-做视频.html|localStorage.getItem('jco-log-v1'|#1",
+      "excerpt": "localStorage.getItem('jco-log-v1'"
+    },
+    {
+      "ruleId": "no-direct-business-localstorage",
+      "file": "设计原型/J.Co工作台-做视频.html",
+      "fingerprint": "no-direct-business-localstorage|设计原型/J.Co工作台-做视频.html|localStorage.getItem('jco-materials-v1'|#0",
+      "excerpt": "localStorage.getItem('jco-materials-v1'"
+    },
+    {
+      "ruleId": "no-direct-business-localstorage",
+      "file": "设计原型/J.Co工作台-做视频.html",
+      "fingerprint": "no-direct-business-localstorage|设计原型/J.Co工作台-做视频.html|localStorage.getItem('jco-mode-v1'|#0",
+      "excerpt": "localStorage.getItem('jco-mode-v1'"
+    },
+    {
+      "ruleId": "no-direct-business-localstorage",
+      "file": "设计原型/J.Co工作台-做视频.html",
+      "fingerprint": "no-direct-business-localstorage|设计原型/J.Co工作台-做视频.html|localStorage.getItem('jco-notify-done'|#0",
+      "excerpt": "localStorage.getItem('jco-notify-done'"
+    },
+    {
+      "ruleId": "no-direct-business-localstorage",
+      "file": "设计原型/J.Co工作台-做视频.html",
+      "fingerprint": "no-direct-business-localstorage|设计原型/J.Co工作台-做视频.html|localStorage.getItem('jco-script-v1'|#0",
+      "excerpt": "localStorage.getItem('jco-script-v1'"
+    },
+    {
+      "ruleId": "no-direct-business-localstorage",
+      "file": "设计原型/J.Co工作台-做视频.html",
+      "fingerprint": "no-direct-business-localstorage|设计原型/J.Co工作台-做视频.html|localStorage.getItem('jco-side-pinned'|#0",
+      "excerpt": "localStorage.getItem('jco-side-pinned'"
+    },
+    {
+      "ruleId": "no-direct-business-localstorage",
+      "file": "设计原型/J.Co工作台-做视频.html",
+      "fingerprint": "no-direct-business-localstorage|设计原型/J.Co工作台-做视频.html|localStorage.getItem('jco-side-pinned'|#1",
+      "excerpt": "localStorage.getItem('jco-side-pinned'"
+    },
+    {
+      "ruleId": "no-direct-business-localstorage",
+      "file": "设计原型/J.Co工作台-做视频.html",
+      "fingerprint": "no-direct-business-localstorage|设计原型/J.Co工作台-做视频.html|localStorage.getItem('jco-skills-v1'|#0",
+      "excerpt": "localStorage.getItem('jco-skills-v1'"
+    },
+    {
+      "ruleId": "no-direct-business-localstorage",
+      "file": "设计原型/J.Co工作台-做视频.html",
+      "fingerprint": "no-direct-business-localstorage|设计原型/J.Co工作台-做视频.html|localStorage.setItem('jco-chats-v1'|#0",
+      "excerpt": "localStorage.setItem('jco-chats-v1'"
+    },
+    {
+      "ruleId": "no-direct-business-localstorage",
+      "file": "设计原型/J.Co工作台-做视频.html",
+      "fingerprint": "no-direct-business-localstorage|设计原型/J.Co工作台-做视频.html|localStorage.setItem('jco-drafts-v1'|#0",
+      "excerpt": "localStorage.setItem('jco-drafts-v1'"
+    },
+    {
+      "ruleId": "no-direct-business-localstorage",
+      "file": "设计原型/J.Co工作台-做视频.html",
+      "fingerprint": "no-direct-business-localstorage|设计原型/J.Co工作台-做视频.html|localStorage.setItem('jco-log-v1'|#0",
+      "excerpt": "localStorage.setItem('jco-log-v1'"
+    },
+    {
+      "ruleId": "no-direct-business-localstorage",
+      "file": "设计原型/J.Co工作台-做视频.html",
+      "fingerprint": "no-direct-business-localstorage|设计原型/J.Co工作台-做视频.html|localStorage.setItem('jco-side-pinned'|#0",
+      "excerpt": "localStorage.setItem('jco-side-pinned'"
+    },
+    {
+      "ruleId": "no-direct-business-localstorage",
+      "file": "设计原型/J.Co管家团队.html",
+      "fingerprint": "no-direct-business-localstorage|设计原型/J.Co管家团队.html|localStorage.getItem('jco-chats-v1'|#0",
+      "excerpt": "localStorage.getItem('jco-chats-v1'"
+    },
+    {
+      "ruleId": "no-direct-business-localstorage",
+      "file": "设计原型/J.Co管家团队.html",
+      "fingerprint": "no-direct-business-localstorage|设计原型/J.Co管家团队.html|localStorage.getItem('jco-chats-v1'|#1",
+      "excerpt": "localStorage.getItem('jco-chats-v1'"
+    },
+    {
+      "ruleId": "no-direct-business-localstorage",
+      "file": "设计原型/J.Co管家团队.html",
+      "fingerprint": "no-direct-business-localstorage|设计原型/J.Co管家团队.html|localStorage.getItem('jco-drafts-v1'|#0",
+      "excerpt": "localStorage.getItem('jco-drafts-v1'"
+    },
+    {
+      "ruleId": "no-direct-business-localstorage",
+      "file": "设计原型/J.Co管家团队.html",
+      "fingerprint": "no-direct-business-localstorage|设计原型/J.Co管家团队.html|localStorage.getItem('jco-log-v1'|#0",
+      "excerpt": "localStorage.getItem('jco-log-v1'"
+    },
+    {
+      "ruleId": "no-direct-business-localstorage",
+      "file": "设计原型/J.Co管家团队.html",
+      "fingerprint": "no-direct-business-localstorage|设计原型/J.Co管家团队.html|localStorage.getItem('jco-log-v1'|#1",
+      "excerpt": "localStorage.getItem('jco-log-v1'"
+    },
+    {
+      "ruleId": "no-direct-business-localstorage",
+      "file": "设计原型/J.Co管家团队.html",
+      "fingerprint": "no-direct-business-localstorage|设计原型/J.Co管家团队.html|localStorage.getItem('jco-publish-v1'|#0",
+      "excerpt": "localStorage.getItem('jco-publish-v1'"
+    },
+    {
+      "ruleId": "no-direct-business-localstorage",
+      "file": "设计原型/J.Co管家团队.html",
+      "fingerprint": "no-direct-business-localstorage|设计原型/J.Co管家团队.html|localStorage.getItem('jco-side-pinned'|#0",
+      "excerpt": "localStorage.getItem('jco-side-pinned'"
+    },
+    {
+      "ruleId": "no-direct-business-localstorage",
+      "file": "设计原型/J.Co管家团队.html",
+      "fingerprint": "no-direct-business-localstorage|设计原型/J.Co管家团队.html|localStorage.getItem('jco-side-pinned'|#1",
+      "excerpt": "localStorage.getItem('jco-side-pinned'"
+    },
+    {
+      "ruleId": "no-direct-business-localstorage",
+      "file": "设计原型/J.Co管家团队.html",
+      "fingerprint": "no-direct-business-localstorage|设计原型/J.Co管家团队.html|localStorage.setItem('jco-chats-v1'|#0",
+      "excerpt": "localStorage.setItem('jco-chats-v1'"
+    },
+    {
+      "ruleId": "no-direct-business-localstorage",
+      "file": "设计原型/J.Co管家团队.html",
+      "fingerprint": "no-direct-business-localstorage|设计原型/J.Co管家团队.html|localStorage.setItem('jco-side-pinned'|#0",
+      "excerpt": "localStorage.setItem('jco-side-pinned'"
+    },
+    {
+      "ruleId": "no-direct-business-localstorage",
+      "file": "设计原型/J.Co技能库.html",
+      "fingerprint": "no-direct-business-localstorage|设计原型/J.Co技能库.html|localStorage.getItem('jco-chats-v1'|#0",
+      "excerpt": "localStorage.getItem('jco-chats-v1'"
+    },
+    {
+      "ruleId": "no-direct-business-localstorage",
+      "file": "设计原型/J.Co技能库.html",
+      "fingerprint": "no-direct-business-localstorage|设计原型/J.Co技能库.html|localStorage.getItem('jco-drafts-v1'|#0",
+      "excerpt": "localStorage.getItem('jco-drafts-v1'"
+    },
+    {
+      "ruleId": "no-direct-business-localstorage",
+      "file": "设计原型/J.Co技能库.html",
+      "fingerprint": "no-direct-business-localstorage|设计原型/J.Co技能库.html|localStorage.getItem('jco-log-v1'|#0",
+      "excerpt": "localStorage.getItem('jco-log-v1'"
+    },
+    {
+      "ruleId": "no-direct-business-localstorage",
+      "file": "设计原型/J.Co技能库.html",
+      "fingerprint": "no-direct-business-localstorage|设计原型/J.Co技能库.html|localStorage.getItem('jco-log-v1'|#1",
+      "excerpt": "localStorage.getItem('jco-log-v1'"
+    },
+    {
+      "ruleId": "no-direct-business-localstorage",
+      "file": "设计原型/J.Co技能库.html",
+      "fingerprint": "no-direct-business-localstorage|设计原型/J.Co技能库.html|localStorage.getItem('jco-publish-v1'|#0",
+      "excerpt": "localStorage.getItem('jco-publish-v1'"
+    },
+    {
+      "ruleId": "no-direct-business-localstorage",
+      "file": "设计原型/J.Co技能库.html",
+      "fingerprint": "no-direct-business-localstorage|设计原型/J.Co技能库.html|localStorage.getItem('jco-side-pinned'|#0",
+      "excerpt": "localStorage.getItem('jco-side-pinned'"
+    },
+    {
+      "ruleId": "no-direct-business-localstorage",
+      "file": "设计原型/J.Co技能库.html",
+      "fingerprint": "no-direct-business-localstorage|设计原型/J.Co技能库.html|localStorage.getItem('jco-side-pinned'|#1",
+      "excerpt": "localStorage.getItem('jco-side-pinned'"
+    },
+    {
+      "ruleId": "no-direct-business-localstorage",
+      "file": "设计原型/J.Co技能库.html",
+      "fingerprint": "no-direct-business-localstorage|设计原型/J.Co技能库.html|localStorage.setItem('jco-chats-v1'|#0",
+      "excerpt": "localStorage.setItem('jco-chats-v1'"
+    },
+    {
+      "ruleId": "no-direct-business-localstorage",
+      "file": "设计原型/J.Co技能库.html",
+      "fingerprint": "no-direct-business-localstorage|设计原型/J.Co技能库.html|localStorage.setItem('jco-side-pinned'|#0",
+      "excerpt": "localStorage.setItem('jco-side-pinned'"
+    },
+    {
+      "ruleId": "no-direct-business-localstorage",
+      "file": "设计原型/J.Co设置.html",
+      "fingerprint": "no-direct-business-localstorage|设计原型/J.Co设置.html|localStorage.getItem('jco-agnes-key-last'|#0",
+      "excerpt": "localStorage.getItem('jco-agnes-key-last'"
+    },
+    {
+      "ruleId": "no-direct-business-localstorage",
+      "file": "设计原型/J.Co设置.html",
+      "fingerprint": "no-direct-business-localstorage|设计原型/J.Co设置.html|localStorage.getItem('jco-assets-dir'|#0",
+      "excerpt": "localStorage.getItem('jco-assets-dir'"
+    },
+    {
+      "ruleId": "no-direct-business-localstorage",
+      "file": "设计原型/J.Co设置.html",
+      "fingerprint": "no-direct-business-localstorage|设计原型/J.Co设置.html|localStorage.getItem('jco-chats-v1'|#0",
+      "excerpt": "localStorage.getItem('jco-chats-v1'"
+    },
+    {
+      "ruleId": "no-direct-business-localstorage",
+      "file": "设计原型/J.Co设置.html",
+      "fingerprint": "no-direct-business-localstorage|设计原型/J.Co设置.html|localStorage.getItem('jco-log-v1'|#0",
+      "excerpt": "localStorage.getItem('jco-log-v1'"
+    },
+    {
+      "ruleId": "no-direct-business-localstorage",
+      "file": "设计原型/J.Co设置.html",
+      "fingerprint": "no-direct-business-localstorage|设计原型/J.Co设置.html|localStorage.getItem('jco-mode-v1'|#0",
+      "excerpt": "localStorage.getItem('jco-mode-v1'"
+    },
+    {
+      "ruleId": "no-direct-business-localstorage",
+      "file": "设计原型/J.Co设置.html",
+      "fingerprint": "no-direct-business-localstorage|设计原型/J.Co设置.html|localStorage.getItem('jco-side-pinned'|#0",
+      "excerpt": "localStorage.getItem('jco-side-pinned'"
+    },
+    {
+      "ruleId": "no-direct-business-localstorage",
+      "file": "设计原型/J.Co设置.html",
+      "fingerprint": "no-direct-business-localstorage|设计原型/J.Co设置.html|localStorage.getItem('jco-side-pinned'|#1",
+      "excerpt": "localStorage.getItem('jco-side-pinned'"
+    },
+    {
+      "ruleId": "no-direct-business-localstorage",
+      "file": "设计原型/J.Co设置.html",
+      "fingerprint": "no-direct-business-localstorage|设计原型/J.Co设置.html|localStorage.removeItem('jco-agnes-key-last'|#0",
+      "excerpt": "localStorage.removeItem('jco-agnes-key-last'"
+    },
+    {
+      "ruleId": "no-direct-business-localstorage",
+      "file": "设计原型/J.Co设置.html",
+      "fingerprint": "no-direct-business-localstorage|设计原型/J.Co设置.html|localStorage.setItem('jco-agnes-key-last'|#0",
+      "excerpt": "localStorage.setItem('jco-agnes-key-last'"
+    },
+    {
+      "ruleId": "no-direct-business-localstorage",
+      "file": "设计原型/J.Co设置.html",
+      "fingerprint": "no-direct-business-localstorage|设计原型/J.Co设置.html|localStorage.setItem('jco-agnes-key-last'|#1",
+      "excerpt": "localStorage.setItem('jco-agnes-key-last'"
+    },
+    {
+      "ruleId": "no-direct-business-localstorage",
+      "file": "设计原型/J.Co设置.html",
+      "fingerprint": "no-direct-business-localstorage|设计原型/J.Co设置.html|localStorage.setItem('jco-assets-dir'|#0",
+      "excerpt": "localStorage.setItem('jco-assets-dir'"
+    },
+    {
+      "ruleId": "no-direct-business-localstorage",
+      "file": "设计原型/J.Co设置.html",
+      "fingerprint": "no-direct-business-localstorage|设计原型/J.Co设置.html|localStorage.setItem('jco-chats-v1'|#0",
+      "excerpt": "localStorage.setItem('jco-chats-v1'"
+    },
+    {
+      "ruleId": "no-direct-business-localstorage",
+      "file": "设计原型/J.Co设置.html",
+      "fingerprint": "no-direct-business-localstorage|设计原型/J.Co设置.html|localStorage.setItem('jco-mode-v1'|#0",
+      "excerpt": "localStorage.setItem('jco-mode-v1'"
+    },
+    {
+      "ruleId": "no-direct-business-localstorage",
+      "file": "设计原型/J.Co设置.html",
+      "fingerprint": "no-direct-business-localstorage|设计原型/J.Co设置.html|localStorage.setItem('jco-side-pinned'|#0",
+      "excerpt": "localStorage.setItem('jco-side-pinned'"
+    },
+    {
+      "ruleId": "no-direct-business-localstorage",
+      "file": "设计原型/J.Co账号中心.html",
+      "fingerprint": "no-direct-business-localstorage|设计原型/J.Co账号中心.html|localStorage.getItem('jco-chats-v1'|#0",
+      "excerpt": "localStorage.getItem('jco-chats-v1'"
+    },
+    {
+      "ruleId": "no-direct-business-localstorage",
+      "file": "设计原型/J.Co账号中心.html",
+      "fingerprint": "no-direct-business-localstorage|设计原型/J.Co账号中心.html|localStorage.getItem('jco-log-v1'|#0",
+      "excerpt": "localStorage.getItem('jco-log-v1'"
+    },
+    {
+      "ruleId": "no-direct-business-localstorage",
+      "file": "设计原型/J.Co账号中心.html",
+      "fingerprint": "no-direct-business-localstorage|设计原型/J.Co账号中心.html|localStorage.getItem('jco-side-pinned'|#0",
+      "excerpt": "localStorage.getItem('jco-side-pinned'"
+    },
+    {
+      "ruleId": "no-direct-business-localstorage",
+      "file": "设计原型/J.Co账号中心.html",
+      "fingerprint": "no-direct-business-localstorage|设计原型/J.Co账号中心.html|localStorage.getItem('jco-side-pinned'|#1",
+      "excerpt": "localStorage.getItem('jco-side-pinned'"
+    },
+    {
+      "ruleId": "no-direct-business-localstorage",
+      "file": "设计原型/J.Co账号中心.html",
+      "fingerprint": "no-direct-business-localstorage|设计原型/J.Co账号中心.html|localStorage.setItem('jco-chats-v1'|#0",
+      "excerpt": "localStorage.setItem('jco-chats-v1'"
+    },
+    {
+      "ruleId": "no-direct-business-localstorage",
+      "file": "设计原型/J.Co账号中心.html",
+      "fingerprint": "no-direct-business-localstorage|设计原型/J.Co账号中心.html|localStorage.setItem('jco-side-pinned'|#0",
+      "excerpt": "localStorage.setItem('jco-side-pinned'"
+    },
+    {
+      "ruleId": "no-direct-business-localstorage",
+      "file": "设计原型/J.Co主界面-首页.html",
+      "fingerprint": "no-direct-business-localstorage|设计原型/J.Co主界面-首页.html|localStorage.getItem('jco-chats-v1'|#0",
+      "excerpt": "localStorage.getItem('jco-chats-v1'"
+    },
+    {
+      "ruleId": "no-direct-business-localstorage",
+      "file": "设计原型/J.Co主界面-首页.html",
+      "fingerprint": "no-direct-business-localstorage|设计原型/J.Co主界面-首页.html|localStorage.getItem('jco-drafts-v1'|#0",
+      "excerpt": "localStorage.getItem('jco-drafts-v1'"
+    },
+    {
+      "ruleId": "no-direct-business-localstorage",
+      "file": "设计原型/J.Co主界面-首页.html",
+      "fingerprint": "no-direct-business-localstorage|设计原型/J.Co主界面-首页.html|localStorage.getItem('jco-drafts-v1'|#1",
+      "excerpt": "localStorage.getItem('jco-drafts-v1'"
+    },
+    {
+      "ruleId": "no-direct-business-localstorage",
+      "file": "设计原型/J.Co主界面-首页.html",
+      "fingerprint": "no-direct-business-localstorage|设计原型/J.Co主界面-首页.html|localStorage.getItem('jco-log-v1'|#0",
+      "excerpt": "localStorage.getItem('jco-log-v1'"
+    },
+    {
+      "ruleId": "no-direct-business-localstorage",
+      "file": "设计原型/J.Co主界面-首页.html",
+      "fingerprint": "no-direct-business-localstorage|设计原型/J.Co主界面-首页.html|localStorage.getItem('jco-log-v1'|#1",
+      "excerpt": "localStorage.getItem('jco-log-v1'"
+    },
+    {
+      "ruleId": "no-direct-business-localstorage",
+      "file": "设计原型/J.Co主界面-首页.html",
+      "fingerprint": "no-direct-business-localstorage|设计原型/J.Co主界面-首页.html|localStorage.getItem('jco-mode-v1'|#0",
+      "excerpt": "localStorage.getItem('jco-mode-v1'"
+    },
+    {
+      "ruleId": "no-direct-business-localstorage",
+      "file": "设计原型/J.Co主界面-首页.html",
+      "fingerprint": "no-direct-business-localstorage|设计原型/J.Co主界面-首页.html|localStorage.getItem('jco-side-pinned'|#0",
+      "excerpt": "localStorage.getItem('jco-side-pinned'"
+    },
+    {
+      "ruleId": "no-direct-business-localstorage",
+      "file": "设计原型/J.Co主界面-首页.html",
+      "fingerprint": "no-direct-business-localstorage|设计原型/J.Co主界面-首页.html|localStorage.getItem('jco-side-pinned'|#1",
+      "excerpt": "localStorage.getItem('jco-side-pinned'"
+    },
+    {
+      "ruleId": "no-direct-business-localstorage",
+      "file": "设计原型/J.Co主界面-首页.html",
+      "fingerprint": "no-direct-business-localstorage|设计原型/J.Co主界面-首页.html|localStorage.setItem('jco-chats-v1'|#0",
+      "excerpt": "localStorage.setItem('jco-chats-v1'"
+    },
+    {
+      "ruleId": "no-direct-business-localstorage",
+      "file": "设计原型/J.Co主界面-首页.html",
+      "fingerprint": "no-direct-business-localstorage|设计原型/J.Co主界面-首页.html|localStorage.setItem('jco-mode-v1'|#0",
+      "excerpt": "localStorage.setItem('jco-mode-v1'"
+    },
+    {
+      "ruleId": "no-direct-business-localstorage",
+      "file": "设计原型/J.Co主界面-首页.html",
+      "fingerprint": "no-direct-business-localstorage|设计原型/J.Co主界面-首页.html|localStorage.setItem('jco-side-pinned'|#0",
+      "excerpt": "localStorage.setItem('jco-side-pinned'"
+    },
+    {
+      "ruleId": "no-direct-business-localstorage",
+      "file": "设计原型/J.Co自动任务.html",
+      "fingerprint": "no-direct-business-localstorage|设计原型/J.Co自动任务.html|localStorage.getItem('jco-chats-v1'|#0",
+      "excerpt": "localStorage.getItem('jco-chats-v1'"
+    },
+    {
+      "ruleId": "no-direct-business-localstorage",
+      "file": "设计原型/J.Co自动任务.html",
+      "fingerprint": "no-direct-business-localstorage|设计原型/J.Co自动任务.html|localStorage.getItem('jco-drafts-v1'|#0",
+      "excerpt": "localStorage.getItem('jco-drafts-v1'"
+    },
+    {
+      "ruleId": "no-direct-business-localstorage",
+      "file": "设计原型/J.Co自动任务.html",
+      "fingerprint": "no-direct-business-localstorage|设计原型/J.Co自动任务.html|localStorage.getItem('jco-log-v1'|#0",
+      "excerpt": "localStorage.getItem('jco-log-v1'"
+    },
+    {
+      "ruleId": "no-direct-business-localstorage",
+      "file": "设计原型/J.Co自动任务.html",
+      "fingerprint": "no-direct-business-localstorage|设计原型/J.Co自动任务.html|localStorage.getItem('jco-log-v1'|#1",
+      "excerpt": "localStorage.getItem('jco-log-v1'"
+    },
+    {
+      "ruleId": "no-direct-business-localstorage",
+      "file": "设计原型/J.Co自动任务.html",
+      "fingerprint": "no-direct-business-localstorage|设计原型/J.Co自动任务.html|localStorage.getItem('jco-publish-v1'|#0",
+      "excerpt": "localStorage.getItem('jco-publish-v1'"
+    },
+    {
+      "ruleId": "no-direct-business-localstorage",
+      "file": "设计原型/J.Co自动任务.html",
+      "fingerprint": "no-direct-business-localstorage|设计原型/J.Co自动任务.html|localStorage.getItem('jco-side-pinned'|#0",
+      "excerpt": "localStorage.getItem('jco-side-pinned'"
+    },
+    {
+      "ruleId": "no-direct-business-localstorage",
+      "file": "设计原型/J.Co自动任务.html",
+      "fingerprint": "no-direct-business-localstorage|设计原型/J.Co自动任务.html|localStorage.getItem('jco-side-pinned'|#1",
+      "excerpt": "localStorage.getItem('jco-side-pinned'"
+    },
+    {
+      "ruleId": "no-direct-business-localstorage",
+      "file": "设计原型/J.Co自动任务.html",
+      "fingerprint": "no-direct-business-localstorage|设计原型/J.Co自动任务.html|localStorage.setItem('jco-chats-v1'|#0",
+      "excerpt": "localStorage.setItem('jco-chats-v1'"
+    },
+    {
+      "ruleId": "no-direct-business-localstorage",
+      "file": "设计原型/J.Co自动任务.html",
+      "fingerprint": "no-direct-business-localstorage|设计原型/J.Co自动任务.html|localStorage.setItem('jco-side-pinned'|#0",
+      "excerpt": "localStorage.setItem('jco-side-pinned'"
+    },
+    {
+      "ruleId": "no-direct-business-localstorage",
+      "file": "设计原型/J.Co总管.html",
+      "fingerprint": "no-direct-business-localstorage|设计原型/J.Co总管.html|localStorage.getItem('jco-chat-v1'|#0",
+      "excerpt": "localStorage.getItem('jco-chat-v1'"
+    },
+    {
+      "ruleId": "no-direct-business-localstorage",
+      "file": "设计原型/J.Co总管.html",
+      "fingerprint": "no-direct-business-localstorage|设计原型/J.Co总管.html|localStorage.getItem('jco-drafts-v1'|#0",
+      "excerpt": "localStorage.getItem('jco-drafts-v1'"
+    },
+    {
+      "ruleId": "no-direct-business-localstorage",
+      "file": "设计原型/J.Co总管.html",
+      "fingerprint": "no-direct-business-localstorage|设计原型/J.Co总管.html|localStorage.getItem('jco-feedback-v1'|#0",
+      "excerpt": "localStorage.getItem('jco-feedback-v1'"
+    },
+    {
+      "ruleId": "no-direct-business-localstorage",
+      "file": "设计原型/J.Co总管.html",
+      "fingerprint": "no-direct-business-localstorage|设计原型/J.Co总管.html|localStorage.getItem('jco-log-v1'|#0",
+      "excerpt": "localStorage.getItem('jco-log-v1'"
+    },
+    {
+      "ruleId": "no-direct-business-localstorage",
+      "file": "设计原型/J.Co总管.html",
+      "fingerprint": "no-direct-business-localstorage|设计原型/J.Co总管.html|localStorage.getItem('jco-log-v1'|#1",
+      "excerpt": "localStorage.getItem('jco-log-v1'"
+    },
+    {
+      "ruleId": "no-direct-business-localstorage",
+      "file": "设计原型/J.Co总管.html",
+      "fingerprint": "no-direct-business-localstorage|设计原型/J.Co总管.html|localStorage.getItem('jco-log-v1'|#2",
+      "excerpt": "localStorage.getItem('jco-log-v1'"
+    },
+    {
+      "ruleId": "no-direct-business-localstorage",
+      "file": "设计原型/J.Co总管.html",
+      "fingerprint": "no-direct-business-localstorage|设计原型/J.Co总管.html|localStorage.getItem('jco-mode-v1'|#0",
+      "excerpt": "localStorage.getItem('jco-mode-v1'"
+    },
+    {
+      "ruleId": "no-direct-business-localstorage",
+      "file": "设计原型/J.Co总管.html",
+      "fingerprint": "no-direct-business-localstorage|设计原型/J.Co总管.html|localStorage.getItem('jco-publish-v1'|#0",
+      "excerpt": "localStorage.getItem('jco-publish-v1'"
+    },
+    {
+      "ruleId": "no-direct-business-localstorage",
+      "file": "设计原型/J.Co总管.html",
+      "fingerprint": "no-direct-business-localstorage|设计原型/J.Co总管.html|localStorage.getItem('jco-side-pinned'|#0",
+      "excerpt": "localStorage.getItem('jco-side-pinned'"
+    },
+    {
+      "ruleId": "no-direct-business-localstorage",
+      "file": "设计原型/J.Co总管.html",
+      "fingerprint": "no-direct-business-localstorage|设计原型/J.Co总管.html|localStorage.getItem('jco-side-pinned'|#1",
+      "excerpt": "localStorage.getItem('jco-side-pinned'"
+    },
+    {
+      "ruleId": "no-direct-business-localstorage",
+      "file": "设计原型/J.Co总管.html",
+      "fingerprint": "no-direct-business-localstorage|设计原型/J.Co总管.html|localStorage.setItem('jco-feedback-v1'|#0",
+      "excerpt": "localStorage.setItem('jco-feedback-v1'"
+    },
+    {
+      "ruleId": "no-direct-business-localstorage",
+      "file": "设计原型/J.Co总管.html",
+      "fingerprint": "no-direct-business-localstorage|设计原型/J.Co总管.html|localStorage.setItem('jco-log-v1'|#0",
+      "excerpt": "localStorage.setItem('jco-log-v1'"
+    },
+    {
+      "ruleId": "no-direct-business-localstorage",
+      "file": "设计原型/J.Co总管.html",
+      "fingerprint": "no-direct-business-localstorage|设计原型/J.Co总管.html|localStorage.setItem('jco-mode-v1'|#0",
+      "excerpt": "localStorage.setItem('jco-mode-v1'"
+    },
+    {
+      "ruleId": "no-direct-business-localstorage",
+      "file": "设计原型/J.Co总管.html",
+      "fingerprint": "no-direct-business-localstorage|设计原型/J.Co总管.html|localStorage.setItem('jco-side-pinned'|#0",
+      "excerpt": "localStorage.setItem('jco-side-pinned'"
+    },
+    {
+      "ruleId": "no-direct-tasks-dispatch",
+      "file": "设计原型/J.Co工作台-发布.html",
+      "fingerprint": "no-direct-tasks-dispatch|设计原型/J.Co工作台-发布.html|tasks:dispatch|#0",
+      "excerpt": "tasks:dispatch"
+    },
+    {
+      "ruleId": "no-direct-tasks-dispatch",
+      "file": "设计原型/J.Co工作台-发布.html",
+      "fingerprint": "no-direct-tasks-dispatch|设计原型/J.Co工作台-发布.html|tasks.dispatch(|#0",
+      "excerpt": "tasks.dispatch("
+    },
+    {
+      "ruleId": "no-direct-tasks-dispatch",
+      "file": "设计原型/J.Co工作台-后期.html",
+      "fingerprint": "no-direct-tasks-dispatch|设计原型/J.Co工作台-后期.html|tasks.dispatch(|#0",
+      "excerpt": "tasks.dispatch("
+    },
+    {
+      "ruleId": "no-direct-tasks-dispatch",
+      "file": "设计原型/J.Co工作台-运营.html",
+      "fingerprint": "no-direct-tasks-dispatch|设计原型/J.Co工作台-运营.html|tasks.dispatch(|#0",
+      "excerpt": "tasks.dispatch("
+    },
+    {
+      "ruleId": "no-direct-tasks-dispatch",
+      "file": "设计原型/J.Co工作台-运营.html",
+      "fingerprint": "no-direct-tasks-dispatch|设计原型/J.Co工作台-运营.html|tasks.dispatch(|#1",
+      "excerpt": "tasks.dispatch("
+    },
+    {
+      "ruleId": "no-direct-tasks-dispatch",
+      "file": "设计原型/J.Co主界面-首页.html",
+      "fingerprint": "no-direct-tasks-dispatch|设计原型/J.Co主界面-首页.html|tasks.dispatch(|#0",
+      "excerpt": "tasks.dispatch("
+    },
+    {
+      "ruleId": "no-duplicate-sidebar",
+      "file": "设计原型/J.Co工作台-创作.html",
+      "fingerprint": "no-duplicate-sidebar|设计原型/J.Co工作台-创作.html|<aside class=\"sidebar\"|#0",
+      "excerpt": "<aside class=\"sidebar\""
+    },
+    {
+      "ruleId": "no-duplicate-sidebar",
+      "file": "设计原型/J.Co工作台-发布.html",
+      "fingerprint": "no-duplicate-sidebar|设计原型/J.Co工作台-发布.html|<aside class=\"sidebar\"|#0",
+      "excerpt": "<aside class=\"sidebar\""
+    },
+    {
+      "ruleId": "no-duplicate-sidebar",
+      "file": "设计原型/J.Co工作台-后期.html",
+      "fingerprint": "no-duplicate-sidebar|设计原型/J.Co工作台-后期.html|<aside class=\"sidebar\"|#0",
+      "excerpt": "<aside class=\"sidebar\""
+    },
+    {
+      "ruleId": "no-duplicate-sidebar",
+      "file": "设计原型/J.Co工作台-素材.html",
+      "fingerprint": "no-duplicate-sidebar|设计原型/J.Co工作台-素材.html|<aside class=\"sidebar\"|#0",
+      "excerpt": "<aside class=\"sidebar\""
+    },
+    {
+      "ruleId": "no-duplicate-sidebar",
+      "file": "设计原型/J.Co工作台-选题.html",
+      "fingerprint": "no-duplicate-sidebar|设计原型/J.Co工作台-选题.html|<aside class=\"sidebar\"|#0",
+      "excerpt": "<aside class=\"sidebar\""
+    },
+    {
+      "ruleId": "no-duplicate-sidebar",
+      "file": "设计原型/J.Co工作台-运营.html",
+      "fingerprint": "no-duplicate-sidebar|设计原型/J.Co工作台-运营.html|<aside class=\"sidebar\"|#0",
+      "excerpt": "<aside class=\"sidebar\""
+    },
+    {
+      "ruleId": "no-duplicate-sidebar",
+      "file": "设计原型/J.Co工作台-做视频.html",
+      "fingerprint": "no-duplicate-sidebar|设计原型/J.Co工作台-做视频.html|<aside class=\"sidebar\"|#0",
+      "excerpt": "<aside class=\"sidebar\""
+    },
+    {
+      "ruleId": "no-duplicate-sidebar",
+      "file": "设计原型/J.Co管家团队.html",
+      "fingerprint": "no-duplicate-sidebar|设计原型/J.Co管家团队.html|<aside class=\"sidebar\"|#0",
+      "excerpt": "<aside class=\"sidebar\""
+    },
+    {
+      "ruleId": "no-duplicate-sidebar",
+      "file": "设计原型/J.Co技能库.html",
+      "fingerprint": "no-duplicate-sidebar|设计原型/J.Co技能库.html|<aside class=\"sidebar\"|#0",
+      "excerpt": "<aside class=\"sidebar\""
+    },
+    {
+      "ruleId": "no-duplicate-sidebar",
+      "file": "设计原型/J.Co设置.html",
+      "fingerprint": "no-duplicate-sidebar|设计原型/J.Co设置.html|<aside class=\"sidebar\"|#0",
+      "excerpt": "<aside class=\"sidebar\""
+    },
+    {
+      "ruleId": "no-duplicate-sidebar",
+      "file": "设计原型/J.Co应用壳.html",
+      "fingerprint": "no-duplicate-sidebar|设计原型/J.Co应用壳.html|<aside class=\"sidebar\"|#0",
+      "excerpt": "<aside class=\"sidebar\""
+    },
+    {
+      "ruleId": "no-duplicate-sidebar",
+      "file": "设计原型/J.Co账号中心.html",
+      "fingerprint": "no-duplicate-sidebar|设计原型/J.Co账号中心.html|<aside class=\"sidebar\"|#0",
+      "excerpt": "<aside class=\"sidebar\""
+    },
+    {
+      "ruleId": "no-duplicate-sidebar",
+      "file": "设计原型/J.Co主界面-首页.html",
+      "fingerprint": "no-duplicate-sidebar|设计原型/J.Co主界面-首页.html|<aside class=\"sidebar\"|#0",
+      "excerpt": "<aside class=\"sidebar\""
+    },
+    {
+      "ruleId": "no-duplicate-sidebar",
+      "file": "设计原型/J.Co自动任务.html",
+      "fingerprint": "no-duplicate-sidebar|设计原型/J.Co自动任务.html|<aside class=\"sidebar\"|#0",
+      "excerpt": "<aside class=\"sidebar\""
+    },
+    {
+      "ruleId": "no-duplicate-sidebar",
+      "file": "设计原型/J.Co总管.html",
+      "fingerprint": "no-duplicate-sidebar|设计原型/J.Co总管.html|<aside class=\"sidebar\"|#0",
+      "excerpt": "<aside class=\"sidebar\""
+    },
+    {
+      "ruleId": "no-hardcoded-industry",
+      "file": "设计原型/J.Co工作台-创作.html",
+      "fingerprint": "no-hardcoded-industry|设计原型/J.Co工作台-创作.html|成人高考|#0",
+      "excerpt": "成人高考"
+    },
+    {
+      "ruleId": "no-hardcoded-industry",
+      "file": "设计原型/J.Co工作台-创作.html",
+      "fingerprint": "no-hardcoded-industry|设计原型/J.Co工作台-创作.html|成人高考|#1",
+      "excerpt": "成人高考"
+    },
+    {
+      "ruleId": "no-hardcoded-industry",
+      "file": "设计原型/J.Co工作台-创作.html",
+      "fingerprint": "no-hardcoded-industry|设计原型/J.Co工作台-创作.html|成人高考|#2",
+      "excerpt": "成人高考"
+    },
+    {
+      "ruleId": "no-hardcoded-industry",
+      "file": "设计原型/J.Co工作台-创作.html",
+      "fingerprint": "no-hardcoded-industry|设计原型/J.Co工作台-创作.html|成人高考|#3",
+      "excerpt": "成人高考"
+    },
+    {
+      "ruleId": "no-hardcoded-industry",
+      "file": "设计原型/J.Co工作台-创作.html",
+      "fingerprint": "no-hardcoded-industry|设计原型/J.Co工作台-创作.html|成人高考|#4",
+      "excerpt": "成人高考"
+    },
+    {
+      "ruleId": "no-hardcoded-industry",
+      "file": "设计原型/J.Co工作台-创作.html",
+      "fingerprint": "no-hardcoded-industry|设计原型/J.Co工作台-创作.html|成人高考|#5",
+      "excerpt": "成人高考"
+    },
+    {
+      "ruleId": "no-hardcoded-industry",
+      "file": "设计原型/J.Co工作台-创作.html",
+      "fingerprint": "no-hardcoded-industry|设计原型/J.Co工作台-创作.html|成人高考|#6",
+      "excerpt": "成人高考"
+    },
+    {
+      "ruleId": "no-hardcoded-industry",
+      "file": "设计原型/J.Co工作台-创作.html",
+      "fingerprint": "no-hardcoded-industry|设计原型/J.Co工作台-创作.html|成人高考|#7",
+      "excerpt": "成人高考"
+    },
+    {
+      "ruleId": "no-hardcoded-industry",
+      "file": "设计原型/J.Co工作台-创作.html",
+      "fingerprint": "no-hardcoded-industry|设计原型/J.Co工作台-创作.html|成人高考|#8",
+      "excerpt": "成人高考"
+    },
+    {
+      "ruleId": "no-hardcoded-industry",
+      "file": "设计原型/J.Co工作台-创作.html",
+      "fingerprint": "no-hardcoded-industry|设计原型/J.Co工作台-创作.html|成人学历|#0",
+      "excerpt": "成人学历"
+    },
+    {
+      "ruleId": "no-hardcoded-industry",
+      "file": "设计原型/J.Co工作台-创作.html",
+      "fingerprint": "no-hardcoded-industry|设计原型/J.Co工作台-创作.html|学历规划|#0",
+      "excerpt": "学历规划"
+    },
+    {
+      "ruleId": "no-hardcoded-industry",
+      "file": "设计原型/J.Co工作台-创作.html",
+      "fingerprint": "no-hardcoded-industry|设计原型/J.Co工作台-创作.html|招生|#0",
+      "excerpt": "招生"
+    },
+    {
+      "ruleId": "no-hardcoded-industry",
+      "file": "设计原型/J.Co工作台-创作.html",
+      "fingerprint": "no-hardcoded-industry|设计原型/J.Co工作台-创作.html|自考|#0",
+      "excerpt": "自考"
+    },
+    {
+      "ruleId": "no-hardcoded-industry",
+      "file": "设计原型/J.Co工作台-发布.html",
+      "fingerprint": "no-hardcoded-industry|设计原型/J.Co工作台-发布.html|成人高考|#0",
+      "excerpt": "成人高考"
+    },
+    {
+      "ruleId": "no-hardcoded-industry",
+      "file": "设计原型/J.Co工作台-发布.html",
+      "fingerprint": "no-hardcoded-industry|设计原型/J.Co工作台-发布.html|成人高考|#1",
+      "excerpt": "成人高考"
+    },
+    {
+      "ruleId": "no-hardcoded-industry",
+      "file": "设计原型/J.Co工作台-发布.html",
+      "fingerprint": "no-hardcoded-industry|设计原型/J.Co工作台-发布.html|成人高考|#2",
+      "excerpt": "成人高考"
+    },
+    {
+      "ruleId": "no-hardcoded-industry",
+      "file": "设计原型/J.Co工作台-发布.html",
+      "fingerprint": "no-hardcoded-industry|设计原型/J.Co工作台-发布.html|成人高考|#3",
+      "excerpt": "成人高考"
+    },
+    {
+      "ruleId": "no-hardcoded-industry",
+      "file": "设计原型/J.Co工作台-发布.html",
+      "fingerprint": "no-hardcoded-industry|设计原型/J.Co工作台-发布.html|成人高考|#4",
+      "excerpt": "成人高考"
+    },
+    {
+      "ruleId": "no-hardcoded-industry",
+      "file": "设计原型/J.Co工作台-发布.html",
+      "fingerprint": "no-hardcoded-industry|设计原型/J.Co工作台-发布.html|成人学历|#0",
+      "excerpt": "成人学历"
+    },
+    {
+      "ruleId": "no-hardcoded-industry",
+      "file": "设计原型/J.Co工作台-发布.html",
+      "fingerprint": "no-hardcoded-industry|设计原型/J.Co工作台-发布.html|成人学历|#1",
+      "excerpt": "成人学历"
+    },
+    {
+      "ruleId": "no-hardcoded-industry",
+      "file": "设计原型/J.Co工作台-发布.html",
+      "fingerprint": "no-hardcoded-industry|设计原型/J.Co工作台-发布.html|成人学历|#2",
+      "excerpt": "成人学历"
+    },
+    {
+      "ruleId": "no-hardcoded-industry",
+      "file": "设计原型/J.Co工作台-发布.html",
+      "fingerprint": "no-hardcoded-industry|设计原型/J.Co工作台-发布.html|成人学历|#3",
+      "excerpt": "成人学历"
+    },
+    {
+      "ruleId": "no-hardcoded-industry",
+      "file": "设计原型/J.Co工作台-发布.html",
+      "fingerprint": "no-hardcoded-industry|设计原型/J.Co工作台-发布.html|学历规划|#0",
+      "excerpt": "学历规划"
+    },
+    {
+      "ruleId": "no-hardcoded-industry",
+      "file": "设计原型/J.Co工作台-发布.html",
+      "fingerprint": "no-hardcoded-industry|设计原型/J.Co工作台-发布.html|招生|#0",
+      "excerpt": "招生"
+    },
+    {
+      "ruleId": "no-hardcoded-industry",
+      "file": "设计原型/J.Co工作台-发布.html",
+      "fingerprint": "no-hardcoded-industry|设计原型/J.Co工作台-发布.html|招生|#1",
+      "excerpt": "招生"
+    },
+    {
+      "ruleId": "no-hardcoded-industry",
+      "file": "设计原型/J.Co工作台-发布.html",
+      "fingerprint": "no-hardcoded-industry|设计原型/J.Co工作台-发布.html|自考|#0",
+      "excerpt": "自考"
+    },
+    {
+      "ruleId": "no-hardcoded-industry",
+      "file": "设计原型/J.Co工作台-后期.html",
+      "fingerprint": "no-hardcoded-industry|设计原型/J.Co工作台-后期.html|成人高考|#0",
+      "excerpt": "成人高考"
+    },
+    {
+      "ruleId": "no-hardcoded-industry",
+      "file": "设计原型/J.Co工作台-后期.html",
+      "fingerprint": "no-hardcoded-industry|设计原型/J.Co工作台-后期.html|招生|#0",
+      "excerpt": "招生"
+    },
+    {
+      "ruleId": "no-hardcoded-industry",
+      "file": "设计原型/J.Co工作台-素材.html",
+      "fingerprint": "no-hardcoded-industry|设计原型/J.Co工作台-素材.html|成人高考|#0",
+      "excerpt": "成人高考"
+    },
+    {
+      "ruleId": "no-hardcoded-industry",
+      "file": "设计原型/J.Co工作台-素材.html",
+      "fingerprint": "no-hardcoded-industry|设计原型/J.Co工作台-素材.html|成人高考|#1",
+      "excerpt": "成人高考"
+    },
+    {
+      "ruleId": "no-hardcoded-industry",
+      "file": "设计原型/J.Co工作台-素材.html",
+      "fingerprint": "no-hardcoded-industry|设计原型/J.Co工作台-素材.html|成人学历|#0",
+      "excerpt": "成人学历"
+    },
+    {
+      "ruleId": "no-hardcoded-industry",
+      "file": "设计原型/J.Co工作台-素材.html",
+      "fingerprint": "no-hardcoded-industry|设计原型/J.Co工作台-素材.html|成人学历|#1",
+      "excerpt": "成人学历"
+    },
+    {
+      "ruleId": "no-hardcoded-industry",
+      "file": "设计原型/J.Co工作台-素材.html",
+      "fingerprint": "no-hardcoded-industry|设计原型/J.Co工作台-素材.html|招生|#0",
+      "excerpt": "招生"
+    },
+    {
+      "ruleId": "no-hardcoded-industry",
+      "file": "设计原型/J.Co工作台-素材.html",
+      "fingerprint": "no-hardcoded-industry|设计原型/J.Co工作台-素材.html|招生|#1",
+      "excerpt": "招生"
+    },
+    {
+      "ruleId": "no-hardcoded-industry",
+      "file": "设计原型/J.Co工作台-素材.html",
+      "fingerprint": "no-hardcoded-industry|设计原型/J.Co工作台-素材.html|招生|#2",
+      "excerpt": "招生"
+    },
+    {
+      "ruleId": "no-hardcoded-industry",
+      "file": "设计原型/J.Co工作台-素材.html",
+      "fingerprint": "no-hardcoded-industry|设计原型/J.Co工作台-素材.html|自考|#0",
+      "excerpt": "自考"
+    },
+    {
+      "ruleId": "no-hardcoded-industry",
+      "file": "设计原型/J.Co工作台-选题.html",
+      "fingerprint": "no-hardcoded-industry|设计原型/J.Co工作台-选题.html|成人高考|#0",
+      "excerpt": "成人高考"
+    },
+    {
+      "ruleId": "no-hardcoded-industry",
+      "file": "设计原型/J.Co工作台-选题.html",
+      "fingerprint": "no-hardcoded-industry|设计原型/J.Co工作台-选题.html|成人高考|#1",
+      "excerpt": "成人高考"
+    },
+    {
+      "ruleId": "no-hardcoded-industry",
+      "file": "设计原型/J.Co工作台-选题.html",
+      "fingerprint": "no-hardcoded-industry|设计原型/J.Co工作台-选题.html|成人高考|#2",
+      "excerpt": "成人高考"
+    },
+    {
+      "ruleId": "no-hardcoded-industry",
+      "file": "设计原型/J.Co工作台-选题.html",
+      "fingerprint": "no-hardcoded-industry|设计原型/J.Co工作台-选题.html|成人学历|#0",
+      "excerpt": "成人学历"
+    },
+    {
+      "ruleId": "no-hardcoded-industry",
+      "file": "设计原型/J.Co工作台-选题.html",
+      "fingerprint": "no-hardcoded-industry|设计原型/J.Co工作台-选题.html|成人学历|#1",
+      "excerpt": "成人学历"
+    },
+    {
+      "ruleId": "no-hardcoded-industry",
+      "file": "设计原型/J.Co工作台-选题.html",
+      "fingerprint": "no-hardcoded-industry|设计原型/J.Co工作台-选题.html|招生|#0",
+      "excerpt": "招生"
+    },
+    {
+      "ruleId": "no-hardcoded-industry",
+      "file": "设计原型/J.Co工作台-选题.html",
+      "fingerprint": "no-hardcoded-industry|设计原型/J.Co工作台-选题.html|招生|#1",
+      "excerpt": "招生"
+    },
+    {
+      "ruleId": "no-hardcoded-industry",
+      "file": "设计原型/J.Co工作台-选题.html",
+      "fingerprint": "no-hardcoded-industry|设计原型/J.Co工作台-选题.html|招生|#2",
+      "excerpt": "招生"
+    },
+    {
+      "ruleId": "no-hardcoded-industry",
+      "file": "设计原型/J.Co工作台-选题.html",
+      "fingerprint": "no-hardcoded-industry|设计原型/J.Co工作台-选题.html|自考|#0",
+      "excerpt": "自考"
+    },
+    {
+      "ruleId": "no-hardcoded-industry",
+      "file": "设计原型/J.Co工作台-运营.html",
+      "fingerprint": "no-hardcoded-industry|设计原型/J.Co工作台-运营.html|成人高考|#0",
+      "excerpt": "成人高考"
+    },
+    {
+      "ruleId": "no-hardcoded-industry",
+      "file": "设计原型/J.Co工作台-运营.html",
+      "fingerprint": "no-hardcoded-industry|设计原型/J.Co工作台-运营.html|成人高考|#1",
+      "excerpt": "成人高考"
+    },
+    {
+      "ruleId": "no-hardcoded-industry",
+      "file": "设计原型/J.Co工作台-运营.html",
+      "fingerprint": "no-hardcoded-industry|设计原型/J.Co工作台-运营.html|成人高考|#2",
+      "excerpt": "成人高考"
+    },
+    {
+      "ruleId": "no-hardcoded-industry",
+      "file": "设计原型/J.Co工作台-运营.html",
+      "fingerprint": "no-hardcoded-industry|设计原型/J.Co工作台-运营.html|成人高考|#3",
+      "excerpt": "成人高考"
+    },
+    {
+      "ruleId": "no-hardcoded-industry",
+      "file": "设计原型/J.Co工作台-运营.html",
+      "fingerprint": "no-hardcoded-industry|设计原型/J.Co工作台-运营.html|成人高考|#4",
+      "excerpt": "成人高考"
+    },
+    {
+      "ruleId": "no-hardcoded-industry",
+      "file": "设计原型/J.Co工作台-运营.html",
+      "fingerprint": "no-hardcoded-industry|设计原型/J.Co工作台-运营.html|成人高考|#5",
+      "excerpt": "成人高考"
+    },
+    {
+      "ruleId": "no-hardcoded-industry",
+      "file": "设计原型/J.Co工作台-运营.html",
+      "fingerprint": "no-hardcoded-industry|设计原型/J.Co工作台-运营.html|学历提升|#0",
+      "excerpt": "学历提升"
+    },
+    {
+      "ruleId": "no-hardcoded-industry",
+      "file": "设计原型/J.Co工作台-运营.html",
+      "fingerprint": "no-hardcoded-industry|设计原型/J.Co工作台-运营.html|招生|#0",
+      "excerpt": "招生"
+    },
+    {
+      "ruleId": "no-hardcoded-industry",
+      "file": "设计原型/J.Co工作台-做视频.html",
+      "fingerprint": "no-hardcoded-industry|设计原型/J.Co工作台-做视频.html|成人高考|#0",
+      "excerpt": "成人高考"
+    },
+    {
+      "ruleId": "no-hardcoded-industry",
+      "file": "设计原型/J.Co工作台-做视频.html",
+      "fingerprint": "no-hardcoded-industry|设计原型/J.Co工作台-做视频.html|成人高考|#1",
+      "excerpt": "成人高考"
+    },
+    {
+      "ruleId": "no-hardcoded-industry",
+      "file": "设计原型/J.Co工作台-做视频.html",
+      "fingerprint": "no-hardcoded-industry|设计原型/J.Co工作台-做视频.html|成人高考|#2",
+      "excerpt": "成人高考"
+    },
+    {
+      "ruleId": "no-hardcoded-industry",
+      "file": "设计原型/J.Co工作台-做视频.html",
+      "fingerprint": "no-hardcoded-industry|设计原型/J.Co工作台-做视频.html|成人高考|#3",
+      "excerpt": "成人高考"
+    },
+    {
+      "ruleId": "no-hardcoded-industry",
+      "file": "设计原型/J.Co工作台-做视频.html",
+      "fingerprint": "no-hardcoded-industry|设计原型/J.Co工作台-做视频.html|成人学历|#0",
+      "excerpt": "成人学历"
+    },
+    {
+      "ruleId": "no-hardcoded-industry",
+      "file": "设计原型/J.Co工作台-做视频.html",
+      "fingerprint": "no-hardcoded-industry|设计原型/J.Co工作台-做视频.html|成人学历|#1",
+      "excerpt": "成人学历"
+    },
+    {
+      "ruleId": "no-hardcoded-industry",
+      "file": "设计原型/J.Co工作台-做视频.html",
+      "fingerprint": "no-hardcoded-industry|设计原型/J.Co工作台-做视频.html|成人学历|#2",
+      "excerpt": "成人学历"
+    },
+    {
+      "ruleId": "no-hardcoded-industry",
+      "file": "设计原型/J.Co工作台-做视频.html",
+      "fingerprint": "no-hardcoded-industry|设计原型/J.Co工作台-做视频.html|学历提升|#0",
+      "excerpt": "学历提升"
+    },
+    {
+      "ruleId": "no-hardcoded-industry",
+      "file": "设计原型/J.Co工作台-做视频.html",
+      "fingerprint": "no-hardcoded-industry|设计原型/J.Co工作台-做视频.html|招生|#0",
+      "excerpt": "招生"
+    },
+    {
+      "ruleId": "no-hardcoded-industry",
+      "file": "设计原型/J.Co工作台-做视频.html",
+      "fingerprint": "no-hardcoded-industry|设计原型/J.Co工作台-做视频.html|招生|#1",
+      "excerpt": "招生"
+    },
+    {
+      "ruleId": "no-hardcoded-industry",
+      "file": "设计原型/J.Co工作台-做视频.html",
+      "fingerprint": "no-hardcoded-industry|设计原型/J.Co工作台-做视频.html|招生|#2",
+      "excerpt": "招生"
+    },
+    {
+      "ruleId": "no-hardcoded-industry",
+      "file": "设计原型/J.Co工作台-做视频.html",
+      "fingerprint": "no-hardcoded-industry|设计原型/J.Co工作台-做视频.html|自考|#0",
+      "excerpt": "自考"
+    },
+    {
+      "ruleId": "no-hardcoded-industry",
+      "file": "设计原型/J.Co工作台-做视频.html",
+      "fingerprint": "no-hardcoded-industry|设计原型/J.Co工作台-做视频.html|自考|#1",
+      "excerpt": "自考"
+    },
+    {
+      "ruleId": "no-hardcoded-industry",
+      "file": "设计原型/J.Co管家团队.html",
+      "fingerprint": "no-hardcoded-industry|设计原型/J.Co管家团队.html|成人高考|#0",
+      "excerpt": "成人高考"
+    },
+    {
+      "ruleId": "no-hardcoded-industry",
+      "file": "设计原型/J.Co管家团队.html",
+      "fingerprint": "no-hardcoded-industry|设计原型/J.Co管家团队.html|招生|#0",
+      "excerpt": "招生"
+    },
+    {
+      "ruleId": "no-hardcoded-industry",
+      "file": "设计原型/J.Co技能库.html",
+      "fingerprint": "no-hardcoded-industry|设计原型/J.Co技能库.html|成人高考|#0",
+      "excerpt": "成人高考"
+    },
+    {
+      "ruleId": "no-hardcoded-industry",
+      "file": "设计原型/J.Co技能库.html",
+      "fingerprint": "no-hardcoded-industry|设计原型/J.Co技能库.html|招生|#0",
+      "excerpt": "招生"
+    },
+    {
+      "ruleId": "no-hardcoded-industry",
+      "file": "设计原型/J.Co设计系统.html",
+      "fingerprint": "no-hardcoded-industry|设计原型/J.Co设计系统.html|招生|#0",
+      "excerpt": "招生"
+    },
+    {
+      "ruleId": "no-hardcoded-industry",
+      "file": "设计原型/J.Co设置.html",
+      "fingerprint": "no-hardcoded-industry|设计原型/J.Co设置.html|招生|#0",
+      "excerpt": "招生"
+    },
+    {
+      "ruleId": "no-hardcoded-industry",
+      "file": "设计原型/J.Co账号中心.html",
+      "fingerprint": "no-hardcoded-industry|设计原型/J.Co账号中心.html|招生|#0",
+      "excerpt": "招生"
+    },
+    {
+      "ruleId": "no-hardcoded-industry",
+      "file": "设计原型/J.Co主界面-首页.html",
+      "fingerprint": "no-hardcoded-industry|设计原型/J.Co主界面-首页.html|招生|#0",
+      "excerpt": "招生"
+    },
+    {
+      "ruleId": "no-hardcoded-industry",
+      "file": "设计原型/J.Co主界面-首页.html",
+      "fingerprint": "no-hardcoded-industry|设计原型/J.Co主界面-首页.html|招生|#1",
+      "excerpt": "招生"
+    },
+    {
+      "ruleId": "no-hardcoded-industry",
+      "file": "设计原型/J.Co主界面-首页.html",
+      "fingerprint": "no-hardcoded-industry|设计原型/J.Co主界面-首页.html|招生|#2",
+      "excerpt": "招生"
+    },
+    {
+      "ruleId": "no-hardcoded-industry",
+      "file": "设计原型/J.Co主界面-首页.html",
+      "fingerprint": "no-hardcoded-industry|设计原型/J.Co主界面-首页.html|招生|#3",
+      "excerpt": "招生"
+    },
+    {
+      "ruleId": "no-hardcoded-industry",
+      "file": "设计原型/J.Co自动任务.html",
+      "fingerprint": "no-hardcoded-industry|设计原型/J.Co自动任务.html|成人高考|#0",
+      "excerpt": "成人高考"
+    },
+    {
+      "ruleId": "no-hardcoded-industry",
+      "file": "设计原型/J.Co自动任务.html",
+      "fingerprint": "no-hardcoded-industry|设计原型/J.Co自动任务.html|招生|#0",
+      "excerpt": "招生"
+    },
+    {
+      "ruleId": "no-hardcoded-industry",
+      "file": "设计原型/J.Co总管.html",
+      "fingerprint": "no-hardcoded-industry|设计原型/J.Co总管.html|招生|#0",
+      "excerpt": "招生"
+    },
+    {
+      "ruleId": "no-hardcoded-industry",
+      "file": "设计原型/J.Co总管.html",
+      "fingerprint": "no-hardcoded-industry|设计原型/J.Co总管.html|招生|#1",
+      "excerpt": "招生"
+    },
+    {
+      "ruleId": "no-hardcoded-industry",
+      "file": "设计原型/J.Co总管.html",
+      "fingerprint": "no-hardcoded-industry|设计原型/J.Co总管.html|招生|#2",
+      "excerpt": "招生"
+    },
+    {
+      "ruleId": "no-hardcoded-industry",
+      "file": "设计原型/J.Co总管.html",
+      "fingerprint": "no-hardcoded-industry|设计原型/J.Co总管.html|招生|#3",
+      "excerpt": "招生"
+    },
+    {
+      "ruleId": "no-message-truncation",
+      "file": "设计原型/J.Co工作台-选题.html",
+      "fingerprint": "no-message-truncation|设计原型/J.Co工作台-选题.html|.slice(0, 1500)|#0",
+      "excerpt": ".slice(0, 1500)"
+    },
+    {
+      "ruleId": "no-message-truncation",
+      "file": "设计原型/J.Co总管.html",
+      "fingerprint": "no-message-truncation|设计原型/J.Co总管.html|.slice(0, 2000)|#0",
+      "excerpt": ".slice(0, 2000)"
+    },
+    {
+      "ruleId": "no-message-truncation",
+      "file": "设计原型/J.Co总管.html",
+      "fingerprint": "no-message-truncation|设计原型/J.Co总管.html|.slice(0, 2000)|#1",
+      "excerpt": ".slice(0, 2000)"
+    },
+    {
+      "ruleId": "no-message-truncation",
+      "file": "app/main.js",
+      "fingerprint": "no-message-truncation|app/main.js|clipSafe(String((payload && payload.prompt) || '').trim(), 4000)|#0",
+      "excerpt": "clipSafe(String((payload && payload.prompt) || '').trim(), 4000)"
+    }
+  ]
+}
