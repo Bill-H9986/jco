@@ -325,6 +325,8 @@ export interface SessionHostConfig {
   shotsDir: string
   /** 运营数据目录（战报/评论落盘处，运营页读取） */
   dataDir: string
+  /** 测试/无人值守时可使用无头浏览器；生产默认有头。 */
+  headless?: boolean
 }
 
 export interface SessionEvent {
@@ -366,27 +368,25 @@ export class PublishSessionManager {
     }
     try {
       const profileDir = join(this.host.profileRoot, platformId, 'profile')
-      const child = spawn(
-        this.host.execPath,
-        [
-          this.host.serverPath,
-          '--platform',
-          platformId,
-          '--profile-dir',
-          profileDir,
-          '--session-file',
-          this.host.sessionFile,
-          '--shots-dir',
-          this.host.shotsDir,
-          '--data-dir',
-          this.host.dataDir,
-        ],
-        {
-          env: { ...process.env, ELECTRON_RUN_AS_NODE: '1' },
-          stdio: ['pipe', 'pipe', 'pipe'],
-          windowsHide: true,
-        },
-      )
+      const args = [
+        this.host.serverPath,
+        '--platform',
+        platformId,
+        '--profile-dir',
+        profileDir,
+        '--session-file',
+        this.host.sessionFile,
+        '--shots-dir',
+        this.host.shotsDir,
+        '--data-dir',
+        this.host.dataDir,
+      ]
+      if (this.host.headless) args.push('--headless')
+      const child = spawn(this.host.execPath, args, {
+        env: { ...process.env, ELECTRON_RUN_AS_NODE: '1' },
+        stdio: ['pipe', 'pipe', 'pipe'],
+        windowsHide: true,
+      })
       this.child = child
       this.currentPlatform = platformId
       let buffer = ''

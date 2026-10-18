@@ -1,7 +1,7 @@
 {
   "version": 1,
   "note": "W0-06 存量欠账。只允许删除，不允许新增；新增违规会让 npm run gate 失败。",
-  "generatedAt": "2026-10-18T09:26:54.499Z",
+  "generatedAt": "2026-10-18T09:40:56.473Z",
   "entries": [
     {
       "ruleId": "no-direct-business-localstorage",

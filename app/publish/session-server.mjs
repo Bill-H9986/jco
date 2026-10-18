@@ -21,7 +21,12 @@ const sessionFile = arg('--session-file')
 const shotsDir = arg('--shots-dir', join(process.cwd(), 'shots'))
 const dataDir = arg('--data-dir', join(process.cwd(), 'publish-data'))
 const platformId = arg('--platform', 'douyin')
-const platformConf = PLATFORMS[platformId] || PLATFORMS.douyin
+const headless = argv.includes('--headless')
+const platformConf = PLATFORMS[platformId]
+if (!platformConf) {
+  process.stderr.write(`[session] 未知平台：${platformId}\n`)
+  process.exit(1)
+}
 const allowedDomains = platformConf.domains
 
 const TOOL_NAMES = Object.keys(tools.IMPLEMENTATIONS)
@@ -68,7 +73,7 @@ async function startBrowser() {
   const { chromium } = await import('playwright')
   context = await chromium.launchPersistentContext(profileDir, {
     channel: 'msedge',
-    headless: false,
+    headless,
     viewport: null,
     ignoreDefaultArgs: ['--enable-automation'],
     args: ['--disable-blink-features=AutomationControlled'],
