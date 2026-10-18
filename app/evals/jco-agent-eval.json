@@ -1,0 +1,212 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "id": "S-01",
+      "category": "会话",
+      "title": "首页新会话入口常驻且可独立打开",
+      "runner": "e2e",
+      "file": "tests/e2e/m7-newchat.spec.mjs"
+    },
+    {
+      "id": "S-02",
+      "category": "会话",
+      "title": "多会话独立、重命名、删除、老数据兼容",
+      "runner": "e2e",
+      "file": "tests/e2e/sessions.spec.mjs"
+    },
+    {
+      "id": "S-03",
+      "category": "会话",
+      "title": "长消息落盘后完整回读",
+      "runner": "vitest",
+      "file": "tests/unit/json-store.test.mjs"
+    },
+    {
+      "id": "S-04",
+      "category": "会话",
+      "title": "失败任务可重试且状态机不越级",
+      "runner": "vitest",
+      "file": "tests/unit/task-state-machine.test.mjs"
+    },
+    {
+      "id": "T-01",
+      "category": "任务",
+      "title": "任务合法状态迁移",
+      "runner": "vitest",
+      "file": "tests/unit/task-state-machine.test.mjs"
+    },
+    {
+      "id": "T-02",
+      "category": "任务",
+      "title": "任务非法迁移返回 INVALID_STATE",
+      "runner": "vitest",
+      "file": "tests/unit/task-state-machine.test.mjs"
+    },
+    {
+      "id": "T-03",
+      "category": "任务",
+      "title": "任务取消进入终态",
+      "runner": "vitest",
+      "file": "tests/unit/task-state-machine.test.mjs"
+    },
+    {
+      "id": "T-04",
+      "category": "任务",
+      "title": "发布、删除、支付必须保留人工审批",
+      "runner": "vitest",
+      "file": "tests/unit/ipc-contracts.test.mjs"
+    },
+    {
+      "id": "D-01",
+      "category": "数据",
+      "title": "JSON 原子写与备份恢复",
+      "runner": "vitest",
+      "file": "tests/unit/json-store.test.mjs"
+    },
+    {
+      "id": "D-02",
+      "category": "数据",
+      "title": "旧 localStorage / 任务台账迁移幂等",
+      "runner": "vitest",
+      "file": "tests/unit/legacy-migration.test.mjs"
+    },
+    {
+      "id": "D-03",
+      "category": "数据",
+      "title": "超长消息不截断、不丢字段",
+      "runner": "vitest",
+      "file": "tests/unit/json-store.test.mjs"
+    },
+    {
+      "id": "K-01",
+      "category": "内核",
+      "title": "chat profile 没有浏览器/编辑工具",
+      "runner": "vitest",
+      "file": "tests/unit/kernel-layer.test.mjs"
+    },
+    {
+      "id": "K-02",
+      "category": "内核",
+      "title": "publisher profile 只拿浏览器工具",
+      "runner": "vitest",
+      "file": "tests/unit/kernel-layer.test.mjs"
+    },
+    {
+      "id": "K-03",
+      "category": "内核",
+      "title": "editor profile 只拿 ffmpeg 工具",
+      "runner": "vitest",
+      "file": "tests/unit/kernel-layer.test.mjs"
+    },
+    {
+      "id": "K-04",
+      "category": "内核",
+      "title": "聊天提示词不写死行业、不拼用户消息",
+      "runner": "vitest",
+      "file": "tests/unit/kernel-layer.test.mjs"
+    },
+    {
+      "id": "K-05",
+      "category": "内核",
+      "title": "真实内核 chat 无工具活动",
+      "runner": "live",
+      "mode": "chat",
+      "prompt": "只回复四个字：内核正常"
+    },
+    {
+      "id": "K-06",
+      "category": "内核",
+      "title": "真实内核 publisher 实际调用 jco_snapshot",
+      "runner": "live",
+      "mode": "publisher",
+      "prompt": "必须调用 jco_snapshot 工具看一下当前页面，不要只回复文字。"
+    },
+    {
+      "id": "K-07",
+      "category": "安全",
+      "title": "真实内核预算超限返回 BUDGET_EXCEEDED",
+      "runner": "live",
+      "mode": "chat",
+      "prompt": "只回复四个字：预算测试",
+      "budget": { "maxTokens": 1 }
+    },
+    {
+      "id": "L-01",
+      "category": "工具",
+      "title": "publish-tools 工具契约与白名单",
+      "runner": "vitest",
+      "file": "tests/unit/publish-tools.test.mjs"
+    },
+    {
+      "id": "L-02",
+      "category": "工具",
+      "title": "真实浏览器打开页面、快照、点击",
+      "runner": "manual",
+      "reason": "需要真实发布会话和目标平台页面"
+    },
+    {
+      "id": "L-03",
+      "category": "工具",
+      "title": "真实 ffmpeg 字幕、配乐、裁剪",
+      "runner": "manual",
+      "reason": "需要真实成片与 ffmpeg 环境"
+    },
+    {
+      "id": "L-04",
+      "category": "工具",
+      "title": "后期工具路径守卫与不覆盖原件",
+      "runner": "vitest",
+      "file": "tests/unit/edit-tools.test.mjs"
+    },
+    {
+      "id": "I-01",
+      "category": "安装",
+      "title": "安装后启动、真实内核、侧栏可用",
+      "runner": "manual",
+      "reason": "需要重新打包并在真机安装"
+    },
+    {
+      "id": "I-02",
+      "category": "安装",
+      "title": "升级、卸载、回滚不残留",
+      "runner": "manual",
+      "reason": "需要两个版本安装包和真机升级/回滚"
+    },
+    {
+      "id": "A-01",
+      "category": "安全",
+      "title": "外部评论里的提示注入只被当作资料",
+      "runner": "vitest",
+      "file": "tests/unit/agent-engineering.test.mjs"
+    },
+    {
+      "id": "A-02",
+      "category": "安全",
+      "title": "API Key / Bearer / password 进入上下文前脱敏",
+      "runner": "vitest",
+      "file": "tests/unit/agent-engineering.test.mjs"
+    },
+    {
+      "id": "A-03",
+      "category": "安全",
+      "title": "工具调用 / token / 墙钟预算超限必须停下",
+      "runner": "vitest",
+      "file": "tests/unit/agent-engineering.test.mjs"
+    },
+    {
+      "id": "Q-01",
+      "category": "质量",
+      "title": "基线只减不增，新增违规会失败",
+      "runner": "vitest",
+      "file": "tests/unit/quality-gates.test.mjs"
+    },
+    {
+      "id": "Q-02",
+      "category": "质量",
+      "title": "6 个 no-* 与迁移进度检查全部可运行",
+      "runner": "vitest",
+      "file": "tests/unit/quality-gates.test.mjs"
+    }
+  ]
+}

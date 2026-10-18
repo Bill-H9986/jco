@@ -23,6 +23,8 @@ import { buildSkillsSection } from './skills-prompt.mjs'
 import { HarnessPool } from '../dist/kernel/harness-pool.js'
 import { getProfile } from '../dist/kernel/profiles.js'
 import { buildProfilePersona } from '../dist/kernel/prompt-builder.js'
+import { addUsage, emptyRunMetrics, usageOf } from '../dist/agent/run-metrics.js'
+import { BudgetTracker } from '../dist/agent/run-budget.js'
 
 const HERE = dirname(fileURLToPath(import.meta.url))
 /** 打包适配：内核子进程读不到 asar 内文件——把 kernel 内路径映射到 app.asar.unpacked */
@@ -613,6 +615,21 @@ function friendlyError(raw) {
  */
 export function ask(text, onDelta, options) {
   return (async () => {
+    const startedAt = Date.now()
+    const metrics = emptyRunMetrics()
+    const budget = options && options.budget ? new BudgetTracker(options.budget) : null
+    if (budget) budget.start()
+    let budgetError = null
+    const finish = (value) => {
+      metrics.wallMs = Date.now() - startedAt
+      const budgetSnapshot = budget ? budget.snapshot() : null
+      if (budgetSnapshot) metrics.costUsd = budgetSnapshot.costUsd
+      return {
+        ...value,
+        metrics: { ...metrics, tokens: { ...metrics.tokens } },
+        ...(budgetSnapshot ? { budget: budgetSnapshot } : {}),
+      }
+    }
     try {
       const requestedProfile = options && typeof options.profile === 'string' ? options.profile : 'chat'
       const profile = getProfile(requestedProfile).id
@@ -642,6 +659,18 @@ export function ask(text, onDelta, options) {
             if (parts.length > 0) streamParts = parts
             const activity = activityOf(notification)
             if (activity !== null) {
+              if (activity.kind === 'tool' && activity.phase === 'call') {
+                metrics.toolCalls += 1
+                if (budget) {
+                  budget.recordToolCall()
+                  try {
+                    budget.check()
+                  } catch (error) {
+                    budgetError = error
+                  }
+                }
+              }
+              if (activity.kind === 'tool' && activity.phase === 'result' && activity.isError) metrics.toolErrors += 1
               if (activity.kind === 'tool' && activity.phase === 'call') callNames.set(activity.callId, activity.tool)
               if (activity.kind === 'tool' && activity.phase === 'result') activity.tool = callNames.get(activity.callId) || ''
               try {
@@ -649,6 +678,29 @@ export function ask(text, onDelta, options) {
                 if (onActivity) onActivity({ ...activity, session, t: Date.now() })
               } catch (error) {
                 /* 单个活动回调失败不影响整轮 */
+              }
+            }
+            const usage = usageOf(notification)
+            if (usage) {
+              metrics.modelCalls += 1
+              addUsage(metrics, usage)
+              if (budget) {
+                budget.recordModelCall(usage)
+                try {
+                  budget.check()
+                } catch (error) {
+                  budgetError = error
+                }
+              }
+            } else if (notification && notification.params && notification.params.event && notification.params.event.type === 'assistant/message') {
+              metrics.modelCalls += 1
+              if (budget) {
+                budget.recordModelCall()
+                try {
+                  budget.check()
+                } catch (error) {
+                  budgetError = error
+                }
               }
             }
             const error = turnErrorOf(notification)
@@ -679,7 +731,11 @@ export function ask(text, onDelta, options) {
       if (result && result.__askTimeout) {
         // 强制回收该 profile 的内核；不等待卡住的回合，也不阻塞这次返回。
         void pool.reset(profile, { force: true }).catch(() => {})
-        return { ok: false, error: '内核这次没响应（等超过 3 分钟），我已经把它重启了，再发一次就好。' }
+        return finish({ ok: false, error: '内核这次没响应（等超过 3 分钟），我已经把它重启了，再发一次就好。' })
+      }
+      if (budgetError) {
+        void pool.reset(profile, { force: true }).catch(() => {})
+        return finish({ ok: false, code: 'BUDGET_EXCEEDED', error: budgetError.message })
       }
       if (result && result.__askError) throw result.__askError
       const finalText = (result && result.finalResponse) || ''
@@ -696,7 +752,7 @@ export function ask(text, onDelta, options) {
       }
       // 回合以错误结束且没有产出正文：如实报错，而不是留一段空白
       if (cleanedText === '' && turnError !== '') {
-        return { ok: false, error: friendlyError(turnError), raw: turnError }
+        return finish({ ok: false, error: friendlyError(turnError), raw: turnError })
       }
       // 厂商不发实时增量时：按模型真实时间戳把整段压成回放节拍（逐字出现，而不是一下蹦出）
       if (cleanedText !== '' && !toolLeak && !streamed && typeof onDelta === 'function') {
@@ -713,11 +769,11 @@ export function ask(text, onDelta, options) {
       }
       if (toolLeak) {
         const base = cleanedText === '' ? '刚才那步工具调用没有真正执行成功。' : `${cleanedText}\n\n`
-        return { ok: true, text: `${base}（那步操作没有真正执行——请对我说「继续」，我重新做一次。）`, streamed }
+        return finish({ ok: true, text: `${base}（那步操作没有真正执行——请对我说「继续」，我重新做一次。）`, streamed })
       }
-      return { ok: true, text: cleanedText, streamed }
+      return finish({ ok: true, text: cleanedText, streamed })
     } catch (error) {
-      return { ok: false, error: String((error && error.message) || error) }
+      return finish({ ok: false, error: String((error && error.message) || error) })
     }
   })()
 }

@@ -26,6 +26,8 @@
     "check:cross-page-journeys": "node scripts/check-all.mjs --only cross-page-journeys",
     "check:visual-regression-all": "node scripts/check-all.mjs --only visual-regression-all",
     "check:all": "node scripts/check-all.mjs --baseline",
+    "security:gate": "node scripts/security-gate.mjs",
+    "eval:agent": "npm run build && node scripts/run-agent-eval.mjs",
     "release": "commit-and-tag-version"
   },
   "devDependencies": {

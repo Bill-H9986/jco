@@ -17,6 +17,8 @@ const steps = [
   },
   { name: '单元测试 (Vitest)', cmd: 'npx', args: ['vitest', 'run'] },
   { name: '全项目扫描门禁 (Project Checks)', cmd: 'node', args: ['scripts/check-all.mjs', '--baseline'] },
+  { name: 'OWASP 安全门 (Security Gate)', cmd: 'node', args: ['scripts/security-gate.mjs'] },
+  { name: 'Agent Eval', cmd: 'node', args: ['scripts/run-agent-eval.mjs', '--ci'] },
   { name: '全站一致性审计 (Frontend Audit)', cmd: 'node', args: ['scripts/audit-frontend.mjs'] },
   { name: '端到端回归 (Playwright)', cmd: 'npx', args: ['playwright', 'test'] },
 ]

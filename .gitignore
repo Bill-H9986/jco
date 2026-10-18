@@ -14,6 +14,8 @@ app/tests/report/
 
 # 运行时本地配置（含 API Key，绝不入库）
 app/kernel/model-config.json
+# 发布会话文件含本地 endpoint/token，绝不入库
+app/kernel/publish-session.json
 # 发布工具 patch（自动生成，含本机路径，不入库）
 app/kernel/publish-tools.patch.yml
 # 岗位系统提示词与按 profile 生成的工具 patch（运行时生成，含本机路径）
