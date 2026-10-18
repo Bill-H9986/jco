@@ -1,4 +1,4 @@
-// 发布页 AI 入口（M7 批 1b：派活走任务管道）：入口按钮与状态文案就位
+// 发布页 AI 入口（W3-01：Task + Approval）：入口按钮与状态文案就位
 // （不点击——点击会真派活、真调模型；点击链路的消费端见 m9e-taskbridge，真机链路由 qa 脚本验证）
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -9,7 +9,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const APP_DIR = path.resolve(__dirname, '..', '..')
 const ELECTRON_BIN = path.join(APP_DIR, 'node_modules', 'electron', 'dist', 'electron.exe')
 
-test('发布页：让 AI 发到抖音入口就位（存在性与文案）', async () => {
+test('发布页：让 AI 准备抖音发布入口就位（存在性与文案）', async () => {
   const app = await electron.launch({ executablePath: ELECTRON_BIN, args: [APP_DIR, '--jco-test'] })
   try {
     const win = await app.firstWindow()
@@ -27,7 +27,7 @@ test('发布页：让 AI 发到抖音入口就位（存在性与文案）', asyn
 
     const btn = win.locator('#aiDyBtn')
     await expect(btn).toBeVisible()
-    await expect(btn).toContainText('让 AI 发到「抖音」')
+    await expect(btn).toContainText('让 AI 准备「抖音」发布')
     await expect(win.locator('#aiDyState')).toHaveText(/待命|桌面应用内可用/)
     await expect(win.locator('#platforms .pf', { hasText: '抖音' })).toContainText('已登记')
     await expect(win.locator('#platforms .pf', { hasText: 'B站' })).toContainText('未登录')

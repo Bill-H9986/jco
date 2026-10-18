@@ -1315,6 +1315,11 @@ function profileOfWorkTask(task) {
   if (task.type === 'operate') return 'operator'
   return 'writer'
 }
+function platformOfWorkTask(task) {
+  const inputs = Array.isArray(task && task.inputs) ? task.inputs : []
+  const found = inputs.map((item) => String(item || '')).find((item) => item.startsWith('platform:'))
+  return found ? found.slice('platform:'.length) : 'douyin'
+}
 /** W1-05：审批通过后，用真实内核执行任务；事件进入同一任务详情时间线。 */
 async function runWorkTask(task) {
   if (!task || task.status !== 'running') return
@@ -1334,6 +1339,10 @@ async function runWorkTask(task) {
     })
     workTaskEvent(task, 'note', '任务执行已交给「' + task.ownerRole + '」岗位')
     saveWorkTask(task.id)
+    if (task.type === 'publish') {
+      const ready = await ensurePublishReady(platformOfWorkTask(task))
+      if (!ready) workTaskEvent(task, 'note', '发布会话没有就绪；AI 会如实报告，不假装已登录')
+    }
     const bridge = await getBridge()
     const result = await bridge.ask(prompt, null, {
       profile,
@@ -1346,15 +1355,21 @@ async function runWorkTask(task) {
         }
       },
     })
-    task.status = result.ok ? 'done' : 'failed'
-    task.summary = clipSafe(String((result.ok ? result.text : result.error) || ''), 300)
+    if (result.ok && task.type === 'publish') {
+      task.status = 'waiting_user'
+      task.summary = clipSafe(String(result.text || '已准备到发布前，等你亲手点发布'), 300)
+      workTaskEvent(task, 'note', 'AI 已准备到发布前；请你在浏览器里亲手点发布')
+    } else {
+      task.status = result.ok ? 'done' : 'failed'
+      task.summary = clipSafe(String((result.ok ? result.text : result.error) || ''), 300)
+      workTaskEvent(task, result.ok ? 'state_changed' : 'error', result.ok ? '任务执行完成' : '任务执行失败：' + task.summary)
+    }
     task.messages = [
       { role: 'user', text: prompt, t: Date.now() },
       { role: 'assistant', text: task.summary || '（没有返回内容）', t: Date.now() },
     ]
-    workTaskEvent(task, result.ok ? 'state_changed' : 'error', result.ok ? '任务执行完成' : '任务执行失败：' + task.summary)
     saveWorkTask(task.id)
-    broadcastWorkTask(task, result.ok ? 'done' : 'fail')
+    broadcastWorkTask(task, result.ok ? (task.type === 'publish' ? 'update' : 'done') : 'fail')
   } catch (error) {
     task.status = 'failed'
     task.summary = '执行出错：' + clipSafe(String((error && error.message) || error), 200)
