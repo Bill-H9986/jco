@@ -1,6 +1,9 @@
 // M9 后期工具（AI 代劳）：纯函数单测——SRT 生成 / ffmpeg 信息解析 / 路径守卫
+import fs from 'node:fs'
+import os from 'node:os'
+import path from 'node:path'
 import { describe, expect, it } from 'vitest'
-import { buildSrt, insideDir, parseProbe, srtTime } from '../../kernel/edit-tools/index.mjs'
+import { buildSrt, insideDir, parseProbe, resolveInside, srtTime } from '../../kernel/edit-tools/index.mjs'
 
 describe('后期工具纯函数（M9 后期·AI 代劳）', () => {
   it('srtTime 格式化（毫秒 / 分 / 时）', () => {
@@ -51,5 +54,35 @@ describe('后期工具纯函数（M9 后期·AI 代劳）', () => {
     expect(insideDir('C:/a', 'C:/a/x/y.mp4')).toBe(true)
     expect(insideDir('C:/a', 'C:/a/../x.mp4')).toBe(false)
     expect(insideDir('C:/a', 'C:/b/x.mp4')).toBe(false)
+  })
+
+  it('resolveInside：真实路径守卫，拒绝不存在与目录外文件', () => {
+    const root = fs.mkdtempSync(path.join(os.tmpdir(), 'jco-guard-'))
+    const inside = path.join(root, 'inside.mp4')
+    fs.writeFileSync(inside, 'x')
+    try {
+      expect(resolveInside(root, 'inside.mp4')).toBe(fs.realpathSync(inside))
+      expect(resolveInside(root, '../outside.mp4')).toBeNull()
+      expect(resolveInside(root, 'missing.mp4')).toBeNull()
+    } finally {
+      fs.rmSync(root, { recursive: true, force: true })
+    }
+  })
+
+  it('resolveInside：挡住符号链接逃逸', () => {
+    const root = fs.mkdtempSync(path.join(os.tmpdir(), 'jco-guard-link-'))
+    const outside = fs.mkdtempSync(path.join(os.tmpdir(), 'jco-guard-out-'))
+    fs.writeFileSync(path.join(outside, 'leak.mp4'), 'x')
+    try {
+      try {
+        fs.symlinkSync(outside, path.join(root, 'link'), process.platform === 'win32' ? 'junction' : 'dir')
+      } catch {
+        return
+      }
+      expect(resolveInside(root, 'link/leak.mp4')).toBeNull()
+    } finally {
+      fs.rmSync(root, { recursive: true, force: true })
+      fs.rmSync(outside, { recursive: true, force: true })
+    }
   })
 })

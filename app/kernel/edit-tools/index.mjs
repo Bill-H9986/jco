@@ -2,7 +2,7 @@
 // 六个本地视频处理工具（ffmpeg）：列素材 / 看信息 / 加字幕 / 配音乐 / 裁剪 / 拼接。
 // 安全：一切文件操作限定在成片目录（assetsDir）内；永不覆盖原件；spawn 参数数组不拼 shell。
 // 设计依据：docs/plans/M9-后期-AI代劳/方案冻结.md
-import { readdirSync, statSync, writeFileSync, mkdirSync, existsSync } from 'node:fs'
+import { readdirSync, statSync, writeFileSync, mkdirSync, existsSync, realpathSync, unlinkSync } from 'node:fs'
 import { resolve, basename, extname, join, relative, isAbsolute } from 'node:path'
 import { spawn } from 'node:child_process'
 import { defineTool } from '@deepseek-ai/dsh-tools'
@@ -17,6 +17,20 @@ const AUDIO_EXT = new Set(['.mp3', '.m4a', '.wav', '.aac', '.flac', '.ogg'])
 export function insideDir(dir, p) {
   const r = relative(dir, p)
   return r !== '' && !r.startsWith('..') && !isAbsolute(r)
+}
+
+/** 解析真实路径并确认仍在目录内（同时挡住符号链接逃逸） */
+export function resolveInside(dir, file) {
+  const base = resolve(String(dir || ''))
+  const target = resolve(base, String(file || ''))
+  if (!insideDir(base, target)) return null
+  try {
+    const realBase = realpathSync(base)
+    const realTarget = realpathSync(target)
+    return insideDir(realBase, realTarget) ? realTarget : null
+  } catch {
+    return null
+  }
 }
 
 /** 毫秒 → SRT 时间戳 00:00:01,250 */
@@ -62,16 +76,63 @@ export function parseProbe(stderr) {
   }
 }
 
-function runFfmpeg(bin, args, cwd) {
+export function runFfmpeg(bin, args, cwd, options = {}) {
+  const timeoutMs = Number(options.timeoutMs) || 0
+  const cancelFile = String(options.cancelFile || '')
+  const cancelPollMs = Math.max(20, Number(options.cancelPollMs) || 250)
   return new Promise((done) => {
     let err = ''
+    let settled = false
+    let timer = null
+    let cancelTimer = null
     const p = spawn(bin, args, { cwd, windowsHide: true })
+    const finish = (result) => {
+      if (settled) return
+      settled = true
+      if (timer) clearTimeout(timer)
+      if (cancelTimer) clearInterval(cancelTimer)
+      done(result)
+    }
+    const stop = (code, message) => {
+      try {
+        p.kill()
+      } catch {
+        /* 进程可能已退出 */
+      }
+      finish({ ok: false, code, err: (err ? err + '\n' : '') + message })
+    }
     p.stderr.on('data', (chunk) => {
       err += chunk
       if (err.length > 60000) err = err.slice(-60000)
     })
-    p.on('error', (e) => done({ ok: false, code: -1, err: String((e && e.message) || e) }))
-    p.on('close', (code) => done({ ok: code === 0, code, err }))
+    p.on('error', (e) => finish({ ok: false, code: -1, err: String((e && e.message) || e) }))
+    p.on('close', (code) => {
+      if (settled) return
+      finish({ ok: code === 0, code, err })
+    })
+    if (timeoutMs > 0) {
+      timer = setTimeout(() => stop('TIMEOUT', 'ffmpeg 超过 ' + Math.round(timeoutMs / 1000) + ' 秒，已停止。'), timeoutMs)
+    }
+    if (cancelFile) {
+      if (existsSync(cancelFile)) {
+        try {
+          unlinkSync(cancelFile)
+        } catch {
+          /* 忽略清理失败 */
+        }
+        stop('CANCELLED', '任务已取消。')
+        return
+      }
+      cancelTimer = setInterval(() => {
+        if (!existsSync(cancelFile)) return
+        try {
+          unlinkSync(cancelFile)
+        } catch {
+          /* 忽略清理失败 */
+        }
+        stop('CANCELLED', '任务已取消。')
+      }, cancelPollMs)
+    }
   })
 }
 
@@ -80,6 +141,9 @@ export function apply(ctx, config) {
   const assetsDir = resolve(String(cfg.assetsDir || ''))
   const ffmpeg = String(cfg.ffmpeg || '')
   const allow = Array.isArray(cfg.allowedTools) ? new Set(cfg.allowedTools) : null
+  const timeoutMs = Number(cfg.timeoutMs) || 600000
+  const cancelFile = String(cfg.cancelFile || '')
+  const run = (argv) => runFfmpeg(ffmpeg, argv, assetsDir, { timeoutMs, cancelFile })
 
   const ensure = () => {
     if (!cfg.assetsDir) return '后期引擎未就绪：没有成片目录（先启动一次 J.Co 应用）。'
@@ -87,8 +151,8 @@ export function apply(ctx, config) {
     return ''
   }
   const guard = (file) => {
-    const p = resolve(assetsDir, String(file || ''))
-    if (!insideDir(assetsDir, p) || !existsSync(p)) return null
+    const p = resolveInside(assetsDir, file)
+    if (!p || !existsSync(p)) return null
     return p
   }
   const outName = (base, tag, ext) => base + '-' + tag + '-' + Date.now().toString(36) + '.' + ext
@@ -136,7 +200,7 @@ export function apply(ctx, config) {
     async (args) => {
       const p = guard(args.file)
       if (!p) return '找不到这个文件（必须是成片目录里已有的文件）。'
-      const r = await runFfmpeg(ffmpeg, ['-hide_banner', '-i', basename(p)], assetsDir)
+      const r = await run(['-hide_banner', '-i', basename(p)])
       const info = parseProbe(r.err)
       return JSON.stringify({ file: basename(p), ...info })
     },
@@ -153,7 +217,7 @@ export function apply(ctx, config) {
     async (args) => {
       const p = guard(args.file)
       if (!p) return '找不到这个文件（必须是成片目录里已有的文件）。'
-      const probe = await runFfmpeg(ffmpeg, ['-hide_banner', '-i', basename(p)], assetsDir)
+      const probe = await run(['-hide_banner', '-i', basename(p)])
       const info = parseProbe(probe.err)
       if (!(info.durationSec > 0)) return '读不出这个视频的时长，换个文件试试。'
       const srt = buildSrt(args.lines, info.durationSec)
@@ -169,7 +233,7 @@ export function apply(ctx, config) {
       const argv = ['-hide_banner', '-y', '-i', basename(p), '-vf', vf, '-c:v', 'libx264', '-preset', 'veryfast', '-crf', '20']
       if (info.hasAudio) argv.push('-c:a', 'copy')
       argv.push(out)
-      const r = await runFfmpeg(ffmpeg, argv, assetsDir)
+      const r = await run(argv)
       if (!r.ok) return '加字幕失败：' + r.err.split('\n').slice(-3).join(' ').slice(0, 200)
       return JSON.stringify({ ok: true, output: out, note: '已烧录 ' + (args.lines || []).filter((s) => String(s || '').trim()).length + ' 句字幕' })
     },
@@ -188,7 +252,7 @@ export function apply(ctx, config) {
       const m = guard(args.music)
       if (!p) return '找不到视频文件。'
       if (!m) return '找不到音乐文件（先把音乐导入成片目录）。'
-      const probe = await runFfmpeg(ffmpeg, ['-hide_banner', '-i', basename(p)], assetsDir)
+      const probe = await run(['-hide_banner', '-i', basename(p)])
       const info = parseProbe(probe.err)
       const vol = Math.max(0, Math.min(1, Number(args.volume) || 0.3))
       const base = basename(p, extname(p))
@@ -204,7 +268,7 @@ export function apply(ctx, config) {
         argv.push('-map', '0:v', '-map', '1:a')
       }
       argv.push('-c:v', 'copy', '-c:a', 'aac', '-b:a', '192k', '-shortest', out)
-      const r = await runFfmpeg(ffmpeg, argv, assetsDir)
+      const r = await run(argv)
       if (!r.ok) return '配音乐失败：' + r.err.split('\n').slice(-3).join(' ').slice(0, 200)
       return JSON.stringify({ ok: true, output: out, note: info.hasAudio ? '已混入音乐（保留人声，音乐音量 ' + vol + '）' : '已配上背景音乐' })
     },
@@ -228,7 +292,7 @@ export function apply(ctx, config) {
       if (Number(args.end) > start) argv.push('-t', String(Number(args.end) - start))
       // 重编码裁剪（-c copy 会因关键帧稀疏而裁不准——实测 3s 片只出一个关键帧时整段保留）
       argv.push('-c:v', 'libx264', '-preset', 'veryfast', '-crf', '20', '-c:a', 'aac', out)
-      const r = await runFfmpeg(ffmpeg, argv, assetsDir)
+      const r = await run(argv)
       if (!r.ok) return '裁剪失败：' + r.err.split('\n').slice(-3).join(' ').slice(0, 200)
       return JSON.stringify({ ok: true, output: out, note: '已裁剪 ' + start + 's 起' + (Number(args.end) > start ? ' 到 ' + args.end + 's' : ' 到片尾') })
     },
@@ -248,11 +312,10 @@ export function apply(ctx, config) {
       const listName = 'concat-' + Date.now().toString(36) + '.txt'
       writeFileSync(join(assetsDir, listName), list.map((f) => "file '" + basename(f) + "'").join('\n'), 'utf8')
       // 重编码拼接（比 -c copy 兼容：允许各段编码参数略有差异）
-      const r = await runFfmpeg(
-        ffmpeg,
-        ['-hide_banner', '-y', '-f', 'concat', '-safe', '0', '-i', listName, '-c:v', 'libx264', '-preset', 'veryfast', '-crf', '20', '-c:a', 'aac', out],
-        assetsDir,
-      )
+      const r = await run([
+        '-hide_banner', '-y', '-f', 'concat', '-safe', '0', '-i', listName,
+        '-c:v', 'libx264', '-preset', 'veryfast', '-crf', '20', '-c:a', 'aac', out,
+      ])
       if (!r.ok) return '拼接失败（可能是几段格式不一致）：' + r.err.split('\n').slice(-3).join(' ').slice(0, 200)
       return JSON.stringify({ ok: true, output: out, note: '已接成一条（' + list.length + ' 段）' })
     },

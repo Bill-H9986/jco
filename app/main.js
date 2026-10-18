@@ -222,9 +222,28 @@ function writeEditToolsConfig() {
   try {
     const ffmpegPath = kernelUnpackedPath(String(require('@ffmpeg-installer/ffmpeg').path || ''))
     const file = kernelUnpackedPath(path.join(__dirname, 'kernel', 'edit-tools.json'))
-    fs.writeFileSync(file, JSON.stringify({ assetsDir: assetsDirPath(), ffmpeg: ffmpegPath }), 'utf8')
+    const cancelFile = kernelUnpackedPath(path.join(__dirname, 'kernel', 'edit-tools.cancel'))
+    fs.writeFileSync(
+      file,
+      JSON.stringify({ assetsDir: assetsDirPath(), ffmpeg: ffmpegPath, timeoutMs: 600000, cancelFile }),
+      'utf8',
+    )
   } catch (error) {
     console.warn('[edit] 后期工具配置写入失败：' + String((error && error.message) || error))
+  }
+}
+function requestEditCancel() {
+  try {
+    fs.writeFileSync(kernelUnpackedPath(path.join(__dirname, 'kernel', 'edit-tools.cancel')), 'cancel', 'utf8')
+  } catch (error) {
+    console.warn('[edit] 写入取消标记失败：' + String((error && error.message) || error))
+  }
+}
+function clearEditCancel() {
+  try {
+    fs.rmSync(kernelUnpackedPath(path.join(__dirname, 'kernel', 'edit-tools.cancel')), { force: true })
+  } catch (error) {
+    /* 忽略清理失败 */
   }
 }
 /** 列成片目录（后期页「手头成片」/做视频「手头素材」共用） */
@@ -1463,6 +1482,9 @@ ipcMain.handle('tasks:cancel', (_event, payload) => {
   try {
     const id = String((payload && payload.id) || '')
     const task = workTasks.get(id)
+    if (task && task.type === 'edit') requestEditCancel()
+    const session = taskSessions.get(id)
+    if (session && session.staff === 'post') requestEditCancel()
     if (!task) return { ok: false, code: 'NOT_FOUND', error: '任务不存在' }
     if (task.status === 'done' || task.status === 'cancelled') return { ok: true, task: workTaskView(task) }
     task.status = 'cancelled'
@@ -1545,6 +1567,7 @@ ipcMain.handle('tasks:dispatch', (_event, payload) => {
     const staff = String((payload && payload.staff) || '').slice(0, 20)
     const platform = String((payload && payload.platform) || '').slice(0, 32)
     if (name === '' || prompt === '') return { ok: false, error: '没给任务名或内容' }
+    if (staff === 'post') clearEditCancel()
     const id = 't' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6)
     // 上限保护（对抗审查 R4）：>50 条时清最旧的已完成记录（台账文件保留，内存只留活跃 + 最近）
     if (taskSessions.size > 50) {

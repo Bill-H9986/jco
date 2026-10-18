@@ -91,6 +91,8 @@ function writeEditToolsPatch(profile) {
       '      config:',
       `        assetsDir: '${posix(cfg.assetsDir)}'`,
       `        ffmpeg: '${posix(cfg.ffmpeg)}'`,
+      `        timeoutMs: ${Number(cfg.timeoutMs) || 600000}`,
+      `        cancelFile: '${posix(cfg.cancelFile)}'`,
       '        allowedTools:',
       ...definition.allowedTools.map((tool) => `          - ${tool}`),
       '',
