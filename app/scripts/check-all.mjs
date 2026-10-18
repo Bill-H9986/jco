@@ -158,8 +158,8 @@ function progressChecks() {
     checks.push({
       id: 'visual-regression-all',
       title: '全站关键状态视觉基准',
-      ok: strict ? skeleton && pngs.length >= 17 : skeleton,
-      detail: skeleton ? `骨架就绪；已建立 ${pngs.length} 张基准（目标 ≥ 17）` : '视觉基准骨架缺失',
+      ok: skeleton && pngs.length >= 17,
+      detail: skeleton ? `已建立 ${pngs.length} 张基准（目标 17）` : '视觉基准骨架缺失',
     })
   }
   return checks

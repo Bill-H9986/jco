@@ -1,6 +1,6 @@
-# J.Co 视觉基准骨架
+# J.Co 全站视觉基准
 
-状态：W1-06 已建立消息阅读面和任务详情基准；W5-02 补齐全站关键状态。
+状态：W5-02 已补齐 17 张全站关键状态基准。
 
 ## 运行
 
@@ -9,15 +9,16 @@ cd app
 npm run test:visual
 ```
 
-基准图在 `tests/visual/baseline/`。首次建立或有意更新基准时：
+基准图在 `tests/visual/baseline/`。当前覆盖唯一应用壳、14 个内容页、总管消息面和独立任务详情。首次建立或有意更新基准时：
 
 ```powershell
 $env:JCO_UPDATE_VISUAL = '1'
 npm run test:visual
 ```
 
-当前测试用 Electron `capturePage()` 固定窗口截图，再按 PNG 内容 SHA-256 精确比对；
-这样避开 iframe 字体等待导致的 Playwright 截图超时。
+当前测试用 Electron `capturePage()` 固定窗口截图；全站页用 Sharp 做像素差比对，
+允许 1% 内的抗锯齿噪声；聊天和任务详情继续保留精确 SHA-256 比对。
+这样避开 iframe 字体等待导致的 Playwright 截图超时，也不会把字体亚像素差异误报成 UI 回归。
 
 ## 命名
 
@@ -36,3 +37,23 @@ npm run test:visual
 - 深浅色、窄窗口、长文本、空态、错误态都要有独立基准；
 - 每次 UI 改动先跑视觉回归，再提交；
 - 不接受“看起来没变”作为证据，必须有截图或像素对比结果。
+
+当前基准：
+
+- `shell-light-1440x900.png`
+- `home-light-1440x900.png`
+- `chat-message-light-1440x900.png`
+- `topics-light-1440x900.png`
+- `materials-light-1440x900.png`
+- `scripts-light-1440x900.png`
+- `video-light-1440x900.png`
+- `post-light-1440x900.png`
+- `publish-light-1440x900.png`
+- `ops-light-1440x900.png`
+- `team-light-1440x900.png`
+- `skills-light-1440x900.png`
+- `auto-tasks-light-1440x900.png`
+- `accounts-light-1440x900.png`
+- `settings-light-1440x900.png`
+- `design-system-light-1440x900.png`
+- `task-detail-light-1440x900.png`

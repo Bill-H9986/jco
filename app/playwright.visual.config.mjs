@@ -4,6 +4,8 @@ import { defineConfig } from '@playwright/test'
 // 基准图放 tests/visual/baseline/；命名规则见 tests/visual/README.md。
 export default defineConfig({
   testDir: './tests/visual',
+  globalSetup: './tests/visual/global-setup.mjs',
+  globalTeardown: './tests/visual/global-teardown.mjs',
   timeout: 120_000,
   expect: {
     timeout: 15_000,
