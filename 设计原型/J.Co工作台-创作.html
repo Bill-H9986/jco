@@ -527,7 +527,9 @@
     /** 完事提醒（真：系统通知；可在设置页关掉） */
     function jcoNotifyDone(title, body) {
       try {
-        if (localStorage.getItem('jco-notify-done') === '0') return;
+        var settings = (window.jco && window.jco.settings && window.jco.settings.getSync) ? window.jco.settings.getSync() : null;
+        if (settings && settings.notifyDone === false) return;
+        if (!settings) { try { if (localStorage.getItem('jco-notify-done') === '0') return; } catch (e) {} }
         var sys = (typeof window.jco !== 'undefined' && window.jco && window.jco.sys) ? window.jco.sys : null;
         if (sys && sys.notify) sys.notify({ title: title, body: body });
       } catch (e) {}
@@ -730,7 +732,11 @@
       if (JCO_KERNEL) {
         // 「每步问我」模式：第一次点击先问一句
         let runMode = 'auto';
-        try { runMode = localStorage.getItem('jco-mode-v1') || 'auto'; } catch (e) {}
+        try {
+          const settings = (window.jco && window.jco.settings && window.jco.settings.getSync) ? window.jco.settings.getSync() : null;
+          if (settings && settings.mode) runMode = settings.mode;
+          else runMode = localStorage.getItem('jco-mode-v1') || 'auto';
+        } catch (e) {}
         const rb = document.getElementById('regen');
         if (runMode === 'ask' && rb.dataset.confirm !== '1') {
           rb.dataset.confirm = '1';

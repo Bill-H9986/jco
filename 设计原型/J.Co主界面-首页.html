@@ -404,7 +404,13 @@
     })();
     /* ---------- 干活方式（全自动 / 每步问我）：真存、真显示 ---------- */
     (function modeSwitch() {
-      function getMode() { try { return localStorage.getItem('jco-mode-v1') || 'auto'; } catch (e) { return 'auto'; } }
+      function getMode() {
+        try {
+          const settings = (window.jco && window.jco.settings && window.jco.settings.getSync) ? window.jco.settings.getSync() : null;
+          if (settings && settings.mode) return settings.mode;
+          return localStorage.getItem('jco-mode-v1') || 'auto';
+        } catch (e) { return 'auto'; }
+      }
       const LABEL = { auto: '全自动', ask: '每步问我' };
       const btn = document.getElementById('modePill');
       if (!btn) return;
@@ -429,7 +435,8 @@
           if (b.dataset.m === getMode()) b.classList.add('on');
           b.addEventListener('click', function (ev) {
             ev.stopPropagation();
-            try { localStorage.setItem('jco-mode-v1', b.dataset.m); } catch (err) {}
+            if (window.jco && window.jco.settings && window.jco.settings.save) window.jco.settings.save({ mode: b.dataset.m });
+            else { try { localStorage.setItem('jco-mode-v1', b.dataset.m); } catch (err) {} }
             paint();
             pop.remove();
             showToast('已切换：' + LABEL[b.dataset.m]);

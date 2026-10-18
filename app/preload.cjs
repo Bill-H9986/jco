@@ -202,6 +202,18 @@ contextBridge.exposeInMainWorld('jco', {
   },
   brand: {
     get: () => ipcRenderer.invoke('brand:get'),
+    save: (data) => ipcRenderer.invoke('brand:save', {
+      industry: String((data && data.industry) || ''),
+      audience: String((data && data.audience) || ''),
+      platforms: Array.isArray(data && data.platforms) ? data.platforms.map(String) : [],
+      tone: String((data && data.tone) || ''),
+      forbidden: Array.isArray(data && data.forbidden) ? data.forbidden.map(String) : [],
+    }),
+  },
+  settings: {
+    get: () => ipcRenderer.invoke('settings:get'),
+    getSync: () => ipcRenderer.sendSync('settings:get-sync'),
+    save: (data) => ipcRenderer.invoke('settings:save', data || {}),
   },
   scripts: {
     get: () => ipcRenderer.invoke('scripts:get'),

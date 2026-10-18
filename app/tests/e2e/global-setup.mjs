@@ -21,6 +21,7 @@ export const FILES = [
   'drafts.json',
   'ops.json',
   'accounts.json',
+  'settings.json',
 ]
 export const DIRS = ['task-sessions', 'work-tasks']
 

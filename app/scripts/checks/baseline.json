@@ -1,7 +1,7 @@
 {
   "version": 1,
   "note": "W0-06 存量欠账。只允许删除，不允许新增；新增违规会让 npm run gate 失败。",
-  "generatedAt": "2026-10-18T09:40:56.473Z",
+  "generatedAt": "2026-10-18T10:13:19.456Z",
   "entries": [
     {
       "ruleId": "no-direct-business-localstorage",
@@ -546,12 +546,6 @@
     {
       "ruleId": "no-direct-business-localstorage",
       "file": "设计原型/J.Co设置.html",
-      "fingerprint": "no-direct-business-localstorage|设计原型/J.Co设置.html|localStorage.getItem('jco-assets-dir'|#0",
-      "excerpt": "localStorage.getItem('jco-assets-dir'"
-    },
-    {
-      "ruleId": "no-direct-business-localstorage",
-      "file": "设计原型/J.Co设置.html",
       "fingerprint": "no-direct-business-localstorage|设计原型/J.Co设置.html|localStorage.getItem('jco-chats-v1'|#0",
       "excerpt": "localStorage.getItem('jco-chats-v1'"
     },
@@ -560,12 +554,6 @@
       "file": "设计原型/J.Co设置.html",
       "fingerprint": "no-direct-business-localstorage|设计原型/J.Co设置.html|localStorage.getItem('jco-log-v1'|#0",
       "excerpt": "localStorage.getItem('jco-log-v1'"
-    },
-    {
-      "ruleId": "no-direct-business-localstorage",
-      "file": "设计原型/J.Co设置.html",
-      "fingerprint": "no-direct-business-localstorage|设计原型/J.Co设置.html|localStorage.getItem('jco-mode-v1'|#0",
-      "excerpt": "localStorage.getItem('jco-mode-v1'"
     },
     {
       "ruleId": "no-direct-business-localstorage",
@@ -600,20 +588,8 @@
     {
       "ruleId": "no-direct-business-localstorage",
       "file": "设计原型/J.Co设置.html",
-      "fingerprint": "no-direct-business-localstorage|设计原型/J.Co设置.html|localStorage.setItem('jco-assets-dir'|#0",
-      "excerpt": "localStorage.setItem('jco-assets-dir'"
-    },
-    {
-      "ruleId": "no-direct-business-localstorage",
-      "file": "设计原型/J.Co设置.html",
       "fingerprint": "no-direct-business-localstorage|设计原型/J.Co设置.html|localStorage.setItem('jco-chats-v1'|#0",
       "excerpt": "localStorage.setItem('jco-chats-v1'"
-    },
-    {
-      "ruleId": "no-direct-business-localstorage",
-      "file": "设计原型/J.Co设置.html",
-      "fingerprint": "no-direct-business-localstorage|设计原型/J.Co设置.html|localStorage.setItem('jco-mode-v1'|#0",
-      "excerpt": "localStorage.setItem('jco-mode-v1'"
     },
     {
       "ruleId": "no-direct-business-localstorage",

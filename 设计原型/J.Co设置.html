@@ -153,6 +153,8 @@
 
 .inp:focus { outline: 2px solid transparent; outline-offset: 0; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(0, 128, 255, 0.12); }
 
+.brand-input { width: 280px; }
+
 .f-wrap { position: relative; }
 
 .f-wrap .inp { padding-right: 40px; }
@@ -293,6 +295,35 @@
                   <button data-v="dark"><span class="ti ti-moon"></span>深色</button>
                 </div>
               </div>
+            </div>
+          </div>
+
+          <!-- 品牌档案 -->
+          <div class="grp-title"><span class="ti ti-briefcase"></span>品牌档案</div>
+          <div class="grp-card">
+            <div class="row">
+              <div class="r-main"><div class="r-title">行业 / 赛道</div><div class="r-desc">客户自己定，J.Co 不写死行业；选题、素材、写稿、分镜共用这份档案</div></div>
+              <div class="r-ctl"><input class="inp brand-input" id="brandIndustry" type="text" placeholder="例如：客户所在行业"></div>
+            </div>
+            <div class="row">
+              <div class="r-main"><div class="r-title">核心受众</div><div class="r-desc">这条账号主要说给谁听</div></div>
+              <div class="r-ctl"><input class="inp brand-input" id="brandAudience" type="text" placeholder="例如：上班族、宝妈、初学者"></div>
+            </div>
+            <div class="row">
+              <div class="r-main"><div class="r-title">发布平台</div><div class="r-desc">多个平台用逗号分隔</div></div>
+              <div class="r-ctl"><input class="inp brand-input" id="brandPlatforms" type="text" placeholder="例如：抖音、视频号、小红书"></div>
+            </div>
+            <div class="row">
+              <div class="r-main"><div class="r-title">语气</div><div class="r-desc">AI 说话和写稿的语气</div></div>
+              <div class="r-ctl"><input class="inp brand-input" id="brandTone" type="text" placeholder="例如：直接、专业、亲切"></div>
+            </div>
+            <div class="row">
+              <div class="r-main"><div class="r-title">禁用表达</div><div class="r-desc">多个词用逗号分隔；AI 生成时会避开</div></div>
+              <div class="r-ctl"><input class="inp brand-input" id="brandForbidden" type="text" placeholder="例如：包过、稳赚、绝对"></div>
+            </div>
+            <div class="row">
+              <div class="r-main"><div class="r-title">保存后全站生效</div><div class="r-desc">新打开的选题、素材、文案、做视频页面会读取这份档案</div></div>
+              <div class="r-ctl"><button class="btn-ghost primary" id="btnBrandSave">保存品牌档案</button></div>
             </div>
           </div>
 
@@ -499,6 +530,22 @@
       showToast.timer = setTimeout(() => toastEl.classList.remove('show'), 2800);
     }
 
+    const JCO_SETTINGS = (window.jco && window.jco.settings) ? window.jco.settings : null;
+    let appSettings = { mode: 'auto', notifyDone: true, notifyAuth: true, assetsDir: '' };
+    async function loadAppSettings() {
+      if (!JCO_SETTINGS || !JCO_SETTINGS.get) return appSettings;
+      try {
+        const res = await JCO_SETTINGS.get();
+        if (res && res.ok) appSettings = res;
+      } catch (e) {}
+      return appSettings;
+    }
+    function saveAppSettings(patch) {
+      appSettings = Object.assign({}, appSettings, patch);
+      if (!JCO_SETTINGS || !JCO_SETTINGS.save) return Promise.resolve({ ok: true });
+      return JCO_SETTINGS.save(patch);
+    }
+
     /* 开关 */
     document.querySelectorAll('.tg').forEach((t) => {
       t.addEventListener('click', () => {
@@ -556,33 +603,49 @@
       }
     })();
 
-    /* ---------- 本地偏好开关（真存）：完事提醒 / 账号提醒；发布确认固定开启 ---------- */
-    (function localSwitches() {
-      const LOCAL_TG = { tgNotifyDone: 'jco-notify-done', tgNotifyAuth: 'jco-notify-auth', tgConfirmPublish: 'jco-confirm-publish' };
+    /* ---------- 偏好开关（真存主进程 settings.json）：完事提醒 / 账号提醒；发布确认固定开启 ---------- */
+    const LOCAL_TG = { tgNotifyDone: 'notifyDone', tgNotifyAuth: 'notifyAuth', tgConfirmPublish: 'publishConfirm' };
+    function renderLocalSwitches() {
       Object.entries(LOCAL_TG).forEach(([id, key]) => {
         const el = document.getElementById(id);
         if (!el) return;
-        let on = true;
-        try { on = localStorage.getItem(key) !== '0'; } catch (e) {}
-        if (id === 'tgConfirmPublish') on = true;
-        el.classList.toggle('on', on);
-        el.addEventListener('click', () => {
-          if (id === 'tgConfirmPublish') {
-            el.classList.add('on');
-            showToast('安全红线：发布动作永远由你亲手点，这个开关不能关闭。');
-            return;
-          }
-          const want = !el.classList.contains('on');
-          el.classList.toggle('on');
-          try { localStorage.setItem(key, want ? '1' : '0'); } catch (e) {}
-          const MSG = {
-            tgNotifyDone: want ? '好：活儿干完会弹系统通知叫你。' : '好：不打扰你，干完就在软件里等你。',
-            tgNotifyAuth: want ? '好：有账号掉线马上叫你（接上平台账号后生效）。' : '好：不提醒账号问题。',
-          };
-          showToast(MSG[id] || '已记下。');
-        });
+        if (id === 'tgConfirmPublish') {
+          el.classList.add('on');
+          return;
+        }
+        el.classList.toggle('on', appSettings[key] !== false);
       });
-    })();
+    }
+    Object.entries(LOCAL_TG).forEach(([id, key]) => {
+      const el = document.getElementById(id);
+      if (!el || id === 'tgConfirmPublish') return;
+      el.addEventListener('click', async () => {
+        const want = !el.classList.contains('on');
+        el.classList.toggle('on');
+        await saveAppSettings({ [key]: want });
+        const MSG = {
+          tgNotifyDone: want ? '好：活儿干完会弹系统通知叫你。' : '好：不打扰你，干完就在软件里等你。',
+          tgNotifyAuth: want ? '好：有账号掉线马上叫你（接上平台账号后生效）。' : '好：不提醒账号问题。',
+        };
+        showToast(MSG[id] || '已记下。');
+      });
+    });
+    const confirmPublish = document.getElementById('tgConfirmPublish');
+    if (confirmPublish) {
+      confirmPublish.addEventListener('click', function () {
+        confirmPublish.classList.add('on');
+        showToast('安全红线：发布动作永远由你亲手点，这个开关不能关闭。');
+      });
+    }
+    renderLocalSwitches();
+    void loadAppSettings().then(function () {
+      renderLocalSwitches();
+      const path = document.getElementById('pathText');
+      if (path && appSettings.assetsDir) path.textContent = appSettings.assetsDir;
+      document.querySelectorAll('#segMode button').forEach(function (b) {
+        b.classList.toggle('on', (b.dataset.v === 'auto') === (appSettings.mode === 'auto'));
+      });
+    });
 
     /* 分段选择 */
     document.querySelectorAll('.seg').forEach((seg) => {
@@ -606,16 +669,16 @@
       }
       showToast('（原型示意）正式版会立即把整个应用换成这个主题。');
     });
-    document.getElementById('segMode').addEventListener('click', (e) => {
+    document.getElementById('segMode').addEventListener('click', async (e) => {
       const btn = e.target.closest('button');
       if (!btn) return;
-      try { localStorage.setItem('jco-mode-v1', btn.dataset.v === 'ask' ? 'ask' : 'auto'); } catch (err) {}
+      await saveAppSettings({ mode: btn.dataset.v === 'ask' ? 'ask' : 'auto' });
       showToast(btn.dataset.v === 'ask' ? '好：生成类操作动手前先问一句。' : '好：AI 一路干完再汇报。');
     });
     (function modeInit() {
-      let m = 'auto';
-      try { m = localStorage.getItem('jco-mode-v1') || 'auto'; } catch (err) {}
-      document.querySelectorAll('#segMode button').forEach((b) => b.classList.toggle('on', (b.dataset.v === 'auto') === (m === 'auto')));
+      void loadAppSettings().then(function (saved) {
+        document.querySelectorAll('#segMode button').forEach((b) => b.classList.toggle('on', (b.dataset.v === 'auto') === (saved.mode === 'auto')));
+      });
     })();
 
     /* 按钮 */
@@ -630,16 +693,61 @@
         if (!res || !res.ok) { showToast('没打开选择框：' + ((res && res.error) || '未知错误')); return; }
         if (!res.path) return;
         document.getElementById('pathText').textContent = res.path;
-        try { localStorage.setItem('jco-assets-dir', res.path); } catch (e) {}
+        appSettings.assetsDir = res.path;
         showToast('已保存：生成物会放这里；后期工具下次启动生效。');
       }, () => showToast('没打开选择框，再试一次。'));
     });
     (function pathInit() {
-      try {
-        const saved = localStorage.getItem('jco-assets-dir');
-        if (saved) document.getElementById('pathText').textContent = saved;
-      } catch (e) {}
+      void loadAppSettings().then(function (saved) {
+        if (saved.assetsDir) document.getElementById('pathText').textContent = saved.assetsDir;
+      });
     })();
+
+    /* ---------- BrandProfile（客户自己定行业；保存后新打开的页面读取同一份档案） ---------- */
+    function splitBrandList(value) {
+      return String(value || '').split(/[,，、;；\s]+/).map(function (item) { return item.trim(); }).filter(Boolean);
+    }
+    async function loadBrandProfile() {
+      if (!window.jco || !window.jco.brand || !window.jco.brand.get) return;
+      try {
+        const res = await window.jco.brand.get();
+        const data = (res && res.ok && res.data) || {};
+        document.getElementById('brandIndustry').value = data.industry || '';
+        document.getElementById('brandAudience').value = data.audience || '';
+        document.getElementById('brandPlatforms').value = Array.isArray(data.platforms) ? data.platforms.join('、') : '';
+        document.getElementById('brandTone').value = data.tone || '';
+        document.getElementById('brandForbidden').value = Array.isArray(data.forbidden) ? data.forbidden.join('、') : '';
+      } catch (e) {}
+    }
+    document.getElementById('btnBrandSave').addEventListener('click', async function () {
+      if (!window.jco || !window.jco.brand || !window.jco.brand.save) {
+        showToast('这个功能在桌面应用里可用（浏览器直开是演示模式）。');
+        return;
+      }
+      const payload = {
+        industry: document.getElementById('brandIndustry').value.trim(),
+        audience: document.getElementById('brandAudience').value.trim(),
+        platforms: splitBrandList(document.getElementById('brandPlatforms').value),
+        tone: document.getElementById('brandTone').value.trim(),
+        forbidden: splitBrandList(document.getElementById('brandForbidden').value),
+      };
+      const btn = document.getElementById('btnBrandSave');
+      btn.disabled = true;
+      try {
+        const res = await window.jco.brand.save(payload);
+        if (res && res.ok) {
+          showToast('品牌档案保存好了；新打开的选题、素材、文案和做视频会读这份档案。');
+        } else {
+          showToast('没存上：' + ((res && res.error) || '未知错误'));
+        }
+      } catch (e) {
+        showToast('没存上，再试一次。');
+      } finally {
+        btn.disabled = false;
+      }
+    });
+    void loadBrandProfile();
+
     document.getElementById('btnCleanup').addEventListener('click', () => {
       const sys = (typeof window.jco !== 'undefined' && window.jco && window.jco.sys) ? window.jco.sys : null;
       if (!sys) {

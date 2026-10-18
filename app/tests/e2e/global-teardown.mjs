@@ -19,6 +19,7 @@ const FILES = [
   'drafts.json',
   'ops.json',
   'accounts.json',
+  'settings.json',
 ]
 const DIRS = ['task-sessions', 'work-tasks']
 

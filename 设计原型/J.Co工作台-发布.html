@@ -527,7 +527,9 @@
         } catch (err) {}
         try {
           const sys = window.jco && window.jco.sys;
-          if (sys && sys.notify && localStorage.getItem('jco-notify-done') !== '0') sys.notify({ title: '封面画好了', body: '回发布页看一眼' });
+          const settings = window.jco && window.jco.settings && window.jco.settings.getSync ? window.jco.settings.getSync() : null;
+          const allowed = settings ? settings.notifyDone !== false : localStorage.getItem('jco-notify-done') !== '0';
+          if (sys && sys.notify && allowed) sys.notify({ title: '封面画好了', body: '回发布页看一眼' });
         } catch (err) {}
         showToast('封面出来了，看看行不行。');
       } else {

@@ -10,9 +10,9 @@ const ENTRY = 'J.Co应用壳.html' // 应用壳（M10 前端一壳化）：侧�
 
 // ---------- 应用级设置（主进程持有：主题偏好等；开机启动由系统记录） ----------
 // 打包版：设置写入用户数据目录（安装目录只读）；开发版：沿用工程内文件
-const SETTINGS_PATH = app.isPackaged
-  ? path.join(app.getPath('userData'), 'settings.json')
-  : path.join(__dirname, 'settings.json')
+const SETTINGS_PATH = process.argv.includes('--jco-test')
+  ? path.join(app.getPath('temp'), 'jco-test-kernel-data', 'settings.json')
+  : (app.isPackaged ? path.join(app.getPath('userData'), 'settings.json') : path.join(__dirname, 'settings.json'))
 function readSettings() {
   try { return JSON.parse(fs.readFileSync(SETTINGS_PATH, 'utf8')) } catch (e) { return {} }
 }
@@ -21,6 +21,29 @@ function writeSettings(patch) {
   try { fs.writeFileSync(SETTINGS_PATH, JSON.stringify(next, null, 2)) } catch (e) {}
   return next
 }
+function settingsView() {
+  const saved = readSettings()
+  return {
+    theme: saved.theme || 'system',
+    tray: saved.tray === true,
+    mode: saved.mode === 'ask' ? 'ask' : 'auto',
+    notifyDone: saved.notifyDone !== false,
+    notifyAuth: saved.notifyAuth !== false,
+    assetsDir: saved.assetsDir || assetsDirPath(),
+  }
+}
+ipcMain.handle('settings:get', () => ({ ok: true, ...settingsView() }))
+ipcMain.on('settings:get-sync', (event) => {
+  event.returnValue = { ok: true, ...settingsView() }
+})
+ipcMain.handle('settings:save', (_event, patch) => {
+  const safe = {}
+  if (patch && (patch.mode === 'auto' || patch.mode === 'ask')) safe.mode = patch.mode
+  if (patch && typeof patch.notifyDone === 'boolean') safe.notifyDone = patch.notifyDone
+  if (patch && typeof patch.notifyAuth === 'boolean') safe.notifyAuth = patch.notifyAuth
+  writeSettings(safe)
+  return { ok: true, ...settingsView() }
+})
 
 // 主题覆盖表：渲染器的 prefers-color-scheme 未必跟随 themeSource（Electron 44 实测），
 // 所以真切换用"主进程注入变量覆盖 CSS"实现；system 模式移除注入、回归系统媒体查询。
@@ -694,13 +717,36 @@ function writeTopics(data) {
   fs.renameSync(temp, TOPICS_FILE)
   return normalized
 }
+function normalizeBrandProfile(input) {
+  const data = input && typeof input === 'object' ? input : {}
+  const platforms = Array.isArray(data.platforms)
+    ? [...new Set(data.platforms.map((item) => String(item || '').trim()).filter(Boolean))].slice(0, 10)
+    : []
+  const forbidden = Array.isArray(data.forbidden)
+    ? [...new Set(data.forbidden.map((item) => String(item || '').trim()).filter(Boolean))].slice(0, 20)
+    : []
+  return {
+    industry: String(data.industry || '').trim().slice(0, 100),
+    audience: String(data.audience || '').trim().slice(0, 200),
+    platforms,
+    tone: String(data.tone || '').trim().slice(0, 100),
+    forbidden,
+  }
+}
 function readBrandProfile() {
   try {
-    const data = JSON.parse(fs.readFileSync(BRAND_PROFILE_FILE, 'utf8'))
-    return data && typeof data === 'object' ? data : {}
+    return normalizeBrandProfile(JSON.parse(fs.readFileSync(BRAND_PROFILE_FILE, 'utf8')))
   } catch (error) {
     return {}
   }
+}
+function writeBrandProfile(input) {
+  const normalized = normalizeBrandProfile(input)
+  fs.mkdirSync(path.dirname(BRAND_PROFILE_FILE), { recursive: true })
+  const temp = BRAND_PROFILE_FILE + '.tmp-' + process.pid
+  fs.writeFileSync(temp, JSON.stringify(normalized, null, 2), 'utf8')
+  fs.renameSync(temp, BRAND_PROFILE_FILE)
+  return normalized
 }
 function emptyMaterials() {
   return { version: 1, items: [] }
@@ -1068,6 +1114,13 @@ ipcMain.handle('materials:migrate', (_event, payload) => {
   }
 })
 ipcMain.handle('brand:get', () => ({ ok: true, data: readBrandProfile() }))
+ipcMain.handle('brand:save', (_event, payload) => {
+  try {
+    return { ok: true, data: writeBrandProfile(payload || {}) }
+  } catch (error) {
+    return { ok: false, error: String((error && error.message) || error) }
+  }
+})
 ipcMain.handle('scripts:get', () => ({ ok: true, data: readScripts() }))
 ipcMain.handle('scripts:save', (_event, payload) => {
   try {
