@@ -16,6 +16,7 @@ export default defineConfig({
   retries: 0,
   workers: 1,
   reporter: [['list']],
+  snapshotPathTemplate: '{testDir}/baseline/{arg}{ext}',
   use: {
     viewport: { width: 1440, height: 900 },
     colorScheme: 'light',

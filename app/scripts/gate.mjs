@@ -20,6 +20,11 @@ const steps = [
   { name: 'OWASP 安全门 (Security Gate)', cmd: 'node', args: ['scripts/security-gate.mjs'] },
   { name: 'Agent Eval', cmd: 'node', args: ['scripts/run-agent-eval.mjs', '--ci'] },
   { name: '全站一致性审计 (Frontend Audit)', cmd: 'node', args: ['scripts/audit-frontend.mjs'] },
+  {
+    name: 'Wave 1 视觉基准 (Visual Regression)',
+    cmd: 'npx',
+    args: ['playwright', 'test', '-c', 'playwright.visual.config.mjs'],
+  },
   { name: '端到端回归 (Playwright)', cmd: 'npx', args: ['playwright', 'test'] },
 ]
 
