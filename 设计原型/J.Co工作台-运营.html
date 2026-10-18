@@ -273,7 +273,7 @@
       </nav>
       <button class="group-label" type="button"><span class="ti ti-messages"></span>对话<span class="ti ti-chevron-down"></span></button>
       <div class="convos">
-        <button class="convo"><span class="name">暑期招生 · 今日发布</span></button>
+        <button class="convo"><span class="name">示例项目 · 今日发布</span></button>
         <button class="convo"><span class="name">评论跟进（5 条）</span></button>
         <button class="convo"><span class="name">上周数据复盘</span></button>
         <button class="convo"><span class="name">引流名单 · 待跟进</span></button>
@@ -333,7 +333,7 @@
             <span class="ibadge ti ti-sparkles"></span>
             <div>
               <h3 id="insightTitle">昨晚那条，是你平常播放的 8 倍</h3>
-              <p id="insightText">《成人高考报名其实就 3 步》播放 5.2 万，还带来 41 个粉丝、6 条咨询。AI 拆出来的原因：「3 步」给的是确定感，「不踩坑」戳的是怕麻烦。这两个词，就是你的流量密码。</p>
+              <p id="insightText">《把一件事讲清楚，其实就 3 步》播放 5.2 万，还带来 41 个粉丝、6 条咨询。AI 拆出来的原因：「3 步」给的是确定感，「不踩坑」戳的是怕麻烦。这两个词，就是你的流量密码。</p>
               <div class="acts">
                 <button class="btn-sm" id="insightGo">照这个套路再做一条<span class="ti ti-arrow-right"></span></button>
                 <button class="btn-sm ghost2" id="insightMore">看完整分析</button>
@@ -396,12 +396,12 @@
     const COMMENTS = [
       {
         id: 'c1', logo: 'xhs', ch: '红', pfName: '小红书', user: '美好明天',
-        from: '《成人高考 3 步》下面的评论',
-        text: '成人高考真的只要 3 步吗？我初中毕业能报吗',
+        from: '《三步讲清楚》下面的评论',
+        text: '真的只要 3 步吗？我这种情况能行吗',
         alts: [
-          '可以报的，年满 18 岁就能报高起专，初中学历没问题。我把报名要准备的材料整理给你呀。',
+          '可以的，先把条件和流程说清楚。我把需要准备的材料整理给你。',
           '能报。初中毕业符合高起专的条件。要准备的材料我发你一份，照着弄就行。',
-          '可以呀，只要你年满 18 岁、有初中毕业证就能报。我把「报名材料清单」发给你？'
+          '可以呀，先把条件和流程说清楚。我把「准备材料清单」发给你？'
         ]
       },
       {
@@ -416,12 +416,12 @@
       },
       {
         id: 'c3', logo: 'sph', ch: '视', pfName: '视频号', user: '王妈妈',
-        from: '《成人高考 3 步》下面的评论',
+        from: '《三步讲清楚》下面的评论',
         text: '我儿子高二，现在准备是不是太早了？'
       , alts: [
-          '不早啦。高二先把路子了解清楚，高三报名的时候就不慌。我发你一份时间表，顺着走就行。',
-          '正合适。提前了解在前，报名的时候就不手忙脚乱。时间表我发你，看一眼就明白了。',
-          '现在了解刚刚好。我把「从高二到报名」的时间表整理给你，照着安排就行。'
+          '不早啦。先把路径了解清楚，真正开始的时候就不慌。我发你一份时间表，顺着走就行。',
+          '正合适。提前了解在前，真正开始的时候就不手忙脚乱。时间表我发你，看一眼就明白了。',
+          '现在了解刚刚好。我把从了解到行动的时间表整理给你，照着安排就行。'
         ]
       }
     ];
@@ -484,9 +484,9 @@
     const LEADS = [
       {
         id: 'l1', name: '刘姐', note: '孩子高二', ava: '刘',
-        from: '从《成人高考 3 步》小红书评论来的',
+        from: '从《三步讲清楚》小红书评论来的',
         stage: '已加微信', stageCls: 'blue',
-        next: '把报名要准备的材料发给她'
+        next: '把准备材料发给她'
       },
       {
         id: 'l2', name: '阿凯', note: '', ava: '凯',
@@ -498,7 +498,7 @@
         id: 'l3', name: '陈叔', note: '', ava: '陈',
         from: '从视频号评论来的',
         stage: '刚打招呼', stageCls: '',
-        next: '先发自我介绍和学员案例'
+        next: '先发自我介绍和用户案例'
       }
     ];
 
@@ -537,9 +537,9 @@
 
     /* ---------- 内容计划 ---------- */
     const PLANS = [
-      { when: '周一 19:30', title: '《初中学历提升的 3 条路，哪条最省事》', state: '待拍', cls: '' },
-      { when: '周三 19:30', title: '《报名材料清单，照着准备就行》', state: '文案中', cls: 'making' },
-      { when: '周五 19:30', title: '《学员真实经历：38 岁也能报》', state: '待剪', cls: '' }
+      { when: '周一 19:30', title: '《同一件事的 3 条路，哪条最省事》', state: '待拍', cls: '' },
+      { when: '周三 19:30', title: '《准备材料清单，照着准备就行》', state: '文案中', cls: 'making' },
+      { when: '周五 19:30', title: '《用户真实经历：38 岁也能开始》', state: '待剪', cls: '' }
     ];
 
     function renderPlans() {
@@ -589,7 +589,7 @@
         if (m < 60) return m + ' 分钟前更新';
         return Math.floor(m / 60) + ' 小时前更新';
       }
-      var LEAD_WORDS = /(报名|多少钱|费用|学费|怎么联系|想学|咨询|加微信|私信|了解)/;
+      var LEAD_WORDS = /(想了解|多少钱|价格|费用|预算|怎么联系|想学|咨询|加微信|私信|了解|预约|参与)/;
 
       function demoHints() {
         $('reportHint').textContent = '演示数据 · 点「马上跑」让 AI 去取真数据';
@@ -668,7 +668,7 @@
           el.id = 'lead-real-' + idx;
           el.innerHTML =
             '<div class="lava">' + esc(String(c.author || '客').slice(0, 1)) + '</div>' +
-            '<div class="lm"><div class="lname">' + esc(c.author) + '<span class="lnote">有报名意向</span></div>' +
+            '<div class="lm"><div class="lname">' + esc(c.author) + '<span class="lnote">有参与意向</span></div>' +
             '<div class="lfrom">从抖音评论识别：「' + esc(String(c.text || '').slice(0, 40)) + '」</div>' +
             '<div class="lnext"><span>下一步：<b>回复引导到私信，先发材料清单</b></span>' +
             '<span class="actions"><button class="linkbtn act-follow"><span class="ti ti-check"></span>标记已跟进</button></span>' +
@@ -785,7 +785,7 @@
         btn.addEventListener('click', function () { panel.hidden = !panel.hidden; });
         if (fold) fold.addEventListener('click', function () { panel.hidden = true; });
         var FIXED = {
-          '这条视频数据怎么样？': '《成人高考报名其实就 3 步》实时数据：播放 <b>5.2 万</b>（还在涨）、点赞 3,180、评论 57、带来咨询 6 条。比你的平均表现高 <b>8 倍</b>。',
+          '这条视频数据怎么样？': '《把一件事讲清楚，其实就 3 步》实时数据：播放 <b>5.2 万</b>（还在涨）、点赞 3,180、评论 57、带来咨询 6 条。比你的平均表现高 <b>8 倍</b>。',
           '今天还剩什么事？': '还有 3 件在你手上：2 条视频等你过目、8 条评论等你放行、19:30 的发布等你确认。都排好了，你点头就行。',
           '评论有什么动静？': '新评论 6 条：2 条问价格（我拟好引导话术了），3 条夸的，1 条问「初中能不能报」。建议你亲自回，这种最容易成。'
         };

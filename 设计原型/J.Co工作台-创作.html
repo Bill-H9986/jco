@@ -268,7 +268,7 @@
       </nav>
       <button class="group-label" type="button"><span class="ti ti-messages"></span>对话<span class="ti ti-chevron-down"></span></button>
       <div class="convos">
-        <button class="convo"><span class="name">暑期招生 · 今日发布</span></button>
+        <button class="convo"><span class="name">示例项目 · 今日发布</span></button>
         <button class="convo"><span class="name">评论跟进（5 条）</span></button>
         <button class="convo"><span class="name">上周数据复盘</span></button>
         <button class="convo"><span class="name">引流名单 · 待跟进</span></button>
@@ -298,8 +298,8 @@
 
           <div class="from">
             <span class="ti ti-bulb"></span>
-            <span>正在写：<b id="topicName">《成人高考报名其实就 3 步，看完不踩坑》</b></span>
-            <span class="src" id="topicSrc">这条主题是<b>你选的</b>（来自「选题」） · 结构学自 <em>@学历规划王老师</em> 的爆款</span>
+            <span>正在写：<b id="topicName">《把一件事讲清楚，其实就 3 步》</b></span>
+            <span class="src" id="topicSrc">这条主题是<b>你选的</b>（来自「选题」） · 结构学自 <em>@示例账号</em> 的爆款</span>
             <span class="btns">
               <button class="ghost mini" onclick="changeTopic()">换主题</button>
               <button class="ghost mini" onclick="openOwn()">自己出题</button>
@@ -310,7 +310,7 @@
             <div class="paper anim">
               <div class="paper-top">
                 <div>
-                  <div class="ptitle" id="paperTitle">成人高考报名其实就 3 步，看完不踩坑</div>
+                  <div class="ptitle" id="paperTitle">把一件事讲清楚，其实就 3 步</div>
                   <div class="checks" id="checks">
                     <span class="check">钩子有力</span>
                     <span class="check">节奏顺</span>
@@ -332,7 +332,7 @@
               <h3>写法设定</h3>
               <div class="set-field">
                 <label>形态</label>
-                <div class="static-val">口播稿 · 教育知识类</div>
+                <div class="static-val">口播稿 · 知识分享类</div>
               </div>
               <div class="set-field">
                 <label>开头吸引力</label>
@@ -416,7 +416,7 @@
     <div class="sheet" role="dialog" aria-label="自己出题">
       <h3>自己出题</h3>
       <div class="sub">你想写什么，直接说。AI 只管写，题由你定。</div>
-      <div class="field"><input id="ownInp" placeholder="例如：讲讲我们学员暑期班报名后的真实变化"></div>
+      <div class="field"><input id="ownInp" placeholder="例如：讲讲用户使用前后的真实变化"></div>
       <div class="foot">
         <button class="ghost" onclick="closeOwn()">取消</button>
         <button class="go-btn sm" onclick="ownGo()">开始写</button>
@@ -431,38 +431,38 @@
         kind: 'koubo-a',
         lines: [
           '别被网上那些流程吓到。',
-          '成人高考报名，其实就三步，两分钟讲完。',
+          '把一件事讲清楚，其实就三步，两分钟讲完。',
           '第一步，定学校和专业。这个最花时间，今天就能定下来。',
-          '第二步，备齐三样东西。身份证、学历证明、两寸照片。',
+          '第二步，备齐三样东西。身份证明、相关材料、两寸照片。',
           '第三步，网上填报。十分钟的事，别拖到最后一天。',
-          '对了，今年报名截止比往年早半个月。',
+          '对了，这次的活动截止比往年早半个月。',
           '想报的抓紧，错过真的要再等一年。',
-          '我是 J.Co，帮你把学历这事儿整明白。',
+          '我是 J.Co，帮你把这件事整明白。',
         ],
       },
       {
         kind: 'koubo-b',
         lines: [
-          '去年有个学员，就晚了三天。',
-          '报名通道一关，整整多等了一年。',
-          '成人高考报名，其实就三步。',
+          '去年有个人，就晚了三天。',
+          '窗口一关，整整多等了一年。',
+          '把一件事讲清楚，其实就三步。',
           '第一步，定学校和专业。今天就能定，别在这卡住。',
-          '第二步，备齐三样东西。身份证、学历证明、两寸照片。',
+          '第二步，备齐三样东西。身份证明、相关材料、两寸照片。',
           '第三步，网上填报。十分钟的事，当天就能搞定。',
           '今年截止时间比往年早半个月，现在就去看你省里的公告。',
-          '我是 J.Co，帮你把学历的事儿整明白。',
+          '我是 J.Co，帮你把这件事整明白。',
         ],
       },
       {
         kind: 'xhs',
         lines: [
-          '成人高考报名，其实就 3 步（避坑版）',
+          '把一件事讲清楚，其实就 3 步（避坑版）',
           '',
-          '大家好，最近被问爆了：报名麻烦吗？',
+          '大家好，最近被问爆了：参与麻烦吗？',
           '不麻烦，就 3 步：',
           '',
           '第 1 步：定学校和专业，今天就能定',
-          '第 2 步：备齐身份证、学历证明、照片',
+          '第 2 步：备齐身份证明、相关材料、照片',
           '第 3 步：网上填报，10 分钟搞定',
           '',
           '提醒：今年截止比往年早半个月，别再拖',
@@ -481,7 +481,7 @@
     /* ---------- 真内核模式（桌面应用里启用；浏览器直开保持演示） ---------- */
     const JCO_KERNEL = (typeof window.jco !== 'undefined' && window.jco && window.jco.kernel) ? window.jco.kernel : null;
     const GEN_SYSTEM = [
-      '你是「J.Co」自媒体工作台里的文案写手，服务成人学历提升赛道（成人高考/自考/开放大学）的短视频口播稿与小红书图文。',
+      '你是「J.Co」自媒体工作台里的文案写手，服务通用自媒体创作者的短视频口播稿与小红书图文；具体行业、受众、平台由品牌档案决定。',
       '规则：',
       '- 简体中文，口语化，像真人对着镜头说话；自然、有信息量，避免书面腔和 AI 套话（如"在这个快节奏的时代"）。',
       '- 直接输出稿子正文；每句话单独一行；不要解释、不要标题、不要序号、不要 markdown 符号、不要引号包裹。',
@@ -716,7 +716,7 @@
       if (xhsMode) { showToast('小红书版也能重新生成。原型里先切回口播稿看看。'); xhsMode = false; }
       vIndex = (vIndex + 1) % 2;
       paint(VERSIONS[vIndex]);
-      showToast(vIndex === 1 ? '换了一版：开头换成"学员故事"，更抓人。' : '换回上一版：平实的讲法。');
+      showToast(vIndex === 1 ? '换了一版：开头换成"用户故事"，更抓人。' : '换回上一版：平实的讲法。');
     });
 
     function toXhs() {
@@ -728,7 +728,7 @@
       if (xhsMode) { showToast('已经是小红书版了。'); return; }
       xhsMode = true;
       paint(VERSIONS[2]);
-      paperTitle.textContent = '成人高考报名三步走（小红书图文版）';
+      paperTitle.textContent = '把一件事讲清楚三步走（小红书图文版）';
       showToast('已改成小红书版：短句、换行、结尾引导评论。');
     }
 
@@ -762,7 +762,7 @@
 
     /* ---------- 主题由用户定：换主题 / 自己出题 ---------- */
     const TOPICS = [
-      { name: '《成人高考报名其实就 3 步，看完不踩坑》', src: '这条主题来自「选题」· 挑一个直接开写' },
+      { name: '《把一件事讲清楚，其实就 3 步》', src: '这条主题来自「选题」· 挑一个直接开写' },
       { name: '《32 岁宝妈 6 个月拿下大专文凭，她只做了 3 件事》', src: '这条主题来自「选题」· 挑一个直接开写' },
     ];
     let topicIndex = 0;
@@ -899,7 +899,7 @@
         btn.addEventListener('click', function () { panel.hidden = !panel.hidden; });
         if (fold) fold.addEventListener('click', function () { panel.hidden = true; });
         var FIXED = {
-          '这条视频数据怎么样？': '《成人高考报名其实就 3 步》实时数据：播放 <b>5.2 万</b>（还在涨）、点赞 3,180、评论 57、带来咨询 6 条。比你的平均表现高 <b>8 倍</b>。',
+          '这条视频数据怎么样？': '《把一件事讲清楚，其实就 3 步》实时数据：播放 <b>5.2 万</b>（还在涨）、点赞 3,180、评论 57、带来咨询 6 条。比你的平均表现高 <b>8 倍</b>。',
           '今天还剩什么事？': '还有 3 件在你手上：2 条视频等你过目、8 条评论等你放行、19:30 的发布等你确认。都排好了，你点头就行。',
           '评论有什么动静？': '新评论 6 条：2 条问价格（我拟好引导话术了），3 条夸的，1 条问「初中能不能报」。建议你亲自回，这种最容易成。'
         };

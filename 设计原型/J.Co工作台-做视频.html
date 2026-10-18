@@ -651,7 +651,7 @@
       </nav>
       <button class="group-label" type="button"><span class="ti ti-messages"></span>对话<span class="ti ti-chevron-down"></span></button>
       <div class="convos">
-        <button class="convo"><span class="name">暑期招生 · 今日发布</span></button>
+        <button class="convo"><span class="name">示例项目 · 今日发布</span></button>
         <button class="convo"><span class="name">评论跟进（5 条）</span></button>
         <button class="convo"><span class="name">上周数据复盘</span></button>
         <button class="convo"><span class="name">引流名单 · 待跟进</span></button>
@@ -717,7 +717,7 @@
                 </div>
                 <div class="fix-bar">
                   <span class="ti ti-wand"></span>
-                  <input id="fixInp" placeholder="对哪里不满意，直接说：第 3 段换画面 / 配音换男声 / 结尾加一句找我报名">
+                  <input id="fixInp" placeholder="对哪里不满意，直接说：第 3 段换画面 / 配音换男声 / 结尾加一句找我咨询">
                   <button class="ghost" onclick="fixGo()">按我说的改</button>
                 </div>
               </div>
@@ -763,7 +763,7 @@
       </div>
       <div class="pinbar">
         <section class="ask">
-          <textarea id="askInp" rows="2" placeholder="说说你的创作想法，也可以选素材或参考（比如：把稿子做成口播视频，用学员采访画面）"></textarea>
+          <textarea id="askInp" rows="2" placeholder="说说你的创作想法，也可以选素材或参考（比如：把稿子做成口播视频，用用户采访画面）"></textarea>
           <div class="ask-bar">
             <div class="left">
               <button class="tool" onclick="location.href='J.Co工作台-素材.html'"><span class="ti ti-plus"></span>素材</button>
@@ -911,17 +911,17 @@
     const SKILLS = loadMakeVideoSkills();
 
     const TEMPLATES = [
-      { icon: 'ti-file-text', nm: '政策解读', ds: '新规出来，第一时间讲清楚', fill: '做一条政策解读视频：把最新的成人学历改革讲清楚' },
-      { icon: 'ti-users-group', nm: '学员故事', ds: '真实学员的逆袭，最打动人', fill: '做一条学员故事视频：32 岁宝妈 6 个月拿证的故事' },
-      { icon: 'ti-bulb', nm: '避坑指南', ds: '这几种说法别信，信任感拉满', fill: '做一条避坑视频：学历提升里最常见的 4 个坑' },
-      { icon: 'ti-chart-bar', nm: '对比测评', ds: '两种方式怎么选，一条讲完', fill: '做一条对比视频：自考和成考到底怎么选' },
+      { icon: 'ti-file-text', nm: '政策解读', ds: '新规出来，第一时间讲清楚', fill: '做一条政策解读视频：把最新的变化讲清楚' },
+      { icon: 'ti-users-group', nm: '用户故事', ds: '真实用户的改变，最打动人', fill: '做一条用户故事视频：32 岁宝妈 6 个月完成转变的故事' },
+      { icon: 'ti-bulb', nm: '避坑指南', ds: '这几种说法别信，信任感拉满', fill: '做一条避坑视频：这件事里最常见的 4 个坑' },
+      { icon: 'ti-chart-bar', nm: '对比测评', ds: '两种方式怎么选，一条讲完', fill: '做一条对比视频：两种方案到底怎么选' },
     ];
 
     /* ================= 渲染 ================= */
     const TYPE_DEFAULT_RATIO = { video: '9:16', image: '3:4' };
     const HINTS = { video: '说说你想做什么', image: '说说你要什么图' };
     const PLACEHOLDERS = {
-      video: '说说你的创作想法，也可以选素材或参考（比如：把稿子做成口播视频，用学员采访画面）',
+      video: '说说你的创作想法，也可以选素材或参考（比如：把稿子做成口播视频，用用户采访画面）',
       image: '比如：给这篇稿子配 3 张小红书风格的图',
     };
 
@@ -1032,7 +1032,7 @@
       let t = null;
       try { t = sessionStorage.getItem('jco-make-topic'); if (t) sessionStorage.removeItem('jco-make-topic'); } catch (e) {}
       if (t) {
-        askInp.value = '把《' + t + '》做成口播短视频，用学员采访和校区实拍画面';
+        askInp.value = '把《' + t + '》做成口播短视频，用用户采访和真实场景画面';
         inputChanged();
         askInp.focus();
         showToast('从选题带过来的，确认一下想法就能开做。');
@@ -1170,15 +1170,15 @@
 
     const SHOT_LINES = [
       '别被网上那些流程吓到。',
-      '成人高考报名，其实就三步，两分钟讲完。',
+      '把一件事讲清楚，其实就三步，两分钟讲完。',
       '第一步，定学校和专业。这个最花时间，今天就能定下来。',
-      '第二步，备齐三样东西。身份证、学历证明、两寸照片。',
+      '第二步，备齐三样东西。身份证明、相关材料、两寸照片。',
       '第三步，网上填报。十分钟的事，别拖到最后一天。',
-      '对了，今年报名截止比往年早半个月。',
+      '对了，这次的活动截止比往年早半个月。',
       '想报的抓紧，错过真的要再等一年。',
-      '我是 J.Co，帮你把学历的事儿整明白。',
+      '我是 J.Co，帮你把这件事整明白。',
     ];
-    const PIC_POOL = ['学员采访片段·小李', '校区教室实拍', '城市清晨空镜', '学员采访片段·王姐', '办公室学习场景', '备考桌上书本', '证书阶梯背景', '老师讲课花絮'];
+    const PIC_POOL = ['用户采访片段·小李', '真实场景实拍', '城市清晨空镜', '用户采访片段·王姐', '办公室学习场景', '工作桌上资料', '成果展示背景', '讲解花絮'];
     const SHOT_DUR = ['4 秒', '5 秒', '6 秒', '6 秒', '5 秒', '5 秒', '5 秒', '4 秒'];
 
     let genTimer = null;
@@ -1325,7 +1325,7 @@
         $('donePhoneTxt').textContent = d.ratio + ' · ' + d.duration;
         const isLong = d.duration === '3 分钟' || d.duration === '5 分钟';
         const shotCount = Array.isArray(d.shots) && d.shots.length > 0 ? d.shots.length : 8;
-        const titleText = d.idea && d.idea.length <= 28 ? d.idea : '《成人高考报名其实就 3 步，看完不踩坑》' + (isLong ? '（长视频版）' : '');
+        const titleText = d.idea && d.idea.length <= 28 ? d.idea : '《把一件事讲清楚，其实就 3 步》' + (isLong ? '（长视频版）' : '');
         $('doneTitle').textContent = titleText;
         const voiceTxt = d.method === 'assemble' ? (' · AI 配音（' + d.voice + '）') : '';
         $('doneMeta').textContent = d.ratio + ' · ' + d.res + ' · ' + d.duration + voiceTxt + ' · 共 ' + shotCount + ' 段 · 每一段都能看、能换';
@@ -1456,11 +1456,11 @@
         '我要做一条' + (isLong ? '长' : '短') + '视频：' + idea,
         '比例 ' + state.ratio + '，时长目标 ' + state.duration + '，清晰度 ' + state.res + '。',
         isLong ? '给我 12~16 个镜头的分镜。' : '给我 8~12 个镜头的分镜。',
-        '输出一个 JSON 数组（不要 markdown 代码块、不要解释），每个元素形如：{"line":"这一句台词，口语、一句话","pic":"这个镜头的画面描述，简短，比如 学员采访片段·小李"}',
+        '输出一个 JSON 数组（不要 markdown 代码块、不要解释），每个元素形如：{"line":"这一句台词，口语、一句话","pic":"这个镜头的画面描述，简短，比如 用户采访片段·小李"}',
       ].join('\n');
       const res = await Promise.race([
         JCO_KERNEL.task({
-          system: '你是短视频分镜师，服务成人学历提升招生赛道（成人高考/自考）。只输出 JSON 数组。',
+          system: '你是短视频分镜师，服务通用自媒体创作者；行业、受众、平台由品牌档案决定。只输出 JSON 数组。',
           input: input,
         }),
         new Promise((resolve) => setTimeout(() => resolve({ ok: false, error: '这次想太久了（超过 100 秒），再点一次试试。' }), 100000)),
@@ -1507,7 +1507,7 @@
       try {
         const planRes = await JCO_KERNEL.task({
           system: '你是短视频画面策划，只输出画面描述行，不要解释。',
-          input: '视频想法：' + idea + '\n为这条视频设计 ' + wanted + ' 个镜头的画面（' + ratioWord + '，成人学历提升主题），每行一条简短描述，不要序号。',
+          input: '视频想法：' + idea + '\n为这条视频设计 ' + wanted + ' 个镜头的画面（' + ratioWord + '，当前品牌主题），每行一条简短描述，不要序号。',
         })
         if (planRes && planRes.ok && planRes.text) prompts = cleanLines(planRes.text).filter((l) => l.length > 3).slice(0, wanted)
       } catch (e) {}
@@ -1894,7 +1894,7 @@
     async function ibFix() {
       if (!selRect) { showToast('先在图上拖住鼠标，框住要改的地方'); return; }
       const v = $('ibFixInp').value.trim();
-      if (!v) { showToast('说一句把这块改成什么，比如：换成“暑期班招生”'); return; }
+      if (!v) { showToast('说一句把这块改成什么，比如：换成“新的项目名称”'); return; }
       $('ibFixInp').value = '';
       const sel = $('ibSel');
       if (!JCO_KERNEL || !currentDraft || !Array.isArray(currentDraft.images) || currentDraft.images.length === 0) {
@@ -2008,7 +2008,7 @@
         btn.addEventListener('click', function () { panel.hidden = !panel.hidden; });
         if (fold) fold.addEventListener('click', function () { panel.hidden = true; });
         var FIXED = {
-          '这条视频数据怎么样？': '《成人高考报名其实就 3 步》实时数据：播放 <b>5.2 万</b>（还在涨）、点赞 3,180、评论 57、带来咨询 6 条。比你的平均表现高 <b>8 倍</b>。',
+          '这条视频数据怎么样？': '《把一件事讲清楚，其实就 3 步》实时数据：播放 <b>5.2 万</b>（还在涨）、点赞 3,180、评论 57、带来咨询 6 条。比你的平均表现高 <b>8 倍</b>。',
           '今天还剩什么事？': '还有 3 件在你手上：2 条视频等你过目、8 条评论等你放行、19:30 的发布等你确认。都排好了，你点头就行。',
           '评论有什么动静？': '新评论 6 条：2 条问价格（我拟好引导话术了），3 条夸的，1 条问「初中能不能报」。建议你亲自回，这种最容易成。'
         };

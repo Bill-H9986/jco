@@ -35,7 +35,7 @@ export const RULES = [
     id: 'no-hardcoded-industry',
     title: '系统提示词、页面示例、默认任务不得写死行业',
     include: (rel) => pageFile(rel) || kernelFile(rel),
-    patterns: [/(成人学历|成人高考|自考|招生|学历提升|学历规划)/g],
+    patterns: [/(成人学历|成人高考|自考|招生|学历提升|学历规划|学员|院校|报名|升本|教育|培训|课程)/g],
   },
   {
     id: 'no-chat-browser-tools',

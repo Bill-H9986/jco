@@ -271,7 +271,7 @@
       </nav>
       <button class="group-label" type="button"><span class="ti ti-messages"></span>对话<span class="ti ti-chevron-down"></span></button>
       <div class="convos">
-        <button class="convo"><span class="name">暑期招生 · 今日发布</span></button>
+        <button class="convo"><span class="name">示例项目 · 今日发布</span></button>
         <button class="convo"><span class="name">评论跟进（5 条）</span></button>
         <button class="convo"><span class="name">上周数据复盘</span></button>
         <button class="convo"><span class="name">引流名单 · 待跟进</span></button>
@@ -347,7 +347,7 @@
     <div class="sheet" role="dialog" aria-label="贴一条爆款">
       <h3>贴一条爆款</h3>
       <div class="sub">把你在别处看到的一条爆款贴进来（标题/文案/口播稿都行），我拆它的结构，套出你自己的版本。不爬取、不搬运。</div>
-      <div class="field"><label>爆款内容（粘贴文案最好；只贴标题也行）</label><textarea id="inspoText" rows="4" placeholder="比如：成人高考报名流程全攻略，看这一条就够了。别被网上那些流程吓到……"></textarea></div>
+      <div class="field"><label>爆款内容（粘贴文案最好；只贴标题也行）</label><textarea id="inspoText" rows="4" placeholder="比如：把这件事讲清楚，看这一条就够了。别被网上那些说法吓到……"></textarea></div>
       <div class="foot">
         <button class="ghost" onclick="inspoClose()">先不贴</button>
         <button class="use-btn" id="inspoGoBtn" onclick="inspoGo()">拆给我看</button>
@@ -429,7 +429,7 @@
     function saveRadar() { saveJSON('jco-radar-v1', radar.slice(0, 60)); }
     function saveFavs() { saveJSON('jco-favs-v1', favs.slice(0, 100)); }
 
-    const TOPIC_SYSTEM = '你是短视频选题策划，服务成人学历提升招生赛道（成人高考/自考/开放大学）。要求：实用、能直接拍、不夸大承诺、不碰"包过"这类违规说法。只输出要求的行，不要解释。';
+    const TOPIC_SYSTEM = '你是短视频选题策划，服务通用自媒体创作者；具体行业、受众、平台由品牌档案决定。要求：实用、能直接拍、不夸大承诺、不碰"包过"这类违规说法。只输出要求的行，不要解释。';
 
     /* ---------- 拿去开写（交接给「创作」页） / 开始做视频（交接给「创作」页-做视频） ---------- */
     function goWrite(title) {
@@ -459,7 +459,7 @@
       var btn = document.getElementById('inspoGoBtn');
       if (btn) { btn.disabled = true; btn.textContent = '正在拆……'; }
       var input = [
-        '这是我看到的一条爆款（我的赛道：成人学历提升招生）：',
+        '这是我看到的一条爆款（我的账号定位）：',
         '---',
         v.slice(0, 1500),
         '---',
@@ -709,7 +709,7 @@
     /* ---------- 底部条：我有想拍的 → AI 定方向（真生成，存进雷达） ---------- */
     async function selfGo() {
       var v = document.getElementById('selfInp').value.trim();
-      if (!v) { showToast('先写下你想拍什么，比如：讲讲我们学员的就业情况'); return; }
+      if (!v) { showToast('先写下你想拍什么，比如：讲讲用户的实际变化'); return; }
       if (!JCO_KERNEL) { showToast('这个功能在桌面应用里可用（浏览器直开是演示模式）。'); return; }
       showToast('想选题中……');
       var res = await JCO_KERNEL.task({
@@ -784,7 +784,7 @@
         btn.addEventListener('click', function () { panel.hidden = !panel.hidden; });
         if (fold) fold.addEventListener('click', function () { panel.hidden = true; });
         var FIXED = {
-          '这条视频数据怎么样？': '《成人高考报名其实就 3 步》实时数据：播放 <b>5.2 万</b>（还在涨）、点赞 3,180、评论 57、带来咨询 6 条。比你的平均表现高 <b>8 倍</b>。',
+          '这条视频数据怎么样？': '《把一件事讲清楚，其实就 3 步》实时数据：播放 <b>5.2 万</b>（还在涨）、点赞 3,180、评论 57、带来咨询 6 条。比你的平均表现高 <b>8 倍</b>。',
           '今天还剩什么事？': '还有 3 件在你手上：2 条视频等你过目、8 条评论等你放行、19:30 的发布等你确认。都排好了，你点头就行。',
           '评论有什么动静？': '新评论 6 条：2 条问价格（我拟好引导话术了），3 条夸的，1 条问「初中能不能报」。建议你亲自回，这种最容易成。'
         };

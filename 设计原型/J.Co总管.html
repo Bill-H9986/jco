@@ -325,7 +325,7 @@
         <div class="convos" id="taskList"></div>
         <button class="group-label" type="button"><span class="ti ti-messages"></span>对话<span class="ti ti-chevron-down"></span></button>
         <div class="convos">
-          <button class="convo active"><span class="name">暑期招生 · 今日发布</span></button>
+          <button class="convo active"><span class="name">示例项目 · 今日发布</span></button>
           <button class="convo"><span class="name">评论跟进（5 条）</span></button>
           <button class="convo"><span class="name">上周数据复盘</span></button>
           <button class="convo"><span class="name">引流名单 · 待跟进</span></button>
@@ -987,8 +987,8 @@
     }
 
     const REPLY = {
-      video: `好，按你的「暑期招生」系列风格来，大约 2 分钟出片。做好我叫你。`,
-      publish: `要发的是这两条：<br>1、《暑期招生特辑②》<br>2、《学员故事③》<br>标题和话题都填好了，抖音、视频号都登录着，直接发吗？<div class="acts"><button class="act primary" onclick="pick('马上发')">马上发</button><button class="act" onclick="pick('我先看看')">我先看看</button></div>`,
+      video: `好，按你的内容系列风格来，大约 2 分钟出片。做好我叫你。`,
+      publish: `要发的是这两条：<br>1、《内容特辑②》<br>2、《用户故事③》<br>标题和话题都填好了，抖音、视频号都登录着，直接发吗？<div class="acts"><button class="act primary" onclick="pick('马上发')">马上发</button><button class="act" onclick="pick('我先看看')">我先看看</button></div>`,
       data: `昨晚的账（3 条视频）：<br>播放 <b>+32%</b>，晚上 7 点那条最好。建议今天上午再发 1 条。<div class="acts"><button class="act" onclick="pick('看完整数据')">看完整数据</button></div>`,
       comment: `评论箱 8 条：2 条问价格，我拟了私信引导话术；6 条夸的，我拟了回复。<div class="acts"><button class="act primary" onclick="pick('看我拟的回复')">看我拟的回复</button><button class="act" onclick="pick('一键全回')">一键全回</button></div>`,
     };
@@ -1012,7 +1012,7 @@
       setTimeout(() => {
         addAI(REPLY[kind]).then((el) => {
           if (kind === 'video') {
-            runProgress(el, '正在写脚本，配音，剪辑合成', `做好了，这版你看看行不行：<br><b>《暑期招生特辑④ · 3 个真实学员故事》</b><div class="acts"><button class="act primary" onclick="pick('去发布')">去发布</button><button class="act" onclick="pick('重新做一版')">重新做一版</button></div>`);
+            runProgress(el, '正在写脚本，配音，剪辑合成', `做好了，这版你看看行不行：<br><b>《内容特辑④ · 3 个真实用户故事》</b><div class="acts"><button class="act primary" onclick="pick('去发布')">去发布</button><button class="act" onclick="pick('重新做一版')">重新做一版</button></div>`);
           }
           busy = false;
         });

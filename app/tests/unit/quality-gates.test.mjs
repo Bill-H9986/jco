@@ -38,6 +38,7 @@ describe('全项目扫描规则', () => {
   it('行业写死会被抓到，通用描述不会', () => {
     const target = rule('no-hardcoded-industry')
     expect(scanText(target, '设计原型/页.html', '服务做成人学历提升招生')).not.toHaveLength(0)
+    expect(scanText(target, '设计原型/页.html', '学员报名和课程安排')).not.toHaveLength(0)
     expect(scanText(target, '设计原型/页.html', '服务通用自媒体创作者')).toHaveLength(0)
   })
 

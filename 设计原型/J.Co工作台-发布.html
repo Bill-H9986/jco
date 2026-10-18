@@ -271,7 +271,7 @@
       </nav>
       <button class="group-label" type="button"><span class="ti ti-messages"></span>对话<span class="ti ti-chevron-down"></span></button>
       <div class="convos">
-        <button class="convo"><span class="name">暑期招生 · 今日发布</span></button>
+        <button class="convo"><span class="name">示例项目 · 今日发布</span></button>
         <button class="convo"><span class="name">评论跟进（5 条）</span></button>
         <button class="convo"><span class="name">上周数据复盘</span></button>
         <button class="convo"><span class="name">引流名单 · 待跟进</span></button>
@@ -305,7 +305,7 @@
           <div class="work">
             <span class="thumb ti ti-player-play"></span>
             <span class="info">
-              <span class="wt">《成人高考报名其实就 3 步，看完不踩坑》</span>
+              <span class="wt">《把一件事讲清楚，其实就 3 步》</span>
               <span class="wm">9:16 竖屏 · 1 分 20 秒 · 刚在「后期」定的稿</span>
             </span>
             <span class="badge">已通过</span>
@@ -337,11 +337,11 @@
             </div>
             <div class="frow">
               <span class="flabel">标题</span>
-              <input id="titleInp" value="成人高考报名其实就 3 步，看完不踩坑">
+              <input id="titleInp" value="把一件事讲清楚，其实就 3 步">
             </div>
             <div class="frow">
               <span class="flabel">话题</span>
-              <input id="tagInp" value="#成人学历提升 #成人高考 #学历规划">
+              <input id="tagInp" value="#内容创作 #短视频 #选题">
             </div>
             <div class="frow">
               <span class="flabel">介绍</span>
@@ -433,7 +433,7 @@
       btn.disabled = true;
       btn.textContent = '正在设计……';
       // 素材：当前标题 + 最近草稿的分镜台词
-      const topic = $('titleInp').value.trim() || '成人学历提升短视频';
+      const topic = $('titleInp').value.trim() || '短视频';
       let shots = [];
       try {
         const ds = JSON.parse(localStorage.getItem('jco-drafts-v1') || '{"items":[]}');
@@ -443,12 +443,12 @@
       const input = [
         '视频主题：《' + topic + '》',
         shots.length ? ('分镜台词节选：' + shots.join(' / ')) : '',
-        '我的账号：成人学历提升招生（成人高考/自考/开放大学），发布在抖音、视频号、小红书。',
+        '我的账号：通用自媒体账号，发布平台由品牌档案决定。',
         '',
-        '请按教育类爆款的通行做法设计（钩子式标题、分层话题；合规不夸大，不承诺包过/保录取，留官方口径），严格输出 JSON（不要 markdown 代码块）：',
+        '请按同类内容爆款的通行做法设计（钩子式标题、分层话题；合规不夸大，不承诺包过/保录取，留官方口径），严格输出 JSON（不要 markdown 代码块）：',
         '{"titles":["标题1（钩子型）","标题2（干货/数字型）","标题3（共鸣/故事型）"],"tags":"#大流量标签 #精准垂类标签 #节点热点标签（8 个左右，空格分隔）","desc":"2~3 句发布介绍：一句价值点 + 一句关键信息 + 一句互动引导，结尾留合规句（以官方公告为准）","cover":"封面主视觉描述：6~10 字大标题字 + 一句副文案 + 画面构图（适合竖屏封面）"}',
       ].filter(Boolean).join('\n');
-      const res = await JCO_KERNEL.task({ system: '你是短视频发布运营专家，服务成人学历提升赛道。只输出 JSON。', input: input });
+      const res = await JCO_KERNEL.task({ system: '你是短视频发布运营专家，服务通用自媒体创作者；行业、受众、平台由品牌档案决定。只输出 JSON。', input: input });
       btn.disabled = false;
       btn.textContent = '帮我配好这一版';
       aiBusy = false;
@@ -492,7 +492,7 @@
         showToast('（原型示意）正式版会按内容生成封面图。');
         return;
       }
-      const prompt = (window.__coverPrompt || ('短视频封面：' + $('titleInp').value)) + '，竖屏 9:16 封面图，大号醒目标题字排版，干净有质感，专业教育类风格';
+      const prompt = (window.__coverPrompt || ('短视频封面：' + $('titleInp').value)) + '，竖屏 9:16 封面图，大号醒目标题字排版，干净有质感，专业内容风格';
       showToast('正在画封面……（约 10~30 秒）');
       const r = await JCO_KERNEL.draw({ prompt: prompt });
       if (r && r.ok && (r.dataUrl || r.url)) {
@@ -891,7 +891,7 @@
         btn.addEventListener('click', function () { panel.hidden = !panel.hidden; });
         if (fold) fold.addEventListener('click', function () { panel.hidden = true; });
         var FIXED = {
-          '这条视频数据怎么样？': '《成人高考报名其实就 3 步》实时数据：播放 <b>5.2 万</b>（还在涨）、点赞 3,180、评论 57、带来咨询 6 条。比你的平均表现高 <b>8 倍</b>。',
+          '这条视频数据怎么样？': '《把一件事讲清楚，其实就 3 步》实时数据：播放 <b>5.2 万</b>（还在涨）、点赞 3,180、评论 57、带来咨询 6 条。比你的平均表现高 <b>8 倍</b>。',
           '今天还剩什么事？': '还有 3 件在你手上：2 条视频等你过目、8 条评论等你放行、19:30 的发布等你确认。都排好了，你点头就行。',
           '评论有什么动静？': '新评论 6 条：2 条问价格（我拟好引导话术了），3 条夸的，1 条问「初中能不能报」。建议你亲自回，这种最容易成。'
         };
