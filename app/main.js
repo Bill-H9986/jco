@@ -848,6 +848,198 @@ function loadTaskSessions() {
     /* 目录不可用时任务仍在内存里工作 */
   }
 }
+/* ---------- W1-03 structured task cards / detail / approval ---------- */
+const WORK_TASKS_DIR = kernelDataPath('work-tasks')
+const workTasks = new Map()
+function saveWorkTask(id) {
+  try {
+    fs.mkdirSync(WORK_TASKS_DIR, { recursive: true })
+    fs.writeFileSync(path.join(WORK_TASKS_DIR, id + '.json'), JSON.stringify(workTasks.get(id), null, 2), 'utf8')
+  } catch (error) {
+    /* 落盘失败不阻塞任务卡流程 */
+  }
+}
+function loadWorkTasks() {
+  try {
+    fs.mkdirSync(WORK_TASKS_DIR, { recursive: true })
+    for (const file of fs.readdirSync(WORK_TASKS_DIR).filter((name) => name.endsWith('.json'))) {
+      try {
+        const task = JSON.parse(fs.readFileSync(path.join(WORK_TASKS_DIR, file), 'utf8'))
+        if (task && typeof task.id === 'string') workTasks.set(task.id, task)
+      } catch (error) {
+        /* 坏文件跳过 */
+      }
+    }
+  } catch (error) {
+    /* 目录不可用 */
+  }
+}
+function workTaskEvent(task, type, summary, data) {
+  task.events.push({
+    id: 'e' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5),
+    taskId: task.id,
+    runId: task.runId,
+    type,
+    at: Date.now(),
+    summary,
+    ...(data ? { data } : {}),
+  })
+  task.updatedAt = Date.now()
+}
+function broadcastWorkTask(task, phase) {
+  BrowserWindow.getAllWindows().forEach((win) => {
+    try {
+      win.webContents.send('kernel:task', {
+        taskId: task.id,
+        phase,
+        state: task.status,
+        name: task.title,
+        summary: String(task.goal || '').slice(0, 120),
+      })
+    } catch (error) {
+      /* 窗口已关闭 */
+    }
+  })
+}
+function workTaskView(task) {
+  return {
+    ...task,
+    name: task.title,
+    state: task.status,
+    startedAt: task.createdAt,
+    messages: task.messages || [],
+    live: [],
+  }
+}
+ipcMain.handle('tasks:propose', (_event, payload) => {
+  try {
+    const draft = (payload && payload.task) || payload || {}
+    const title = clipSafe(String(draft.title || '').trim(), 80)
+    const goal = String(draft.goal || '').trim()
+    const type = ['content', 'publish', 'operate', 'edit', 'research', 'custom'].includes(String(draft.type))
+      ? String(draft.type)
+      : 'custom'
+    const deliverables = Array.isArray(draft.deliverables)
+      ? draft.deliverables.map((item) => clipSafe(String(item || '').trim(), 200)).filter(Boolean)
+      : []
+    if (!title || !goal || deliverables.length === 0) {
+      return { ok: false, error: '任务卡必须有标题、目标和交付物' }
+    }
+    const approvals = draft.approvalPolicy || {}
+    const approvalPolicy = {
+      requirePublishApproval: true,
+      requireDeleteApproval: true,
+      requirePaymentApproval: true,
+      requireFinalApproval: approvals.requireFinalApproval !== false,
+    }
+    const id = 'w' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6)
+    const task = {
+      id,
+      title,
+      goal,
+      type,
+      ownerRole: String(draft.ownerRole || (type === 'publish' ? 'publisher' : type === 'edit' ? 'editor' : 'writer')).slice(0, 40),
+      status: 'pending_confirm',
+      inputs: Array.isArray(draft.inputs) ? draft.inputs.slice(0, 20) : [],
+      constraints: Array.isArray(draft.constraints) ? draft.constraints.map((item) => String(item || '').slice(0, 300)).filter(Boolean) : [],
+      deliverables,
+      approvalPolicy,
+      sourceConversationId: String(draft.sourceConversationId || '').slice(0, 120),
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+      runId: id + '-run1',
+      events: [],
+      approvals: [],
+      artifacts: [],
+      messages: [],
+    }
+    workTaskEvent(task, 'state_changed', '任务卡已提出，等待用户确认')
+    workTasks.set(id, task)
+    saveWorkTask(id)
+    broadcastWorkTask(task, 'start')
+    return { ok: true, task: workTaskView(task) }
+  } catch (error) {
+    return { ok: false, error: String((error && error.message) || error) }
+  }
+})
+ipcMain.handle('tasks:confirm', (_event, payload) => {
+  try {
+    const id = String((payload && payload.id) || '')
+    const task = workTasks.get(id)
+    if (!task) return { ok: false, code: 'NOT_FOUND', error: '任务不存在' }
+    if (task.status !== 'pending_confirm') return { ok: false, code: 'INVALID_STATE', error: '任务不在待确认状态' }
+    task.status = 'queued'
+    workTaskEvent(task, 'state_changed', '任务已确认，进入队列')
+    if (task.type === 'publish' || task.approvalPolicy.requireFinalApproval) {
+      task.status = 'running'
+      workTaskEvent(task, 'state_changed', '任务开始准备')
+      task.status = 'waiting_user'
+      const approval = {
+        id: 'a' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5),
+        taskId: task.id,
+        runId: task.runId,
+        type: task.type === 'publish' ? 'publish' : 'confirm',
+        reason: task.type === 'publish' ? '发布前需要你亲手确认' : '任务执行前需要你确认',
+        options: [
+          { id: 'approve', label: '确认继续' },
+          { id: 'reject', label: '取消任务', danger: true },
+        ],
+        status: 'pending',
+        createdAt: Date.now(),
+      }
+      task.approvals.push(approval)
+      workTaskEvent(task, 'approval_requested', approval.reason, { approvalId: approval.id, type: approval.type })
+    }
+    task.updatedAt = Date.now()
+    saveWorkTask(id)
+    broadcastWorkTask(task, 'update')
+    return { ok: true, task: workTaskView(task) }
+  } catch (error) {
+    return { ok: false, error: String((error && error.message) || error) }
+  }
+})
+ipcMain.handle('tasks:approval', (_event, payload) => {
+  try {
+    const id = String((payload && payload.id) || '')
+    const decision = String((payload && payload.decision) || '')
+    const task = workTasks.get(id)
+    if (!task) return { ok: false, code: 'NOT_FOUND', error: '任务不存在' }
+    const approval = task.approvals.find((item) => item.status === 'pending')
+    if (!approval) return { ok: false, code: 'APPROVAL_REQUIRED', error: '没有等待处理的审批' }
+    if (decision !== 'approve' && decision !== 'reject') return { ok: false, error: '审批决定不合法' }
+    approval.status = decision === 'approve' ? 'approved' : 'rejected'
+    approval.resolvedAt = Date.now()
+    if (decision === 'approve') {
+      task.status = 'running'
+      workTaskEvent(task, 'approval_resolved', '用户已批准，任务继续', { approvalId: approval.id, decision })
+    } else {
+      task.status = 'cancelled'
+      workTaskEvent(task, 'approval_resolved', '用户拒绝了任务', { approvalId: approval.id, decision })
+    }
+    task.updatedAt = Date.now()
+    saveWorkTask(id)
+    broadcastWorkTask(task, decision === 'approve' ? 'update' : 'fail')
+    return { ok: true, task: workTaskView(task) }
+  } catch (error) {
+    return { ok: false, error: String((error && error.message) || error) }
+  }
+})
+ipcMain.handle('tasks:cancel', (_event, payload) => {
+  try {
+    const id = String((payload && payload.id) || '')
+    const task = workTasks.get(id)
+    if (!task) return { ok: false, code: 'NOT_FOUND', error: '任务不存在' }
+    if (task.status === 'done' || task.status === 'cancelled') return { ok: true, task: workTaskView(task) }
+    task.status = 'cancelled'
+    workTaskEvent(task, 'state_changed', '用户取消了任务')
+    task.updatedAt = Date.now()
+    saveWorkTask(id)
+    broadcastWorkTask(task, 'fail')
+    return { ok: true, task: workTaskView(task) }
+  } catch (error) {
+    return { ok: false, error: String((error && error.message) || error) }
+  }
+})
 /** 派活任务的纪律尾注（与自动任务同源；措辞按"用户派活"场景） */
 const DISPATCH_DISCIPLINE = [
   '（任务纪律：这是用户派给你的活。准备工作照做；',
@@ -953,26 +1145,40 @@ ipcMain.handle('tasks:dispatch', (_event, payload) => {
   }
 })
 ipcMain.handle('tasks:sessions', () => {
-  const list = Array.from(taskSessions.values())
+  const structured = Array.from(workTasks.values()).map((task) => ({
+    id: task.id,
+    name: task.title,
+    staff: task.ownerRole,
+    platform: '',
+    state: task.status,
+    startedAt: task.createdAt,
+    endedAt: task.status === 'done' || task.status === 'cancelled' ? task.updatedAt : 0,
+    summary: String(task.goal || '').slice(0, 120),
+    structured: true,
+  }))
+  const legacy = Array.from(taskSessions.values()).map((r) => ({
+    id: r.id,
+    name: r.name,
+    staff: r.staff,
+    platform: r.platform || '',
+    state: r.state,
+    startedAt: r.startedAt,
+    endedAt: r.endedAt,
+    summary: String(r.summary || '').slice(0, 120),
+    structured: false,
+  }))
+  const list = [...structured, ...legacy]
     .sort((a, b) => (b.startedAt || 0) - (a.startedAt || 0))
     .slice(0, 20)
-    .map((r) => ({
-      id: r.id,
-      name: r.name,
-      staff: r.staff,
-      platform: r.platform || '',
-      state: r.state,
-      startedAt: r.startedAt,
-      endedAt: r.endedAt,
-      summary: String(r.summary || '').slice(0, 120),
-    }))
   return { tasks: list }
 })
 ipcMain.handle('tasks:session:get', (_event, payload) => {
   const id = payload && typeof payload.id === 'string' ? payload.id : ''
+  const structured = workTasks.get(id)
+  if (structured) return { ok: true, task: workTaskView(structured) }
   const rec = taskSessions.get(id)
   if (!rec) return { ok: false, error: '任务不存在' }
-  return { ok: true, task: { ...rec, messages: Array.isArray(rec.messages) ? rec.messages.slice(-30) : [] } }
+  return { ok: true, task: { ...rec, messages: Array.isArray(rec.messages) ? rec.messages.slice(-30) : [], structured: false } }
 })
 
 // 测试模式：用独立的临时数据目录，避免和正在使用的 J.Co 抢单实例锁
@@ -1063,6 +1269,8 @@ if (!gotLock) {
     startAutoScheduler().catch(() => {})
     // 任务会话（M7 桥）：加载历史任务台账（重启后任务列表/回看不丢）
     loadTaskSessions()
+    // W1-03 结构化任务卡：加载独立的 work-tasks 台账
+    loadWorkTasks()
     // 后期工具（M9 后期·AI 代劳）：写成片目录与 ffmpeg 配置（bridge 生成工具 patch 时读）
     writeEditToolsConfig()
     app.on('activate', () => {

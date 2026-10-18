@@ -11,7 +11,7 @@ const APP_DIR = path.resolve(__dirname, '..', '..')
 export const KERNEL = path.join(APP_DIR, 'kernel')
 export const SNAPSHOT = path.join(APP_DIR, 'node_modules', '.cache', 'jco-e2e-kernel-snapshot')
 export const FILES = ['auto-tasks.json', 'auto-runs.json', 'skills.json']
-export const DIRS = ['task-sessions']
+export const DIRS = ['task-sessions', 'work-tasks']
 
 export default async function globalSetup() {
   fs.rmSync(SNAPSHOT, { recursive: true, force: true })

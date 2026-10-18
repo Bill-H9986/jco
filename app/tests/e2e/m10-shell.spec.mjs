@@ -95,9 +95,12 @@ test('应用壳：侧栏常驻切页不重载 / 内嵌页隐藏自身侧栏 / IP
     await win.waitForTimeout(350)
     expect(await sideWidth()).toBe(expandedWidth)
 
-    // 通知点击钩子：让总管任务视图在 iframe 内打开，不导航掉外壳
+    // 通知点击钩子：打开壳内独立任务视图，不导航掉外壳
     await win.evaluate(() => window.__jcoOpenTaskById('shelltask'))
-    await expect(win.locator('#jcoFrame')).toHaveAttribute('src', 'J.Co总管.html?task=shelltask')
+    await expect(win.locator('#jcoTaskView')).toBeVisible()
+    await expect(win.locator('#tvTitle')).toContainText('外壳刷新测试任务')
+    expect(decodeURIComponent(win.url())).toContain('J.Co应用壳.html')
+    await win.locator('#tvBack').click()
     expect(await win.evaluate(() => window.__shellMark)).toBe(1)
 
     // 深色主题必须同时进外壳和 iframe，不能只黑侧栏、内容区仍是浅色

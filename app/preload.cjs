@@ -157,6 +157,26 @@ contextBridge.exposeInMainWorld('jco', {
       }),
     sessions: () => ipcRenderer.invoke('tasks:sessions'),
     session: (id) => ipcRenderer.invoke('tasks:session:get', { id: String(id || '') }),
+    /** W1-03：任务卡确认前只提案，不创建可执行 Task */
+    propose: (task) => ipcRenderer.invoke('tasks:propose', {
+      task: {
+        title: String((task && task.title) || ''),
+        goal: String((task && task.goal) || ''),
+        type: String((task && task.type) || 'custom'),
+        ownerRole: String((task && task.ownerRole) || ''),
+        inputs: Array.isArray(task && task.inputs) ? task.inputs : [],
+        constraints: Array.isArray(task && task.constraints) ? task.constraints : [],
+        deliverables: Array.isArray(task && task.deliverables) ? task.deliverables : [],
+        approvalPolicy: (task && task.approvalPolicy) || {},
+        sourceConversationId: String((task && task.sourceConversationId) || ''),
+      },
+    }),
+    confirm: (id) => ipcRenderer.invoke('tasks:confirm', { id: String(id || '') }),
+    approval: (id, decision) => ipcRenderer.invoke('tasks:approval', {
+      id: String(id || ''),
+      decision: String(decision || ''),
+    }),
+    cancel: (id) => ipcRenderer.invoke('tasks:cancel', { id: String(id || '') }),
   },
   /** 系统级开关：主题（真切换）/ 开机启动（系统登录项）/ 清缓存（真清理） */
   sys: {

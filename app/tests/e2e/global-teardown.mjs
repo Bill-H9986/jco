@@ -9,7 +9,7 @@ const APP_DIR = path.resolve(__dirname, '..', '..')
 const KERNEL = path.join(APP_DIR, 'kernel')
 const SNAPSHOT = path.join(APP_DIR, 'node_modules', '.cache', 'jco-e2e-kernel-snapshot')
 const FILES = ['auto-tasks.json', 'auto-runs.json', 'skills.json']
-const DIRS = ['task-sessions']
+const DIRS = ['task-sessions', 'work-tasks']
 
 export default async function globalTeardown() {
   for (const f of FILES) {

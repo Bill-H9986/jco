@@ -866,6 +866,44 @@ html[data-jco-theme="dark"] {
 
 .convo.new-btn .ti { font-size: 16px; color: #ffffff; }
 
+/* W1-03 任务卡：确认前只是草稿，不进入任务台账 */
+.task-card {
+  max-width: 720px;
+  margin: 14px 0 4px;
+  padding: 16px;
+  border: 0.5px solid var(--line);
+  border-radius: 12px;
+  background: var(--card);
+}
+
+.task-card h3 { margin: 0 0 4px; font-size: 15px; font-weight: 600; }
+
+.task-card .task-card-note { margin: 0 0 14px; color: var(--text-3); font-size: 12.5px; line-height: 1.55; }
+
+.task-card .task-field { display: flex; flex-direction: column; gap: 5px; margin-bottom: 10px; }
+
+.task-card label { color: var(--text-3); font-size: 12px; }
+
+.task-card input, .task-card textarea {
+  width: 100%; border: 0.5px solid var(--line); border-radius: 8px;
+  padding: 8px 10px; background: var(--bg); color: var(--text-1);
+  font: inherit; font-size: 13.5px; line-height: 1.5; outline: none;
+}
+
+.task-card textarea { min-height: 64px; resize: vertical; }
+
+.task-card input:focus-visible, .task-card textarea:focus-visible {
+  border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-tint, rgba(0, 128, 255, 0.16));
+}
+
+.task-card .task-card-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 4px; }
+
+.task-card .task-card-actions .ghost { height: 32px; font-size: 13px; }
+
+.task-card .task-card-actions .go-btn { height: 34px; padding: 0 16px; font-size: 13px; }
+
+.task-card .task-card-error { color: var(--red); font-size: 12.5px; min-height: 17px; }
+
 .convo { position: relative; }
 
 .convo:has(.convo-more) { padding-right: 30px; }

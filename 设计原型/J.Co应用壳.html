@@ -14,6 +14,37 @@
     #jcoFrame { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; background: var(--bg); }
     .frame-fade { position: absolute; inset: 0; background: var(--bg); pointer-events: none; opacity: 0; transition: opacity 0.16s ease; }
     .frame-fade.on { opacity: 1; }
+    .task-view { position: absolute; inset: 0; z-index: 8; overflow-y: auto; background: var(--bg); padding: 28px 34px 40px; }
+    .task-view[hidden] { display: none; }
+    .tv-head { display: flex; align-items: flex-start; gap: 18px; margin-bottom: 24px; }
+    .tv-head h2 { margin: 4px 0 6px; font-size: 24px; line-height: 1.25; letter-spacing: -0.02em; }
+    .tv-meta { font-size: 13px; color: var(--text-3); }
+    .tv-status { margin-left: auto; flex: none; padding: 5px 10px; border-radius: 999px; background: var(--tint); color: var(--text-2); font-size: 12px; }
+    .tv-status.running { color: var(--accent); background: var(--accent-soft, var(--tint)); }
+    .tv-status.waiting { color: var(--amber); background: var(--amber-tint); }
+    .tv-status.done { color: var(--green); background: var(--green-tint); }
+    .tv-status.failed, .tv-status.cancelled { color: var(--red); background: var(--red-tint); }
+    .tv-grid { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 28px; max-width: 1120px; }
+    .tv-main, .tv-side { min-width: 0; }
+    .tv-section { padding: 18px 0; border-top: 0.5px solid var(--line); }
+    .tv-section h3 { margin: 0 0 9px; font-size: 13px; font-weight: 600; color: var(--text-3); }
+    .tv-section p { margin: 0; font-size: 15px; line-height: 1.7; white-space: pre-wrap; }
+    .tv-list { display: flex; flex-direction: column; gap: 7px; }
+    .tv-list-item { font-size: 14px; line-height: 1.6; color: var(--text-2); }
+    .tv-list-item::before { content: "·"; margin-right: 8px; color: var(--text-3); }
+    .tv-timeline { display: flex; flex-direction: column; gap: 12px; margin: 0; padding: 0; list-style: none; }
+    .tv-event { display: grid; grid-template-columns: 48px 1fr; gap: 12px; font-size: 13.5px; line-height: 1.55; }
+    .tv-event time { color: var(--text-3); font-size: 12px; }
+    .tv-event span { color: var(--text-1); }
+    .tv-empty { color: var(--text-3); font-size: 13px; }
+    .tv-approval { margin-top: 4px; padding: 14px; border: 0.5px solid var(--line); border-radius: 12px; background: var(--tint); }
+    .tv-approval p { margin: 0 0 12px; font-size: 14px; line-height: 1.6; }
+    .tv-approval .tv-actions { margin-top: 0; }
+    .tv-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 14px; }
+    .tv-actions .ghost { height: 34px; font-size: 13px; }
+    .tv-actions .danger { color: var(--red); }
+    .tv-small { margin-top: 8px; font-size: 12.5px; color: var(--text-3); }
+    @media (max-width: 900px) { .tv-grid { grid-template-columns: 1fr; } .task-view { padding: 22px; } }
   </style>
 </head>
 <body>
@@ -54,6 +85,30 @@
     <div class="frame-wrap">
       <iframe id="jcoFrame" src="J.Co主界面-首页.html" title="J.Co 内容区"></iframe>
       <div class="frame-fade" id="frameFade"></div>
+      <section class="task-view" id="jcoTaskView" hidden aria-labelledby="tvTitle">
+        <div class="tv-head">
+          <button class="ghost" id="tvBack" type="button">返回对话</button>
+          <div>
+            <h2 id="tvTitle">任务</h2>
+            <div class="tv-meta" id="tvMeta"></div>
+          </div>
+          <span class="tv-status" id="tvStatus">待确认</span>
+        </div>
+        <div class="tv-grid">
+          <div class="tv-main">
+            <section class="tv-section"><h3>目标</h3><p id="tvGoal"></p></section>
+            <section class="tv-section"><h3>输入</h3><div class="tv-list" id="tvInputs"></div></section>
+            <section class="tv-section"><h3>约束</h3><div class="tv-list" id="tvConstraints"></div></section>
+            <section class="tv-section"><h3>交付物</h3><div class="tv-list" id="tvDeliverables"></div></section>
+            <section class="tv-section"><h3>时间线</h3><ol class="tv-timeline" id="tvTimeline"></ol></section>
+          </div>
+          <aside class="tv-side">
+            <section class="tv-section"><h3>审批</h3><div id="tvApproval"></div></section>
+            <section class="tv-section"><h3>产物</h3><div id="tvArtifacts" class="tv-empty">还没有产物</div></section>
+            <section class="tv-section"><h3>操作</h3><div class="tv-actions"><button class="ghost" id="tvCancel" type="button">取消任务</button></div></section>
+          </aside>
+        </div>
+      </section>
     </div>
   </div>
 
@@ -62,6 +117,196 @@
     (function shellHost() {
       var frame = document.getElementById('jcoFrame');
       var fade = document.getElementById('frameFade');
+      var taskView = document.getElementById('jcoTaskView');
+      var taskPoll = null;
+      var currentTask = null;
+      var lastTaskStamp = '';
+
+      function statusText(status) {
+        if (status === 'pending_confirm') return '待确认';
+        if (status === 'queued') return '排队中';
+        if (status === 'running') return '执行中';
+        if (status === 'waiting_user') return '等你确认';
+        if (status === 'done') return '已完成';
+        if (status === 'failed') return '失败';
+        if (status === 'cancelled') return '已取消';
+        return String(status || '任务');
+      }
+      function addList(el, items, emptyText) {
+        if (!el) return;
+        el.innerHTML = '';
+        if (!items || items.length === 0) {
+          el.innerHTML = '<div class="tv-empty"></div>';
+          el.firstChild.textContent = emptyText;
+          return;
+        }
+        items.forEach(function (item) {
+          var row = document.createElement('div');
+          row.className = 'tv-list-item';
+          row.textContent = String(item == null ? '' : item);
+          el.appendChild(row);
+        });
+      }
+      function timeText(ts) {
+        try {
+          var d = new Date(Number(ts) || Date.now());
+          return String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+        } catch (err) {
+          return '';
+        }
+      }
+      function renderTask(task) {
+        var stamp = task
+          ? [task.id, task.updatedAt, task.status, (task.approvals || []).map(function (item) { return item.status }).join(',')].join(':')
+          : 'none';
+        if (stamp === lastTaskStamp) return;
+        lastTaskStamp = stamp;
+        currentTask = task;
+        var title = document.getElementById('tvTitle');
+        var meta = document.getElementById('tvMeta');
+        var status = document.getElementById('tvStatus');
+        var goal = document.getElementById('tvGoal');
+        if (!task) {
+          if (title) title.textContent = '任务不存在';
+          return;
+        }
+        if (title) title.textContent = task.title || task.name || '任务';
+        if (meta) meta.textContent = '负责人：' + (task.ownerRole || task.staff || '未指定') + ' · 来源：' + (task.sourceConversationId ? '会话' : '页面');
+        if (status) {
+          status.textContent = statusText(task.status || task.state);
+          status.className = 'tv-status ' + String(task.status || task.state || '').replace('waiting_user', 'waiting');
+        }
+        if (goal) goal.textContent = task.goal || '';
+        addList(
+          document.getElementById('tvInputs'),
+          (task.inputs || []).map(function (input) {
+            return input && (input.label || input.kind + '：' + input.ref);
+          }),
+          '没有额外输入',
+        );
+        addList(document.getElementById('tvConstraints'), task.constraints || [], '没有额外约束');
+        addList(document.getElementById('tvDeliverables'), task.deliverables || [], '没有登记交付物');
+
+        var timeline = document.getElementById('tvTimeline');
+        if (timeline) {
+          timeline.innerHTML = '';
+          var events = Array.isArray(task.events) && task.events.length
+            ? task.events
+            : (task.messages || []).map(function (message) {
+                return { at: message.t, summary: (message.role === 'user' ? '我：' : 'J.Co：') + String(message.text || '') };
+              });
+          if (events.length === 0) {
+            timeline.innerHTML = '<li class="tv-empty">还没有事件记录</li>';
+          } else {
+            events.forEach(function (event) {
+              var li = document.createElement('li');
+              li.className = 'tv-event';
+              var time = document.createElement('time');
+              time.textContent = timeText(event.at);
+              var text = document.createElement('span');
+              text.textContent = String(event.summary || '');
+              li.appendChild(time);
+              li.appendChild(text);
+              timeline.appendChild(li);
+            });
+          }
+        }
+
+        var approvalBox = document.getElementById('tvApproval');
+        if (approvalBox) {
+          approvalBox.innerHTML = '';
+          var pending = (task.approvals || []).find(function (item) { return item.status === 'pending'; });
+          if (!pending) {
+            approvalBox.innerHTML = '<div class="tv-empty">当前没有待审批事项</div>';
+          } else {
+            var card = document.createElement('div');
+            card.className = 'tv-approval';
+            var note = document.createElement('p');
+            note.textContent = pending.reason || '需要你确认后继续';
+            card.appendChild(note);
+            var actions = document.createElement('div');
+            actions.className = 'tv-actions';
+            var approve = document.createElement('button');
+            approve.className = 'ghost';
+            approve.type = 'button';
+            approve.textContent = '确认继续';
+            approve.addEventListener('click', function () {
+              window.jco.tasks.approval(task.id, 'approve').then(function (result) {
+                if (result && result.ok) {
+                  renderTask(result.task);
+                  try { if (typeof window.__refreshJcoSidebar === 'function') window.__refreshJcoSidebar(); } catch (err) {}
+                } else { alert((result && result.error) || '审批失败'); }
+              });
+            });
+            var reject = document.createElement('button');
+            reject.className = 'ghost danger';
+            reject.type = 'button';
+            reject.textContent = '拒绝并取消';
+            reject.addEventListener('click', function () {
+              window.jco.tasks.approval(task.id, 'reject').then(function (result) {
+                if (result && result.ok) {
+                  renderTask(result.task);
+                  try { if (typeof window.__refreshJcoSidebar === 'function') window.__refreshJcoSidebar(); } catch (err) {}
+                } else { alert((result && result.error) || '审批失败'); }
+              });
+            });
+            actions.appendChild(approve);
+            actions.appendChild(reject);
+            card.appendChild(actions);
+            approvalBox.appendChild(card);
+          }
+        }
+        var artifacts = document.getElementById('tvArtifacts');
+        if (artifacts) {
+          artifacts.className = (task.artifacts || []).length ? 'tv-list' : 'tv-empty';
+          artifacts.innerHTML = '';
+          (task.artifacts || []).forEach(function (artifact) {
+            var row = document.createElement('div');
+            row.className = 'tv-list-item';
+            row.textContent = artifact.name || artifact.path || artifact.id || '产物';
+            artifacts.appendChild(row);
+          });
+          if (!artifacts.children.length) artifacts.textContent = '还没有产物';
+        }
+        var cancel = document.getElementById('tvCancel');
+        if (cancel) {
+          cancel.disabled = task.status === 'done' || task.status === 'cancelled';
+          cancel.onclick = function () {
+            window.jco.tasks.cancel(task.id).then(function (result) {
+              if (result && result.ok) {
+                renderTask(result.task);
+                try { if (typeof window.__refreshJcoSidebar === 'function') window.__refreshJcoSidebar(); } catch (err) {}
+              }
+              else alert((result && result.error) || '取消失败');
+            });
+          };
+        }
+      }
+      function loadTaskView(id) {
+        if (!window.jco || !window.jco.tasks || !window.jco.tasks.session) return;
+        window.jco.tasks.session(id).then(function (result) {
+          if (result && result.ok) renderTask(result.task);
+          else renderTask(null);
+        }).catch(function () {});
+      }
+      function showTaskView(id) {
+        if (!taskView || !id) return;
+        lastTaskStamp = '';
+        taskView.hidden = false;
+        loadTaskView(id);
+        try { if (typeof window.__refreshJcoSidebar === 'function') window.__refreshJcoSidebar(); } catch (err) {}
+        if (taskPoll) clearInterval(taskPoll);
+        taskPoll = setInterval(function () { loadTaskView(id); }, 1500);
+      }
+      function hideTaskView() {
+        if (taskView) taskView.hidden = true;
+        if (taskPoll) clearInterval(taskPoll);
+        taskPoll = null;
+      }
+      document.getElementById('tvBack').addEventListener('click', function () {
+        var source = currentTask && currentTask.sourceConversationId;
+        applyRoute({ kind: 'chat', id: source || 'last' }, true);
+      });
 
       function routeOfHash() {
         var raw = String(location.hash || '').replace(/^#\/?/, '');
@@ -108,6 +353,13 @@
       }
       function applyRoute(route, remember) {
         if (!route) return;
+        if (route.kind === 'task') {
+          showTaskView(route.id);
+          if (remember) rememberHash(route);
+          if (typeof window.__jcoHighlightPage === 'function') window.__jcoHighlightPage('J.Co总管.html');
+          return;
+        }
+        hideTaskView();
         loadFrame(targetOfRoute(route));
         if (remember) rememberHash(route);
         if (typeof window.__jcoHighlightPage === 'function') {

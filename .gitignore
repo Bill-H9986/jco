@@ -36,6 +36,8 @@ Thumbs.db
 .DS_Store
 # 任务会话台账（运行时生成：任务桥写入，不入库）
 app/kernel/task-sessions/
+# W1-03 结构化任务卡台账（运行时生成：任务卡确认后写入）
+app/kernel/work-tasks/
 # 后期工具配置与 patch（运行时生成：main/bridge 写入，不入库）
 app/kernel/edit-tools.json
 app/kernel/edit-tools.patch.yml

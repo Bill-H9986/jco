@@ -1,4 +1,6 @@
 // M11 W1-01：壳内 home/chat/task 路由；首页发送 = 新会话，不创建任务、不启动浏览器。
+import fs from 'node:fs'
+import os from 'node:os'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { expect, test } from '@playwright/test'
@@ -7,6 +9,7 @@ import { _electron as electron } from 'playwright'
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const APP_DIR = path.resolve(__dirname, '..', '..')
 const ELECTRON_BIN = path.join(APP_DIR, 'node_modules', 'electron', 'dist', 'electron.exe')
+const TEST_WORK_TASKS = path.join(os.tmpdir(), 'jco-test-kernel-data', 'work-tasks')
 
 async function launchClean() {
   const app = await electron.launch({ executablePath: ELECTRON_BIN, args: [APP_DIR, '--jco-test'] })
@@ -103,14 +106,25 @@ test('M11 W1-01：第二个会话独立，A 的内容不被覆盖', async () => 
 test('M11 W1-01：task 路由仍落到总管的任务视图', async () => {
   const { app, win, errors } = await launchClean()
   try {
-    await win.evaluate(() => {
-      location.hash = '#/task/demo-task'
-    })
-    await expect(win.locator('#jcoFrame')).toHaveAttribute('src', /J\.Co总管\.html\?task=demo-task/, {
-      timeout: 10_000,
-    })
+    const proposed = await win.evaluate(() =>
+      window.jco.tasks.propose({
+        title: '路由测试任务',
+        goal: '验证任务详情路由',
+        type: 'content',
+        deliverables: ['任务详情'],
+      }),
+    )
+    expect(proposed.ok).toBe(true)
+    await win.evaluate((id) => window.jco.tasks.confirm(id), proposed.task.id)
+    await win.evaluate((id) => {
+      location.hash = '#/task/' + id
+    }, proposed.task.id)
+    await expect(win.locator('#jcoTaskView')).toBeVisible({ timeout: 10_000 })
+    await expect(win.locator('#tvTitle')).toHaveText('路由测试任务')
+    await win.evaluate((id) => window.jco.tasks.cancel(id), proposed.task.id)
     expect(errors, `JS 错误：\n${errors.join('\n')}`).toEqual([])
   } finally {
     await app.close()
+    fs.rmSync(TEST_WORK_TASKS, { recursive: true, force: true })
   }
 })

@@ -537,7 +537,7 @@
       } else {
         // 历史消息：不带入场动画、批量插入、最多渲染最近 80 条（防长会话卡顿）
         var list = c.messages;
-        var actionsHTML = '<div class="msg-actions"><button aria-label="复制"><span class="ti ti-copy"></span></button><button aria-label="赞"><span class="ti ti-thumb-up"></span></button><button aria-label="踩"><span class="ti ti-thumb-down"></span></button><button aria-label="转发"><span class="ti ti-share-3"></span></button></div>';
+        var actionsHTML = '<div class="msg-actions"><button aria-label="复制"><span class="ti ti-copy"></span></button><button aria-label="赞"><span class="ti ti-thumb-up"></span></button><button aria-label="踩"><span class="ti ti-thumb-down"></span></button><button aria-label="转发"><span class="ti ti-share-3"></span></button><button aria-label="派活"><span class="ti ti-user-plus"></span></button></div>';
         var frag = document.createDocumentFragment();
         list.forEach(function (m) {
           var el;
@@ -740,7 +740,14 @@
           nm.className = 'name';
           nm.textContent = t.name + ' ' + stateGlyph(t.state);
           b.appendChild(nm);
-          b.addEventListener('click', function (e) { e.stopPropagation(); openTaskView(t.id); });
+          b.addEventListener('click', function (e) {
+            e.stopPropagation();
+            if (window.parent && window.parent !== window && typeof window.parent.__jcoOpenTaskById === 'function') {
+              window.parent.__jcoOpenTaskById(t.id);
+              return;
+            }
+            openTaskView(t.id);
+          });
           listEl.appendChild(b);
         });
       }
@@ -897,6 +904,7 @@
           <button aria-label="赞"><span class="ti ti-thumb-up"></span></button>
           <button aria-label="踩"><span class="ti ti-thumb-down"></span></button>
           <button aria-label="转发"><span class="ti ti-share-3"></span></button>
+          <button aria-label="派活"><span class="ti ti-user-plus"></span></button>
         </div></div></div>`);
       stream.appendChild(el);
       requestAnimationFrame(() => el.classList.add('in'));
@@ -930,6 +938,7 @@
       busy = false;
       bottom();
       chatPush('ai', (res && res.ok) ? (res.text || liveText || '（这轮没有内容）') : ('没答上来：' + ((res && res.error) || '未知错误')));
+      maybeProposeTask(text, res);
       renderConvoList();
       jcoLogAdd('chat', String(text).slice(0, 40), (res && res.ok) ? '聊了一轮' : '这轮没答上来');
       refreshBoard();
@@ -965,6 +974,7 @@
           <button aria-label="赞"><span class="ti ti-thumb-up"></span></button>
           <button aria-label="踩"><span class="ti ti-thumb-down"></span></button>
           <button aria-label="转发"><span class="ti ti-share-3"></span></button>
+          <button aria-label="派活"><span class="ti ti-user-plus"></span></button>
         </div>`;
         if (typingFirst) {
           el = node(`<div class="msg ai anim"><div class="ava">J</div><div class="body"><div class="name">J.Co</div><div class="bubble"><span class="typing"><i></i><i></i><i></i></span></div></div></div>`);
@@ -984,6 +994,93 @@
           resolve(el);
         }
       });
+    }
+
+    /* W1-03 任务卡：先展示草稿，用户确认后才调用 tasks:propose + tasks:confirm */
+    function taskDraftFromText(text) {
+      var value = String(text || '').trim();
+      var titleText = value.replace(/^(帮我|请帮我|请|麻烦|把)+/, '').replace(/[。！!]+$/, '').trim() || value;
+      var type = 'content';
+      var ownerRole = 'writer';
+      if (/(发到|发布|上传)/.test(value)) { type = 'publish'; ownerRole = 'publisher'; }
+      else if (/(剪辑|后期|字幕|配乐|裁剪|拼接)/.test(value)) { type = 'edit'; ownerRole = 'editor'; }
+      else if (/(评论|战报|数据|运营)/.test(value)) { type = 'operate'; ownerRole = 'operator'; }
+      return {
+        title: Array.from(titleText).slice(0, 28).join('') || '新的任务',
+        goal: value,
+        type: type,
+        ownerRole: ownerRole,
+        inputs: [{ kind: 'conversation', ref: activeChat().id, label: '来源会话' }],
+        constraints: ['不自动发布、删除或支付；不可逆动作等你确认'],
+        deliverables: [type === 'publish' ? '发布草稿（停在发布按钮前）' : type === 'edit' ? '处理后的新文件' : type === 'operate' ? '运营草稿或数据记录' : '完成的内容草稿'],
+        approvalPolicy: { requirePublishApproval: true, requireDeleteApproval: true, requirePaymentApproval: true, requireFinalApproval: true },
+        sourceConversationId: activeChat().id,
+      };
+    }
+
+    function showTaskCard(draft) {
+      var old = stream.querySelector('.task-card');
+      if (old) old.remove();
+      var card = document.createElement('section');
+      card.className = 'task-card';
+      card.setAttribute('aria-label', '任务卡草稿');
+      card.innerHTML = '<h3>任务卡草稿</h3><p class="task-card-note">确认前不会创建 Task，也不会启动浏览器。</p>' +
+        '<div class="task-field"><label for="taskCardTitle">标题</label><input id="taskCardTitle"></div>' +
+        '<div class="task-field"><label for="taskCardGoal">目标</label><textarea id="taskCardGoal"></textarea></div>' +
+        '<div class="task-field"><label for="taskCardDeliverable">交付物</label><input id="taskCardDeliverable"></div>' +
+        '<div class="task-card-error" role="status"></div>' +
+        '<div class="task-card-actions"><button class="go-btn" type="button" data-task-confirm>确认派活</button><button class="ghost" type="button" data-task-modify>修改</button><button class="ghost" type="button" data-task-cancel>取消</button></div>';
+      card.querySelector('#taskCardTitle').value = draft.title || '';
+      card.querySelector('#taskCardGoal').value = draft.goal || '';
+      card.querySelector('#taskCardDeliverable').value = (draft.deliverables || [])[0] || '';
+      var error = card.querySelector('.task-card-error');
+      card.querySelector('[data-task-modify]').addEventListener('click', function () {
+        card.querySelector('#taskCardTitle').focus();
+        card.querySelector('#taskCardTitle').select();
+      });
+      card.querySelector('[data-task-cancel]').addEventListener('click', function () {
+        card.remove();
+        showToast('任务卡已取消，没有创建任务。');
+      });
+      card.querySelector('[data-task-confirm]').addEventListener('click', async function () {
+        var next = Object.assign({}, draft, {
+          title: card.querySelector('#taskCardTitle').value.trim(),
+          goal: card.querySelector('#taskCardGoal').value.trim(),
+          deliverables: [card.querySelector('#taskCardDeliverable').value.trim()].filter(Boolean),
+        });
+        if (!next.title || !next.goal || next.deliverables.length === 0) {
+          error.textContent = '标题、目标和交付物都要填。';
+          return;
+        }
+        if (!window.jco || !window.jco.tasks || !window.jco.tasks.propose) {
+          error.textContent = '这个功能在桌面应用里可用。';
+          return;
+        }
+        var button = card.querySelector('[data-task-confirm]');
+        button.disabled = true;
+        try {
+          var proposed = await window.jco.tasks.propose(next);
+          if (!proposed || !proposed.ok || !proposed.task) throw new Error((proposed && proposed.error) || '任务卡提交失败');
+          var confirmed = await window.jco.tasks.confirm(proposed.task.id);
+          if (!confirmed || !confirmed.ok) throw new Error((confirmed && confirmed.error) || '任务确认失败');
+          card.remove();
+          showToast('任务已创建，正在打开任务详情。');
+          if (window.parent && window.parent !== window && typeof window.parent.__jcoOpenTaskById === 'function') {
+            window.parent.__jcoOpenTaskById(proposed.task.id);
+          }
+        } catch (err) {
+          button.disabled = false;
+          error.textContent = String((err && err.message) || err);
+        }
+      });
+      stream.appendChild(card);
+      bottom();
+    }
+
+    function maybeProposeTask(text, res) {
+      if (!res || !res.ok) return;
+      if (!/(发到|发布|上传|剪辑|后期|字幕|配乐|裁剪|拼接|写一篇|写一条|做一条|修改)/.test(String(text || ''))) return;
+      showTaskCard(taskDraftFromText(text));
     }
 
     function runProgress(el, label, doneHtml) {
@@ -1128,6 +1225,17 @@
           return;
         }
         showToast('没复制成，手动选中复制一下。');
+      }
+      else if (label === '派活') {
+        var msgTask = btn.closest('.msg');
+        var prev = msgTask ? msgTask.previousElementSibling : null;
+        while (prev && !prev.classList.contains('msg')) prev = prev.previousElementSibling;
+        var userBubble = prev && prev.classList.contains('user') ? prev.querySelector('.bubble') : null;
+        if (userBubble && userBubble.textContent.trim()) {
+          showTaskCard(taskDraftFromText(userBubble.textContent));
+        } else {
+          showToast('先在聊天里说一句要做什么，再点派活。');
+        }
       }
     });
 
