@@ -217,6 +217,17 @@ contextBridge.exposeInMainWorld('jco', {
       items: Array.isArray(data && data.items) ? data.items : [],
     }),
   },
+  ops: {
+    get: () => ipcRenderer.invoke('ops:get'),
+    save: (data) => ipcRenderer.invoke('ops:save', {
+      report: data && data.report ? data.report : null,
+      comments: Array.isArray(data && data.comments) ? data.comments : [],
+    }),
+    updateComment: (id, patch) => ipcRenderer.invoke('ops:update-comment', {
+      id: String(id || ''),
+      patch: patch && typeof patch === 'object' ? patch : {},
+    }),
+  },
   /** 系统级开关：主题（真切换）/ 开机启动（系统登录项）/ 清缓存（真清理） */
   sys: {
     theme: (mode) => ipcRenderer.invoke('sys:theme', String(mode || 'system')),

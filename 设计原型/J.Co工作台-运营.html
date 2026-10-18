@@ -564,13 +564,21 @@
       showToast('（原型示意）正式版会展开对比：这条和你平常的视频，开头、标题、封面各差在哪。');
     });
 
-    renderComments();
-    renderLeads();
+    function renderEmptyComments() {
+      $('cmts').innerHTML = '<div class="empty">还没有取回评论。点右上「取评论」，AI 取回后会把回复草稿放在这里，等你确认。</div>';
+      $('cmtsHint').textContent = '还没有评论草稿 · 先取评论';
+    }
+    function renderEmptyLeads() {
+      $('leads').innerHTML = '<div class="lead"><div class="lm"><div class="lfrom">还没有取回评论，暂时无法识别私域线索。</div></div></div>';
+      $('leadsHint').textContent = '取回评论后自动识别意向线索';
+    }
+    renderEmptyComments();
+    renderEmptyLeads();
     renderPlans();
 
     /* ---------- 运营环 · 真数据（M4：AI 取回的战报 / 评论 / 线索） ---------- */
     (function () {
-      var jcoLive = (typeof window.jco !== 'undefined' && window.jco && window.jco.publish && window.jco.publish.data && window.jco.publish.session) ? window.jco : null;
+      var jcoLive = (typeof window.jco !== 'undefined' && window.jco && window.jco.ops && window.jco.ops.get) ? window.jco : null;
 
       function esc(s) {
         return String(s == null ? '' : s).replace(/[&<>"']/g, function (m) {
@@ -592,9 +600,9 @@
       var LEAD_WORDS = /(想了解|多少钱|价格|费用|预算|怎么联系|想学|咨询|加微信|私信|了解|预约|参与)/;
 
       function demoHints() {
-        $('reportHint').textContent = '演示数据 · 点「马上跑」让 AI 去取真数据';
-        $('cmtsHint').textContent = '演示内容 · 点「取评论」让 AI 取回真评论和拟稿';
-        $('leadsHint').textContent = '演示内容 · 取回评论后自动识别意向线索';
+        $('reportHint').textContent = '还没有取回战报 · 点「马上跑」让 AI 去取';
+        $('cmtsHint').textContent = '还没有取回评论 · 点「取评论」让 AI 取回并拟稿';
+        $('leadsHint').textContent = '取回评论后自动识别意向线索';
       }
 
       function applyReport(r) {
@@ -629,24 +637,48 @@
             '<div class="cmt-reply"><div class="rl"><span class="ti ti-sparkles"></span>AI 拟好的回复（发之前你可以直接改）</div>' +
             '<div class="editbox"><textarea rows="3"></textarea>' +
             '<div class="cmt-acts">' +
-            '<button class="btn-sm act-send">发出去<span class="ti ti-send"></span></button>' +
+            '<button class="btn-sm act-send">提交审批<span class="ti ti-send"></span></button>' +
             '<button class="linkbtn act-skip">不用回</button>' +
             '</div>' +
             '<div class="replied"><span class="ti ti-check"></span><span class="rtxt"></span></div></div></div>';
           box.appendChild(el);
           var ta = el.querySelector('textarea');
           ta.value = c.draft || '';
+          var saveTimer = null;
+          ta.addEventListener('input', function () {
+            c.draft = ta.value;
+            clearTimeout(saveTimer);
+            saveTimer = setTimeout(function () {
+              jcoLive.ops.updateComment(c.id, { draft: ta.value });
+            }, 600);
+          });
           el.querySelector('.act-send').addEventListener('click', function () {
             var txt = ta.value.trim();
             if (!txt) { showToast('回复不能是空的呀，写一句再发。'); return; }
-            sendReply(c, txt);
+            submitReply(c, txt, el);
           });
           el.querySelector('.act-skip').addEventListener('click', function () {
             el.classList.add('skipped');
             el.querySelector('.rl').innerHTML = '已跳过这条';
             el.querySelector('.replied .ti').className = 'ti ti-check';
             el.querySelector('.rtxt').textContent = '你觉得不需要回，就不回。';
+            jcoLive.ops.updateComment(c.id, { status: 'skipped' });
           });
+          if (c.status === 'skipped') {
+            el.classList.add('skipped');
+            el.querySelector('.rl').innerHTML = '已跳过这条';
+            el.querySelector('.rtxt').textContent = '你觉得不需要回，就不回。';
+          } else if (c.status === 'pending_approval') {
+            el.querySelector('.rl').innerHTML = '已提交审批，等你在任务详情确认';
+            el.querySelector('.act-send').disabled = true;
+          } else if (c.status === 'sent') {
+            el.classList.add('done');
+            el.querySelector('.rl').innerHTML = '<span class="ti ti-check"></span>已发送';
+            el.querySelector('.rtxt').textContent = '这条回复已经由你确认并发出。';
+            el.querySelector('.act-send').disabled = true;
+          } else if (c.status === 'rejected' || c.status === 'failed') {
+            el.querySelector('.rl').innerHTML = '上次审批未通过，可以改完再提交';
+          }
         });
         $('cmtsHint').textContent = 'AI 拟好稿，你点头才发 · 共 ' + items.length + ' 条待你过目';
       }
@@ -684,39 +716,102 @@
       }
 
       var opsBusy = false;
-      function startOps(kind) {
+      function openTaskDetail(id) {
+        if (!id) return;
+        try {
+          if (window.top && window.top !== window) {
+            window.top.location.hash = '#/task/' + encodeURIComponent(id);
+            return;
+          }
+        } catch (e) {}
+        try { sessionStorage.setItem('jco-open-task', id); } catch (e) {}
+        location.href = 'J.Co总管.html';
+      }
+      function taskApiReady() {
+        return !!(window.jco && window.jco.tasks && window.jco.tasks.propose && window.jco.tasks.confirm);
+      }
+      async function startOps(kind) {
         if (opsBusy) return;
-        var engine = (typeof window.jco !== 'undefined' && window.jco && window.jco.tasks && window.jco.tasks.dispatch) ? window.jco : null;
-        if (!engine) { showToast('这个功能在桌面应用里可用（浏览器直开是演示模式）。'); return; }
+        if (!taskApiReady()) { showToast('这个功能在桌面应用里可用（浏览器直开是演示模式）。'); return; }
         opsBusy = true;
-        var name = kind === 'report' ? '取今日战报' : '取待回评论';
-        var task = kind === 'report'
+        var isReport = kind === 'report';
+        var name = isReport ? '取今日战报' : '取待回评论';
+        var goal = isReport
           ? '帮我取今天的战报：打开抖音创作者中心的数据页，看清近 7 天的播放量、新增粉丝、评论数，然后用 jco_save_report 把数字存好（metrics 里放 views / fans / comments，note 里写一句你的解读），存好后跟我说一句。记住只读，不动任何东西。'
           : '帮我取抖音的待回评论：打开评论管理页，挑最重要的几条（最多 5 条），每条拟一句得体的回复（不承诺效果、引导到私信），然后用 jco_save_comments 存好（每条含 id / author / text / draft），我回运营页过目。记住：不要替我回复。';
-        engine.tasks.dispatch({ name: name, prompt: task, staff: 'ops' }).then(function (res) {
-          if (!res || !res.ok) { opsBusy = false; showToast((res && res.error) || '派活失败，稍后再试一次。'); return; }
-          try { sessionStorage.setItem('jco-open-task', res.taskId); } catch (e) {}
-          location.href = 'J.Co总管.html';
-        }).catch(function (err) {
+        try {
+          var proposed = await window.jco.tasks.propose({
+            title: name,
+            goal: goal,
+            type: 'operate',
+            ownerRole: 'operator',
+            inputs: ['platform:douyin'],
+            constraints: isReport ? ['只读，不改页面任何内容'] : ['只取评论并拟稿，不替我回复'],
+            deliverables: isReport ? ['近 7 天战报'] : ['最多 5 条评论与回复草稿'],
+            approvalPolicy: { requireFinalApproval: false },
+          });
+          if (!proposed || !proposed.ok || !proposed.task) {
+            showToast('任务卡没建成：' + ((proposed && proposed.error) || '未知错误'));
+            return;
+          }
+          var confirmed = await window.jco.tasks.confirm(proposed.task.id);
+          if (!confirmed || !confirmed.ok) {
+            showToast('任务启动失败：' + ((confirmed && confirmed.error) || '未知错误'));
+            return;
+          }
+          openTaskDetail(proposed.task.id);
+        } catch (err) {
+          showToast('创建运营任务失败：' + ((err && err.message) || '稍后再试一次'));
+        } finally {
           opsBusy = false;
-          showToast('派活失败：' + ((err && err.message) || '稍后再试一次'));
-        });
+        }
       }
 
-      function sendReply(c, text) {
+      async function submitReply(c, text, el) {
         if (opsBusy) return;
-        var engine = (typeof window.jco !== 'undefined' && window.jco && window.jco.tasks && window.jco.tasks.dispatch) ? window.jco : null;
-        if (!engine) { showToast('这个功能在桌面应用里可用（浏览器直开是演示模式）。'); return; }
+        if (!taskApiReady()) { showToast('这个功能在桌面应用里可用（浏览器直开是演示模式）。'); return; }
         opsBusy = true;
-        var task = '帮我回复抖音评论：找到作者「' + String(c.author || '') + '」的那条评论（内容「' + String(c.text || '').slice(0, 30) + '」，id ' + String(c.id || '') + '），回复：「' + String(text) + '」。这条回复用户已在运营页确认过，直接发送。用发布工具操作，发完告诉我。只回这一条，别动别的。';
-        engine.tasks.dispatch({ name: '回复评论：' + String(c.author || ''), prompt: task, staff: 'ops' }).then(function (res) {
-          if (!res || !res.ok) { opsBusy = false; showToast((res && res.error) || '派活失败，稍后再试一次。'); return; }
-          try { sessionStorage.setItem('jco-open-task', res.taskId); } catch (e) {}
-          location.href = 'J.Co总管.html';
-        }).catch(function (err) {
+        try {
+          await jcoLive.ops.updateComment(c.id, { draft: text });
+          var goal = '帮我回复抖音评论：找到作者「' + String(c.author || '') + '」的那条评论（内容「' + String(c.text || '') + '」，id ' + String(c.id || '') + '），回复：「' + String(text) + '」。这条回复我已经在运营页确认过，只回复这一条，别动别的；不得点赞、删除或发布其他内容，不得修改回复内容。';
+          var proposed = await window.jco.tasks.propose({
+            title: '回复评论：' + String(c.author || ''),
+            goal: goal,
+            type: 'operate',
+            ownerRole: 'operator',
+            inputs: [
+              'platform:douyin',
+              'commentId:' + String(c.id || ''),
+              'author:' + String(c.author || ''),
+              'comment:' + String(c.text || ''),
+            ],
+            constraints: ['只回复指定评论', '不得点赞/删除/发布其他内容', '回复内容必须与用户确认的一致'],
+            deliverables: ['回复已发送到指定评论'],
+            approvalPolicy: { requireFinalApproval: true },
+          });
+          if (!proposed || !proposed.ok || !proposed.task) {
+            showToast('回复任务没建成：' + ((proposed && proposed.error) || '未知错误'));
+            return;
+          }
+          var confirmed = await window.jco.tasks.confirm(proposed.task.id);
+          if (!confirmed || !confirmed.ok) {
+            showToast('回复任务确认失败：' + ((confirmed && confirmed.error) || '未知错误'));
+            return;
+          }
+          await jcoLive.ops.updateComment(c.id, { status: 'pending_approval', taskId: proposed.task.id });
+          if (el) {
+            var rl = el.querySelector('.rl');
+            if (rl) rl.innerHTML = '已提交审批，等你在任务详情确认';
+            var sendBtn = el.querySelector('.act-send');
+            if (sendBtn) sendBtn.disabled = true;
+          }
+          openTaskDetail(proposed.task.id);
+        } catch (err) {
           opsBusy = false;
-          showToast('派活失败：' + ((err && err.message) || '稍后再试一次'));
-        });
+          showToast('提交回复审批失败：' + ((err && err.message) || '稍后再试一次'));
+        } finally {
+          opsBusy = false;
+        }
       }
 
       $('opsReportBtn').addEventListener('click', function () { startOps('report'); });
@@ -724,15 +819,16 @@
 
       (function loadOps() {
         if (!jcoLive) { demoHints(); return; }
-        jcoLive.publish.data.get().then(function (data) {
-          if (data && data.report) { applyReport(data.report); } else { $('reportHint').textContent = '演示数据 · 点「马上跑」让 AI 去取真数据'; }
-          var items = data && data.comments && data.comments.items;
+        jcoLive.ops.get().then(function (res) {
+          var data = res && res.ok ? res.data : null;
+          if (data && data.report) { applyReport(data.report); } else { $('reportHint').textContent = '还没有取回战报 · 点「马上跑」让 AI 去取'; }
+          var items = data && data.comments;
           if (items && items.length) {
             renderRealComments(items);
             renderRealLeads(items);
           } else {
-            $('cmtsHint').textContent = '演示内容 · 点「取评论」让 AI 取回真评论和拟稿';
-            $('leadsHint').textContent = '演示内容 · 取回评论后自动识别意向线索';
+            renderEmptyComments();
+            renderEmptyLeads();
           }
         }).catch(function () { demoHints(); });
       })();

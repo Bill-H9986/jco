@@ -19,6 +19,7 @@ export const FILES = [
   'materials.json',
   'scripts.json',
   'drafts.json',
+  'ops.json',
 ]
 export const DIRS = ['task-sessions', 'work-tasks']
 

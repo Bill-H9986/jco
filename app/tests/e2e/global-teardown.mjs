@@ -17,6 +17,7 @@ const FILES = [
   'materials.json',
   'scripts.json',
   'drafts.json',
+  'ops.json',
 ]
 const DIRS = ['task-sessions', 'work-tasks']
 

@@ -390,6 +390,7 @@ const BRAND_PROFILE_FILE = kernelDataPath('brand-profile.json')
 const MATERIALS_FILE = kernelDataPath('materials.json')
 const SCRIPTS_FILE = kernelDataPath('scripts.json')
 const DRAFTS_FILE = kernelDataPath('drafts.json')
+const OPS_FILE = kernelDataPath('ops.json')
 /** 自动任务纪律尾注（逐字，与《M6 接口契约》一致）：不可逆动作一律停下等用户 */
 const AUTO_DISCIPLINE = [
   '（自动任务纪律：这是定时触发的任务，用户正在别处忙。准备工作照做；',
@@ -641,7 +642,7 @@ ipcMain.handle('publish:session:login', async (_event, payload) => {
 ipcMain.handle('publish:data:get', () => {
   const read = (name) => {
     try {
-      return JSON.parse(fs.readFileSync(path.join(app.getPath('userData'), 'publish', 'data', name), 'utf8'))
+      return JSON.parse(fs.readFileSync(path.join(publishDataDir(), name), 'utf8'))
     } catch (error) {
       return null
     }
@@ -883,6 +884,121 @@ function writeDrafts(data) {
   fs.renameSync(temp, DRAFTS_FILE)
   return normalized
 }
+function emptyOps() {
+  return { version: 1, report: null, comments: [] }
+}
+function normalizeOpsReport(report) {
+  if (!report || typeof report !== 'object') return null
+  const metrics = {}
+  const sourceMetrics = report.metrics && typeof report.metrics === 'object' ? report.metrics : {}
+  Object.keys(sourceMetrics).slice(0, 20).forEach((key) => {
+    const value = Number(sourceMetrics[key])
+    if (Number.isFinite(value)) metrics[String(key).slice(0, 40)] = value
+  })
+  return {
+    platform: String(report.platform || 'douyin').slice(0, 40),
+    at: Number(report.at) || Date.now(),
+    metrics,
+    note: String(report.note || '').slice(0, 500),
+  }
+}
+function normalizeOpsComment(comment, index) {
+  if (!comment || typeof comment !== 'object') return null
+  const status = ['draft', 'skipped', 'pending_approval', 'sent', 'failed', 'rejected'].includes(comment.status)
+    ? comment.status
+    : 'draft'
+  return {
+    id: String(comment.id || 'comment-' + index).slice(0, 120),
+    platform: String(comment.platform || 'douyin').slice(0, 40),
+    author: String(comment.author || '').slice(0, 200),
+    text: String(comment.text || ''),
+    draft: String(comment.draft || ''),
+    status,
+    taskId: String(comment.taskId || '').slice(0, 120),
+    createdAt: Number(comment.createdAt) || Date.now(),
+    updatedAt: Number(comment.updatedAt) || Date.now(),
+  }
+}
+function normalizeOps(input) {
+  const data = input && typeof input === 'object' ? input : {}
+  const comments = Array.isArray(data.comments) ? data.comments : []
+  return {
+    version: 1,
+    report: normalizeOpsReport(data.report),
+    comments: comments.map(normalizeOpsComment).filter(Boolean).slice(0, 100),
+  }
+}
+function publishDataDir() {
+  return path.join(app.getPath('userData'), 'publish', 'data')
+}
+function readOpsLegacy() {
+  const read = (name) => {
+    try {
+      return JSON.parse(fs.readFileSync(path.join(publishDataDir(), name), 'utf8'))
+    } catch (error) {
+      return null
+    }
+  }
+  return { report: read('report-latest.json'), comments: read('comments-latest.json') }
+}
+function readOps() {
+  let current = emptyOps()
+  try {
+    current = normalizeOps(JSON.parse(fs.readFileSync(OPS_FILE, 'utf8')))
+  } catch (error) {
+    current = emptyOps()
+  }
+  const legacy = readOpsLegacy()
+  let changed = false
+  const legacyReport = normalizeOpsReport(legacy.report)
+  if (legacyReport && (!current.report || legacyReport.at > current.report.at)) {
+    current.report = legacyReport
+    changed = true
+  }
+  const legacyComments = Array.isArray(legacy.comments && legacy.comments.items) ? legacy.comments.items : []
+  const byId = new Map(current.comments.map((item) => [item.id, item]))
+  legacyComments.forEach((item, index) => {
+    const normalized = normalizeOpsComment(item, index)
+    if (!normalized) return
+    const existing = byId.get(normalized.id)
+    if (!existing) {
+      normalized.createdAt = Number(item.at) || Date.now()
+      normalized.updatedAt = normalized.createdAt
+      byId.set(normalized.id, normalized)
+      changed = true
+      return
+    }
+    if (existing.status === 'draft' && normalized.draft && normalized.draft !== existing.draft) {
+      existing.draft = normalized.draft
+      existing.updatedAt = Date.now()
+      changed = true
+    }
+  })
+  current.comments = Array.from(byId.values()).slice(0, 100)
+  if (changed) writeOps(current)
+  return current
+}
+function writeOps(data) {
+  const normalized = normalizeOps(data)
+  fs.mkdirSync(path.dirname(OPS_FILE), { recursive: true })
+  const temp = OPS_FILE + '.tmp-' + process.pid
+  fs.writeFileSync(temp, JSON.stringify(normalized, null, 2), 'utf8')
+  fs.renameSync(temp, OPS_FILE)
+  return normalized
+}
+function updateOpsCommentRecord(id, patch) {
+  const data = readOps()
+  const comment = data.comments.find((item) => item.id === String(id || ''))
+  if (!comment) return null
+  if (patch && typeof patch.draft === 'string') comment.draft = patch.draft
+  if (patch && ['draft', 'skipped', 'pending_approval', 'sent', 'failed', 'rejected'].includes(patch.status)) {
+    comment.status = patch.status
+  }
+  if (patch && typeof patch.taskId === 'string') comment.taskId = patch.taskId.slice(0, 120)
+  comment.updatedAt = Date.now()
+  writeOps(data)
+  return comment
+}
 ipcMain.handle('topics:get', () => ({ ok: true, data: readTopics(), brand: readBrandProfile() }))
 ipcMain.handle('topics:save', (_event, payload) => {
   try {
@@ -950,6 +1066,23 @@ ipcMain.handle('drafts:migrate', (_event, payload) => {
     const current = readDrafts()
     if (current.items.length > 0) return { ok: true, data: current, migrated: false }
     return { ok: true, data: writeDrafts(payload || {}), migrated: true }
+  } catch (error) {
+    return { ok: false, error: String((error && error.message) || error) }
+  }
+})
+ipcMain.handle('ops:get', () => ({ ok: true, data: readOps() }))
+ipcMain.handle('ops:save', (_event, payload) => {
+  try {
+    return { ok: true, data: writeOps(payload || {}) }
+  } catch (error) {
+    return { ok: false, error: String((error && error.message) || error) }
+  }
+})
+ipcMain.handle('ops:update-comment', (_event, payload) => {
+  try {
+    const comment = updateOpsCommentRecord(payload && payload.id, payload && payload.patch)
+    if (!comment) return { ok: false, code: 'NOT_FOUND', error: '评论不存在' }
+    return { ok: true, comment }
   } catch (error) {
     return { ok: false, error: String((error && error.message) || error) }
   }
@@ -1320,6 +1453,11 @@ function platformOfWorkTask(task) {
   const found = inputs.map((item) => String(item || '')).find((item) => item.startsWith('platform:'))
   return found ? found.slice('platform:'.length) : 'douyin'
 }
+function taskInputValue(task, prefix) {
+  const inputs = Array.isArray(task && task.inputs) ? task.inputs : []
+  const found = inputs.map((item) => String(item || '')).find((item) => item.startsWith(prefix))
+  return found ? found.slice(prefix.length) : ''
+}
 /** W1-05：审批通过后，用真实内核执行任务；事件进入同一任务详情时间线。 */
 async function runWorkTask(task) {
   if (!task || task.status !== 'running') return
@@ -1339,7 +1477,7 @@ async function runWorkTask(task) {
     })
     workTaskEvent(task, 'note', '任务执行已交给「' + task.ownerRole + '」岗位')
     saveWorkTask(task.id)
-    if (task.type === 'publish') {
+    if (task.type === 'publish' || task.type === 'operate') {
       const ready = await ensurePublishReady(platformOfWorkTask(task))
       if (!ready) workTaskEvent(task, 'note', '发布会话没有就绪；AI 会如实报告，不假装已登录')
     }
@@ -1363,6 +1501,10 @@ async function runWorkTask(task) {
       task.status = result.ok ? 'done' : 'failed'
       task.summary = clipSafe(String((result.ok ? result.text : result.error) || ''), 300)
       workTaskEvent(task, result.ok ? 'state_changed' : 'error', result.ok ? '任务执行完成' : '任务执行失败：' + task.summary)
+    }
+    if (task.type === 'operate') {
+      const commentId = taskInputValue(task, 'commentId:')
+      if (commentId) updateOpsCommentRecord(commentId, { status: result.ok ? 'sent' : 'failed', taskId: task.id })
     }
     task.messages = [
       { role: 'user', text: prompt, t: Date.now() },
@@ -1457,6 +1599,10 @@ ipcMain.handle('tasks:confirm', (_event, payload) => {
       }
       task.approvals.push(approval)
       workTaskEvent(task, 'approval_requested', approval.reason, { approvalId: approval.id, type: approval.type })
+    } else {
+      task.status = 'running'
+      workTaskEvent(task, 'state_changed', '任务开始执行')
+      void runWorkTask(task)
     }
     task.updatedAt = Date.now()
     saveWorkTask(id)
@@ -1482,6 +1628,10 @@ ipcMain.handle('tasks:approval', (_event, payload) => {
       workTaskEvent(task, 'approval_resolved', '用户已批准，任务继续', { approvalId: approval.id, decision })
     } else {
       task.status = 'cancelled'
+      if (task.type === 'operate') {
+        const commentId = taskInputValue(task, 'commentId:')
+        if (commentId) updateOpsCommentRecord(commentId, { status: 'rejected', taskId: task.id })
+      }
       workTaskEvent(task, 'approval_resolved', '用户拒绝了任务', { approvalId: approval.id, decision })
     }
     task.updatedAt = Date.now()
