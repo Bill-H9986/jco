@@ -141,6 +141,14 @@ ipcMain.handle('sys:clean', async () => {
 // 选素材文件（真：系统文件对话框）
 ipcMain.handle('sys:pick-files', async (event) => {
   try {
+    if (JCO_TEST_MODE && process.env.JCO_TEST_PICK_FILES) {
+      return {
+        ok: true,
+        files: process.env.JCO_TEST_PICK_FILES.split(path.delimiter)
+          .filter(Boolean)
+          .map((filePath) => ({ path: filePath, name: path.basename(filePath) })),
+      }
+    }
     const win = BrowserWindow.fromWebContents(event.sender)
     const res = await dialog.showOpenDialog(win, {
       title: '选素材（图片 / 视频 / 音频都行）',
@@ -360,6 +368,7 @@ const AUTO_TASKS_FILE = kernelDataPath('auto-tasks.json')
 const AUTO_RUNS_FILE = kernelDataPath('auto-runs.json')
 const TOPICS_FILE = kernelDataPath('topics.json')
 const BRAND_PROFILE_FILE = kernelDataPath('brand-profile.json')
+const MATERIALS_FILE = kernelDataPath('materials.json')
 /** 自动任务纪律尾注（逐字，与《M6 接口契约》一致）：不可逆动作一律停下等用户 */
 const AUTO_DISCIPLINE = [
   '（自动任务纪律：这是定时触发的任务，用户正在别处忙。准备工作照做；',
@@ -670,6 +679,45 @@ function readBrandProfile() {
     return {}
   }
 }
+function emptyMaterials() {
+  return { version: 1, items: [] }
+}
+function normalizeMaterials(input) {
+  const data = input && typeof input === 'object' ? input : {}
+  const items = Array.isArray(data.items) ? data.items : []
+  return {
+    version: 1,
+    items: items
+      .filter((item) => item && typeof item === 'object')
+      .map((item) => ({
+        cat: ['mine', 'web', 'idea'].includes(item.cat) ? item.cat : 'idea',
+        type: ['video', 'photo', 'star', 'audio'].includes(item.type) ? item.type : 'photo',
+        name: String(item.name || '').slice(0, 200),
+        src: String(item.src || '').slice(0, 300),
+        badge: String(item.badge || '').slice(0, 40),
+        wm: item.wm === true,
+        imported: item.imported === true,
+        path: String(item.path || ''),
+      }))
+      .filter((item) => item.name)
+      .slice(0, 100),
+  }
+}
+function readMaterials() {
+  try {
+    return normalizeMaterials(JSON.parse(fs.readFileSync(MATERIALS_FILE, 'utf8')))
+  } catch (error) {
+    return emptyMaterials()
+  }
+}
+function writeMaterials(data) {
+  const normalized = normalizeMaterials(data)
+  fs.mkdirSync(path.dirname(MATERIALS_FILE), { recursive: true })
+  const temp = MATERIALS_FILE + '.tmp-' + process.pid
+  fs.writeFileSync(temp, JSON.stringify(normalized, null, 2), 'utf8')
+  fs.renameSync(temp, MATERIALS_FILE)
+  return normalized
+}
 ipcMain.handle('topics:get', () => ({ ok: true, data: readTopics(), brand: readBrandProfile() }))
 ipcMain.handle('topics:save', (_event, payload) => {
   try {
@@ -688,6 +736,24 @@ ipcMain.handle('topics:migrate', (_event, payload) => {
     return { ok: false, error: String((error && error.message) || error) }
   }
 })
+ipcMain.handle('materials:get', () => ({ ok: true, data: readMaterials() }))
+ipcMain.handle('materials:save', (_event, payload) => {
+  try {
+    return { ok: true, data: writeMaterials(payload || {}) }
+  } catch (error) {
+    return { ok: false, error: String((error && error.message) || error) }
+  }
+})
+ipcMain.handle('materials:migrate', (_event, payload) => {
+  try {
+    const current = readMaterials()
+    if (current.items.length > 0) return { ok: true, data: current, migrated: false }
+    return { ok: true, data: writeMaterials(payload || {}), migrated: true }
+  } catch (error) {
+    return { ok: false, error: String((error && error.message) || error) }
+  }
+})
+ipcMain.handle('brand:get', () => ({ ok: true, data: readBrandProfile() }))
 function saveAutoRun(taskId, record) {
   // W1-04：执行结果统一写 work-tasks；auto-runs.json 只作为历史迁移来源读取，不再新增写入。
   void taskId

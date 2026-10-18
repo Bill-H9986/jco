@@ -282,8 +282,10 @@
   <div class="toast" id="toast" role="status"></div>
 
   <script>
-    /* 素材箱（真）：初始为空；你导入的素材、AI 找的画面方案，全部真存本机（jco-materials-v1） */
+    /* 素材箱（真）：初始为空；你导入的素材、AI 找的画面方案，全部存本机统一数据层；
+       旧 jco-materials-v1 只做一次性迁移与浏览器直开降级。 */
     const MATERIALS = [];
+    let brandProfile = null;
 
     const gridEl = document.getElementById('grid');
     const toastEl = document.getElementById('toast');
@@ -314,6 +316,28 @@
         .replace(/^\d{1,2}[.、)]\s+/, '')
         .trim()).filter((l) => l !== '');
     }
+    function brandLine() {
+      if (!brandProfile || typeof brandProfile !== 'object') return '';
+      var parts = [];
+      if (brandProfile.industry) parts.push('行业：' + brandProfile.industry);
+      if (brandProfile.audience) parts.push('受众：' + brandProfile.audience);
+      if (Array.isArray(brandProfile.platforms) && brandProfile.platforms.length) parts.push('平台：' + brandProfile.platforms.join('、'));
+      if (brandProfile.tone) parts.push('语气：' + brandProfile.tone);
+      if (Array.isArray(brandProfile.forbidden) && brandProfile.forbidden.length) parts.push('禁用表达：' + brandProfile.forbidden.join('、'));
+      return parts.length ? parts.join('；') : '';
+    }
+    function materialSystemPrompt() {
+      var base = '你是短视频画面策划，服务通用自媒体创作者。只输出要求的行。';
+      var brand = brandLine();
+      return brand ? base + '\n品牌档案：' + brand : base;
+    }
+    async function hydrateBrandProfile() {
+      if (!window.jco || !window.jco.brand || !window.jco.brand.get) return;
+      try {
+        var res = await window.jco.brand.get();
+        if (res && res.ok) brandProfile = res.data || null;
+      } catch (e) {}
+    }
     /* ---------- 导入素材（真文件对话框）/ 本机预览 / 持久化 ---------- */
     function fileUrl(p) {
       var q = String(p).replace(/\\/g, '/');
@@ -321,12 +345,38 @@
       return 'file://' + encodeURI(q);
     }
     function jcoMaterialsSave() {
+      var payload = { items: MATERIALS.slice(0, 100) };
+      if (window.jco && window.jco.materials && window.jco.materials.save) {
+        window.jco.materials.save(payload).then(function (res) {
+          if (!res || !res.ok) showToast('素材没存上：' + ((res && res.error) || '未知错误'));
+        }, function () {
+          showToast('素材没存上，再试一次。');
+        });
+        return;
+      }
       try {
-        localStorage.setItem('jco-materials-v1', JSON.stringify({ items: MATERIALS.slice(0, 100) }));
+        localStorage.setItem('jco-materials-v1', JSON.stringify(payload));
       } catch (e) {}
     }
     function jcoMaterialsLoad() {
       try { return (JSON.parse(localStorage.getItem('jco-materials-v1') || '{"items":[]}').items) || []; } catch (e) { return []; }
+    }
+    async function hydrateMaterialsStore() {
+      if (!window.jco || !window.jco.materials || !window.jco.materials.get) return;
+      try {
+        var res = await window.jco.materials.get();
+        if (!res || !res.ok) return;
+        var items = (res.data && res.data.items) || [];
+        if (items.length === 0 && MATERIALS.length > 0) {
+          var migrated = await window.jco.materials.migrate({ items: MATERIALS });
+          if (migrated && migrated.ok && migrated.data) items = migrated.data.items || [];
+        }
+        MATERIALS.length = 0;
+        items.forEach(function (m) { MATERIALS.push(m); });
+        var active = document.querySelector('.tab.active');
+        var filter = active && active.dataset && active.dataset.f ? active.dataset.f : 'all';
+        render(filter);
+      } catch (e) {}
     }
     function importFiles() {
       var sys = (typeof window.jco !== 'undefined' && window.jco && window.jco.sys) ? window.jco.sys : null;
@@ -459,7 +509,7 @@
           '给我 4 条具体的画面方案，每条一行，格式：画面名称｜一句话说明怎么拍或去哪找。不要序号、不要解释。',
         ].join('\n');
         const res = await JCO_KERNEL.task({
-          system: '你是短视频画面策划，服务通用自媒体创作者。只输出要求的行。',
+          system: materialSystemPrompt(),
           input: input,
         });
         if (res && res.ok && res.text) {
@@ -492,6 +542,8 @@
         saved.slice().reverse().forEach((m) => MATERIALS.unshift(m));
       }
       render('all');
+      void hydrateMaterialsStore();
+      void hydrateBrandProfile();
     })();
   </script>
   <script>

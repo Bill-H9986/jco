@@ -191,6 +191,18 @@ contextBridge.exposeInMainWorld('jco', {
       favs: Array.isArray(data && data.favs) ? data.favs : [],
     }),
   },
+  materials: {
+    get: () => ipcRenderer.invoke('materials:get'),
+    save: (data) => ipcRenderer.invoke('materials:save', {
+      items: Array.isArray(data && data.items) ? data.items : [],
+    }),
+    migrate: (data) => ipcRenderer.invoke('materials:migrate', {
+      items: Array.isArray(data && data.items) ? data.items : [],
+    }),
+  },
+  brand: {
+    get: () => ipcRenderer.invoke('brand:get'),
+  },
   /** 系统级开关：主题（真切换）/ 开机启动（系统登录项）/ 清缓存（真清理） */
   sys: {
     theme: (mode) => ipcRenderer.invoke('sys:theme', String(mode || 'system')),
