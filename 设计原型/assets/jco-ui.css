@@ -113,7 +113,7 @@ html:not(.side-pinned) .side-foot .icon-btn { opacity: 0; pointer-events: none; 
 
 .side-foot .me span, .side-foot .icon-btn { transition: opacity 0.25s ease; }
 
-.side-top { display: flex; align-items: center; justify-content: space-between; padding: 0 6px 0 38px; flex: none; }
+.side-top { display: flex; align-items: center; justify-content: space-between; padding: 0 6px 0 54px; flex: none; }
 
 .wordmark { font-size: 20px; font-weight: 600; letter-spacing: -0.01em; padding: 4px 0 14px 10px; cursor: pointer; transition: opacity 0.25s ease; }
 
@@ -534,7 +534,7 @@ html[data-jco-theme="dark"] {
   }
 
 .side-toggle {
-    position: absolute; top: 13px; left: 10px; z-index: 5;
+    position: absolute; top: 6px; left: 10px; z-index: 5;
     display: flex; align-items: center; justify-content: center;
     width: 34px; height: 34px; border: none; border-radius: 10px;
     background: transparent; color: var(--text-3); cursor: pointer; font-size: 16px;
