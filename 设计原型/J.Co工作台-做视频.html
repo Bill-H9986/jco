@@ -868,7 +868,7 @@
       type: 'video',       // video | image
       ratio: '9:16',
       duration: '30 秒',
-      res: '1080P',
+    res: '720P',
       voice: '标准女声',
       count: '3 张',
       method: 'assemble',  // 技能会影响它
@@ -929,9 +929,7 @@
     ];
     const RES = {
       video: [
-        { v: '720P', tip: '省时间；先看效果用这个' },
-        { v: '1080P', tip: '清晰度够用，平台都认（推荐）' },
-        { v: '2K', tip: '更清晰，生成更慢' },
+        { v: '720P', tip: 'Agnes 视频当前只支持 720P，平台都认' },
       ],
       image: [
         { v: '1K', tip: '够发出去用' },
@@ -1117,7 +1115,7 @@
       if (s.type && s.type !== state.type) {
         state.type = s.type;
         state.ratio = TYPE_DEFAULT_RATIO[s.type];
-        if (state.type === 'image') state.res = '2K'; else state.res = '1080P';
+      if (state.type === 'image') state.res = '2K'; else state.res = '720P';
       }
       if (s.duration) state.duration = s.duration;
       if (s.method) state.method = s.method;
@@ -1170,7 +1168,7 @@
       b.addEventListener('click', () => {
         state.type = b.dataset.t;
         state.ratio = TYPE_DEFAULT_RATIO[state.type];
-        if (state.type === 'image') { state.res = '2K'; state.count = '3 张'; } else { state.res = '1080P'; }
+      if (state.type === 'image') { state.res = '2K'; state.count = '3 张'; } else { state.res = '720P'; }
         render();
       });
     });

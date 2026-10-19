@@ -303,13 +303,13 @@
           </div>
 
           <div class="step-head"><span class="no">第一步</span><h2>发布哪条成片</h2><span class="hint">从「已通过」的草稿里选</span></div>
-          <div class="work">
+          <div class="work" id="publishSource">
             <span class="thumb ti ti-player-play"></span>
             <span class="info">
-              <span class="wt">《把一件事讲清楚，其实就 3 步》</span>
-              <span class="wm">9:16 竖屏 · 1 分 20 秒 · 刚在「后期」定的稿</span>
+              <span class="wt" id="sourceTitle">还没有成片</span>
+              <span class="wm" id="sourceMeta">先去「创作」页出一条，或到「后期」定稿</span>
             </span>
-            <span class="badge">已通过</span>
+            <span class="badge" id="sourceBadge">待定</span>
           </div>
 
           <div class="step-head"><span class="no">第二步</span><h2>发到哪些平台</h2><span class="hint">AI 会用你的浏览器，一个个帮你发</span></div>
@@ -338,11 +338,11 @@
             </div>
             <div class="frow">
               <span class="flabel">标题</span>
-              <input id="titleInp" value="把一件事讲清楚，其实就 3 步">
+            <input id="titleInp" placeholder="点「帮我配好这一版」，或自己写标题">
             </div>
             <div class="frow">
               <span class="flabel">话题</span>
-              <input id="tagInp" value="#内容创作 #短视频 #选题">
+            <input id="tagInp" placeholder="#话题标签，用空格分开">
             </div>
             <div class="frow">
               <span class="flabel">介绍</span>
@@ -591,6 +591,20 @@
     }
 
     /** 从活动日志找最近一张封面图路径（发布页自己的产物记录）。 */
+    (async function initPublishSource() {
+      const path = await latestVideoPath();
+      if (!path) return;
+      const title = document.getElementById('sourceTitle');
+      const meta = document.getElementById('sourceMeta');
+      const badge = document.getElementById('sourceBadge');
+      if (!title || !meta || !badge) return;
+      const name = String(path).split(/[\\/]/).pop() || '成片';
+      title.textContent = name;
+      meta.textContent = '本地成片 · 已就绪';
+      badge.textContent = '已通过';
+      badge.className = 'badge ok';
+    })();
+
     function lastCoverPath() {
       try {
         const lg = JSON.parse(localStorage.getItem('jco-log-v1') || '{"items":[]}');
