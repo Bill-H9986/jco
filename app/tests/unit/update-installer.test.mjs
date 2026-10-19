@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { pickInstallerPath } from '../../src/application/update-installer.ts'
+import { isNewerVersion, pickInstallerPath } from '../../src/application/update-installer.ts'
 
 describe('更新包定位', () => {
   it('优先使用 electron-updater 记录的包', () => {
@@ -28,5 +28,14 @@ describe('更新包定位', () => {
         { path: 'C:/cache/b.exe', exists: false },
       ]),
     ).toBeNull()
+  })
+
+  it('只有更高版本才算可更新，旧缓存不能退回旧版', () => {
+    expect(isNewerVersion('0.6.0-beta.11', '0.6.0-beta.10')).toBe(true)
+    expect(isNewerVersion('0.6.0-beta.10', '0.6.0-beta.11')).toBe(false)
+    expect(isNewerVersion('0.6.0-beta.11', '0.6.0-beta.11')).toBe(false)
+    expect(isNewerVersion('0.6.0', '0.6.0-beta.11')).toBe(true)
+    expect(isNewerVersion('0.6.0-beta.2', '0.6.0-beta.10')).toBe(false)
+    expect(isNewerVersion('', '0.6.0-beta.11')).toBe(false)
   })
 })

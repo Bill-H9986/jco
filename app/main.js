@@ -198,6 +198,21 @@ function setUpdateState(patch) {
 function updateErrorText(error) {
   return String((error && error.message) || error || '未知错误')
 }
+function isNewerVersion(candidate) {
+  const module = require('./dist/application/update-installer.js')
+  return module.isNewerVersion(String(candidate || ''), app.getVersion())
+}
+function pruneStaleUpdateCache() {
+  try {
+    const dir = path.join(process.env.LOCALAPPDATA || app.getPath('appData'), 'jco-updater', 'pending')
+    if (!fs.existsSync(dir)) return
+    for (const name of fs.readdirSync(dir)) {
+      try {
+        fs.rmSync(path.join(dir, name), { force: true })
+      } catch (error) {}
+    }
+  } catch (error) {}
+}
 function updateChannelName(version) {
   const match = String(version || '').match(/-(alpha|beta|rc|next)\./i)
   return match ? match[1].toLowerCase() : 'latest'
@@ -311,6 +326,7 @@ function initAutoUpdater() {
       setUpdateState({ phase: 'checking', feedConfigured: true, message: '正在检查更新…' })
     })
     autoUpdater.on('update-available', (info) => {
+      if (!isNewerVersion(info && info.version)) return
       setUpdateState({
         phase: 'available',
         feedConfigured: true,
@@ -327,6 +343,7 @@ function initAutoUpdater() {
       }
     })
     autoUpdater.on('update-not-available', () => {
+      pruneStaleUpdateCache()
       setUpdateState({
         phase: 'up-to-date',
         feedConfigured: true,
@@ -347,6 +364,18 @@ function initAutoUpdater() {
     })
     autoUpdater.on('update-downloaded', (info) => {
       const latestVersion = String((info && info.version) || updateState.latestVersion || '')
+      if (!isNewerVersion(latestVersion)) {
+        pruneStaleUpdateCache()
+        setUpdateState({
+          phase: 'up-to-date',
+          feedConfigured: true,
+          latestVersion: '',
+          percent: 0,
+          checkedAt: Date.now(),
+          message: '已是最新版本',
+        })
+        return
+      }
       setUpdateState({
         phase: 'downloaded',
         feedConfigured: true,
