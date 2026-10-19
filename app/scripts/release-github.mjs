@@ -52,7 +52,7 @@ function run(command, args, extraEnv = {}) {
     cwd: APP,
     env: { ...process.env, ...extraEnv },
     stdio: 'inherit',
-    shell: false,
+    shell: process.platform === 'win32' && (command === 'npm' || command === 'npx'),
   })
   if (result.status !== 0) process.exit(result.status || 1)
 }
@@ -83,25 +83,40 @@ run('npx', ['electron-builder', '--win', 'nsis', '--config', 'electron-builder.r
 })
 run('node', ['scripts/qa-packaged.mjs'])
 
-const installerName = `J.Co Setup ${version}.exe`
-const assets = [
-  'latest.yml',
-  'latest.yaml',
-  'alpha.yml',
-  'alpha.yaml',
+const channelFile = [
   'beta.yml',
   'beta.yaml',
+  'latest.yml',
+  'latest.yaml',
   'rc.yml',
   'rc.yaml',
-  'next.yml',
-  'next.yaml',
-  installerName,
-  `${installerName}.blockmap`,
+  'alpha.yml',
+  'alpha.yaml',
 ]
   .map((name) => path.join(RELEASE, name))
-  .filter((file) => fs.existsSync(file))
+  .find((file) => fs.existsSync(file))
+if (!channelFile) {
+  console.error('没有找到更新通道 yml。')
+  process.exit(1)
+}
 
-if (assets.length < 2) {
+// GitHub 会把资产名中的空格替换成点；generic provider 仍按 yml 里的 path 拼 URL。
+// 在发布前把通道文件里的安装包名改成 GitHub 实际资产名，避免 404。
+const channelText = fs.readFileSync(channelFile, 'utf8')
+const pathLine = channelText.match(/^path:\s*(.+?)\s*$/m)
+const originalInstallerName = pathLine ? pathLine[1] : ''
+const installerName = originalInstallerName.replace(/ /g, '.')
+if (installerName && installerName !== originalInstallerName) {
+  fs.writeFileSync(channelFile, channelText.split(originalInstallerName).join(installerName), 'utf8')
+}
+const installerPath = path.join(RELEASE, installerName)
+if (!fs.existsSync(installerPath)) {
+  console.error(`通道 yml 指向的安装包不存在：${installerPath}`)
+  process.exit(1)
+}
+const assets = [channelFile, installerPath, `${installerPath}.blockmap`].filter((file) => fs.existsSync(file))
+
+if (assets.length < 3) {
   console.error('没有找到足够的发布资产（通道 yml / exe / blockmap）。')
   process.exit(1)
 }

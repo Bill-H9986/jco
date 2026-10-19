@@ -2,6 +2,9 @@
 # 完整打包（内置 DSH 运行时、首次启动引导）在 M3 完成。
 appId: com.jco.desktop
 productName: J.Co
+# GitHub Releases 会把资产名里的空格替换成点；这里直接生成无空格文件名，保证
+# beta.yml / latest.yml 里的 url 和 GitHub 实际资产名一致。
+artifactName: J.Co-${version}.${ext}
 # 用本地已安装的 Electron（node_modules/electron/dist）：打包不再走网络下载，稳定可复现
 electronDist: node_modules/electron/dist
 # 不重编译原生模块：DSH 内核依赖（koffi / node-pty 等）使用随包预编译二进制，
