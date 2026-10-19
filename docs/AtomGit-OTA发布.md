@@ -1,0 +1,84 @@
+# AtomGit（GitCode）OTA 发布
+
+- 适用版本：`0.6.0-beta.7` 起
+- 平台说明：`gitcode.com` 与 `atomgit.com` 是同一平台的两个品牌入口（同 IP、同 Cookie 体系、同页面标题），账号和仓库通用。
+- 目标：源码与 Release 都放在国内可访问的平台，OTA 不再依赖 GitHub 或第三方代理。
+
+## 1. 一次性准备
+
+1. 在 AtomGit 新建**公开**仓库 `jco`，不要勾选“初始化 README”，这样可以直接推送现有提交历史。
+2. 打开 <https://atomgit.com/setting/token-classic> 新建 access token，只勾选该仓库需要的读写的权限。
+3. token 只放在本机环境变量里，不写进仓库、不写进文档。
+
+## 2. 推送源码
+
+```powershell
+cd C:\Users\Jay\Documents\Codex\2026-10-17\zhu\work\jco-beta
+git remote add atomgit https://atomgit.com/<用户名>/jco.git
+git push atomgit beta/0.6.0
+```
+
+`origin` 仍保留 GitHub，两个平台互不影响。
+
+## 3. 发布安装包到 AtomGit Release
+
+```powershell
+cd C:\Users\Jay\Documents\Codex\2026-10-17\zhu\work\jco-beta\app
+$env:JCO_ATOMGIT_REPO = '<用户名>/jco'
+$env:JCO_ATOMGIT_TOKEN = '<access token>'
+npm run release:atomgit
+```
+
+脚本会：
+
+1. 读取 `release/` 下已打好的通道 yml、安装包和 blockmap；
+2. 创建或更新 `v<版本>` Release；
+3. 用 AtomGit 提供的 OBS 预签名地址上传资产；
+4. 生成 `release-feed/beta.yml`，安装包地址写成 Release 附件的绝对下载地址。
+
+完成后把 `release-feed/beta.yml` 提交到仓库：
+
+```powershell
+git add release-feed/beta.yml
+git commit -m "chore(release): 更新 AtomGit OTA 通道"
+git push atomgit beta/0.6.0
+```
+
+## 4. 为什么 feed 放在仓库里
+
+electron-updater 的 generic provider 会固定请求 `<feedUrl>/beta.yml`，而 AtomGit Release 附件目录不是静态目录结构。因此：
+
+- `beta.yml` 只有几百字节，放进仓库的 `release-feed/` 目录，用 raw 地址读取；
+- `beta.yml` 里的安装包地址写成绝对 URL，指向 Release 附件的下载 API；
+- 安装包本身不进 Git，仓库体积不受影响。
+
+更新源形如：
+
+```text
+https://atomgit.com/<用户名>/jco/raw/beta/0.6.0/release-feed
+```
+
+其中分支名要和实际推送分支一致。
+
+## 5. 已知风险（必须实测）
+
+- AtomGit Release 附件是否能稳定承载约 221 MB 的单文件，官方文档没有写明上限，必须真实上传验证。
+- 附件下载 API 会 302 到 OBS 直链，需要验证下载器能正确跟随重定向、支持 Range 和断点续传。
+- 差分更新依赖安装包同目录的 `.blockmap`；当前绝对 URL 方案下会回退全量下载。若确认全量下载可接受，可在更新器里显式关闭差分下载，避免每次多一次失败请求。
+- 正式对外分发前仍需 Windows 代码签名；当前为内测策略。
+
+## 6. 回滚
+
+把已安装版的更新源切回 GitHub：
+
+```powershell
+node scripts/point-installed-updater.mjs https://github.com/Bill-H9986/jco/releases/latest/download
+```
+
+## 7. 排错顺序
+
+1. `git ls-remote https://atomgit.com/<用户名>/jco.git` 能读到分支；
+2. 浏览器直接打开 `release-feed/beta.yml` 的 raw 地址能下载；
+3. 浏览器直接打开 `beta.yml` 里的安装包地址能开始下载；
+4. 应用 `%APPDATA%\J.Co\update-channel.json` 的 `feedUrl` 指向 AtomGit；
+5. 设置页检查更新进入 `checking → available`，再手动点下载。

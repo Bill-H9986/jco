@@ -21,6 +21,7 @@
     "test:visual": "playwright test -c playwright.visual.config.mjs",
     "release:package": "node scripts/release-package.mjs",
     "release:github": "node scripts/release-github.mjs",
+    "release:atomgit": "node scripts/release-atomgit.mjs",
     "update:point-installed": "node scripts/point-installed-updater.mjs",
     "update:serve": "node scripts/update-feed-server.mjs",
     "check:no-direct-business-localstorage": "node scripts/check-all.mjs --only no-direct-business-localstorage --baseline",
