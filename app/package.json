@@ -7,7 +7,7 @@
   "main": "main.js",
   "private": true,
   "jco": {
-    "updateFeedUrl": "",
+    "updateFeedUrl": "https://github.com/Bill-H9986/jco/releases/latest/download",
     "updateCheckIntervalHours": 4
   },
   "scripts": {
