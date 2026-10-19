@@ -1,8 +1,8 @@
-version: 0.6.0-beta.8
+version: 0.6.0-beta.9
 files:
-  - url: https://api.gitcode.com/api/v5/repos/gcw_R1J1wXIM/jco/releases/v0.6.0-beta.8/attach_files/J.Co-0.6.0-beta.8.exe/download
-    sha512: RexR0GalISkNHXEVdK3jrvYS+eK5NdkzsF5+BsTpTn6jJa61sowl7aDiFMaJUteVXI0tfnm0RIRtYUBBmU9F6g==
-    size: 221629832
-path: J.Co-0.6.0-beta.8.exe
-sha512: RexR0GalISkNHXEVdK3jrvYS+eK5NdkzsF5+BsTpTn6jJa61sowl7aDiFMaJUteVXI0tfnm0RIRtYUBBmU9F6g==
-releaseDate: '2026-10-19T11:20:22.194Z'
+  - url: https://api.gitcode.com/api/v5/repos/gcw_R1J1wXIM/jco/releases/v0.6.0-beta.9/attach_files/J.Co-0.6.0-beta.9.exe/download
+    sha512: pPQ+v4HCCcfbvo66HFLIfnq+wlUyFs9fZXjpz5CrplbXF52EEgM4AFbs4tL9Ce01GvX1c+DRgIHbFkG6Fx8hGA==
+    size: 221629840
+path: J.Co-0.6.0-beta.9.exe
+sha512: pPQ+v4HCCcfbvo66HFLIfnq+wlUyFs9fZXjpz5CrplbXF52EEgM4AFbs4tL9Ce01GvX1c+DRgIHbFkG6Fx8hGA==
+releaseDate: '2026-10-19T11:28:38.048Z'

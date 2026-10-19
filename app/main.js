@@ -259,8 +259,8 @@ function resolveInstallerPath() {
   const pendingDownload = path.join(cacheRoot, 'pending', 'download')
   return module.pickInstallerPath([
     { path: helperFile, exists: Boolean(helperFile) && fs.existsSync(helperFile) },
-    { path: installerExe, exists: fs.existsSync(installerExe) },
     { path: pendingDownload, exists: fs.existsSync(pendingDownload) },
+    { path: installerExe, exists: fs.existsSync(installerExe) },
   ])
 }
 async function downloadUpdateNow() {
