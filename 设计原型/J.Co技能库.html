@@ -936,11 +936,15 @@
         btn.addEventListener('click', function () {
           s.on = !s.on
           paint()
+          updateCount()
           void save(items)
           toast(s.on ? '「' + s.name + '」启用了，去创作页就能叫它' : '「' + s.name + '」先收起来了')
         })
         grid.appendChild(el)
       })
+      updateCount()
+    }
+    function updateCount() {
       var onCount = items.filter(function (s) { return s.on }).length
       countEl.textContent = '已启用 ' + onCount + ' 个 / 共 ' + items.length + ' 个'
     }
