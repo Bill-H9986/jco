@@ -1,7 +1,7 @@
 const { app, BrowserWindow, Menu, shell, screen, ipcMain, nativeTheme, session, dialog, Tray, nativeImage, Notification } = require('electron')
 const path = require('path')
 const fs = require('fs')
-const { execFileSync } = require('child_process')
+const { execFileSync, spawn } = require('child_process')
 const { pathToFileURL } = require('url')
 const PACKAGE_JSON = require('./package.json')
 
@@ -225,9 +225,43 @@ async function checkForUpdates(manual = false) {
 }
 function installUpdateNow() {
   if (!updateController || updateState.phase !== 'downloaded') return updateState
+  const installer = resolveInstallerPath()
+  if (!installer) {
+    setUpdateState({ phase: 'error', message: '找不到已下载的安装包，请重新下载更新。' })
+    return updateState
+  }
   setUpdateState({ phase: 'installing', message: '正在退出并安装更新…' })
-  setImmediate(() => updateController.quitAndInstall(true, true))
+  try {
+    let target = installer
+    if (!/\.exe$/i.test(target)) {
+      const copy = path.join(path.dirname(target), 'installer.exe')
+      fs.copyFileSync(target, copy)
+      target = copy
+    }
+    const child = spawn(target, ['--updated', '/S', '--force-run'], { detached: true, stdio: 'ignore' })
+    child.on('error', (error) => {
+      setUpdateState({ phase: 'error', message: '启动安装程序失败：' + updateErrorText(error) })
+    })
+    child.unref()
+    setImmediate(() => app.quit())
+  } catch (error) {
+    setUpdateState({ phase: 'error', message: '启动安装程序失败：' + updateErrorText(error) })
+  }
   return updateState
+}
+
+function resolveInstallerPath() {
+  const module = require('./dist/application/update-installer.js')
+  const helper = updateController && updateController.downloadedUpdateHelper
+  const helperFile = helper ? String(helper.packageFile || '') : ''
+  const cacheRoot = path.join(process.env.LOCALAPPDATA || app.getPath('appData'), 'jco-updater')
+  const installerExe = path.join(cacheRoot, 'installer.exe')
+  const pendingDownload = path.join(cacheRoot, 'pending', 'download')
+  return module.pickInstallerPath([
+    { path: helperFile, exists: Boolean(helperFile) && fs.existsSync(helperFile) },
+    { path: installerExe, exists: fs.existsSync(installerExe) },
+    { path: pendingDownload, exists: fs.existsSync(pendingDownload) },
+  ])
 }
 async function downloadUpdateNow() {
   if (!updateController) return updateState
