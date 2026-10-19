@@ -238,10 +238,13 @@ contextBridge.exposeInMainWorld('jco', {
     get: () => ipcRenderer.invoke('brand:get'),
     save: (data) => ipcRenderer.invoke('brand:save', {
       industry: String((data && data.industry) || ''),
+      business: String((data && data.business) || ''),
+      products: String((data && data.products) || ''),
       audience: String((data && data.audience) || ''),
       platforms: Array.isArray(data && data.platforms) ? data.platforms.map(String) : [],
       tone: String((data && data.tone) || ''),
       forbidden: Array.isArray(data && data.forbidden) ? data.forbidden.map(String) : [],
+      knowledgeAutoLearn: !data || data.knowledgeAutoLearn !== false,
       knowledge: Array.isArray(data && data.knowledge)
         ? data.knowledge.map((entry) => ({
             id: String((entry && entry.id) || ''),
@@ -250,12 +253,25 @@ contextBridge.exposeInMainWorld('jco', {
             tags: Array.isArray(entry && entry.tags) ? entry.tags.map(String) : [],
             enabled: !entry || entry.enabled !== false,
             updatedAt: Number(entry && entry.updatedAt) || 0,
+            source: String((entry && entry.source) || 'manual'),
+            sourceTaskId: String((entry && entry.sourceTaskId) || ''),
+            sourceTaskTitle: String((entry && entry.sourceTaskTitle) || ''),
           }))
         : [],
     }),
   },
   knowledge: {
     import: () => ipcRenderer.invoke('knowledge:import'),
+    onEvent: (callback) => {
+      if (typeof callback !== 'function') return
+      ipcRenderer.on('knowledge:event', (_event, payload) => {
+        try {
+          callback(payload || null)
+        } catch (error) {
+          /* 页面回调异常不扩散 */
+        }
+      })
+    },
   },
   updates: {
     get: () => ipcRenderer.invoke('updates:get'),

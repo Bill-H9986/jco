@@ -16,7 +16,7 @@ const SETTINGS_FILE = path.join(TEST_KERNEL_DIR, 'settings.json')
 test('M11 W4-01：设置偏好落盘，BrandProfile 全站同源生效', async () => {
   fs.rmSync(BRAND_FILE, { force: true })
   fs.rmSync(SETTINGS_FILE, { force: true })
-  const fixtureDir = path.join(os.tmpdir(), 'jco-knowledge-fixture-' + Date.now().toString(36))
+  const fixtureDir = path.join(os.tmpdir(), `jco-knowledge-fixture-${Date.now().toString(36)}`)
   fs.mkdirSync(fixtureDir, { recursive: true })
   const fixtureFile = path.join(fixtureDir, '品牌说明.md')
   fs.writeFileSync(
@@ -40,6 +40,8 @@ test('M11 W4-01：设置偏好落盘，BrandProfile 全站同源生效', async (
     await win.waitForTimeout(1500)
 
     await win.locator('#brandIndustry').fill('健身')
+    await win.locator('#brandBusiness').fill('线上健身课程与训练营')
+    await win.locator('#brandProducts').fill('七日入门训练营、一对一私教')
     await win.locator('#brandAudience').fill('上班族')
     await win.locator('#brandPlatforms').fill('抖音、视频号')
     await win.locator('#brandTone').fill('直接')
@@ -56,6 +58,8 @@ test('M11 W4-01：设置偏好落盘，BrandProfile 全站同源生效', async (
       .toMatchObject({
         data: {
           industry: '健身',
+          business: '线上健身课程与训练营',
+          products: '七日入门训练营、一对一私教',
           audience: '上班族',
           platforms: ['抖音', '视频号'],
           tone: '直接',
@@ -72,7 +76,22 @@ test('M11 W4-01：设置偏好落盘，BrandProfile 全站同源生效', async (
     const imported = brand.data.knowledge.find((entry) => entry.title === '品牌说明.md')
     expect(imported.content).toContain('[已脱敏]')
     expect(imported.content).not.toContain('fixture-secret-123')
+    expect(imported.source).toBe('import')
+    expect(brand.data.knowledge.find((entry) => entry.title === '发布口径').source).toBe('manual')
     expect(await win.locator('#kbCount').textContent()).toContain('2')
+    await expect(win.locator('#tgKnowledgeAuto')).toHaveClass(/on/)
+    await win.locator('#tgKnowledgeAuto').click()
+    await expect
+      .poll(async () => await win.evaluate(async () => (await window.jco.brand.get()).data.knowledgeAutoLearn), {
+        timeout: 5000,
+      })
+      .toBe(false)
+    await win.locator('#tgKnowledgeAuto').click()
+    await expect
+      .poll(async () => await win.evaluate(async () => (await window.jco.brand.get()).data.knowledgeAutoLearn), {
+        timeout: 5000,
+      })
+      .toBe(true)
 
     const version = await app.evaluate(({ app: electronApp }) => electronApp.getVersion())
     await expect(win.locator('#appVersion')).toContainText(version)

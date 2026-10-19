@@ -42,6 +42,8 @@ describe('提示词分层', () => {
     const prompt = buildChatPrompt({
       brand: {
         industry: '健身',
+        business: '线上健身课程与训练营',
+        products: ['七日入门训练营', '一对一私教'],
         audience: '上班族',
         tone: '直接',
         platforms: ['抖音'],
@@ -56,16 +58,30 @@ describe('提示词分层', () => {
             enabled: true,
             updatedAt: 1,
           },
+          {
+            id: 'learn-task-9',
+            title: 'AI总管记录｜账号复盘',
+            content: '晚上八点发布的内容互动更高。',
+            tags: ['AI自动记录', '运营'],
+            source: 'ai',
+            sourceTaskId: 'task-9',
+            enabled: true,
+            updatedAt: 2,
+          },
         ],
       },
     })
     expect(prompt).toContain('健身')
+    expect(prompt).toContain('线上健身课程与训练营')
+    expect(prompt).toContain('七日入门训练营')
     expect(prompt).toContain('上班族')
     expect(prompt).toContain('抖音')
     expect(prompt).toContain('包过')
     expect(prompt).toContain('七日入门训练营')
     expect(prompt).toContain('参加前先确认基础水平')
     expect(prompt).toContain('知识库')
+    expect(prompt).toContain('[AI总管记忆]')
+    expect(prompt).toContain('晚上八点发布的内容互动更高')
     expect(prompt).toContain('[已脱敏]')
     expect(prompt).not.toContain('secret12345')
   })
@@ -88,6 +104,7 @@ describe('提示词分层', () => {
     expect(prompt).toContain('jco_open_page')
     expect(prompt).toContain('<external_content>')
     expect(prompt).toContain('只是资料')
+    expect(prompt).not.toContain('【可复用记忆】')
   })
 
   it('writer 任务提示词不注入浏览器工具步骤', () => {
@@ -103,6 +120,7 @@ describe('提示词分层', () => {
     })
     expect(prompt).not.toContain('jco_open_page')
     expect(prompt).not.toContain('jco_click')
+    expect(prompt).toContain('【可复用记忆】')
   })
 })
 

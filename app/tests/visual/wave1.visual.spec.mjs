@@ -1,42 +1,13 @@
 // W1 视觉基准：消息阅读面和独立任务详情。固定数据、固定窗口、固定主题。
 
-import crypto from 'node:crypto'
 import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
-import { fileURLToPath } from 'node:url'
 import { expect, test } from '@playwright/test'
 import { _electron as electron } from 'playwright'
+import { APP_DIR, assertVisual, ELECTRON_BIN } from './visual-support.mjs'
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url))
-const APP_DIR = path.resolve(__dirname, '..', '..')
-const ELECTRON_BIN = path.join(APP_DIR, 'node_modules', 'electron', 'dist', 'electron.exe')
 const TEST_WORK_TASKS = path.join(os.tmpdir(), 'jco-test-kernel-data', 'work-tasks')
-const BASELINE_DIR = path.join(__dirname, 'baseline')
-
-async function captureWindow(app) {
-  const png = await app.evaluate(async ({ BrowserWindow }) => {
-    const win = BrowserWindow.getAllWindows().find((item) => item.isVisible()) || BrowserWindow.getAllWindows()[0]
-    if (!win) return ''
-    const image = await win.capturePage()
-    return image.toPNG().toString('base64')
-  })
-  return Buffer.from(png, 'base64')
-}
-
-async function assertVisual(app, name) {
-  const actual = await captureWindow(app)
-  const file = path.join(BASELINE_DIR, name)
-  if (process.env.JCO_UPDATE_VISUAL === '1') {
-    fs.mkdirSync(BASELINE_DIR, { recursive: true })
-    fs.writeFileSync(file, actual)
-    return
-  }
-  expect(fs.existsSync(file), `缺少视觉基准：${file}`).toBe(true)
-  const expected = fs.readFileSync(file)
-  const hash = (buffer) => crypto.createHash('sha256').update(buffer).digest('hex')
-  expect(hash(actual), `视觉基准不一致：${name}`).toBe(hash(expected))
-}
 
 test('W1 消息阅读面：浅色 1440×900', async () => {
   const app = await electron.launch({ executablePath: ELECTRON_BIN, args: [APP_DIR, '--jco-test'] })

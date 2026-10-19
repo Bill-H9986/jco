@@ -616,6 +616,8 @@ const AUTO_RUNS_FILE = kernelDataPath('auto-runs.json')
 const TOPICS_FILE = kernelDataPath('topics.json')
 const BRAND_PROFILE_FILE = kernelDataPath('brand-profile.json')
 const KNOWLEDGE_CONTENT_LIMIT = 8000
+const BRAND_BUSINESS_LIMIT = 500
+const BRAND_PRODUCTS_LIMIT = 1000
 const KNOWLEDGE_SECRET_PATTERNS = [
   /Bearer\s+[A-Za-z0-9._~+/-]{8,}/gi,
   /sk-[A-Za-z0-9_-]{8,}/g,
@@ -1022,10 +1024,13 @@ function normalizeBrandProfile(input) {
     : []
   return {
     industry: String(data.industry || '').trim().slice(0, 100),
+    business: String(data.business || '').trim().slice(0, BRAND_BUSINESS_LIMIT),
+    products: String(data.products || '').trim().slice(0, BRAND_PRODUCTS_LIMIT),
     audience: String(data.audience || '').trim().slice(0, 200),
     platforms,
     tone: String(data.tone || '').trim().slice(0, 100),
     forbidden,
+    knowledgeAutoLearn: data.knowledgeAutoLearn !== false,
     knowledge: normalizeKnowledgeEntries(data.knowledge),
   }
 }
@@ -1049,9 +1054,12 @@ function normalizeKnowledgeEntries(input) {
         tags,
         enabled: entry.enabled !== false,
         updatedAt: Number(entry.updatedAt) || Date.now(),
+        source: ['manual', 'import', 'ai'].includes(entry.source) ? entry.source : 'manual',
+        sourceTaskId: String(entry.sourceTaskId || '').slice(0, 80),
+        sourceTaskTitle: redactKnowledgeText(String(entry.sourceTaskTitle || '')).slice(0, 100),
       }
     })
-    .slice(0, 50)
+    .slice(0, 100)
 }
 function readBrandProfile() {
   try {
@@ -1066,7 +1074,46 @@ function writeBrandProfile(input) {
   const temp = BRAND_PROFILE_FILE + '.tmp-' + process.pid
   fs.writeFileSync(temp, JSON.stringify(normalized, null, 2), 'utf8')
   fs.renameSync(temp, BRAND_PROFILE_FILE)
+  void getBridge()
+    .then((bridge) =>
+      Promise.all(
+        ['chat', 'writer', 'publisher', 'operator', 'editor'].map((profile) =>
+          bridge.reloadProfile(profile).catch(() => {}),
+        ),
+      ),
+    )
+    .catch(() => {})
   return normalized
+}
+function recordTaskKnowledge(task, resultText) {
+  try {
+    const profile = readBrandProfile()
+    if (profile.knowledgeAutoLearn === false) return null
+    const module = require('./dist/application/self-learning.js')
+    const learned = module.buildLearnedKnowledge(
+      {
+        id: String(task.id || ''),
+        title: String(task.title || task.name || '任务结果'),
+        type: String(task.type || ''),
+        status: String(task.status || ''),
+      },
+      String(resultText || ''),
+    )
+    if (!learned) return null
+    const knowledge = module.mergeLearnedKnowledge(profile.knowledge || [], learned, 100)
+    const saved = writeBrandProfile({ ...profile, knowledge })
+    const entry = saved.knowledge.find((item) => item.sourceTaskId === learned.sourceTaskId) || learned
+    BrowserWindow.getAllWindows().forEach((win) => {
+      try {
+        win.webContents.send('knowledge:event', { type: 'learned', entry, count: saved.knowledge.length })
+      } catch (error) {
+        /* 窗口已关闭则忽略 */
+      }
+    })
+    return entry
+  } catch (error) {
+    return null
+  }
 }
 function emptyMaterials() {
   return { version: 1, items: [] }
@@ -1449,7 +1496,7 @@ ipcMain.handle('knowledge:import', async (event) => {
     } else {
       const win = BrowserWindow.fromWebContents(event.sender)
       const result = await dialog.showOpenDialog(win, {
-        title: '导入知识库资料',
+        title: '导入业务资料',
         properties: ['openFile', 'multiSelections'],
         filters: [
           { name: '文本资料', extensions: ['txt', 'md', 'markdown', 'csv', 'json'] },
@@ -1484,6 +1531,7 @@ ipcMain.handle('knowledge:import', async (event) => {
         tags: ['导入'],
         enabled: true,
         updatedAt: Date.now(),
+        source: 'import',
       })
     }
     return { ok: true, entries, skipped }
@@ -1689,6 +1737,7 @@ async function runAutoTask(task) {
     workTaskEvent(workTask, result.ok ? 'state_changed' : 'error', result.ok ? '自动任务完成' : '自动任务失败：' + workTask.summary)
     saveWorkTask(workTask.id)
     broadcastWorkTask(workTask, result.ok ? 'done' : 'fail')
+    if (result.ok) recordTaskKnowledge(workTask, String(result.text || workTask.summary || ''))
     return { ok: !!result.ok, summary: workTask.summary, taskId: workTask.id }
   } catch (error) {
     workTask.status = 'failed'
@@ -1990,6 +2039,7 @@ async function runWorkTask(task) {
     ]
     saveWorkTask(task.id)
     broadcastWorkTask(task, result.ok ? (task.type === 'publish' ? 'update' : 'done') : 'fail')
+    if (result.ok) recordTaskKnowledge(task, String(result.text || task.summary || ''))
   } catch (error) {
     task.status = 'failed'
     task.summary = '执行出错：' + clipSafe(String((error && error.message) || error), 200)

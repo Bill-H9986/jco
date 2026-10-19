@@ -155,6 +155,11 @@
 
 .brand-input { width: 280px; }
 
+.brand-area {
+    width: 320px; height: auto; min-height: 76px; padding: 9px 12px;
+    line-height: 1.55; resize: vertical;
+  }
+
 .kb-card { padding: 4px 18px 16px; }
 
 .kb-hero {
@@ -198,10 +203,20 @@
 
 .kb-item-title .ti { color: var(--text-3); font-size: 14px; }
 
+.kb-source {
+    display: inline-flex; align-items: center; height: 20px; padding: 0 7px;
+    border-radius: 999px; background: var(--tint); color: var(--text-3);
+    font-size: 10.5px; font-weight: 500; white-space: nowrap;
+  }
+
+.kb-source.ai { background: var(--green-tint); color: var(--green); }
+
 .kb-item-text {
     margin-top: 4px; font-size: 12px; color: var(--text-2); line-height: 1.55;
     display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
   }
+
+.kb-item-meta { margin-top: 5px; font-size: 11px; color: var(--text-3); }
 
 .kb-tags { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 7px; }
 
@@ -329,6 +344,7 @@
 @media (max-width: 860px) {
     .sidebar { display: none; }
     .wrap { padding: 24px 18px 60px; }
+    .brand-input, .brand-area { width: 100%; }
   }
   </style>
 </head>
@@ -413,24 +429,32 @@
             </div>
           </div>
 
-          <!-- 内置知识库 -->
-          <div class="grp-title"><span class="ti ti-book"></span>知识库</div>
+          <!-- 让 J.Co 懂你：业务资料由用户填一次，运营记忆由 AI 总管自动积累 -->
+          <div class="grp-title"><span class="ti ti-heart-handshake"></span>让 J.Co 懂你</div>
           <div class="grp-card kb-card">
             <div class="kb-hero">
               <div class="kb-icon"><span class="ti ti-book"></span></div>
               <div class="kb-copy">
-                <div class="kb-title">J.Co 内置知识库</div>
-                <div class="kb-desc">品牌档案和本机资料都收在这里。聊天、选题、素材、写稿和分镜会参考它；只存本机，不自动上传。</div>
+                <div class="kb-title">先告诉 J.Co 你是做什么的</div>
+                <div class="kb-desc">公司业务、产品这些你填一次；以后干完运营、调研、写内容的活，AI 总管会把有用的经验自己记下来。只存本机，不自动上传。</div>
               </div>
               <div class="kb-tools">
                 <button class="btn-ghost" type="button" id="btnKbImport"><span class="ti ti-upload"></span>导入资料</button>
-                <button class="btn-ghost primary" type="button" id="btnKbAdd"><span class="ti ti-plus"></span>添加知识</button>
+                <button class="btn-ghost primary" type="button" id="btnKbAdd"><span class="ti ti-plus"></span>补充一条</button>
               </div>
             </div>
-            <div class="kb-subhead"><b>品牌知识</b><span>所有内容页面共用</span></div>
+            <div class="kb-subhead"><b>我的生意</b><span>所有内容页面共用</span></div>
             <div class="row">
               <div class="r-main"><div class="r-title">行业 / 赛道</div><div class="r-desc">客户自己定，J.Co 不写死行业；选题、素材、写稿、分镜共用这份档案</div></div>
               <div class="r-ctl"><input class="inp brand-input" id="brandIndustry" type="text" placeholder="例如：客户所在行业"></div>
+            </div>
+            <div class="row">
+              <div class="r-main"><div class="r-title">你是做什么的</div><div class="r-desc">一句话说清公司、门店或账号在做什么</div></div>
+              <div class="r-ctl"><textarea class="inp brand-area" id="brandBusiness" maxlength="500" rows="2" placeholder="例如：给上班族做线上健身训练和陪练服务"></textarea></div>
+            </div>
+            <div class="row">
+              <div class="r-main"><div class="r-title">主要产品 / 服务</div><div class="r-desc">卖什么、提供什么；多个用逗号或换行分隔</div></div>
+              <div class="r-ctl"><textarea class="inp brand-area" id="brandProducts" maxlength="1000" rows="2" placeholder="例如：七日入门训练营、一对一私教"></textarea></div>
             </div>
             <div class="row">
               <div class="r-main"><div class="r-title">核心受众</div><div class="r-desc">这条账号主要说给谁听</div></div>
@@ -449,14 +473,18 @@
               <div class="r-ctl"><input class="inp brand-input" id="brandForbidden" type="text" placeholder="例如：包过、稳赚、绝对"></div>
             </div>
             <div class="row">
-              <div class="r-main"><div class="r-title">保存后全站生效</div><div class="r-desc">新打开的聊天、选题、素材、文案和做视频页面会读取同一份知识库</div></div>
-              <div class="r-ctl"><button class="btn-ghost primary" id="btnBrandSave">保存知识库</button></div>
+              <div class="r-main"><div class="r-title">干完活自动记住</div><div class="r-desc">运营、调研、内容任务完成后，AI 总管自动总结可复用的经验；随时可以停用或删除</div></div>
+              <div class="r-ctl"><button class="tg on" id="tgKnowledgeAuto" aria-label="干完活自动记住" aria-checked="true"></button></div>
+            </div>
+            <div class="row">
+              <div class="r-main"><div class="r-title">保存后全站生效</div><div class="r-desc">新打开的聊天、选题、素材、文案和做视频页面会读取同一份业务档案</div></div>
+              <div class="r-ctl"><button class="btn-ghost primary" id="btnBrandSave">保存我的业务</button></div>
             </div>
             <div class="kb-divider"></div>
-            <div class="kb-subhead"><b>资料条目</b><span id="kbCount">已收录 0 条</span></div>
+            <div class="kb-subhead"><b>J.Co 记住的内容</b><span id="kbCount">已记住 0 条</span></div>
             <div class="kb-list" id="kbList"></div>
-            <div class="kb-empty" id="kbEmpty">还没有补充资料。导入一份产品说明、常见问答或账号口径，AI 下次就能参考。</div>
-            <div class="kb-help">支持导入 .txt / .md / .csv / .json，单个文件不超过 200 KB。导入不会上传到外部服务。</div>
+            <div class="kb-empty" id="kbEmpty">还没有资料。先填上面的公司业务和产品；以后 J.Co 干完活，会自己把有用的经验记在这里。</div>
+            <div class="kb-help">也可以导入产品说明、常见问答或账号口径（.txt / .md / .csv / .json，单个文件不超过 200 KB）。全部只存本机。</div>
           </div>
 
           <!-- AI 与干活方式 -->
@@ -656,8 +684,8 @@
 
   <div class="kb-modal" id="kbModal" hidden>
     <div class="kb-sheet" role="dialog" aria-modal="true" aria-labelledby="kbModalTitle">
-      <h3 id="kbModalTitle">添加知识</h3>
-      <div class="kb-desc">写给 AI 的事实、产品资料、问答口径或创作规则。内容越具体，回答越稳。</div>
+      <h3 id="kbModalTitle">补充一条资料</h3>
+      <div class="kb-desc">把产品事实、常见问答或账号口径写清楚。内容越具体，AI 回答越稳；只存本机。</div>
       <div class="kb-field">
         <label for="kbTitle">标题</label>
         <input id="kbTitle" type="text" maxlength="120" placeholder="例如：活动规则说明">
@@ -672,7 +700,7 @@
       </div>
       <div class="kb-modal-foot">
         <button class="btn-ghost" type="button" id="btnKbModalCancel">取消</button>
-        <button class="btn-ghost primary" type="button" id="btnKbModalSave">保存这条知识</button>
+        <button class="btn-ghost primary" type="button" id="btnKbModalSave">收下这条资料</button>
       </div>
     </div>
   </div>
@@ -864,6 +892,7 @@
     /* ---------- 内置知识库（品牌知识 + 本机资料；全站同一份） ---------- */
     let knowledgeEntries = [];
     let editingKnowledgeId = '';
+    let knowledgeAutoLearn = true;
     const KNOWLEDGE_CONTENT_LIMIT = 8000;
 
     function splitBrandList(value) {
@@ -880,30 +909,43 @@
         .map(function (entry, index) {
           return {
             id: String(entry.id || ('kb-' + Date.now().toString(36) + '-' + index)),
-            title: String(entry.title || ('知识 ' + (index + 1))).trim().slice(0, 120),
+            title: String(entry.title || ('资料 ' + (index + 1))).trim().slice(0, 120),
             content: clipKnowledgeContent(String(entry.content || '').trim()),
             tags: Array.isArray(entry.tags) ? entry.tags.map(String).filter(Boolean).slice(0, 10) : [],
             enabled: entry.enabled !== false,
             updatedAt: Number(entry.updatedAt) || Date.now(),
+            source: ['manual', 'import', 'ai'].indexOf(entry.source) !== -1 ? entry.source : 'manual',
+            sourceTaskId: String(entry.sourceTaskId || ''),
+            sourceTaskTitle: String(entry.sourceTaskTitle || ''),
           };
         })
-        .slice(0, 50);
+        .slice(0, 100);
     }
 
     function brandPayload() {
       return {
         industry: document.getElementById('brandIndustry').value.trim(),
+        business: document.getElementById('brandBusiness').value.trim(),
+        products: document.getElementById('brandProducts').value.trim(),
         audience: document.getElementById('brandAudience').value.trim(),
         platforms: splitBrandList(document.getElementById('brandPlatforms').value),
         tone: document.getElementById('brandTone').value.trim(),
         forbidden: splitBrandList(document.getElementById('brandForbidden').value),
+        knowledgeAutoLearn: knowledgeAutoLearn,
         knowledge: knowledgeEntries,
       };
     }
 
+    function paintKnowledgeAutoToggle() {
+      const toggle = document.getElementById('tgKnowledgeAuto');
+      if (!toggle) return;
+      toggle.classList.toggle('on', knowledgeAutoLearn);
+      toggle.setAttribute('aria-checked', knowledgeAutoLearn ? 'true' : 'false');
+    }
+
     async function persistBrandProfile(message) {
       if (!window.jco || !window.jco.brand || !window.jco.brand.save) {
-        showToast('知识库在桌面应用里可用（浏览器直开是演示模式）。');
+        showToast('这部分在桌面应用里可用（浏览器直开是演示模式）。');
         return false;
       }
       const btn = document.getElementById('btnBrandSave');
@@ -915,6 +957,8 @@
           return false;
         }
         knowledgeEntries = normalizeKnowledgeEntries(res.data && res.data.knowledge);
+        knowledgeAutoLearn = !res.data || res.data.knowledgeAutoLearn !== false;
+        paintKnowledgeAutoToggle();
         renderKnowledgeEntries();
         if (message) showToast(message);
         return true;
@@ -932,7 +976,7 @@
       const count = document.getElementById('kbCount');
       list.innerHTML = '';
       const enabled = knowledgeEntries.filter(function (entry) { return entry.enabled !== false; }).length;
-      count.textContent = '已收录 ' + knowledgeEntries.length + ' 条 · ' + enabled + ' 条启用';
+      count.textContent = '已记住 ' + knowledgeEntries.length + ' 条 · ' + enabled + ' 条启用';
       empty.hidden = knowledgeEntries.length > 0;
 
       knowledgeEntries.forEach(function (entry) {
@@ -943,15 +987,25 @@
         main.className = 'kb-item-main';
         const title = document.createElement('div');
         title.className = 'kb-item-title';
-        title.innerHTML = '<span class="ti ti-book"></span>';
+        title.innerHTML = '<span class="ti ' + (entry.source === 'ai' ? 'ti-sparkles' : 'ti-book') + '"></span>';
         const titleText = document.createElement('span');
         titleText.textContent = entry.title;
         title.appendChild(titleText);
+        const sourceTag = document.createElement('span');
+        sourceTag.className = 'kb-source' + (entry.source === 'ai' ? ' ai' : '');
+        sourceTag.textContent = entry.source === 'ai' ? 'AI 总管自动记录' : entry.source === 'import' ? '导入资料' : '手动补充';
+        title.appendChild(sourceTag);
         const text = document.createElement('div');
         text.className = 'kb-item-text';
         text.textContent = entry.content;
         main.appendChild(title);
         main.appendChild(text);
+        if (entry.source === 'ai' && entry.sourceTaskTitle) {
+          const meta = document.createElement('div');
+          meta.className = 'kb-item-meta';
+          meta.textContent = '来自任务：' + entry.sourceTaskTitle;
+          main.appendChild(meta);
+        }
 
         if (entry.tags.length) {
           const tags = document.createElement('div');
@@ -975,7 +1029,7 @@
         toggle.addEventListener('click', async function () {
           entry.enabled = entry.enabled === false;
           entry.updatedAt = Date.now();
-          await persistBrandProfile(entry.enabled ? '这条知识已启用。' : '这条知识已停用，AI 暂时不会参考。');
+          await persistBrandProfile(entry.enabled ? '这条资料已启用。' : '这条资料已停用，AI 暂时不会参考。');
         });
         const edit = document.createElement('button');
         edit.type = 'button';
@@ -989,7 +1043,7 @@
         del.addEventListener('click', async function () {
           if (!confirm('删除「' + entry.title + '」？删除后 AI 不会再参考这条资料。')) return;
           knowledgeEntries = knowledgeEntries.filter(function (item) { return item.id !== entry.id; });
-          await persistBrandProfile('知识条目已删除。');
+          await persistBrandProfile('这条内容已删除，AI 不会再参考。');
         });
         actions.appendChild(toggle);
         actions.appendChild(edit);
@@ -1002,7 +1056,7 @@
 
     function openKnowledgeEditor(entry) {
       editingKnowledgeId = entry ? entry.id : '';
-      document.getElementById('kbModalTitle').textContent = entry ? '编辑知识' : '添加知识';
+      document.getElementById('kbModalTitle').textContent = entry ? '修改这条资料' : '补充一条资料';
       document.getElementById('kbTitle').value = entry ? entry.title : '';
       document.getElementById('kbContent').value = entry ? entry.content : '';
       document.getElementById('kbTags').value = entry && Array.isArray(entry.tags) ? entry.tags.join('、') : '';
@@ -1024,17 +1078,32 @@
         const res = await window.jco.brand.get();
         const data = (res && res.ok && res.data) || {};
         document.getElementById('brandIndustry').value = data.industry || '';
+        document.getElementById('brandBusiness').value = data.business || '';
+        document.getElementById('brandProducts').value = data.products || '';
         document.getElementById('brandAudience').value = data.audience || '';
         document.getElementById('brandPlatforms').value = Array.isArray(data.platforms) ? data.platforms.join('、') : '';
         document.getElementById('brandTone').value = data.tone || '';
         document.getElementById('brandForbidden').value = Array.isArray(data.forbidden) ? data.forbidden.join('、') : '';
+        knowledgeAutoLearn = data.knowledgeAutoLearn !== false;
         knowledgeEntries = normalizeKnowledgeEntries(data.knowledge);
       } catch (e) {}
+      paintKnowledgeAutoToggle();
       renderKnowledgeEntries();
     }
 
     document.getElementById('btnBrandSave').addEventListener('click', function () {
-      void persistBrandProfile('知识库保存好了；聊天和内容页面会读取同一份资料。');
+      void persistBrandProfile('保存好了；聊天和内容页面会读取同一份业务档案。');
+    });
+    document.getElementById('tgKnowledgeAuto').addEventListener('click', async function () {
+      knowledgeAutoLearn = !knowledgeAutoLearn;
+      paintKnowledgeAutoToggle();
+      const saved = await persistBrandProfile(
+        knowledgeAutoLearn ? '以后干完活，AI 总管会自己记住有用的经验。' : '已停用自动记忆；已有记忆不会被删除。',
+      );
+      if (!saved) {
+        knowledgeAutoLearn = !knowledgeAutoLearn;
+        paintKnowledgeAutoToggle();
+      }
     });
     document.getElementById('btnKbAdd').addEventListener('click', function () { openKnowledgeEditor(null); });
     document.getElementById('btnKbModalCancel').addEventListener('click', closeKnowledgeEditor);
@@ -1069,15 +1138,18 @@
           tags: splitBrandList(tagsInput.value).slice(0, 10),
           enabled: true,
           updatedAt: Date.now(),
+          source: 'manual',
+          sourceTaskId: '',
+          sourceTaskTitle: '',
         });
-        knowledgeEntries = knowledgeEntries.slice(0, 50);
+        knowledgeEntries = knowledgeEntries.slice(0, 100);
       }
-      const saved = await persistBrandProfile(existing ? '这条知识已更新。' : '新知识已收录，AI 下次就会参考。');
+      const saved = await persistBrandProfile(existing ? '这条资料已更新。' : '资料已收好，AI 下次就会参考。');
       if (saved) closeKnowledgeEditor();
     });
     document.getElementById('btnKbImport').addEventListener('click', async function () {
       if (!window.jco || !window.jco.knowledge || !window.jco.knowledge.import) {
-        showToast('知识导入在桌面应用里可用。');
+        showToast('导入资料在桌面应用里可用。');
         return;
       }
       const btn = this;
@@ -1093,8 +1165,8 @@
           showToast((res.skipped && res.skipped.length) ? '选中的资料没导入：' + res.skipped[0].reason : '没有选中可导入的资料。');
           return;
         }
-        knowledgeEntries = imported.concat(knowledgeEntries).slice(0, 50);
-        const saved = await persistBrandProfile('已导入 ' + imported.length + ' 条资料到本机知识库。');
+        knowledgeEntries = imported.concat(knowledgeEntries).slice(0, 100);
+        const saved = await persistBrandProfile('已导入 ' + imported.length + ' 条资料，只存本机。');
         if (saved && res.skipped && res.skipped.length) {
           setTimeout(function () { showToast('另有 ' + res.skipped.length + ' 个文件未导入：' + res.skipped[0].reason); }, 2800);
         }
@@ -1104,6 +1176,18 @@
         btn.disabled = false;
       }
     });
+    if (window.jco && window.jco.knowledge && window.jco.knowledge.onEvent) {
+      window.jco.knowledge.onEvent(function (event) {
+        if (!event || event.type !== 'learned' || !event.entry) return;
+        const learned = normalizeKnowledgeEntries([event.entry])[0];
+        if (!learned) return;
+        knowledgeEntries = [learned]
+          .concat(knowledgeEntries.filter(function (item) { return item.id !== learned.id && item.sourceTaskId !== learned.sourceTaskId; }))
+          .slice(0, 100);
+        renderKnowledgeEntries();
+        showToast('AI 总管刚记住一条：' + learned.title);
+      });
+    }
     void loadBrandProfile();
 
     async function loadAppInfo() {
