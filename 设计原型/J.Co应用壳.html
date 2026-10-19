@@ -14,6 +14,28 @@
     #jcoFrame { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; background: var(--bg); }
     .frame-fade { position: absolute; inset: 0; background: var(--bg); pointer-events: none; opacity: 0; transition: opacity 0.16s ease; }
     .frame-fade.on { opacity: 1; }
+    .update-banner {
+      position: absolute; top: 12px; left: 50%; z-index: 12; width: min(680px, calc(100% - 32px));
+      transform: translateX(-50%); display: flex; align-items: center; gap: 12px;
+      padding: 10px 14px; border: 1px solid var(--line); border-radius: 14px;
+      background: var(--card); box-shadow: var(--shadow-modal);
+    }
+    .update-banner[hidden] { display: none; }
+    .update-banner__icon {
+      display: flex; align-items: center; justify-content: center; flex: none;
+      width: 30px; height: 30px; border-radius: 9px; background: var(--accent); color: #fff;
+      font-size: 15px;
+    }
+    .update-banner__copy { flex: 1; min-width: 0; font-size: 12px; color: var(--text-2); line-height: 1.5; }
+    .update-banner__copy b { display: block; margin-bottom: 2px; color: var(--text-1); font-size: 13px; }
+    .update-banner__actions { display: flex; align-items: center; gap: 6px; flex: none; }
+    .update-banner__actions button {
+      height: 30px; padding: 0 11px; border: 0; border-radius: 999px;
+      background: var(--btn-2nd, #edf0f4); color: var(--text-1); font-family: inherit;
+      font-size: 12px; cursor: pointer;
+    }
+    .update-banner__actions button.primary { background: var(--accent); color: #fff; }
+    .update-banner__actions button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
     .task-view { position: absolute; inset: 0; z-index: 8; overflow-y: auto; background: var(--bg); padding: 28px 34px 40px; }
     .task-view[hidden] { display: none; }
     @media (max-width: 900px) { .task-view { padding: 22px; } }
@@ -57,6 +79,17 @@
     <div class="frame-wrap">
       <iframe id="jcoFrame" src="J.Co主界面-首页.html" title="J.Co 内容区"></iframe>
       <div class="frame-fade" id="frameFade"></div>
+      <div class="update-banner" id="jcoUpdateBanner" hidden role="status" aria-live="polite">
+        <span class="update-banner__icon"><span class="ti ti-download"></span></span>
+        <div class="update-banner__copy">
+          <b id="jcoUpdateTitle">发现新版本</b>
+          <span id="jcoUpdateBody">下载和安装都由你决定。</span>
+        </div>
+        <div class="update-banner__actions">
+          <button class="btn-ghost" id="jcoUpdateLater" type="button">稍后提醒</button>
+          <button class="btn-ghost primary" id="jcoUpdateAction" type="button">下载更新</button>
+        </div>
+      </div>
       <section class="task-view" id="jcoTaskView" hidden aria-labelledby="tvTitle">
         <div class="tv-head">
           <button class="ghost" id="tvBack" type="button">返回对话</button>
@@ -86,6 +119,74 @@
 
   <script>
     /* 壳：切页只换内容视图；侧栏常驻（jco-shell.js 负责导航接管/任务/对话/折叠/通知） */
+    (function updateReminder() {
+      var updates = window.jco && window.jco.updates ? window.jco.updates : null;
+      var banner = document.getElementById('jcoUpdateBanner');
+      var title = document.getElementById('jcoUpdateTitle');
+      var body = document.getElementById('jcoUpdateBody');
+      var action = document.getElementById('jcoUpdateAction');
+      var later = document.getElementById('jcoUpdateLater');
+      if (!updates || !banner || !title || !body || !action || !later) return;
+      var snoozeKey = 'jco-update-snooze';
+      var state = null;
+
+      function snoozed(version) {
+        try {
+          var saved = JSON.parse(localStorage.getItem(snoozeKey) || '{}');
+          return saved.version === version && Number(saved.until) > Date.now();
+        } catch (error) { return false; }
+      }
+      function paint(next) {
+        state = next || state;
+        if (!state || !['available', 'downloading', 'downloaded'].includes(state.phase)) {
+          banner.hidden = true;
+          return;
+        }
+        var version = String(state.latestVersion || '新版本');
+        if (state.phase === 'available' && snoozed(version)) {
+          banner.hidden = true;
+          return;
+        }
+        banner.hidden = false;
+        action.disabled = state.phase === 'downloading';
+        later.hidden = state.phase === 'downloading';
+        if (state.phase === 'available') {
+          title.textContent = '发现新版本 v' + version;
+          body.textContent = 'J.Co 只自动检测；点「下载更新」后才会下载，安装前还会再问你。';
+          action.textContent = '下载更新';
+        } else if (state.phase === 'downloading') {
+          title.textContent = '正在下载 v' + version + ' · ' + (state.percent || 0).toFixed(0) + '%';
+          body.textContent = '下载完成后不会自动安装，你可以继续工作。';
+          action.textContent = '下载中…';
+        } else {
+          title.textContent = '更新已下载 v' + version;
+          body.textContent = '点「重启并安装」后才会安装，未保存的工作会先等你处理。';
+          action.textContent = '重启并安装';
+        }
+      }
+      action.addEventListener('click', function () {
+        if (!state) return;
+        if (state.phase === 'available') {
+          action.disabled = true;
+          action.textContent = '下载中…';
+          Promise.resolve(updates.download()).then(paint, function () {
+            action.disabled = false;
+            action.textContent = '重试下载';
+          });
+          return;
+        }
+        if (state.phase === 'downloaded') updates.install();
+      });
+      later.addEventListener('click', function () {
+        var version = String((state && state.latestVersion) || '');
+        try {
+          localStorage.setItem(snoozeKey, JSON.stringify({ version: version, until: Date.now() + 6 * 60 * 60 * 1000 }));
+        } catch (error) {}
+        banner.hidden = true;
+      });
+      updates.onEvent(paint);
+      Promise.resolve(updates.get()).then(paint, function () {});
+    })();
     (function shellHost() {
       var frame = document.getElementById('jcoFrame');
       var fade = document.getElementById('frameFade');

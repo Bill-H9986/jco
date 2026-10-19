@@ -276,6 +276,7 @@ contextBridge.exposeInMainWorld('jco', {
   updates: {
     get: () => ipcRenderer.invoke('updates:get'),
     check: () => ipcRenderer.invoke('updates:check'),
+    download: () => ipcRenderer.invoke('updates:download'),
     install: () => ipcRenderer.invoke('updates:install'),
     onEvent: (callback) => {
       if (typeof callback !== 'function') return

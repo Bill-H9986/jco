@@ -131,6 +131,7 @@ ipcMain.handle('sys:app-info', () => ({
 let updateController = null
 let updateTimer = null
 let updateCheckInFlight = false
+let updateDownloadInFlight = false
 const UPDATE_CHECK_TIMEOUT_MS = 20_000
 let updateState = {
   phase: 'idle',
@@ -228,6 +229,20 @@ function installUpdateNow() {
   setImmediate(() => updateController.quitAndInstall(true, true))
   return updateState
 }
+async function downloadUpdateNow() {
+  if (!updateController) return updateState
+  if (updateDownloadInFlight || !['available', 'error'].includes(updateState.phase)) return updateState
+  updateDownloadInFlight = true
+  setUpdateState({ phase: 'downloading', percent: 0, message: '正在下载更新…' })
+  try {
+    await updateController.downloadUpdate()
+  } catch (error) {
+    setUpdateState({ phase: 'error', message: '下载更新失败：' + updateErrorText(error) })
+  } finally {
+    updateDownloadInFlight = false
+  }
+  return updateState
+}
 function initAutoUpdater() {
   updateState = {
     ...updateState,
@@ -251,8 +266,9 @@ function initAutoUpdater() {
   }
   try {
     const { autoUpdater } = require('electron-updater')
-    autoUpdater.autoDownload = true
-    autoUpdater.autoInstallOnAppQuit = true
+    // 只自动检测，不自动下载或安装；下载/安装必须由用户点击确认。
+    autoUpdater.autoDownload = false
+    autoUpdater.autoInstallOnAppQuit = false
     autoUpdater.allowPrerelease = config.allowPrerelease
     const channel = updateChannelName(app.getVersion())
     autoUpdater.channel = channel
@@ -265,8 +281,16 @@ function initAutoUpdater() {
         phase: 'available',
         feedConfigured: true,
         latestVersion: String((info && info.version) || ''),
-        message: '发现新版本，正在后台下载…',
+        message: '发现新版本，点「下载更新」后才会开始下载。',
       })
+      if (Notification.isSupported()) {
+        try {
+          new Notification({
+            title: 'J.Co 有新版本',
+            body: `v${String((info && info.version) || '')} 可用；打开应用点「下载更新」才会下载。`,
+          }).show()
+        } catch (error) {}
+      }
     })
     autoUpdater.on('update-not-available', () => {
       setUpdateState({
@@ -295,13 +319,13 @@ function initAutoUpdater() {
         latestVersion,
         percent: 100,
         checkedAt: Date.now(),
-        message: `v${latestVersion} 已下载，退出后自动安装`,
+        message: `v${latestVersion} 已下载，点「重启并安装」后才会安装。`,
       })
       if (Notification.isSupported()) {
         try {
           new Notification({
             title: 'J.Co 更新已准备好',
-            body: `v${latestVersion} 已下载，退出应用后会自动安装。`,
+          body: `v${latestVersion} 已下载；点「重启并安装」后才会安装。`,
           }).show()
         } catch (error) {}
       }
@@ -320,6 +344,7 @@ function initAutoUpdater() {
 }
 ipcMain.handle('updates:get', () => updateState)
 ipcMain.handle('updates:check', () => checkForUpdates(true))
+ipcMain.handle('updates:download', () => downloadUpdateNow())
 ipcMain.handle('updates:install', () => installUpdateNow())
 
 // 开机自动启动（真开关：写系统登录项注册表；可读回、可复位）
