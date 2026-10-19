@@ -240,6 +240,13 @@ function assetsDirPath() {
   fs.mkdirSync(dir, { recursive: true })
   return dir
 }
+function editAssetNames() {
+  try {
+    return fs.readdirSync(assetsDirPath()).filter((name) => /\.(mp4|mov|m4v|mkv|webm|avi)$/i.test(name))
+  } catch (error) {
+    return []
+  }
+}
 /** 后期工具配置（M9 后期·AI 代劳）：成片目录 + ffmpeg 路径；bridge 生成 patch 时读 */
 function writeEditToolsConfig() {
   try {
@@ -1631,6 +1638,7 @@ async function runWorkTask(task) {
   try {
     const profile = profileOfWorkTask(task)
     const promptBuilder = await import(pathToFileURL(path.join(__dirname, 'dist', 'kernel', 'prompt-builder.js')).href)
+    const artifactModule = await import(pathToFileURL(path.join(__dirname, 'dist', 'application', 'artifacts.js')).href)
     const prompt = promptBuilder.buildTaskPrompt({
       profile,
       task: {
@@ -1644,6 +1652,7 @@ async function runWorkTask(task) {
     })
     workTaskEvent(task, 'note', '任务执行已交给「' + task.ownerRole + '」岗位')
     saveWorkTask(task.id)
+    const editBefore = task.type === 'edit' ? editAssetNames() : []
     if (task.type === 'publish' || task.type === 'operate') {
       const ready = await ensurePublishReady(platformOfWorkTask(task))
       if (!ready) workTaskEvent(task, 'note', '发布会话没有就绪；AI 会如实报告，不假装已登录')
@@ -1672,6 +1681,21 @@ async function runWorkTask(task) {
     if (task.type === 'operate') {
       const commentId = taskInputValue(task, 'commentId:')
       if (commentId) updateOpsCommentRecord(commentId, { status: result.ok ? 'sent' : 'failed', taskId: task.id })
+    }
+    if (task.type === 'edit' && result.ok) {
+      const created = artifactModule.collectNewEditArtifacts(editBefore, editAssetNames(), assetsDirPath())
+      if (created.length > 0) {
+        task.artifacts = [...(task.artifacts || []), ...created].slice(0, 50)
+        for (const artifact of created) {
+          workTaskEvent(task, 'artifact_added', '产物已登记：' + artifact.name, {
+            artifactId: artifact.id,
+            path: artifact.path,
+            kind: artifact.kind,
+          })
+        }
+      } else {
+        workTaskEvent(task, 'note', '任务完成，但没有发现新的成片文件')
+      }
     }
     task.messages = [
       { role: 'user', text: prompt, t: Date.now() },

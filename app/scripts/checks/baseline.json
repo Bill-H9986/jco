@@ -1,7 +1,7 @@
 {
   "version": 1,
   "note": "W0-06 存量欠账。只允许删除，不允许新增；新增违规会让 npm run gate 失败。",
-  "generatedAt": "2026-10-18T10:13:19.456Z",
+  "generatedAt": "2026-10-19T04:22:11.482Z",
   "entries": [
     {
       "ruleId": "no-direct-business-localstorage",
@@ -836,12 +836,6 @@
       "file": "设计原型/J.Co总管.html",
       "fingerprint": "no-direct-business-localstorage|设计原型/J.Co总管.html|localStorage.setItem('jco-side-pinned'|#0",
       "excerpt": "localStorage.setItem('jco-side-pinned'"
-    },
-    {
-      "ruleId": "no-direct-tasks-dispatch",
-      "file": "设计原型/J.Co工作台-后期.html",
-      "fingerprint": "no-direct-tasks-dispatch|设计原型/J.Co工作台-后期.html|tasks.dispatch(|#0",
-      "excerpt": "tasks.dispatch("
     },
     {
       "ruleId": "no-duplicate-sidebar",

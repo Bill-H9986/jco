@@ -444,7 +444,7 @@ body.tl-dragging .tl-body, body.tl-dragging .tl-body * { cursor: grabbing !impor
 
     /* ---------- 后期 · AI 剪辑间（M9 后期：AI 全代劳） ---------- */
     (function postRoom() {
-      var live = (typeof window.jco !== 'undefined' && window.jco && window.jco.tasks && window.jco.tasks.dispatch && window.jco.sys && window.jco.sys.listAssets) ? window.jco : null;
+      var live = (typeof window.jco !== 'undefined' && window.jco && window.jco.tasks && window.jco.tasks.propose && window.jco.tasks.confirm && window.jco.sys && window.jco.sys.listAssets) ? window.jco : null;
       var assetsDir = '';
       var assets = [];
       var selName = '';
@@ -522,31 +522,53 @@ body.tl-dragging .tl-body, body.tl-dragging .tl-body * { cursor: grabbing !impor
         });
       }
 
-      function dispatchEdit(text) {
+      function openTaskDetail(id) {
+        if (!id) return;
+        try {
+          if (window.top && window.top !== window) {
+            window.top.location.hash = '#/task/' + encodeURIComponent(id);
+            return;
+          }
+        } catch (e) {}
+        try { sessionStorage.setItem('jco-open-task', id); } catch (e) {}
+        location.href = 'J.Co总管.html';
+      }
+
+      async function dispatchEdit(text) {
         if (busy || !live) return;
         if (!text) { showToast('先说一句想怎么改'); return; }
         if (!selName) { showToast('先在左边选一条成片'); return; }
-        var prompt = [
-          '这是后期任务（用户动嘴、你动手做视频后期）。用户想对成片「' + selName + '」做：' + text + '。',
-          '你有本地后期工具：jco_list_assets（列成片目录）、jco_probe_video（看时长/分辨率/有无音轨）、' +
-            'jco_add_subtitles（加字幕：file + lines 按顺序的句子数组；v1 时间按片长均分）、' +
-            'jco_add_music（配音乐：file + music + volume 0~1）、jco_trim（裁剪：file + start/end 秒）、' +
-            'jco_concat（拼接：files 数组）。',
-          '成片目录里的文件直接用文件名操作。音乐若用户还没提供，先在成片目录里找音频文件；没有就问用户要一首（放进成片目录）。',
-          '流程：先 probe 看清素材 → 按用户要求选工具（每次产出新文件、不覆盖原件）→ 做完用一句话说清改了什么、产物文件名。用户没要求的事不要做。'
-        ].join('\n');
         busy = true;
         $('askGo').disabled = true;
-        setState('已经派给 AI 了：自动跳到总管，你能看到它一步步干。');
-        live.tasks.dispatch({ name: '后期：' + text.slice(0, 16), prompt: prompt, staff: 'post' }).then(function (res) {
-          if (!res || !res.ok) { busy = false; $('askGo').disabled = false; showToast((res && res.error) || '派活失败，稍后再试'); return; }
-          try { sessionStorage.setItem('jco-open-task', res.taskId); } catch (e) {}
-          location.href = 'J.Co总管.html';
-        }).catch(function (err) {
+        setState('正在建立任务卡…');
+        try {
+          var proposed = await live.tasks.propose({
+            title: '后期：' + text.slice(0, 16),
+            goal: '对成片「' + selName + '」做：' + text,
+            type: 'edit',
+            ownerRole: 'editor',
+            inputs: [
+              { kind: 'artifact', ref: selName, note: '成片目录里的源视频' },
+              { kind: 'text', ref: text, note: '用户的剪辑要求' }
+            ],
+            constraints: ['只操作成片目录', '不覆盖原件', '每次产出新文件'],
+            deliverables: ['修改后的成片文件'],
+            approvalPolicy: { requireFinalApproval: true }
+          });
+          if (!proposed || !proposed.ok || !proposed.task) {
+            throw new Error((proposed && proposed.error) || '任务卡没建成');
+          }
+          var confirmed = await live.tasks.confirm(proposed.task.id);
+          if (!confirmed || !confirmed.ok) {
+            throw new Error((confirmed && confirmed.error) || '任务确认失败');
+          }
+          setState('任务已建立，等你确认后 AI 再动手。');
+          openTaskDetail(proposed.task.id);
+        } catch (err) {
           busy = false;
           $('askGo').disabled = false;
           showToast('派活失败：' + ((err && err.message) || '稍后再试'));
-        });
+        }
       }
 
       var askGo = $('askGo');

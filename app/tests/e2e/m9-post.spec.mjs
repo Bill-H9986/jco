@@ -38,10 +38,11 @@ test('后期页（AI 剪辑间）：空态 / 快捷指令填充 / 未选片拦�
     await win.waitForTimeout(300)
     await expect(win.locator('#toast')).toContainText('先在左边选一条成片')
 
-    // 派活管道就位（源码级：走 tasks.dispatch，staff=post；无手动剪辑台残留）
+    // 派活管道就位（源码级：走 TaskService propose/confirm；无旧 dispatch 残留）
     const pageSrc = await win.evaluate(() => [...document.scripts].map((s) => s.textContent || '').join('\n'))
-    expect(pageSrc).toContain('tasks.dispatch')
-    expect(pageSrc).toContain("staff: 'post'")
+    expect(pageSrc).toContain('tasks.propose')
+    expect(pageSrc).toContain('tasks.confirm')
+    expect(pageSrc).not.toContain('tasks.dispatch')
     expect(pageSrc).not.toContain('renderTracks') // 旧手动剪辑台逻辑已退休
     expect(errors, `JS 错误：\n${errors.join('\n')}`).toEqual([])
   } finally {
