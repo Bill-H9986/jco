@@ -3,6 +3,7 @@
 // auto-runs.json / skills.json / task-sessions/）。曾出现：E2E 的种子任务留在 auto-tasks.json，
 // 开发模式启动会被调度器误跑。此护栏在跑测前备份、跑测后恢复——一次覆盖全部测试。
 import fs from 'node:fs'
+import os from 'node:os'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
@@ -36,5 +37,7 @@ export default async function globalSetup() {
     const src = path.join(KERNEL, d)
     if (fs.existsSync(src)) fs.cpSync(src, path.join(SNAPSHOT, d), { recursive: true })
   }
+  // 每轮 E2E 都从确定的空测试数据开始；--jco-test 专用临时目录与用户数据无关。
+  fs.rmSync(path.join(os.tmpdir(), 'jco-test-kernel-data'), { recursive: true, force: true })
   console.log('[e2e-guard] kernel 运行数据已备份')
 }

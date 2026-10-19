@@ -12,7 +12,7 @@
 
 .scroll { flex: 1; overflow-y: auto; }
 
-.wrap { max-width: none; margin: 0 auto; padding: 30px 32px 70px; }
+.wrap { max-width: none; margin: 0 auto; padding: var(--jco-page-top) var(--jco-page-x) 70px; }
 
 .head h1 { font-size: 26px; font-weight: 600; letter-spacing: -0.02em; }
 
@@ -495,17 +495,11 @@
 
     function brandLine() {
       if (!brandProfile || typeof brandProfile !== 'object') return '';
-      var parts = [];
-      if (brandProfile.industry) parts.push('行业：' + brandProfile.industry);
-      if (brandProfile.audience) parts.push('受众：' + brandProfile.audience);
-      if (Array.isArray(brandProfile.platforms) && brandProfile.platforms.length) parts.push('平台：' + brandProfile.platforms.join('、'));
-      if (brandProfile.tone) parts.push('语气：' + brandProfile.tone);
-      if (Array.isArray(brandProfile.forbidden) && brandProfile.forbidden.length) parts.push('禁用表达：' + brandProfile.forbidden.join('、'));
-      return parts.length ? parts.join('；') : '';
+      return window.jcoBrandText ? window.jcoBrandText(brandProfile) : '';
     }
     function writerSystemPrompt() {
       var brand = brandLine();
-      return brand ? GEN_SYSTEM + '\n品牌档案：' + brand : GEN_SYSTEM;
+      return brand ? GEN_SYSTEM + '\n' + brand : GEN_SYSTEM;
     }
     async function hydrateBrandProfile() {
       if (!window.jco || !window.jco.brand || !window.jco.brand.get) return;

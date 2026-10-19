@@ -117,6 +117,11 @@ ipcMain.handle('sys:theme:get', () => ({
   theme: readSettings().theme || 'system',
   resolved: nativeTheme.shouldUseDarkColors ? 'dark' : 'light',
 }))
+ipcMain.handle('sys:app-info', () => ({
+  ok: true,
+  version: app.getVersion(),
+  packaged: app.isPackaged,
+}))
 
 // 开机自动启动（真开关：写系统登录项注册表；可读回、可复位）
 const RUN_KEY = 'HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run'
@@ -417,6 +422,20 @@ const AUTO_TASKS_FILE = kernelDataPath('auto-tasks.json')
 const AUTO_RUNS_FILE = kernelDataPath('auto-runs.json')
 const TOPICS_FILE = kernelDataPath('topics.json')
 const BRAND_PROFILE_FILE = kernelDataPath('brand-profile.json')
+const KNOWLEDGE_CONTENT_LIMIT = 8000
+const KNOWLEDGE_SECRET_PATTERNS = [
+  /Bearer\s+[A-Za-z0-9._~+/-]{8,}/gi,
+  /sk-[A-Za-z0-9_-]{8,}/g,
+  /(?:api[_-]?key|token|password|secret)\s*[:=]\s*\S+/gi,
+]
+function redactKnowledgeText(value) {
+  let output = String(value || '')
+  for (const pattern of KNOWLEDGE_SECRET_PATTERNS) output = output.replace(pattern, '[已脱敏]')
+  return output
+}
+function clipKnowledgeContent(value) {
+  return String(value || '').slice(0, KNOWLEDGE_CONTENT_LIMIT)
+}
 const MATERIALS_FILE = kernelDataPath('materials.json')
 const SCRIPTS_FILE = kernelDataPath('scripts.json')
 const DRAFTS_FILE = kernelDataPath('drafts.json')
@@ -814,7 +833,32 @@ function normalizeBrandProfile(input) {
     platforms,
     tone: String(data.tone || '').trim().slice(0, 100),
     forbidden,
+    knowledge: normalizeKnowledgeEntries(data.knowledge),
   }
+}
+function normalizeKnowledgeEntries(input) {
+  const entries = Array.isArray(input) ? input : []
+  const seen = new Set()
+  return entries
+    .filter((entry) => entry && typeof entry === 'object' && String(entry.content || '').trim())
+    .map((entry, index) => {
+      const fallback = `kb-${Date.now().toString(36)}-${index}`
+      let id = String(entry.id || fallback).slice(0, 80)
+      if (seen.has(id)) id = fallback
+      seen.add(id)
+      const tags = Array.isArray(entry.tags)
+        ? [...new Set(entry.tags.map((tag) => redactKnowledgeText(tag).trim()).filter(Boolean))].slice(0, 10)
+        : []
+      return {
+        id,
+        title: redactKnowledgeText(String(entry.title || `知识 ${index + 1}`).trim()).slice(0, 120),
+        content: clipKnowledgeContent(redactKnowledgeText(String(entry.content || '').trim())),
+        tags,
+        enabled: entry.enabled !== false,
+        updatedAt: Number(entry.updatedAt) || Date.now(),
+      }
+    })
+    .slice(0, 50)
 }
 function readBrandProfile() {
   try {
@@ -1200,6 +1244,56 @@ ipcMain.handle('brand:get', () => ({ ok: true, data: readBrandProfile() }))
 ipcMain.handle('brand:save', (_event, payload) => {
   try {
     return { ok: true, data: writeBrandProfile(payload || {}) }
+  } catch (error) {
+    return { ok: false, error: String((error && error.message) || error) }
+  }
+})
+ipcMain.handle('knowledge:import', async (event) => {
+  try {
+    let filePaths = []
+    if (JCO_TEST_MODE && process.env.JCO_TEST_KNOWLEDGE_FILES) {
+      filePaths = process.env.JCO_TEST_KNOWLEDGE_FILES.split(path.delimiter).filter(Boolean)
+    } else {
+      const win = BrowserWindow.fromWebContents(event.sender)
+      const result = await dialog.showOpenDialog(win, {
+        title: '导入知识库资料',
+        properties: ['openFile', 'multiSelections'],
+        filters: [
+          { name: '文本资料', extensions: ['txt', 'md', 'markdown', 'csv', 'json'] },
+          { name: '全部文件', extensions: ['*'] },
+        ],
+      })
+      if (result.canceled) return { ok: true, entries: [], skipped: [] }
+      filePaths = result.filePaths
+    }
+    const entries = []
+    const skipped = []
+    for (const [index, filePath] of filePaths.slice(0, 10).entries()) {
+      const ext = path.extname(filePath).toLowerCase()
+      if (!['.txt', '.md', '.markdown', '.csv', '.json'].includes(ext)) {
+        skipped.push({ name: path.basename(filePath), reason: '暂只支持 txt / md / csv / json' })
+        continue
+      }
+      const stat = fs.statSync(filePath)
+      if (stat.size > 200 * 1024) {
+        skipped.push({ name: path.basename(filePath), reason: '单个文件超过 200 KB' })
+        continue
+      }
+      const content = redactKnowledgeText(fs.readFileSync(filePath, 'utf8').replace(/^\uFEFF/, '').trim())
+      if (!content) {
+        skipped.push({ name: path.basename(filePath), reason: '文件内容为空' })
+        continue
+      }
+      entries.push({
+        id: `kb-import-${Date.now().toString(36)}-${index}`,
+        title: path.basename(filePath).slice(0, 120),
+        content: clipKnowledgeContent(content),
+        tags: ['导入'],
+        enabled: true,
+        updatedAt: Date.now(),
+      })
+    }
+    return { ok: true, entries, skipped }
   } catch (error) {
     return { ok: false, error: String((error && error.message) || error) }
   }

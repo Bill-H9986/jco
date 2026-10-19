@@ -12,7 +12,7 @@
 
 .scroll { flex: 1; overflow-y: auto; }
 
-.wrap { max-width: none; margin: 0 auto; padding: 40px 32px 70px; }
+.wrap { max-width: none; margin: 0 auto; padding: var(--jco-page-top) var(--jco-page-x) 70px; }
 
 /* 头部：和 J.Co + 模式切换 */
   .agent-head { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 22px; }
@@ -851,17 +851,11 @@
     let brandProfile = null;
     function brandLine() {
       if (!brandProfile || typeof brandProfile !== 'object') return '';
-      var parts = [];
-      if (brandProfile.industry) parts.push('行业：' + brandProfile.industry);
-      if (brandProfile.audience) parts.push('受众：' + brandProfile.audience);
-      if (Array.isArray(brandProfile.platforms) && brandProfile.platforms.length) parts.push('平台：' + brandProfile.platforms.join('、'));
-      if (brandProfile.tone) parts.push('语气：' + brandProfile.tone);
-      if (Array.isArray(brandProfile.forbidden) && brandProfile.forbidden.length) parts.push('禁用表达：' + brandProfile.forbidden.join('、'));
-      return parts.length ? parts.join('；') : '';
+      return window.jcoBrandText ? window.jcoBrandText(brandProfile) : '';
     }
     function withBrand(base) {
       var brand = brandLine();
-      return brand ? base + '\n品牌档案：' + brand : base;
+      return brand ? base + '\n' + brand : base;
     }
     function shotSystemPrompt() {
       return withBrand('你是短视频分镜师，服务通用自媒体创作者；行业、受众、平台由品牌档案决定。只输出 JSON 数组。');

@@ -47,12 +47,27 @@ describe('提示词分层', () => {
         platforms: ['抖音'],
         goals: ['涨粉'],
         forbidden: ['包过'],
+        knowledge: [
+          {
+            id: 'kb-1',
+            title: '招牌训练营',
+            content: '七日入门训练营每周一开班，参加前先确认基础水平。api_key=secret12345',
+            tags: ['产品', '报名'],
+            enabled: true,
+            updatedAt: 1,
+          },
+        ],
       },
     })
     expect(prompt).toContain('健身')
     expect(prompt).toContain('上班族')
     expect(prompt).toContain('抖音')
     expect(prompt).toContain('包过')
+    expect(prompt).toContain('七日入门训练营')
+    expect(prompt).toContain('参加前先确认基础水平')
+    expect(prompt).toContain('知识库')
+    expect(prompt).toContain('[已脱敏]')
+    expect(prompt).not.toContain('secret12345')
   })
 
   it('任务提示词包含任务卡、角色和外部内容隔离', () => {

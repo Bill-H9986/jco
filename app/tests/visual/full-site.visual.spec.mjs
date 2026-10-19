@@ -46,6 +46,7 @@ test('W5-02：14 个内容页关键状态', async () => {
           { message: `视觉基线切页失败：${page}`, timeout: 5000 },
         )
         .toBe(page)
+      await expect(win.locator('html')).toHaveAttribute('data-jco-page', page, { timeout: 5000 })
       await expect(win.locator('html')).toHaveAttribute('data-jco-ready', '1', { timeout: 5000 })
       await settleWindow(win)
       await assertVisual(app, `${name}-light-1440x900.png`)

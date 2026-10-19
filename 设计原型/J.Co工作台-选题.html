@@ -12,7 +12,7 @@
 
 .scroll { flex: 1; overflow-y: auto; }
 
-.wrap { max-width: none; margin: 0 auto; padding: 30px 32px 70px; }
+.wrap { max-width: none; margin: 0 auto; padding: var(--jco-page-top) var(--jco-page-x) 70px; }
 
 .head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
 
@@ -443,18 +443,12 @@
 
     function brandLine() {
       if (!brandProfile || typeof brandProfile !== 'object') return '';
-      var parts = [];
-      if (brandProfile.industry) parts.push('行业：' + brandProfile.industry);
-      if (brandProfile.audience) parts.push('受众：' + brandProfile.audience);
-      if (Array.isArray(brandProfile.platforms) && brandProfile.platforms.length) parts.push('平台：' + brandProfile.platforms.join('、'));
-      if (brandProfile.tone) parts.push('语气：' + brandProfile.tone);
-      if (Array.isArray(brandProfile.forbidden) && brandProfile.forbidden.length) parts.push('禁用表达：' + brandProfile.forbidden.join('、'));
-      return parts.length ? parts.join('；') : '';
+      return window.jcoBrandText ? window.jcoBrandText(brandProfile) : '';
     }
     function topicSystemPrompt() {
       var base = '你是短视频选题策划，服务通用自媒体创作者。要求：实用、能直接拍、不夸大承诺、不碰违规说法。只输出要求的行，不要解释。';
       var brand = brandLine();
-      return brand ? base + '\n品牌档案：' + brand : base;
+      return brand ? base + '\n' + brand : base;
     }
     async function hydrateTopicStore() {
       if (!window.jco || !window.jco.topics || !window.jco.topics.get) return;

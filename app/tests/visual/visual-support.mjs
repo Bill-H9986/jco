@@ -1,4 +1,5 @@
 import fs from 'node:fs'
+import os from 'node:os'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { expect } from '@playwright/test'
@@ -19,10 +20,26 @@ export async function captureWindow(app) {
   return Buffer.from(png, 'base64')
 }
 
+async function captureStableWindow(app) {
+  let actual = await captureWindow(app)
+  for (let attempt = 0; attempt < 4; attempt += 1) {
+    await new Promise((resolve) => setTimeout(resolve, 220))
+    const next = await captureWindow(app)
+    if (next.equals(actual)) return next
+    actual = next
+  }
+  return actual
+}
+
 export async function settleWindow(win) {
   await win.waitForTimeout(700)
   for (const frame of win.frames()) {
     try {
+      await frame.waitForFunction(
+        () => document.readyState === 'complete' && Number(getComputedStyle(document.body).opacity || 1) >= 0.999,
+        undefined,
+        { timeout: 5000 },
+      )
       await frame.evaluate(async () => {
         if (document.fonts?.ready) await document.fonts.ready
         if (document.activeElement) document.activeElement.blur()
@@ -44,7 +61,7 @@ export async function settleWindow(win) {
 }
 
 export async function assertVisual(app, name) {
-  const actual = await captureWindow(app)
+  const actual = await captureStableWindow(app)
   const file = path.join(BASELINE_DIR, name)
   if (process.env.JCO_UPDATE_VISUAL === '1') {
     fs.mkdirSync(BASELINE_DIR, { recursive: true })
@@ -73,5 +90,10 @@ export async function assertVisual(app, name) {
     }
   }
   const ratio = changed / (actualPixels.info.width * actualPixels.info.height)
+  if (ratio > 0.01) {
+    const failureDir = path.join(os.tmpdir(), 'jco-visual-failures')
+    fs.mkdirSync(failureDir, { recursive: true })
+    fs.writeFileSync(path.join(failureDir, name), actual)
+  }
   expect(ratio, `视觉基准不一致：${name}（差异 ${(ratio * 100).toFixed(3)}%）`).toBeLessThanOrEqual(0.01)
 }

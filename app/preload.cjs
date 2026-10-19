@@ -242,7 +242,20 @@ contextBridge.exposeInMainWorld('jco', {
       platforms: Array.isArray(data && data.platforms) ? data.platforms.map(String) : [],
       tone: String((data && data.tone) || ''),
       forbidden: Array.isArray(data && data.forbidden) ? data.forbidden.map(String) : [],
+      knowledge: Array.isArray(data && data.knowledge)
+        ? data.knowledge.map((entry) => ({
+            id: String((entry && entry.id) || ''),
+            title: String((entry && entry.title) || ''),
+            content: String((entry && entry.content) || ''),
+            tags: Array.isArray(entry && entry.tags) ? entry.tags.map(String) : [],
+            enabled: !entry || entry.enabled !== false,
+            updatedAt: Number(entry && entry.updatedAt) || 0,
+          }))
+        : [],
     }),
+  },
+  knowledge: {
+    import: () => ipcRenderer.invoke('knowledge:import'),
   },
   settings: {
     get: () => ipcRenderer.invoke('settings:get'),
@@ -304,6 +317,7 @@ contextBridge.exposeInMainWorld('jco', {
     listAssets: () => ipcRenderer.invoke('sys:list-assets'),
     pickFiles: () => ipcRenderer.invoke('sys:pick-files'),
     pickFolder: () => ipcRenderer.invoke('sys:pick-folder'),
+    appInfo: () => ipcRenderer.invoke('sys:app-info'),
     /** 生成物落盘：{ kind:'image'|'video', dataUrl? , url?, ext? } → { ok, path } */
     saveAsset: (payload) => ipcRenderer.invoke('sys:save-asset', payload || {}),
     openExternal: (url) => ipcRenderer.invoke('sys:open-external', String(url || '')),

@@ -20,6 +20,13 @@ test('W5-02：应用壳关键状态（浅色 1440×900）', async () => {
     expect(decodeURIComponent(win.url())).toContain('J.Co应用壳.html')
     await expect(win.locator('#jcoFrame')).toBeVisible()
     await win.evaluate(() => document.documentElement.classList.add('side-pinned'))
+    await expect
+      .poll(
+        () =>
+          win.evaluate(() => Math.round(document.querySelector('.sidebar-inner')?.getBoundingClientRect().width || 0)),
+        { message: '侧栏展开宽度未稳定', timeout: 5000 },
+      )
+      .toBeGreaterThan(180)
     await settleWindow(win)
     await assertVisual(app, 'shell-light-1440x900.png')
   } finally {
