@@ -57,6 +57,18 @@ node scripts/point-installed-updater.mjs https://github.com/你的GitHub用户�
 - 当前安装包仍是 `NotSigned`，正式对外分发前应提供 Windows 代码签名证书或明确内测策略；
 - 发布、删除、支付等业务动作仍由人在应用内确认，OTA 只更新程序本身。
 
+## 5.1 中国区网络（重要）
+
+electron-builder 维护者在 issue #1600 中明确建议：中国区不要把 GitHub Releases 直接作为更新源，应该使用 generic mirror/S3。当前实测 GitHub release-assets 只有约 30–50 KB/s，而 `gh-proxy.com` 临时镜像可达到约 500 KB/s。
+
+临时验证可以用：
+
+```text
+https://gh-proxy.com/https://github.com/Bill-H9986/jco/releases/latest/download
+```
+
+但第三方代理不作为正式生产源。正式方案是 GitHub 保留源码和 Release，GitHub Actions 把 `beta.yml`、exe、blockmap 同步到自建 Cloudflare R2、阿里云 OSS 或腾讯 COS，再把应用的 generic feed 指向自己的 HTTPS 域名。
+
 ## 6. 排错顺序
 
 1. `gh auth status` 是否已登录；
