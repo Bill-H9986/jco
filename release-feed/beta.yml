@@ -1,0 +1,8 @@
+version: 0.6.0-beta.7
+files:
+  - url: https://api.gitcode.com/api/v5/repos/gcw_R1J1wXIM/jco/releases/v0.6.0-beta.7/attach_files/J.Co-0.6.0-beta.7.exe/download
+    sha512: G5Cpl5fhadVMCQhPdNT/Z5juNK7NXB1EZwwfApCA3htPmwIU8AGHNlTrg3sp5CNM0BD+cULPG4TowCYujWUZ/g==
+    size: 221629374
+path: J.Co-0.6.0-beta.7.exe
+sha512: G5Cpl5fhadVMCQhPdNT/Z5juNK7NXB1EZwwfApCA3htPmwIU8AGHNlTrg3sp5CNM0BD+cULPG4TowCYujWUZ/g==
+releaseDate: '2026-10-19T10:58:48.571Z'

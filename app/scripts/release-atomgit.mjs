@@ -103,7 +103,11 @@ async function api(pathname, options = {}) {
   const url = new URL(`${API}${pathname}`)
   url.searchParams.set('access_token', TOKEN)
   const headers = { 'Content-Type': 'application/json', ...(options.headers || {}) }
-  const res = await request(url.toString(), { ...options, headers })
+  const res = await request(
+    url.toString(),
+    { method: options.method, headers, timeout: options.timeout },
+    options.body ?? null,
+  )
   return res
 }
 
@@ -196,7 +200,7 @@ for (const asset of assets) {
 
 const assetUrl = buildAssetDownloadUrl({ owner: repo.owner, repo: repo.repo, tag, fileName: installerName })
 const feedUrl = buildFeedUrl({ owner: repo.owner, repo: repo.repo, branch: BRANCH })
-const feedDir = path.join(APP, 'release-feed')
+const feedDir = path.resolve(process.env.JCO_ATOMGIT_FEED_DIR || path.join(APP, '..', 'release-feed'))
 fs.mkdirSync(feedDir, { recursive: true })
 const feedFile = path.join(feedDir, 'beta.yml')
 fs.writeFileSync(
