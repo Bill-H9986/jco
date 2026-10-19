@@ -779,11 +779,43 @@ ipcMain.handle('kernel:probe', async (_event, payload) => {
   }
 })
 
+// 内核模型配置：安装目录里的文件会被覆盖安装清掉，userData 里保留一份并在启动时恢复
+function modelConfigFile() {
+  const dev = path.join(__dirname, 'kernel', 'model-config.json')
+  const packed = path.join(process.resourcesPath, 'app.asar.unpacked', 'kernel', 'model-config.json')
+  return app.isPackaged ? packed : dev
+}
+function modelConfigBackup() {
+  return path.join(app.getPath('userData'), 'kernel', 'model-config.json')
+}
+function restoreModelConfig() {
+  try {
+    const file = modelConfigFile()
+    const backup = modelConfigBackup()
+    if (!fs.existsSync(file) && fs.existsSync(backup)) {
+      fs.mkdirSync(path.dirname(file), { recursive: true })
+      fs.copyFileSync(backup, file)
+    }
+  } catch (error) {}
+}
+function backupModelConfig() {
+  try {
+    const file = modelConfigFile()
+    const backup = modelConfigBackup()
+    if (fs.existsSync(file)) {
+      fs.mkdirSync(path.dirname(backup), { recursive: true })
+      fs.copyFileSync(file, backup)
+    }
+  } catch (error) {}
+}
+
 // 保存设置页「说话写稿」配置：写配置 + 重建内核（下一条消息按新路由走）
 ipcMain.handle('kernel:set-model', async (_event, config) => {
   try {
     const bridge = await getBridge()
-    return await bridge.setModel(config)
+    const result = await bridge.setModel(config)
+    backupModelConfig()
+    return result
   } catch (error) {
     return { ok: false, error: String((error && error.message) || error) }
   }
@@ -2501,6 +2533,7 @@ if (!gotLock) {
   })
 
   app.whenReady().then(() => {
+    restoreModelConfig()
     const saved = readSettings()
     if (saved.theme === 'dark' || saved.theme === 'light') nativeTheme.themeSource = saved.theme
     if (saved.tray === true) {
