@@ -640,8 +640,11 @@
           <div class="grp-title"><span class="ti ti-info-circle"></span>关于</div>
           <div class="grp-card">
             <div class="row">
-              <div class="r-main"><div class="r-title">J.Co 内测版</div><div class="r-desc">当前版本 <b id="appVersion">读取中…</b> · 驱动内核 · DeepSeek Harness（MIT 开源）</div></div>
-              <div class="r-ctl"><button class="btn-ghost" id="btnUpdate">检查更新</button></div>
+              <div class="r-main"><div class="r-title">J.Co 内测版</div><div class="r-desc">当前版本 <b id="appVersion">读取中…</b> · 内核 DSH <b id="dshVersion">读取中…</b></div></div>
+            </div>
+            <div class="row">
+              <div class="r-main"><div class="r-title">自动更新</div><div class="r-desc" id="updateStatus">正在读取更新状态…</div></div>
+              <div class="r-ctl"><button class="btn-ghost" id="btnUpdate" type="button">检查更新</button></div>
             </div>
           </div>
 
@@ -1109,11 +1112,47 @@
       try {
         const info = await sys.appInfo();
         document.getElementById('appVersion').textContent = info && info.ok ? 'v' + info.version : '—';
+        document.getElementById('dshVersion').textContent = info && info.ok && info.dshVersion ? info.dshVersion : '—';
       } catch (e) {
         document.getElementById('appVersion').textContent = '—';
+        document.getElementById('dshVersion').textContent = '—';
       }
     }
     void loadAppInfo();
+
+    let currentUpdateState = null;
+    function renderUpdateState(state) {
+      currentUpdateState = state || null;
+      const status = document.getElementById('updateStatus');
+      const button = document.getElementById('btnUpdate');
+      if (!currentUpdateState) {
+        status.textContent = '桌面安装版会自动检查新版本。';
+        button.disabled = false;
+        button.textContent = '检查更新';
+        return;
+      }
+      status.textContent = currentUpdateState.message || '自动更新状态未知';
+      button.disabled = ['checking', 'downloading', 'installing', 'disabled'].includes(currentUpdateState.phase);
+      if (currentUpdateState.phase === 'downloaded') button.textContent = '重启并更新';
+      else if (currentUpdateState.phase === 'installing') button.textContent = '正在安装…';
+      else if (currentUpdateState.phase === 'downloading') button.textContent = '下载中…';
+      else if (currentUpdateState.phase === 'checking') button.textContent = '检查中…';
+      else button.textContent = '检查更新';
+    }
+    async function loadUpdateState() {
+      const updates = window.jco && window.jco.updates ? window.jco.updates : null;
+      if (!updates) {
+        renderUpdateState(null);
+        return;
+      }
+      try {
+        renderUpdateState(await updates.get());
+      } catch (e) {
+        renderUpdateState({ phase: 'error', message: '读取更新状态失败' });
+      }
+      if (updates.onEvent) updates.onEvent(renderUpdateState);
+    }
+    void loadUpdateState();
 
     document.getElementById('btnCleanup').addEventListener('click', () => {
       const sys = (typeof window.jco !== 'undefined' && window.jco && window.jco.sys) ? window.jco.sys : null;
@@ -1125,8 +1164,23 @@
         showToast(res && res.ok ? '清好了。素材、草稿和记录一个都没动。' : '没清成：' + ((res && res.error) || '未知错误'));
       }, () => showToast('没清成，再试一次。'));
     });
-    document.getElementById('btnUpdate').addEventListener('click', () =>
-      showToast('当前是内测版；更新包请找产品负责人获取，自动更新后续接入。'));
+    document.getElementById('btnUpdate').addEventListener('click', async function () {
+      const updates = window.jco && window.jco.updates ? window.jco.updates : null;
+      if (!updates) {
+        showToast('自动更新在桌面安装版里可用。');
+        return;
+      }
+      this.disabled = true;
+      try {
+        if (currentUpdateState && currentUpdateState.phase === 'downloaded') {
+          renderUpdateState(await updates.install());
+          return;
+        }
+        renderUpdateState(await updates.check());
+      } catch (e) {
+        renderUpdateState({ phase: 'error', message: '检查更新失败，请稍后再试。' });
+      }
+    });
 
     /* ---------- 账号菜单（点头像弹出：设置 / 退出登录） ---------- */
     (function () {

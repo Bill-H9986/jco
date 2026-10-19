@@ -257,6 +257,21 @@ contextBridge.exposeInMainWorld('jco', {
   knowledge: {
     import: () => ipcRenderer.invoke('knowledge:import'),
   },
+  updates: {
+    get: () => ipcRenderer.invoke('updates:get'),
+    check: () => ipcRenderer.invoke('updates:check'),
+    install: () => ipcRenderer.invoke('updates:install'),
+    onEvent: (callback) => {
+      if (typeof callback !== 'function') return
+      ipcRenderer.on('update:event', (_event, state) => {
+        try {
+          callback(state || null)
+        } catch (error) {
+          /* 页面回调异常不扩散 */
+        }
+      })
+    },
+  },
   settings: {
     get: () => ipcRenderer.invoke('settings:get'),
     getSync: () => ipcRenderer.sendSync('settings:get-sync'),

@@ -3,6 +3,7 @@ const path = require('path')
 const fs = require('fs')
 const { execFileSync } = require('child_process')
 const { pathToFileURL } = require('url')
+const PACKAGE_JSON = require('./package.json')
 
 // 界面文件在 J.Co\设计原型 里（和本工程是邻居），整个 J.Co 文件夹搬走也能正常打开
 const UI_DIR = path.join(__dirname, '..', '设计原型')
@@ -117,11 +118,203 @@ ipcMain.handle('sys:theme:get', () => ({
   theme: readSettings().theme || 'system',
   resolved: nativeTheme.shouldUseDarkColors ? 'dark' : 'light',
 }))
+const DSH_VERSION = String((PACKAGE_JSON.dependencies && PACKAGE_JSON.dependencies['@deepseek-ai/dsh']) || '')
+  .replace(/^[~^]/, '')
 ipcMain.handle('sys:app-info', () => ({
   ok: true,
   version: app.getVersion(),
+  dshVersion: DSH_VERSION,
   packaged: app.isPackaged,
 }))
+
+// ---------- 自动更新（electron-updater + generic HTTPS 静态源） ----------
+let updateController = null
+let updateTimer = null
+let updateCheckInFlight = false
+let updateState = {
+  phase: 'idle',
+  currentVersion: app.getVersion(),
+  dshVersion: DSH_VERSION,
+  latestVersion: '',
+  percent: 0,
+  message: '自动更新准备中…',
+  feedConfigured: false,
+  checkedAt: 0,
+}
+function updateUserConfigPath() {
+  return path.join(app.getPath('userData'), 'update-channel.json')
+}
+function readJsonFile(file) {
+  try {
+    return JSON.parse(fs.readFileSync(file, 'utf8'))
+  } catch (error) {
+    return null
+  }
+}
+function packagedUpdateFeedUrl() {
+  if (!app.isPackaged) return ''
+  try {
+    const text = fs.readFileSync(path.join(process.resourcesPath, 'app-update.yml'), 'utf8')
+    const match = text.match(/^url:\s*['"]?(.+?)['"]?\s*$/m)
+    return match ? match[1].trim() : ''
+  } catch (error) {
+    return ''
+  }
+}
+function resolveUpdateChannel() {
+  const module = require('./dist/application/update-channel.js')
+  const bundled = PACKAGE_JSON.jco || {}
+  const user = readJsonFile(updateUserConfigPath()) || {}
+  const envFeedUrl = String(process.env.JCO_UPDATE_FEED_URL || '').trim()
+  const feedUrl = envFeedUrl || user.feedUrl || bundled.feedUrl || packagedUpdateFeedUrl()
+  return module.normalizeUpdateChannel(
+    {
+      ...bundled,
+      ...user,
+      feedUrl,
+    },
+    {
+      allowInsecure: process.env.JCO_UPDATE_ALLOW_INSECURE === '1',
+      currentVersion: app.getVersion(),
+    },
+  )
+}
+function broadcastUpdateState() {
+  BrowserWindow.getAllWindows().forEach((win) => {
+    try {
+      win.webContents.send('update:event', updateState)
+    } catch (error) {
+      /* 窗口已关闭则忽略 */
+    }
+  })
+}
+function setUpdateState(patch) {
+  updateState = { ...updateState, ...patch }
+  broadcastUpdateState()
+  return updateState
+}
+function updateErrorText(error) {
+  return String((error && error.message) || error || '未知错误')
+}
+function updateChannelName(version) {
+  const match = String(version || '').match(/-(alpha|beta|rc|next)\./i)
+  return match ? match[1].toLowerCase() : 'latest'
+}
+async function checkForUpdates(manual = false) {
+  if (!updateController) return updateState
+  if (updateCheckInFlight || ['checking', 'downloading', 'downloaded', 'installing'].includes(updateState.phase)) {
+    return updateState
+  }
+  updateCheckInFlight = true
+  setUpdateState({ phase: 'checking', message: manual ? '正在检查更新…' : '后台检查更新…' })
+  try {
+    await updateController.checkForUpdates()
+  } catch (error) {
+    setUpdateState({ phase: 'error', message: '检查更新失败：' + updateErrorText(error) })
+  } finally {
+    updateCheckInFlight = false
+  }
+  return updateState
+}
+function installUpdateNow() {
+  if (!updateController || updateState.phase !== 'downloaded') return updateState
+  setUpdateState({ phase: 'installing', message: '正在退出并安装更新…' })
+  setImmediate(() => updateController.quitAndInstall(true, true))
+  return updateState
+}
+function initAutoUpdater() {
+  updateState = {
+    ...updateState,
+    currentVersion: app.getVersion(),
+    dshVersion: DSH_VERSION,
+  }
+  if (JCO_TEST_MODE && process.env.JCO_UPDATE_TEST_MODE !== '1') {
+    return setUpdateState({ phase: 'disabled', message: '测试模式不检查更新' })
+  }
+  if (!app.isPackaged) {
+    return setUpdateState({ phase: 'disabled', message: '开发模式不检查更新' })
+  }
+  let config
+  try {
+    config = resolveUpdateChannel()
+  } catch (error) {
+    return setUpdateState({ phase: 'error', message: '更新配置无效：' + updateErrorText(error) })
+  }
+  if (!config.feedUrl) {
+    return setUpdateState({ phase: 'disabled', feedConfigured: false, message: '安装包未配置更新源' })
+  }
+  try {
+    const { autoUpdater } = require('electron-updater')
+    autoUpdater.autoDownload = true
+    autoUpdater.autoInstallOnAppQuit = true
+    autoUpdater.allowPrerelease = config.allowPrerelease
+    const channel = updateChannelName(app.getVersion())
+    autoUpdater.channel = channel
+    autoUpdater.setFeedURL({ provider: 'generic', url: config.feedUrl, channel })
+    autoUpdater.on('checking-for-update', () => {
+      setUpdateState({ phase: 'checking', feedConfigured: true, message: '正在检查更新…' })
+    })
+    autoUpdater.on('update-available', (info) => {
+      setUpdateState({
+        phase: 'available',
+        feedConfigured: true,
+        latestVersion: String((info && info.version) || ''),
+        message: '发现新版本，正在后台下载…',
+      })
+    })
+    autoUpdater.on('update-not-available', () => {
+      setUpdateState({
+        phase: 'up-to-date',
+        feedConfigured: true,
+        latestVersion: '',
+        percent: 0,
+        checkedAt: Date.now(),
+        message: '已是最新版本',
+      })
+    })
+    autoUpdater.on('download-progress', (progress) => {
+      const percent = Math.max(0, Math.min(100, Number(progress && progress.percent) || 0))
+      setUpdateState({
+        phase: 'downloading',
+        feedConfigured: true,
+        percent,
+        message: `正在下载更新 ${percent.toFixed(0)}%`,
+      })
+    })
+    autoUpdater.on('update-downloaded', (info) => {
+      const latestVersion = String((info && info.version) || updateState.latestVersion || '')
+      setUpdateState({
+        phase: 'downloaded',
+        feedConfigured: true,
+        latestVersion,
+        percent: 100,
+        checkedAt: Date.now(),
+        message: `v${latestVersion} 已下载，退出后自动安装`,
+      })
+      if (Notification.isSupported()) {
+        try {
+          new Notification({
+            title: 'J.Co 更新已准备好',
+            body: `v${latestVersion} 已下载，退出应用后会自动安装。`,
+          }).show()
+        } catch (error) {}
+      }
+    })
+    autoUpdater.on('error', (error) => {
+      setUpdateState({ phase: 'error', feedConfigured: true, message: '自动更新失败：' + updateErrorText(error) })
+    })
+    updateController = autoUpdater
+    updateState = { ...updateState, phase: 'idle', feedConfigured: true, message: '自动更新已开启' }
+    broadcastUpdateState()
+    setTimeout(() => void checkForUpdates(false), 15_000)
+    updateTimer = setInterval(() => void checkForUpdates(false), config.checkIntervalHours * 60 * 60 * 1000)
+  } catch (error) {
+    setUpdateState({ phase: 'error', message: '自动更新初始化失败：' + updateErrorText(error) })
+  }
+}
+ipcMain.handle('updates:get', () => updateState)
+ipcMain.handle('updates:check', () => checkForUpdates(true))
+ipcMain.handle('updates:install', () => installUpdateNow())
 
 // 开机自动启动（真开关：写系统登录项注册表；可读回、可复位）
 const RUN_KEY = 'HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run'
@@ -2170,6 +2363,7 @@ if (!gotLock) {
       createTray()
     }
     createWindow()
+    initAutoUpdater()
     // 后台预热内核（几秒就绪；不阻塞窗口显示，失败也不影响界面）
     getBridge()
       .then((bridge) => bridge.warmUp().catch(() => {}))
@@ -2192,6 +2386,7 @@ if (!gotLock) {
 // 退出前收掉发布会话（浏览器会跟着关闭；不等它，防拖住退出）
 app.on('before-quit', () => {
   if (publishSessionManager) publishSessionManager.stop()
+  if (updateTimer) clearInterval(updateTimer)
 })
 
 let quitting = false

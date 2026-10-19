@@ -1,0 +1,5 @@
+# 可自动更新的发布配置：必须通过 JCO_UPDATE_FEED_URL 指定静态 HTTPS 更新源。
+extends: ./electron-builder.yml
+publish:
+  provider: generic
+  url: ${env.JCO_UPDATE_FEED_URL}

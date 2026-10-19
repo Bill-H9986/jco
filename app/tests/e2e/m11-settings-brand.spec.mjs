@@ -76,6 +76,10 @@ test('M11 W4-01：设置偏好落盘，BrandProfile 全站同源生效', async (
 
     const version = await app.evaluate(({ app: electronApp }) => electronApp.getVersion())
     await expect(win.locator('#appVersion')).toContainText(version)
+    const appInfo = await win.evaluate(async () => await window.jco.sys.appInfo())
+    await expect(win.locator('#dshVersion')).toContainText(appInfo.dshVersion)
+    await expect(win.locator('#updateStatus')).toContainText('测试模式不检查更新')
+    await expect(win.locator('#btnUpdate')).toBeDisabled()
 
     // 偏好存主进程，不再只写 localStorage。
     await win.locator('#segMode button[data-v="ask"]').click()

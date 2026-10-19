@@ -1,11 +1,15 @@
 {
   "name": "jco",
   "productName": "J.Co",
-  "version": "0.6.0-beta.1",
+  "version": "0.6.0-beta.4",
   "description": "J.Co · 自媒体管家（桌面版）",
   "author": "Jay",
   "main": "main.js",
   "private": true,
+  "jco": {
+    "updateFeedUrl": "",
+    "updateCheckIntervalHours": 4
+  },
   "scripts": {
     "start": "npm run build && electron .",
     "build": "tsc -p tsconfig.json",
@@ -15,6 +19,8 @@
     "test:unit": "vitest run",
     "test:e2e": "playwright test",
     "test:visual": "playwright test -c playwright.visual.config.mjs",
+    "release:package": "node scripts/release-package.mjs",
+    "update:serve": "node scripts/update-feed-server.mjs",
     "check:no-direct-business-localstorage": "node scripts/check-all.mjs --only no-direct-business-localstorage --baseline",
     "check:no-hardcoded-industry": "node scripts/check-all.mjs --only no-hardcoded-industry --baseline",
     "check:no-chat-browser-tools": "node scripts/check-all.mjs --only no-chat-browser-tools --baseline",
@@ -75,6 +81,7 @@
     "@deepseek-ai/dsh-workflow": "0.2.0-rc.2",
     "@ffmpeg-installer/ffmpeg": "^1.1.0",
     "@ffmpeg-installer/win32-x64": "^4.1.0",
+    "electron-updater": "6.8.9",
     "playwright": "^1.64.1"
   }
 }

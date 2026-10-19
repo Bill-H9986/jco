@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## 0.6.0-beta.4 (2026-10-19)
+
+### Features
+
+* **ui:** 固定侧栏顶部，工作台/任务/对话独立滚动；统一内容页头部坐标
+* **knowledge:** 设置页品牌档案升级为内置知识库，支持资料导入、条目管理、启停、提示词引用与凭据脱敏
+* **updater:** 接入 electron-updater，支持启动/定时检查、后台下载、SHA-512 校验、退出静默安装、beta 通道与发布 feed 生成
+
+### Fixes
+
+* **testing:** 页面增加 `data-jco-page` 就绪标记，视觉截图等待稳定帧，E2E 每轮清理隔离测试数据
+* **release:** 更新通道从版本号推导，避免预发布版本误请求 `latest.yml`
+
 ## [0.6.0-beta.1](///compare/v0.5.0-beta.1...v0.6.0-beta.1) (2026-10-17)
 
 ### Features
