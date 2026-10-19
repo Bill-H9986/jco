@@ -40,7 +40,7 @@ describe('AtomGit 发布地址', () => {
 
   it('feed 地址固定指向仓库内的 release-feed 目录', () => {
     expect(buildFeedUrl({ owner: 'Bill-H9986', repo: 'jco', branch: 'main' })).toBe(
-      'https://atomgit.com/Bill-H9986/jco/raw/main/release-feed',
+      'https://api.gitcode.com/api/v5/repos/Bill-H9986/jco/raw/release-feed?ref=main',
     )
   })
 

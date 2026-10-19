@@ -48,17 +48,17 @@ git push atomgit beta/0.6.0
 
 electron-updater 的 generic provider 会固定请求 `<feedUrl>/beta.yml`，而 AtomGit Release 附件目录不是静态目录结构。因此：
 
-- `beta.yml` 只有几百字节，放进仓库的 `release-feed/` 目录，用 raw 地址读取；
+- `beta.yml` 只有几百字节，放进仓库根的 `release-feed/`，用 API raw 端点读取；
 - `beta.yml` 里的安装包地址写成绝对 URL，指向 Release 附件的下载 API；
 - 安装包本身不进 Git，仓库体积不受影响。
 
 更新源形如：
 
 ```text
-https://atomgit.com/<用户名>/jco/raw/beta/0.6.0/release-feed
+https://api.gitcode.com/api/v5/repos/<用户名>/jco/raw/release-feed?ref=main
 ```
 
-其中分支名要和实际推送分支一致。
+注意：网页版 `/<用户名>/jco/raw/<分支>/<路径>` 会被前端路由接管，必须用 API raw 端点；`ref` 要和实际推送分支一致。
 
 ## 5. 已知风险（必须实测）
 

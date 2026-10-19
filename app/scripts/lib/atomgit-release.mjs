@@ -9,7 +9,6 @@
  */
 
 const API_BASE = 'https://api.gitcode.com/api/v5'
-const WEB_BASE = 'https://atomgit.com'
 
 export function parseRepoSlug(value) {
   const text = String(value ?? '').trim()
@@ -26,7 +25,8 @@ export function buildAssetDownloadUrl({ owner, repo, tag, fileName }) {
 }
 
 export function buildFeedUrl({ owner, repo, branch }) {
-  return `${WEB_BASE}/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/raw/${encodeURIComponent(branch)}/release-feed`
+  // 网页 raw 路由会被 SPA 接管，只有 API raw 端点直接返回文件字节。
+  return `${API_BASE}/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/raw/release-feed?ref=${encodeURIComponent(branch)}`
 }
 
 export function buildAtomGitChannelYaml({ version, fileName, sha512, size, assetUrl, releaseDate }) {
