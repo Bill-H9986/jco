@@ -50,3 +50,5 @@ app/kernel/accounts.json
 app/kernel/edit-tools.json
 app/kernel/edit-tools.patch.yml
 app/kernel/edit-tools.cancel
+# AI 契约冒烟与运行时证据（含测试产物，不入库）
+outputs/
