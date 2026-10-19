@@ -83,7 +83,8 @@
 
 .ask-bar { display: flex; align-items: center; gap: 10px; margin-top: 12px; }
 
-.ask-bar .left, .ask-bar .right { display: flex; align-items: center; gap: 8px; flex: none; }
+  .ask-bar .left, .ask-bar .right { display: flex; align-items: center; gap: 8px; flex: none; }
+  .ask-bar .right { margin-left: auto; }
 
 .ask-bar .mid { flex: 1; display: flex; justify-content: center; min-width: 0; }
 
@@ -147,6 +148,18 @@
   }
 
 .pill-pop.show { display: block; }
+
+/* 参数直接平铺在输入框底部 */
+.ask-params {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 8px 18px;
+  padding: 8px 14px 2px;
+}
+.ask-params .param { display: flex; align-items: center; gap: 7px; }
+.ask-params .plabel { font-size: 12px; color: var(--text-3); white-space: nowrap; }
+.ask-params .seg { display: flex; gap: 4px; flex-wrap: wrap; }
+.ask-params .seg button {
+  height: 26px; padding: 0 9px; border-radius: 8px; font-size: 12px;
+}
 
 .pop-row { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
 
@@ -773,25 +786,17 @@
               <button class="tool" onclick="location.href='J.Co工作台-素材.html'"><span class="ti ti-plus"></span>素材</button>
               <button class="tool" onclick="location.href='J.Co工作台-创作.html'"><span class="ti ti-at"></span>引用</button>
             </div>
-            <div class="mid">
-              <button class="model-pill" id="pillBtn">
-                <span class="ti ti-sparkles"></span>
-                <span class="px" id="pillText">Seedance 2.5 | 9:16 · 30 秒 · 1080P</span>
-                <span class="ti ti-chevron-down chev"></span>
-              </button>
-            </div>
             <div class="right">
               <button class="send-big" id="goBtn" disabled aria-label="开始生成"><span class="ti ti-arrow-up"></span></button>
             </div>
           </div>
 
-          <div class="pill-pop" id="pillPop">
-            <div class="pop-row"><span class="plabel">模型</span><div class="seg" id="segModel"></div></div>
-            <div class="pop-row"><span class="plabel">比例</span><div class="seg" id="segRatio"></div></div>
-            <div class="pop-row"><span class="plabel" id="durLabel">时长</span><div class="seg" id="segDur"></div></div>
-            <div class="pop-row"><span class="plabel">清晰度</span><div class="seg" id="segRes"></div></div>
-            <div class="pop-row" id="voiceRow"><span class="plabel">配音</span><div class="seg" id="segVoice"></div></div>
-            <div class="pop-tip" id="popTip"></div>
+          <div class="ask-params">
+            <div class="param"><span class="plabel">模型</span><div class="seg" id="segModel"></div></div>
+            <div class="param"><span class="plabel">比例</span><div class="seg" id="segRatio"></div></div>
+            <div class="param"><span class="plabel" id="durLabel">时长</span><div class="seg" id="segDur"></div></div>
+            <div class="param"><span class="plabel">清晰度</span><div class="seg" id="segRes"></div></div>
+            <div class="param" id="voiceRow"><span class="plabel">配音</span><div class="seg" id="segVoice"></div></div>
           </div>
         </section>
       </div>
@@ -993,7 +998,6 @@
     }
 
     function render() {
-      $('pillText').textContent = pillInfo();
       $('agentHint').textContent = HINTS[state.type];
       $('askInp').placeholder = PLACEHOLDERS[state.type];
       document.querySelectorAll('#agentTabs button').forEach((b) => {
@@ -1047,9 +1051,7 @@
       });
     }
 
-    function tip(text) {
-      $('popTip').textContent = text;
-    }
+    function tip() {}
 
     function onSkill(s) {
       if (s.type && s.type !== state.type) {
@@ -1112,16 +1114,6 @@
         render();
       });
     });
-
-    // 胶囊弹层
-    const pillPop = $('pillPop');
-    $('pillBtn').addEventListener('click', (e) => {
-      e.stopPropagation();
-      pillPop.classList.toggle('show');
-      if (pillPop.classList.contains('show')) tip(RATIOS[state.type].find((r) => r.v === state.ratio).tip);
-    });
-    pillPop.addEventListener('click', (e) => e.stopPropagation());
-    document.addEventListener('click', () => pillPop.classList.remove('show'));
 
     /* ================= 生成流程（沿用） ================= */
     /* ---------- 真内核模式（桌面应用里启用；浏览器直开保持演示） ---------- */

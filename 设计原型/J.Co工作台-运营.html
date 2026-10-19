@@ -305,27 +305,27 @@
           </div>
 
           <!-- ============ 今日战报 ============ -->
-          <div class="sec-head"><h2>今日战报</h2><span class="hint" id="reportHint">每天早上自动更新，昨晚的数据已经在了</span><button class="btn-sm" id="opsReportBtn"><span class="ti ti-sparkles"></span>马上跑</button></div>
+          <div class="sec-head"><h2>今日战报</h2><span class="hint" id="reportHint">还没有取过战报，点「马上跑」去取</span><button class="btn-sm" id="opsReportBtn"><span class="ti ti-sparkles"></span>马上跑</button></div>
           <div class="stats">
             <div class="dstat">
               <div class="dlabel"><span class="ti ti-player-play"></span>播放量（近 7 天）</div>
-              <div class="dnum" id="statViews">6.9<span class="unit">万</span></div>
-              <div class="dsub" id="statViewsSub"><span class="ti ti-trending-up"></span><span class="up">5.2 万</span>是昨晚那条带来的</div>
+              <div class="dnum" id="statViews">—</div>
+              <div class="dsub" id="statViewsSub">还没有取过战报</div>
             </div>
             <div class="dstat">
               <div class="dlabel"><span class="ti ti-user-plus"></span>新增粉丝</div>
-              <div class="dnum" id="statFans">386</div>
-              <div class="dsub" id="statFansSub"><span class="ti ti-trending-up"></span><span class="up">比上周多 341</span></div>
+              <div class="dnum" id="statFans">—</div>
+              <div class="dsub" id="statFansSub">点「马上跑」拉取真实数据</div>
             </div>
             <div class="dstat">
               <div class="dlabel"><span class="ti ti-message-dots"></span>评论</div>
-              <div class="dnum" id="statComments">57</div>
-              <div class="dsub" id="statCommentsSub"><span class="todo">8 条等你回</span></div>
+              <div class="dnum" id="statComments">—</div>
+              <div class="dsub" id="statCommentsSub">还没有数据</div>
             </div>
             <div class="dstat">
               <div class="dlabel"><span class="ti ti-users-group"></span>新线索</div>
-              <div class="dnum" id="statLeads">9<span class="unit">人</span></div>
-              <div class="dsub" id="statLeadsSub"><span class="todo">3 个人待跟进</span></div>
+              <div class="dnum" id="statLeads">0<span class="unit">人</span></div>
+              <div class="dsub" id="statLeadsSub">暂无意向</div>
             </div>
           </div>
 
@@ -333,8 +333,8 @@
           <div class="insight">
             <span class="ibadge ti ti-sparkles"></span>
             <div>
-              <h3 id="insightTitle">昨晚那条，是你平常播放的 8 倍</h3>
-              <p id="insightText">《把一件事讲清楚，其实就 3 步》播放 5.2 万，还带来 41 个粉丝、6 条咨询。AI 拆出来的原因：「3 步」给的是确定感，「不踩坑」戳的是怕麻烦。这两个词，就是你的流量密码。</p>
+              <h3 id="insightTitle">还没有可复盘的数据</h3>
+              <p id="insightText">先点「马上跑」取一次战报，AI 才能告诉你哪条最能打、为什么。</p>
               <div class="acts">
                 <button class="btn-sm" id="insightGo">照这个套路再做一条<span class="ti ti-arrow-right"></span></button>
                 <button class="btn-sm ghost2" id="insightMore">看完整分析</button>
@@ -343,11 +343,11 @@
           </div>
 
           <!-- ============ 评论要你过目 ============ -->
-          <div class="sec-head"><h2>评论要你过目</h2><span class="hint" id="cmtsHint">8 条等你回，先挑了 3 条重要的 · AI 拟好稿，你点头才发</span><button class="btn-sm" id="opsCommentsBtn"><span class="ti ti-sparkles"></span>取评论</button></div>
+          <div class="sec-head"><h2>评论要你过目</h2><span class="hint" id="cmtsHint">还没有取回评论</span><button class="btn-sm" id="opsCommentsBtn"><span class="ti ti-sparkles"></span>取评论</button></div>
           <div class="cmts" id="cmts"></div>
 
           <!-- ============ 私域线索 ============ -->
-          <div class="sec-head"><h2>私域线索</h2><span class="hint" id="leadsHint">从评论和私信找过来 9 个人，先跟进这 3 个</span></div>
+          <div class="sec-head"><h2>私域线索</h2><span class="hint" id="leadsHint">还没有取回评论，暂时无法识别线索</span></div>
           <div class="leadlist" id="leads"></div>
 
           <!-- ============ 接下来发什么 ============ -->
@@ -537,15 +537,18 @@
     }
 
     /* ---------- 内容计划 ---------- */
-    const PLANS = [
-      { when: '周一 19:30', title: '《同一件事的 3 条路，哪条最省事》', state: '待拍', cls: '' },
-      { when: '周三 19:30', title: '《准备材料清单，照着准备就行》', state: '文案中', cls: 'making' },
-      { when: '周五 19:30', title: '《用户真实经历：38 岁也能开始》', state: '待剪', cls: '' }
-    ];
+    const PLANS = [];
 
     function renderPlans() {
       const box = $('plans');
       box.innerHTML = '';
+      if (PLANS.length === 0) {
+        const el = document.createElement('div');
+        el.className = 'planrow';
+        el.innerHTML = '<span class="when">—</span><span class="pt">还没有排期，去「发布」排一条</span><span class="ps">空</span>';
+        box.appendChild(el);
+        return;
+      }
       PLANS.forEach((p) => {
         const el = document.createElement('div');
         el.className = 'planrow';
@@ -559,7 +562,7 @@
 
     /* ---------- 洞察按钮 ---------- */
     $('insightGo').addEventListener('click', () => {
-      showToast('（原型示意）正式版会带着「3 步 + 不踩坑」这个思路，去「选题」帮你起 3 个题目。');
+      showToast('带着这次复盘的思路，去「选题」起 3 个题目。');
     });
     $('insightMore').addEventListener('click', () => {
       showToast('（原型示意）正式版会展开对比：这条和你平常的视频，开头、标题、封面各差在哪。');
