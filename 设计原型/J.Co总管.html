@@ -19,7 +19,7 @@
 
 .chat-head {
     flex: none; display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
-    padding: 22px 36px 0;
+    padding: 36px 32px 0;
   }
 
 .agent-logo {
@@ -285,12 +285,17 @@
 
     <main class="main">
       <section class="chat-col">
-        <header class="chat-head">
-          <span class="agent-logo">J</span>
-          <span class="agent-name">和 J.Co</span>
-          <span class="agent-chip">总管</span>
-          <span class="agent-hint">聊一句就干，写什么发什么你说了算</span>
-          <button class="ghost-btn board-toggle" id="boardToggle" type="button" aria-label="待办与安排"><span class="ti ti-flag"></span>待办</button>
+        <header class="chat-head page-head">
+          <div class="page-head__main">
+            <span class="page-head__logo">J</span>
+            <div>
+              <h1>总管</h1>
+              <div class="sub">聊一句就干，写什么发什么你说了算</div>
+            </div>
+          </div>
+          <div class="page-head__actions">
+            <button class="ghost-btn board-toggle" id="boardToggle" type="button" aria-label="待办与安排"><span class="ti ti-flag"></span>待办</button>
+          </div>
         </header>
 
         <div class="chat" id="chat">
