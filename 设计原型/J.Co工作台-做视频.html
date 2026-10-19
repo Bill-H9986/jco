@@ -1016,12 +1016,22 @@
       });
     }
 
+    function configuredModel(kind, fallback) {
+      try {
+        const cfg = JSON.parse(localStorage.getItem('jco-brain-config') || 'null');
+        const model = cfg && cfg[kind] && cfg[kind].model;
+        const text = String(model || '').trim();
+        return text || fallback;
+      } catch (e) {
+        return fallback;
+      }
+    }
     function updateChips(isImage) {
       const set = (key, text) => {
         const el = document.querySelector('.ask-params .param[data-param="' + key + '"] .pv');
         if (el) el.textContent = text;
       };
-      set('model', isImage ? 'Seedream 5.0' : 'Seedance 2.5');
+      set('model', isImage ? configuredModel('image', '未配置图片模型') : configuredModel('video', '未配置视频模型'));
       set('ratio', state.ratio);
       set('dur', isImage ? state.count : state.duration);
       set('res', state.res);
@@ -1059,7 +1069,8 @@
 
       // 弹层
       const isImage = state.type === 'image';
-      segRender($('segModel'), [{ v: isImage ? 'Seedream 5.0' : 'Seedance 2.5' }], isImage ? 'Seedream 5.0' : 'Seedance 2.5', () => {});
+      const modelName = isImage ? configuredModel('image', '未配置图片模型') : configuredModel('video', '未配置视频模型');
+      segRender($('segModel'), [{ v: modelName }], modelName, () => {});
       segRender($('segRatio'), RATIOS[state.type], state.ratio, (o) => { state.ratio = o.v; render(); tip(o.tip); });
       if (isImage) {
         segRender($('segDur'), COUNTS, state.count, (o) => { state.count = o.v; render(); tip(o.tip); });
@@ -1787,7 +1798,10 @@
           } else if (vs && vs.status === 'failed') {
             mk.textContent = '重试';
             mk.title = vs.error || '';
-            mk.addEventListener('click', () => makeShotVideo(i, item));
+            mk.addEventListener('click', () => {
+              if (vs && vs.error) showToast('上次失败：' + vs.error);
+              makeShotVideo(i, item);
+            });
           } else {
             mk.textContent = '出这段';
             mk.addEventListener('click', () => makeShotVideo(i, item));
@@ -1808,7 +1822,17 @@
       renderShots();
       const aspect = state.ratio === '9:16' ? '9:16' : (state.ratio === '16:9' ? '16:9' : '1:1');
       const prompt = (item.pic ? item.pic + '。' : '') + (item.line || '') + (currentDraft.fixNote ? ('。（修改要求：' + currentDraft.fixNote + '）') : '');
-      const res = await JCO_KERNEL.video({ prompt: prompt, seconds: 5, aspect: aspect });
+      let res = null;
+      for (let attempt = 0; attempt < 4; attempt += 1) {
+        res = await JCO_KERNEL.video({ prompt: prompt, seconds: 5, aspect: aspect });
+        if (res && res.ok) break;
+        const msg = String((res && res.error) || '');
+        if (attempt < 3 && /队列已满|rate|429|503|稍后|重试/i.test(msg)) {
+          await new Promise((r) => setTimeout(r, 60000));
+          continue;
+        }
+        break;
+      }
       if (res && res.ok && res.url) {
         let src = res.url
         let savedPath = ''
