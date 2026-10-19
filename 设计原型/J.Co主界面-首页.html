@@ -9,7 +9,7 @@
   <style>
 .main { flex: 1; min-width: 0; overflow-y: auto; }
 
-.page { max-width: none; margin: 0 auto; padding: 68px 32px 72px; }
+.page { max-width: none; margin: 0 auto; padding: 36px 32px 72px; }
 
 /* ============ 头部 ============ */
   .brand { display: flex; align-items: center; gap: 16px; }
@@ -25,7 +25,7 @@
 
 .notice {
     display: inline-flex; align-items: center; gap: 6px;
-    margin: 14px 0 0 62px;
+    margin: 4px 0 0;
     font-size: 14px; color: var(--text-2); text-decoration: none;
     background: none; border: none; font-family: inherit; cursor: pointer;
     transition: color 0.15s ease;
@@ -194,15 +194,17 @@
     </aside>
     <main class="main">
     <div class="page">
-    <header>
-      <div class="brand">
-        <div class="mark">J</div>
-        <h1>J.Co</h1>
+    <header class="page-head">
+      <div class="page-head__main">
+        <span class="page-head__logo">J</span>
+        <div>
+          <h1>首页</h1>
+          <button class="notice" onclick="fillAndFocus('把做好的视频发到抖音')">
+            今天想干点什么？说一句就行
+            <span class="ti ti-chevron-right"></span>
+          </button>
+        </div>
       </div>
-      <button class="notice" onclick="fillAndFocus('把做好的视频发到抖音')">
-        今天想干点什么？说一句就行
-        <span class="ti ti-chevron-right"></span>
-      </button>
     </header>
 
     <section class="ask">

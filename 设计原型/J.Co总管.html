@@ -317,17 +317,11 @@
           <div class="board-head"><span>待办与安排</span><button class="board-close" id="boardClose" type="button" aria-label="收起面板"><span class="ti ti-chevron-right"></span></button></div>
         <div class="board-card">
           <h3><span class="ti ti-flag"></span>等你拍板</h3>
-          <a class="b-todo" href="J.Co工作台-后期.html"><span class="ti ti-player-play"></span><span><b>2 条视频</b>剪好了，等你过目 <span class="go">去「后期」→</span></span></a>
-          <a class="b-todo" href="J.Co工作台-运营.html"><span class="ti ti-message-dots"></span><span><b>8 条评论</b>拟好了稿，等你放行 <span class="go">去「运营」→</span></span></a>
-          <a class="b-todo" href="J.Co工作台-发布.html"><span class="ti ti-upload"></span><span><b>19:30 的发布</b>排好了，等你确认 <span class="go">去「发布」→</span></span></a>
+          <div id="boardPending"></div>
         </div>
         <div class="board-card">
           <h3><span class="ti ti-clock-hour-3"></span>今天的安排</h3>
-          <div class="b-line done"><span class="ti ti-check"></span><span><span class="when">08:30</span> 算好昨晚的账：5.2 万播放那条最猛</span></div>
-          <div class="b-line done"><span class="ti ti-check"></span><span><span class="when">09:12</span> 盯完对标，新爆款已拆解入库</span></div>
-          <div class="b-line doing"><span class="ti ti-refresh"></span><span><span class="when">上午</span> 文案在写口播稿，改到第 2 稿</span></div>
-          <div class="b-line doing"><span class="ti ti-refresh"></span><span><span class="when">上午</span> 创作在出分镜图，已完成 4/8 张</span></div>
-          <div class="b-line plan"><span class="ti ti-clock"></span><span><span class="when">19:30</span> 到点替你发布，发完把结果端给你</span></div>
+          <div id="boardToday"></div>
         </div>
         </div>
       </aside>
@@ -665,8 +659,51 @@
         window.jco.tasks.sessions().then(function (r) {
           tasks = (r && r.tasks) || [];
           renderTasks();
+          renderBoard(tasks);
           if (typeof cb === 'function') cb();
         }).catch(function () {});
+      }
+      function renderBoard(list) {
+        var pendingEl = document.getElementById('boardPending');
+        var todayEl = document.getElementById('boardToday');
+        if (!pendingEl || !todayEl) return;
+        pendingEl.innerHTML = '';
+        todayEl.innerHTML = '';
+        var running = list.filter(function (t) { return t.state === 'running'; });
+        if (running.length === 0) {
+          var p = document.createElement('div');
+          p.className = 'b-line';
+          p.innerHTML = '<span class="ti ti-check"></span><span>还没有要你拍板的事。</span>';
+          pendingEl.appendChild(p);
+        } else {
+          running.slice(0, 4).forEach(function (t) {
+            var b = document.createElement('button');
+            b.type = 'button';
+            b.className = 'b-todo';
+            b.style.cssText = 'width:100%;border:none;background:transparent;text-align:left;font-family:inherit;cursor:pointer;';
+            b.innerHTML = '<span class="ti ti-refresh"></span><span><b></b> 正在跑，跑完等你确认 <span class="go">查看 →</span></span>';
+            b.querySelector('b').textContent = t.name || '任务';
+            b.addEventListener('click', function () { openTaskView(t.id); });
+            pendingEl.appendChild(b);
+          });
+        }
+        if (list.length === 0) {
+          var e = document.createElement('div');
+          e.className = 'b-line';
+          e.innerHTML = '<span class="ti ti-clock"></span><span>今天还没有安排。去说一句要做什么，或到「自动任务」定个时间。</span>';
+          todayEl.appendChild(e);
+          return;
+        }
+        list.slice(0, 6).forEach(function (t) {
+          var row = document.createElement('div');
+          row.className = 'b-line ' + (t.state === 'done' ? 'done' : (t.state === 'failed' ? 'plan' : 'doing'));
+          var icon = t.state === 'done' ? 'ti-check' : (t.state === 'failed' ? 'ti-x' : 'ti-refresh');
+          row.innerHTML = '<span class="ti ' + icon + '"></span><span><span class="when"></span> <span class="txt"></span></span>';
+          var stamp = String(t.updatedAt || t.createdAt || '');
+          row.querySelector('.when').textContent = stamp.length >= 16 ? stamp.slice(11, 16) : '';
+          row.querySelector('.txt').textContent = (t.name || '任务') + (t.state === 'done' ? ' · 已完成' : (t.state === 'failed' ? ' · 没跑成' : ' · 在跑'));
+          todayEl.appendChild(row);
+        });
       }
       function openTaskView(id) {
         window.jco.tasks.session(id).then(function (r) {

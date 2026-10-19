@@ -259,6 +259,145 @@
     })
   }
 
+  // 侧栏会话操作菜单：分享 / 重命名 / 删除（外壳版）
+  var chatMenuEl = null
+  function closeChatMenu() {
+    if (chatMenuEl) {
+      chatMenuEl.remove()
+      chatMenuEl = null
+    }
+  }
+  function shellToast(text) {
+    var el = document.getElementById('__jcoShellToast')
+    if (!el) {
+      el = document.createElement('div')
+      el.id = '__jcoShellToast'
+      el.style.cssText =
+        'position:fixed;left:50%;bottom:28px;transform:translateX(-50%);z-index:99;padding:9px 14px;border-radius:10px;background:rgba(0,0,0,.82);color:#fff;font-size:13px;pointer-events:none;opacity:0;transition:opacity .18s'
+      document.body.appendChild(el)
+    }
+    el.textContent = text
+    el.style.opacity = '1'
+    clearTimeout(el.__timer)
+    el.__timer = setTimeout(function () {
+      el.style.opacity = '0'
+    }, 1800)
+  }
+  function readChatStore() {
+    try {
+      return JSON.parse(localStorage.getItem('jco-chats-v1') || 'null') || { activeId: '', chats: [] }
+    } catch (e) {
+      return { activeId: '', chats: [] }
+    }
+  }
+  function writeChatStore(data) {
+    try {
+      localStorage.setItem('jco-chats-v1', JSON.stringify(data))
+    } catch (e) {}
+  }
+  function shareChat(chat) {
+    var lines = ['【和 J.Co 的对话 · ' + (chat.title || '新会话') + '】']
+    ;(chat.messages || []).forEach(function (m) {
+      lines.push((m.role === 'user' ? '我：' : 'J.Co：') + String(m.text || ''))
+    })
+    var text = lines.join('\n')
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(
+        function () {
+          shellToast('对话已复制，去粘贴分享吧')
+        },
+        function () {
+          shellToast('没复制成，手动选中复制一下')
+        },
+      )
+    } else {
+      shellToast('这台环境不支持直接复制')
+    }
+  }
+  function showChatMenu(anchor, chat) {
+    closeChatMenu()
+    var menu = document.createElement('div')
+    menu.className = 'convo-menu'
+    var rect = anchor.getBoundingClientRect()
+    menu.style.left = Math.max(10, rect.left - 130) + 'px'
+    menu.style.top = Math.min(window.innerHeight - 170, rect.bottom + 4) + 'px'
+    menu.addEventListener('click', function (e) {
+      e.stopPropagation()
+    })
+    function item(icon, label, cls, fn) {
+      var b = document.createElement('button')
+      b.type = 'button'
+      b.className = cls || ''
+      b.innerHTML = '<span class="ti ' + icon + '"></span>' + label
+      b.addEventListener('click', fn)
+      menu.appendChild(b)
+      return b
+    }
+    item('ti-share-3', '分享对话', '', function () {
+      closeChatMenu()
+      shareChat(chat)
+    })
+    item('ti-file-text', '重命名', '', function () {
+      closeChatMenu()
+      var row = anchor.closest('.convo')
+      var nameEl = row ? row.querySelector('.name') : null
+      if (!nameEl) return
+      var input = document.createElement('input')
+      input.className = 'convo-rename'
+      input.value = chat.title || '新会话'
+      nameEl.replaceWith(input)
+      input.focus()
+      input.select()
+      var done = false
+      function finish(save) {
+        if (done) return
+        done = true
+        var value = String(input.value || '').trim()
+        if (save && value) {
+          var data = readChatStore()
+          var target = (data.chats || []).find(function (x) {
+            return x.id === chat.id
+          })
+          if (target) target.title = value
+          writeChatStore(data)
+        }
+        refreshSidebarLists()
+      }
+      input.addEventListener('blur', function () {
+        finish(true)
+      })
+      input.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') {
+          e.preventDefault()
+          finish(true)
+        }
+        if (e.key === 'Escape') {
+          e.preventDefault()
+          finish(false)
+        }
+      })
+    })
+    var del = item('ti-trash', '删除对话', 'danger', function () {
+      if (!del.dataset.armed) {
+        del.dataset.armed = '1'
+        del.innerHTML = '<span class="ti ti-trash"></span>再点一次，真删除'
+        return
+      }
+      var data = readChatStore()
+      data.chats = (data.chats || []).filter(function (x) {
+        return x.id !== chat.id
+      })
+      if (data.activeId === chat.id) data.activeId = data.chats[0] ? data.chats[0].id : ''
+      writeChatStore(data)
+      closeChatMenu()
+      refreshSidebarLists()
+      shellToast('已删除「' + (chat.title || '新会话') + '」')
+    })
+    document.body.appendChild(menu)
+    chatMenuEl = menu
+  }
+  document.addEventListener('click', closeChatMenu)
+
   function renderChatList() {
     if (!chatBoxEl) return
     var chats = []
@@ -282,6 +421,23 @@
       b.className = 'convo'
       b.innerHTML = '<span class="name"></span>'
       b.querySelector('.name').textContent = c.title || '新会话'
+      var more = document.createElement('span')
+      more.className = 'convo-more'
+      more.setAttribute('role', 'button')
+      more.setAttribute('tabindex', '0')
+      more.setAttribute('aria-label', '更多操作')
+      more.textContent = '⋯'
+      more.addEventListener('click', function (e) {
+        e.stopPropagation()
+        showChatMenu(more, c)
+      })
+      more.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') {
+          e.preventDefault()
+          showChatMenu(more, c)
+        }
+      })
+      b.appendChild(more)
       b.addEventListener('click', function () {
         if (typeof window.__jcoGo === 'function') {
           window.__jcoGo('J.Co总管.html?chat=' + encodeURIComponent(c.id))
