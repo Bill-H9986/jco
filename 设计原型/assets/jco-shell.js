@@ -724,4 +724,18 @@
       return fallback
     }
   }
+
+  // 启动时把设置页保存的模型配置推回内核：
+  // 覆盖安装会清掉 app.asar.unpacked 里的 model-config.json，这里从本机配置恢复。
+  try {
+    var rawBrain = localStorage.getItem('jco-brain-config')
+    if (rawBrain) {
+      var brainCfg = JSON.parse(rawBrain)
+      if (brainCfg && brainCfg.chat && brainCfg.chat.key && window.jco && window.jco.kernel && window.jco.kernel.setModel) {
+        window.jco.kernel
+          .setModel({ chat: brainCfg.chat, image: brainCfg.image, video: brainCfg.video })
+          .catch(function () {})
+      }
+    }
+  } catch (err) {}
 })()
