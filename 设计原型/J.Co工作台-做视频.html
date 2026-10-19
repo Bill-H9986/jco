@@ -1017,14 +1017,10 @@
     }
 
     function configuredModel(kind, fallback) {
-      try {
-        const cfg = JSON.parse(localStorage.getItem('jco-brain-config') || 'null');
-        const model = cfg && cfg[kind] && cfg[kind].model;
-        const text = String(model || '').trim();
-        return text || fallback;
-      } catch (e) {
-        return fallback;
+      if (typeof window.jcoConfiguredModel === 'function') {
+        return window.jcoConfiguredModel(kind, fallback);
       }
+      return fallback;
     }
     function updateChips(isImage) {
       const set = (key, text) => {

@@ -712,4 +712,16 @@
       localStorage.setItem('jco-shell-reset-v2', '1')
     }
   } catch (err) {}
+
+  // 页面共用：读取设置页保存的模型名（创作页参数 chip 用）
+  window.jcoConfiguredModel = function (kind, fallback) {
+    try {
+      var cfg = JSON.parse(localStorage.getItem('jco-brain-config') || 'null')
+      var model = cfg && cfg[kind] && cfg[kind].model
+      var text = String(model || '').trim()
+      return text || fallback
+    } catch (err) {
+      return fallback
+    }
+  }
 })()
