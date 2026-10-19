@@ -1354,6 +1354,7 @@ function normalizeDraft(input) {
   return {
     id,
     idea: String(input.idea || ''),
+    title: String(input.title || '').slice(0, 120),
     status: status === 'generating' ? 'review' : status,
     type: input.type === 'image' ? 'image' : 'video',
     ratio: String(input.ratio || '9:16'),

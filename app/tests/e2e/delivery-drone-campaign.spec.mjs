@@ -49,6 +49,7 @@ test('交付验收：无人机宣传 30 秒 6 段 → 创作页 → 发布页', 
     )
     expect(saved.ok).toBe(true)
     expect(saved.data.items.length).toBe(1)
+    expect(saved.data.items[0].title).toBe('无人机装调检修·免费培训')
     expect(saved.data.items[0].shots.length).toBe(6)
     expect(saved.data.items[0].shots.every((s) => s.line && s.pic)).toBe(true)
     expect(saved.data.items[0].duration).toBe('30 秒')
