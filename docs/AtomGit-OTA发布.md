@@ -84,3 +84,20 @@ node scripts/point-installed-updater.mjs https://github.com/Bill-H9986/jco/relea
 3. 浏览器直接打开 `beta.yml` 里的安装包地址能开始下载；
 4. 应用 `%APPDATA%\J.Co\update-channel.json` 的 `feedUrl` 指向 AtomGit；
 5. 设置页检查更新进入 `checking → available`，再手动点下载。
+
+## 8. 安装链路实测与修复
+
+2026-10-19 在真机安装了 `0.6.0-beta.7`，完整跑通：
+
+- 应用自动检查 AtomGit feed，发现 `beta.8` / `beta.9` / `beta.10`；
+- 顶部与设置页显示“发现新版本”，不自动下载；
+- 点「下载更新」后下载 221 MB，进度到 100%，SHA-512 校验通过；
+- 点「重启并安装」后应用退出，安装包静默安装，应用自动重启，版本号更新。
+
+期间发现并修复一个真实缺陷：应用重启后 electron-updater 的内存状态丢失，早期实现会回退到过期的 `installer.exe`，导致“点了重启并安装但版本不变”。`0.6.0-beta.9` 起改为：
+
+1. 优先使用 electron-updater 记录的下载文件；
+2. 其次使用 `pending/download`（最新下载，已由更新器校验）；
+3. 最后才回退到 `installer.exe`。
+
+该修复已用 `beta.9 → beta.10` 真机升级验证。
