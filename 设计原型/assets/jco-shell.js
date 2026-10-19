@@ -376,7 +376,8 @@
     var node = nav.nextSibling
     while (node && node !== foot) {
       var next = node.nextSibling
-      if (node.nodeType === 1) scroll.appendChild(node)
+      // 更新提示要留在侧栏底部固定区，不参与可滚动列表。
+      if (node.nodeType === 1 && !(node.classList && node.classList.contains('update-banner'))) scroll.appendChild(node)
       node = next
     }
     scroll.insertBefore(secondary, scroll.firstChild)
@@ -384,7 +385,8 @@
       if (item) fixed.appendChild(item)
     })
     inner.insertBefore(fixed, inner.firstChild)
-    if (foot) inner.insertBefore(scroll, foot)
+    var updateBanner = inner.querySelector('.update-banner')
+    if (foot) inner.insertBefore(scroll, updateBanner || foot)
     else inner.appendChild(scroll)
   }
 

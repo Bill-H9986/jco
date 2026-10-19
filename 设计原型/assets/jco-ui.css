@@ -78,8 +78,14 @@ body { font-family: var(--font); background: var(--bg); color: var(--text-1); he
 
 .side-pinned .sidebar { width: 238px; }
 
+html[data-jco-theme="dark"] .sidebar-inner {
+    background: rgba(40, 40, 43, 0.92);
+    border-color: rgba(255, 255, 255, 0.09);
+    box-shadow: 0 0 1px rgba(255, 255, 255, 0.1), 0 10px 30px rgba(0, 0, 0, 0.45);
+  }
+
 @media (prefers-color-scheme: dark) {
-    .sidebar-inner { background: rgba(40, 40, 43, 0.92); border-color: rgba(255, 255, 255, 0.09); box-shadow: 0 0 1px rgba(255, 255, 255, 0.1), 0 10px 30px rgba(0, 0, 0, 0.45); }
+    html:not([data-jco-theme="light"]) .sidebar-inner { background: rgba(40, 40, 43, 0.92); border-color: rgba(255, 255, 255, 0.09); box-shadow: 0 0 1px rgba(255, 255, 255, 0.1), 0 10px 30px rgba(0, 0, 0, 0.45); }
   }
 
 .side-pinned .sidebar-inner { width: 228px; }
@@ -553,7 +559,7 @@ html[data-jco-theme="dark"] {
 /* ===== 按钮体系标准件（统一代数，勿逐页改） ===== */
 .ghost {
     display: inline-flex; align-items: center; gap: 7px;
-    height: 36px; padding: 0 15px; border: none; border-radius: 999px;
+    height: 36px; padding: 0 15px; border: none; border-radius: 10px;
     background: var(--btn-2nd); color: var(--text-1);
     font-family: inherit; font-size: 14px; cursor: pointer; flex: none;
     transition: background 0.15s ease, transform 0.1s ease;
@@ -606,7 +612,7 @@ html[data-jco-theme="dark"] {
 
 /* 小按钮 */
   .btn-sm {
-    height: 34px; padding: 0 16px; border: none; border-radius: 999px;
+    height: 34px; padding: 0 16px; border: none; border-radius: 10px;
     background: var(--accent); color: #ffffff;
     font-family: inherit; font-size: 13px; font-weight: 500; cursor: pointer;
     display: inline-flex; align-items: center; gap: 7px;
@@ -1184,3 +1190,36 @@ html:not(.side-pinned) .convo.new-btn .ti { font-size: 18px; }
 .side-foot { position: relative; flex: none; background: var(--sidebar); z-index: 2; }
 /* 应用壳内嵌页面：隐藏页面自己的侧栏（外壳常驻，页面只负责内容区） */
 .embedded .sidebar { display: none; }
+
+/* ============ 页面头部标准（全站统一） ============ */
+.page-head {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  gap: 16px; margin-bottom: 20px;
+}
+.page-head__main { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.page-head__logo {
+  flex: none; width: 28px; height: 28px; border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--text-1); color: var(--bg);
+  font-size: 13px; font-weight: 600; letter-spacing: -0.02em;
+}
+.page-head h1 {
+  font-size: 22px; font-weight: 600; letter-spacing: -0.02em;
+  color: var(--text-1); line-height: 1.2;
+}
+.page-head .sub {
+  margin-top: 4px; font-size: 13px; color: var(--text-2); line-height: 1.5;
+}
+.page-head__actions { display: flex; align-items: center; gap: 8px; flex: none; }
+
+/* 幽灵按钮标准件（应用壳/设置页共用） */
+.btn-ghost {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  height: 36px; padding: 0 14px; border: 1px solid var(--line); border-radius: 10px;
+  background: transparent; color: var(--text-1);
+  font-family: inherit; font-size: 13px; cursor: pointer;
+  transition: background 0.15s ease, transform 0.1s ease;
+}
+.btn-ghost:hover { background: var(--hover); }
+.btn-ghost:active { transform: scale(0.98); }
+.btn-ghost.primary { background: var(--accent); border-color: var(--accent); color: #fff; }

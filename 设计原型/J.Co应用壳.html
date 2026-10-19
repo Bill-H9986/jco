@@ -14,28 +14,36 @@
     #jcoFrame { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; background: var(--bg); }
     .frame-fade { position: absolute; inset: 0; background: var(--bg); pointer-events: none; opacity: 0; transition: opacity 0.16s ease; }
     .frame-fade.on { opacity: 1; }
+    /* 更新提示：侧栏头像上方的小卡片，不再占据内容区顶部 */
     .update-banner {
-      position: absolute; top: 12px; left: 50%; z-index: 12; width: min(680px, calc(100% - 32px));
-      transform: translateX(-50%); display: flex; align-items: center; gap: 12px;
-      padding: 10px 14px; border: 1px solid var(--line); border-radius: 14px;
-      background: var(--card); box-shadow: var(--shadow-modal);
+      flex: none; margin: 6px 2px; padding: 9px 10px;
+      display: flex; flex-direction: column; gap: 8px;
+      border: 1px solid var(--line); border-radius: 12px; background: var(--card);
     }
     .update-banner[hidden] { display: none; }
+    .update-banner__head { display: flex; align-items: flex-start; gap: 8px; min-width: 0; }
     .update-banner__icon {
       display: flex; align-items: center; justify-content: center; flex: none;
-      width: 30px; height: 30px; border-radius: 9px; background: var(--accent); color: #fff;
-      font-size: 15px;
+      width: 24px; height: 24px; border-radius: 8px; background: var(--accent); color: #fff;
+      font-size: 13px;
     }
-    .update-banner__copy { flex: 1; min-width: 0; font-size: 12px; color: var(--text-2); line-height: 1.5; }
-    .update-banner__copy b { display: block; margin-bottom: 2px; color: var(--text-1); font-size: 13px; }
-    .update-banner__actions { display: flex; align-items: center; gap: 6px; flex: none; }
+    .update-banner__copy { flex: 1; min-width: 0; font-size: 11px; color: var(--text-2); line-height: 1.45; }
+    .update-banner__copy b { display: block; margin-bottom: 1px; color: var(--text-1); font-size: 12px; }
+    .update-banner__actions { display: flex; align-items: center; gap: 6px; }
     .update-banner__actions button {
-      height: 30px; padding: 0 11px; border: 0; border-radius: 999px;
+      flex: 1; height: 26px; padding: 0 8px; border: 0; border-radius: 8px;
       background: var(--btn-2nd, #edf0f4); color: var(--text-1); font-family: inherit;
-      font-size: 12px; cursor: pointer;
+      font-size: 11px; cursor: pointer;
     }
     .update-banner__actions button.primary { background: var(--accent); color: #fff; }
     .update-banner__actions button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+    html:not(.side-pinned) .update-banner {
+      width: 42px; height: 42px; margin: 6px auto; padding: 0;
+      align-items: center; justify-content: center; cursor: pointer;
+    }
+    html:not(.side-pinned) .update-banner__head { justify-content: center; }
+    html:not(.side-pinned) .update-banner__copy,
+    html:not(.side-pinned) .update-banner__actions { display: none; }
     .task-view { position: absolute; inset: 0; z-index: 8; overflow-y: auto; background: var(--bg); padding: 28px 34px 40px; }
     .task-view[hidden] { display: none; }
     @media (max-width: 900px) { .task-view { padding: 22px; } }
@@ -70,6 +78,19 @@
           <button class="nav-item" data-page="J.Co管家团队.html"><span class="ti ti-users-group"></span>管家团队</button>
           <button class="nav-item" data-page="J.Co账号中心.html"><span class="ti ti-key"></span>账号中心</button>
         </nav>
+        <div class="update-banner" id="jcoUpdateBanner" hidden role="status" aria-live="polite">
+          <div class="update-banner__head">
+            <span class="update-banner__icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg></span>
+            <div class="update-banner__copy">
+              <b id="jcoUpdateTitle">发现新版本</b>
+              <span id="jcoUpdateBody">下载和安装都由你决定。</span>
+            </div>
+          </div>
+          <div class="update-banner__actions">
+            <button class="btn-ghost" id="jcoUpdateLater" type="button">稍后</button>
+            <button class="btn-ghost primary" id="jcoUpdateAction" type="button">下载更新</button>
+          </div>
+        </div>
         <div class="side-foot">
           <div class="me" id="meBtn" role="button" tabindex="0" aria-haspopup="menu" aria-expanded="false"><div class="ava">J</div><span>Jay</span></div>
           <button class="icon-btn" aria-label="通知" id="bellBtn"><span class="ti ti-bell"></span></button>
@@ -79,17 +100,6 @@
     <div class="frame-wrap">
       <iframe id="jcoFrame" src="J.Co主界面-首页.html" title="J.Co 内容区"></iframe>
       <div class="frame-fade" id="frameFade"></div>
-      <div class="update-banner" id="jcoUpdateBanner" hidden role="status" aria-live="polite">
-        <span class="update-banner__icon"><span class="ti ti-download"></span></span>
-        <div class="update-banner__copy">
-          <b id="jcoUpdateTitle">发现新版本</b>
-          <span id="jcoUpdateBody">下载和安装都由你决定。</span>
-        </div>
-        <div class="update-banner__actions">
-          <button class="btn-ghost" id="jcoUpdateLater" type="button">稍后提醒</button>
-          <button class="btn-ghost primary" id="jcoUpdateAction" type="button">下载更新</button>
-        </div>
-      </div>
       <section class="task-view" id="jcoTaskView" hidden aria-labelledby="tvTitle">
         <div class="tv-head">
           <button class="ghost" id="tvBack" type="button">返回对话</button>
@@ -183,6 +193,13 @@
           localStorage.setItem(snoozeKey, JSON.stringify({ version: version, until: Date.now() + 6 * 60 * 60 * 1000 }));
         } catch (error) {}
         banner.hidden = true;
+      });
+      // 侧栏收起时只显示图标，点一下展开侧栏再操作。
+      banner.addEventListener('click', function (event) {
+        if (document.documentElement.classList.contains('side-pinned')) return;
+        if (event.target.closest('button')) return;
+        var toggle = document.querySelector('.side-toggle');
+        if (toggle) toggle.click();
       });
       updates.onEvent(paint);
       Promise.resolve(updates.get()).then(paint, function () {});
