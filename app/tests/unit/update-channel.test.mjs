@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { normalizeUpdateChannel, normalizeUpdateFeedUrl } from '../../src/application/update-channel.ts'
+import { normalizeUpdateChannel, normalizeUpdateFeedUrl, withTimeout } from '../../src/application/update-channel.ts'
 
 describe('自动更新通道', () => {
   it('只接受 HTTPS 更新源', () => {
@@ -25,5 +25,10 @@ describe('自动更新通道', () => {
       checkIntervalHours: 168,
       allowPrerelease: false,
     })
+  })
+
+  it('更新检查超时不会永远卡在 checking', async () => {
+    await expect(withTimeout(new Promise(() => {}), 10, '检查超时')).rejects.toThrow('检查超时')
+    await expect(withTimeout(Promise.resolve('ok'), 100)).resolves.toBe('ok')
   })
 })

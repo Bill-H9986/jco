@@ -131,6 +131,7 @@ ipcMain.handle('sys:app-info', () => ({
 let updateController = null
 let updateTimer = null
 let updateCheckInFlight = false
+const UPDATE_CHECK_TIMEOUT_MS = 20_000
 let updateState = {
   phase: 'idle',
   currentVersion: app.getVersion(),
@@ -208,7 +209,12 @@ async function checkForUpdates(manual = false) {
   updateCheckInFlight = true
   setUpdateState({ phase: 'checking', message: manual ? '正在检查更新…' : '后台检查更新…' })
   try {
-    await updateController.checkForUpdates()
+    const module = require('./dist/application/update-channel.js')
+    await module.withTimeout(
+      Promise.resolve(updateController.checkForUpdates()),
+      UPDATE_CHECK_TIMEOUT_MS,
+      '检查更新超时：连不上 GitHub，请检查网络后重试',
+    )
   } catch (error) {
     setUpdateState({ phase: 'error', message: '检查更新失败：' + updateErrorText(error) })
   } finally {

@@ -10,6 +10,22 @@ export interface UpdateChannelConfig {
   allowPrerelease: boolean
 }
 
+export function withTimeout<T>(promise: Promise<T>, timeoutMs: number, message = '操作超时'): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error(message)), Math.max(1, timeoutMs))
+    promise.then(
+      (value) => {
+        clearTimeout(timer)
+        resolve(value)
+      },
+      (error) => {
+        clearTimeout(timer)
+        reject(error)
+      },
+    )
+  })
+}
+
 const LOCAL_HOSTS = new Set(['localhost', '127.0.0.1', '::1', '[::1]'])
 
 /**

@@ -1254,15 +1254,24 @@
         showToast('自动更新在桌面安装版里可用。');
         return;
       }
+      const wasDownloaded = currentUpdateState && currentUpdateState.phase === 'downloaded';
       this.disabled = true;
+      renderUpdateState({ phase: 'checking', message: '正在检查更新…' });
+      const watchdog = setTimeout(function () {
+        if (currentUpdateState && currentUpdateState.phase === 'checking') {
+          renderUpdateState({ phase: 'error', message: '检查更新超时：连不上 GitHub，请检查网络后重试。' });
+        }
+      }, 25000);
       try {
-        if (currentUpdateState && currentUpdateState.phase === 'downloaded') {
+        if (wasDownloaded) {
           renderUpdateState(await updates.install());
           return;
         }
         renderUpdateState(await updates.check());
       } catch (e) {
         renderUpdateState({ phase: 'error', message: '检查更新失败，请稍后再试。' });
+      } finally {
+        clearTimeout(watchdog);
       }
     });
 
