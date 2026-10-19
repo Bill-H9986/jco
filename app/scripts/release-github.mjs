@@ -83,10 +83,23 @@ run('npx', ['electron-builder', '--win', 'nsis', '--config', 'electron-builder.r
 })
 run('node', ['scripts/qa-packaged.mjs'])
 
-const assets = fs
-  .readdirSync(RELEASE)
-  .filter((name) => /^(?:(?:latest|alpha|beta|rc|next)\.ya?ml|.*\.exe(?:\.blockmap)?)$/i.test(name))
+const installerName = `J.Co Setup ${version}.exe`
+const assets = [
+  'latest.yml',
+  'latest.yaml',
+  'alpha.yml',
+  'alpha.yaml',
+  'beta.yml',
+  'beta.yaml',
+  'rc.yml',
+  'rc.yaml',
+  'next.yml',
+  'next.yaml',
+  installerName,
+  `${installerName}.blockmap`,
+]
   .map((name) => path.join(RELEASE, name))
+  .filter((file) => fs.existsSync(file))
 
 if (assets.length < 2) {
   console.error('没有找到足够的发布资产（通道 yml / exe / blockmap）。')
