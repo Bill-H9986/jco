@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## 0.6.0-beta.25 (2026-10-20)
+
+### Features
+
+* **create:** 图片/视频生成循环迁到主进程 `media-jobs` 后台任务；任务 JSON 持久化，切页、刷新后台继续跑
+* **create:** 页面订阅 `media:job` 并轮询兜底；回来自动打开最后一条草稿并恢复进度、已完成图片/视频
+* **create:** 每完成一张图/一段视频就写回草稿；支持停止生成；应用重启后未完成任务标为“已中断”，保留已完成结果并可重试
+* **testing:** 新增 media-jobs 单测、跨页/刷新 E2E；测试模式提供假媒体桥，避免回归消耗真实额度
+
+### Fixes
+
+* **create:** 修复页面保存覆盖后台结果导致草稿空图、进度丢失
+* **create:** 修复生成中的草稿不落盘、切换页面后工作态消失
+* **create:** 修复 `doing` 段在页面恢复后永久卡住；无任务时统一标为“已中断，点重试”
+
 ## 0.6.0-beta.24 (2026-10-20)
 
 ### Features

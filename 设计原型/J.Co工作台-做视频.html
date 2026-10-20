@@ -789,6 +789,7 @@
               <div class="ib-head">
                 <span class="badge" id="ibStatus"></span>
                 <span class="dtime">刚刚生成 · 点哪张就修哪张</span>
+                <button class="ghost" id="ibStop" type="button" hidden onclick="cancelCurrentMediaJob()" style="margin-left:auto">停止生成</button>
               </div>
               <div class="ib-body">
                 <div class="ib-main">
@@ -1318,6 +1319,10 @@
         voice: d.voice || '标准女声',
         method: d.method || 'assemble',
         fixNote: d.fixNote || '',
+        progress: Number(d.progress) || 0,
+        stepText: String(d.stepText || ''),
+        jobId: String(d.jobId || ''),
+        jobKind: d.jobKind === 'image' || d.jobKind === 'video' ? d.jobKind : '',
         shots: (d.shots || []).slice(0, 50).map(function (s) {
           return {
             line: (s && s.line) || '',
@@ -1341,10 +1346,23 @@
         updatedAt: Date.now(),
       };
     }
-    function normalizeLoadedDraft(d) {
+    function normalizeLoadedDraft(d, keepGenerating) {
       if (!d || typeof d !== 'object') return d;
       d.images = MEDIA.normalizeImages(d.images);
       d.shots = Array.isArray(d.shots) ? d.shots : [];
+      d.progress = Number(d.progress) || 0;
+      d.stepText = String(d.stepText || '');
+      if (d.videos && typeof d.videos === 'object') {
+        Object.keys(d.videos).forEach(function (key) {
+          if (d.videos[key] && d.videos[key].status === 'doing') {
+            d.videos[key] = { status: 'failed', error: '上次出片被中断，点「重试」。' };
+          }
+        });
+      }
+      if (d.status === 'generating' && !keepGenerating) {
+        d.status = 'interrupted';
+        d.stepText = d.stepText || '上次生成被中断，点「换一版」重试。';
+      }
       return d;
     }
     function warnDraftSave(msg) {
@@ -1354,8 +1372,10 @@
       setTimeout(function () { draftSaveWarned = false; }, 5000);
     }
     function jcoDraftsSave() {
-      if (!draftsReady) return;
-      var items = drafts.filter(function (d) { return d.status !== 'generating'; }).slice(0, 30).map(draftToStore);
+      if (!draftsReady || mediaHydrating || mediaRefreshing) return;
+      // 后台媒体任务运行期间由主进程写草稿，页面避免把任务进度覆盖掉。
+      if (mediaJobState && mediaJobState.status === 'running') return;
+      var items = drafts.slice(0, 30).map(draftToStore);
       if (window.jco && window.jco.drafts && window.jco.drafts.save) {
         window.jco.drafts.save({ items: items }).then(function (res) {
           if (!res || !res.ok) warnDraftSave('草稿没存上：' + ((res && res.error) || '未知错误'));
@@ -1444,8 +1464,14 @@
     let draftSeq = 0;
     const drafts = [];
     let currentDraft = null;
+    let mediaJobState = null;
+    let mediaPollTimer = null;
+    let mediaRefreshTimer = null;
+    let mediaHydrating = true;
+    let mediaRefreshing = false;
     const STATUS_META = {
       generating: { cls: 'gen', text: '生成中' },
+      interrupted: { cls: 'review', text: '已中断' },
       review: { cls: 'review', text: '待检查' },
       adjusted: { cls: 'adjusted', text: '已改过' },
       approved: { cls: 'approved', text: '已通过' },
@@ -1498,7 +1524,7 @@
         return;
       }
       drafts.forEach((d) => {
-        const st = STATUS_META[d.status];
+        const st = STATUS_META[d.status] || STATUS_META.review;
         const card = document.createElement('button');
         card.type = 'button';
         card.className = 'dcard';
@@ -1521,17 +1547,15 @@
           '</span>';
         card.querySelector('.dname').textContent = draftTitle(d);
         card.querySelector('.dmeta').textContent = d.ratio + ' · ' + amount;
-        card.querySelector('.dtime').textContent = d.status === 'generating' ? '' : '点开看详情';
+        card.querySelector('.dtime').textContent = d.status === 'generating' ? '后台生成中' : '点开看详情';
         if (d.status === 'generating') {
-          card.disabled = true;
           const f = card.querySelector('.dfill');
           if (f) f.style.transform = 'scaleX(' + (d.progress / 100) + ')';
-        } else {
-          card.addEventListener('click', () => { openDraft(d.id); });
         }
+        card.addEventListener('click', () => { openDraft(d.id); });
         el.appendChild(card);
       });
-      // 状态落定后持久化（生成中的过程不落盘，避免假进度复活）
+      // 生成中的草稿由 startGen* 显式落盘；稳定状态在这里收口。
       if (!drafts.some(function (d) { return d.status === 'generating'; })) jcoDraftsSave();
     }
 
@@ -1541,14 +1565,15 @@
       return 'phone';
     }
 
-    function openDraft(id) {
+    function openDraft(id, silent) {
       const d = drafts.find((x) => x.id === id);
       if (!d) return;
       currentDraft = d;
+      try { sessionStorage.setItem('jco-make-last-draft', String(d.id)); } catch (e) {}
       if (d.type === 'image') d.images = MEDIA.normalizeImages(d.images);
       const done = $('done');
       done.classList.add('show');
-      const st = STATUS_META[d.status];
+      const st = STATUS_META[d.status] || STATUS_META.review;
       $('dStatus').className = 'badge ' + st.cls;
       $('dStatus').textContent = st.text;
       $('ibStatus').className = 'badge ' + st.cls;
@@ -1567,22 +1592,213 @@
         $('doneTitle').textContent = titleText;
         const seconds = MEDIA.shotSecondsFor(d.duration, shotCount);
         const voiceTxt = d.method === 'assemble' ? (' · 配音偏好：' + d.voice + '（成片暂不含配音）') : '';
-        $('doneMeta').textContent = d.ratio + ' · ' + d.res + ' · ' + d.duration + voiceTxt + ' · 共 ' + shotCount + ' 段 · 每段约 ' + seconds + ' 秒';
+        $('doneMeta').textContent = d.ratio + ' · ' + d.res + ' · ' + d.duration + voiceTxt + ' · 共 ' + shotCount + ' 段 · 每段约 ' + seconds + ' 秒' + (d.status === 'generating' ? ' · ' + (d.stepText || '生成中') : '');
         renderShots();
       }
       $('approveBtn').textContent = d.status === 'approved' ? '去发布' : '这版可以了';
       $('ibApprove').textContent = d.status === 'approved' ? '去发布' : '这版可以了';
-      done.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      if (!silent) done.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    function mediaJobToDraft(d, job) {
+      if (!d || !job) return;
+      d.progress = Number(job.progress) || 0;
+      d.stepText = String(job.stepText || '');
+      d.jobId = String(job.id || '');
+      d.jobKind = job.kind === 'image' || job.kind === 'video' ? job.kind : '';
+      if (job.status === 'running') d.status = 'generating';
+      else if (job.status === 'interrupted' || job.status === 'canceled') {
+        if (d.status === 'generating') d.status = 'interrupted';
+      } else if (d.status === 'generating') d.status = 'review';
+      if (
+        job.kind === 'video' &&
+        Array.isArray(job.items) &&
+        (job.status === 'running' || job.status === 'interrupted' || job.status === 'canceled')
+      ) {
+        d.videos = d.videos || {};
+        job.items.forEach((item) => {
+          const index = Number(item && item.index);
+          if (!Number.isFinite(index)) return;
+          if (item.status === 'doing') {
+            d.videos[index] = job.status === 'running' ? { status: 'doing' } : { status: 'failed', error: job.error || '任务已中断' };
+          }
+          else if (item.status === 'done') {
+            d.videos[index] = { status: 'done', url: item.url || '', path: item.path || '', videoId: item.videoId || '' };
+          } else if (item.status === 'failed') {
+            d.videos[index] = { status: 'failed', error: item.error || '' };
+          }
+        });
+        if (job.status === 'running' && Array.isArray(job.shots)) {
+          const finished = new Set(
+            job.items
+              .filter((item) => item.status === 'done' || item.status === 'failed')
+              .map((item) => Number(item.index)),
+          );
+          job.shots.forEach((shot) => {
+            const index = Number(shot && shot.index);
+            if (Number.isFinite(index) && !finished.has(index)) d.videos[index] = { status: 'doing' };
+          });
+        }
+      }
+    }
+
+    async function refreshDraftFromStore(id) {
+      if (!window.jco || !window.jco.drafts || !window.jco.drafts.get) return false;
+      const res = await window.jco.drafts.get();
+      if (!res || !res.ok) return false;
+      const item = ((res.data && res.data.items) || []).find((draft) => Number(draft.id) === Number(id));
+      if (!item) return false;
+      const keepGenerating = Boolean(mediaJobState && mediaJobState.status === 'running' && Number(mediaJobState.draftId) === Number(id));
+      const normalized = normalizeLoadedDraft(item, keepGenerating);
+      const index = drafts.findIndex((draft) => Number(draft.id) === Number(id));
+      if (index >= 0) drafts[index] = normalized;
+      else drafts.unshift(normalized);
+      if (currentDraft && Number(currentDraft.id) === Number(id)) openDraft(id, true);
+      else renderDrafts();
+      return true;
+    }
+
+    async function finishMediaJob(job) {
+      if (!job) return;
+      mediaRefreshing = true;
+      let refreshed = false;
+      try {
+        refreshed = await refreshDraftFromStore(job.draftId);
+      } finally {
+        mediaRefreshing = false;
+        if (refreshed) jcoDraftsSave();
+      }
+    }
+
+    function scheduleDraftRefresh(id) {
+      clearTimeout(mediaRefreshTimer);
+      mediaRefreshTimer = setTimeout(() => {
+        void refreshDraftFromStore(id);
+      }, 250);
+    }
+
+    function stopMediaPoll() {
+      if (mediaPollTimer) {
+        clearInterval(mediaPollTimer);
+        mediaPollTimer = null;
+      }
+    }
+
+    function startMediaPoll() {
+      stopMediaPoll();
+      mediaPollTimer = setInterval(async () => {
+        if (!mediaJobState || mediaJobState.status !== 'running') {
+          stopMediaPoll();
+          return;
+        }
+        const res = await window.jco.media.get(mediaJobState.id);
+        if (!res || !res.ok || !res.job) return;
+        mediaJobState = res.job;
+        if (mediaJobState.status !== 'running') mediaRefreshing = true;
+        const d = drafts.find((draft) => Number(draft.id) === Number(mediaJobState.draftId));
+        if (d) {
+          mediaJobToDraft(d, mediaJobState);
+          if (mediaJobState.kind === 'image' && mediaJobState.status === 'running') {
+            scheduleDraftRefresh(mediaJobState.draftId);
+          }
+          if (currentDraft && currentDraft.id === d.id) {
+            renderDrafts();
+            if (d.type === 'image') renderImgBoard();
+            else renderShots();
+          } else {
+            renderDrafts();
+          }
+        }
+        if (mediaJobState.status !== 'running') {
+          stopMediaPoll();
+          void finishMediaJob(mediaJobState);
+        }
+      }, 2000);
+    }
+
+    function attachMediaJob(job) {
+      if (!job) return;
+      mediaJobState = job;
+      if (job.status !== 'running') mediaRefreshing = true;
+      const d = drafts.find((draft) => Number(draft.id) === Number(job.draftId));
+      if (d) {
+        mediaJobToDraft(d, job);
+        if (!currentDraft || Number(currentDraft.id) !== Number(d.id)) openDraft(d.id, true);
+        else {
+          renderDrafts();
+          if (d.type === 'image') renderImgBoard();
+          else renderShots();
+        }
+      }
+      if (job.status === 'running') startMediaPoll();
+      else {
+        stopMediaPoll();
+        void finishMediaJob(job);
+      }
+    }
+
+    async function hydrateMediaJobs() {
+      try {
+        if (!window.jco || !window.jco.media || !window.jco.media.list) return;
+        const res = await window.jco.media.list();
+        if (!res || !res.ok) return;
+        const jobs = Array.isArray(res.jobs) ? res.jobs : [];
+        const latestByDraft = new Map();
+        for (const job of jobs) {
+          const key = Number(job.draftId);
+          const previous = latestByDraft.get(key);
+          const newer =
+            !previous ||
+            (job.status === 'running' && previous.status !== 'running') ||
+            (job.status !== 'running' &&
+              previous.status !== 'running' &&
+              (Number(job.updatedAt) || 0) > (Number(previous.updatedAt) || 0));
+          if (newer) latestByDraft.set(key, job);
+        }
+        for (const job of latestByDraft.values()) {
+          if (job.status !== 'running' && job.status !== 'interrupted' && job.status !== 'canceled') continue;
+          const d = drafts.find((draft) => Number(draft.id) === Number(job.draftId));
+          if (d) mediaJobToDraft(d, job);
+        }
+        renderDrafts();
+        let lastId = 0;
+        try { lastId = Number(sessionStorage.getItem('jco-make-last-draft')) || 0; } catch (e) {}
+        const lastDraft = drafts.find((draft) => Number(draft.id) === lastId) || drafts[0] || null;
+        if (lastDraft) openDraft(lastDraft.id, true);
+        const active =
+          jobs.find((job) => job.status === 'running' && lastDraft && Number(job.draftId) === Number(lastDraft.id)) ||
+          jobs.find((job) => job.status === 'running');
+        if (active) attachMediaJob(active);
+      } finally {
+        mediaHydrating = false;
+        if (!mediaJobState || mediaJobState.status !== 'running') jcoDraftsSave();
+      }
+    }
+
+    async function cancelCurrentMediaJob() {
+      if (!mediaJobState || !window.jco.media) return;
+      const id = mediaJobState.id;
+      const res = await window.jco.media.cancel(id);
+      if (res && res.ok) {
+        mediaJobState = res.job || mediaJobState;
+        showToast('已停止生成，已完成的结果保留。');
+        void finishMediaJob(mediaJobState);
+      } else {
+        showToast('停止失败：' + ((res && res.error) || '再试一次'));
+      }
     }
 
     function draftReady(d) {
       if (!d) return false;
+      if (d.status === 'generating' || d.status === 'interrupted') return false;
       if (d.type === 'image') return MEDIA.normalizeImages(d.images).length > 0;
       return MEDIA.videoProgress(d).complete;
     }
 
     function draftBlockedMessage(d) {
       if (!d) return '先打开一条草稿。';
+      if (d.status === 'generating') return '这条还在后台生成，等任务结束再通过。';
+      if (d.status === 'interrupted') return d.stepText || '上次生成被中断，先重试未完成项。';
       if (d.type === 'image') return '这版还没有可用图片，先点重画或再出几张。';
       const progress = MEDIA.videoProgress(d);
       if (progress.total === 0) return '这条还没有分镜，先点「换一版」重新生成。';
@@ -1717,6 +1933,9 @@
       if (genTimer) { clearInterval(genTimer); genTimer = null; }
       p = 0;
       $('done').classList.remove('show');
+      d.status = 'generating';
+      d.stepText = 'AI 正在写分镜';
+      jcoDraftsSave();
       const list = stepsFor();
       const stepSpan = 90 / list.length;
       genTimer = setInterval(() => {
@@ -1755,11 +1974,12 @@
         showToast('分镜好了，共 ' + shots.length + ' 段。先审分镜；点「全部出片」或每段「出这段」才会调用视频模型。');
         return;
       }
-      // 失败：不留假草稿，如实报错
-      const idx = drafts.indexOf(d);
-      if (idx >= 0) drafts.splice(idx, 1);
+      // 失败也保留工作态，回来能看到失败原因并重试。
+      d.status = 'interrupted';
+      d.stepText = '分镜没生成成：' + ((res && res.error) || '内容没解析出来');
+      jcoDraftsSave();
       renderDrafts();
-      showToast('没生成成：' + ((res && res.error) || '内容没解析出来') + '。再点一次试试。');
+      showToast(d.stepText + '。再点「换一版」试试。');
     }
 
     /** 真模式（图片类）：内核先出画面方案，再逐张真画（用「画图修图」的配置） */
@@ -1767,6 +1987,10 @@
       if (genTimer) { clearInterval(genTimer); genTimer = null; }
       p = 0;
       $('done').classList.remove('show');
+      d.status = 'generating';
+      d.progress = 0;
+      d.stepText = '读懂稿子重点';
+      jcoDraftsSave();
       const list = stepsFor();
       const stepSpan = 90 / list.length;
       genTimer = setInterval(() => {
@@ -1792,55 +2016,36 @@
       } catch (e) {}
       if (prompts.length === 0) prompts = [idea, idea + '（细节特写）', idea + '（场景全景）'].slice(0, wanted)
       prompts = MEDIA.ensurePromptCount(prompts, wanted, idea)
-      // 2) 逐张真画
-      const images = []
-      let lastError = ''
-      for (let i = 0; i < prompts.length; i++) {
-        d.stepText = '正在画第 ' + (i + 1) + ' 张 / ' + prompts.length;
-        d.progress = Math.max(d.progress, 40 + Math.round((i / prompts.length) * 50));
-        renderDrafts()
-        const r = await JCO_KERNEL.draw({
-          prompt: ratioWord + '，' + prompts[i],
-          size: imageResolution,
-          sizePx: MEDIA.imageSizeFor(d.ratio, imageResolution),
-          aspect: d.ratio,
-          model: imageModel,
-        })
-        if (r && r.ok && (r.dataUrl || r.url)) {
-          let src = r.dataUrl || r.url
-          let savedPath = ''
-          // 落盘到素材文件夹：草稿只存路径，不撑爆本机存储
-          try {
-            const sys = window.jco && window.jco.sys
-            if (sys && sys.saveAsset) {
-              const saved = await sys.saveAsset(r.dataUrl ? { kind: 'image', dataUrl: r.dataUrl } : { kind: 'image', url: r.url })
-              if (saved && saved.ok && saved.path) {
-                savedPath = saved.path
-                src = 'file:///' + String(saved.path).replace(/\\/g, '/')
-              }
-            }
-          } catch (e) {}
-          images.push({ src: src, path: savedPath, prompt: prompts[i] })
-        }
-        else if (r && r.error) lastError = r.error
-      }
       if (genTimer) { clearInterval(genTimer); genTimer = null; }
-      if (images.length === 0) {
-        const idx = drafts.indexOf(d)
-        if (idx >= 0) drafts.splice(idx, 1)
-        renderDrafts()
-        showToast('没画成：' + (lastError || '检查「设置 → AI 大脑 → 画图修图」的 Key 后重试'))
-        return
+      if (!window.jco || !window.jco.media || !window.jco.media.start) {
+        d.status = 'interrupted';
+        d.stepText = '当前环境不支持后台出图，请更新桌面应用。';
+        jcoDraftsSave();
+        showToast(d.stepText);
+        return;
       }
-      d.images = images
-      d.progress = 100
-      d.status = 'review'
-      d.stepText = ''
-      renderDrafts()
-      openDraft(d.id)
-      jcoLogAdd('material', 'AI 出图', images.length + ' 张')
-      jcoNotifyDone('图好了', '共 ' + images.length + ' 张，等你过目')
-      showToast('画好了 ' + images.length + ' 张。点着看、框住改；满意了点「这版可以了」。' + (images.length < prompts.length ? '（有 ' + (prompts.length - images.length) + ' 张没画成，可重试）' : ''))
+      d.progress = 10;
+      d.stepText = '图片模型出图中（后台任务）';
+      d.jobKind = 'image';
+      jcoDraftsSave();
+      const jobRes = await window.jco.media.start({
+        kind: 'image',
+        draftId: d.id,
+        prompts: prompts.map(function (prompt) { return ratioWord + '，' + prompt; }),
+        ratio: d.ratio,
+        res: imageResolution,
+        sizePx: MEDIA.imageSizeFor(d.ratio, imageResolution),
+        model: imageModel,
+      });
+      if (jobRes && jobRes.ok && jobRes.job) {
+        attachMediaJob(jobRes.job);
+        showToast('图片任务已转到后台，切页或刷新都不会丢。');
+      } else {
+        d.status = 'review';
+        d.stepText = '';
+        jcoDraftsSave();
+        showToast('图片任务没启动：' + ((jobRes && jobRes.error) || '再试一次'));
+      }
     }
 
     function regen() {
@@ -1876,20 +2081,30 @@
         const btn = document.createElement('button');
         btn.className = 'go-btn';
         const remain = rows.length - doneCount;
-        btn.textContent = doing ? '出片中……' : (doneCount > 0 && remain > 0 ? '继续出片（还差 ' + remain + ' 段）' : (remain === 0 ? '全部出好了' : '全部出片（' + rows.length + ' 段）'));
-        btn.disabled = doing || remain === 0;
+        const generating = currentDraft && currentDraft.status === 'generating';
+        btn.textContent = generating ? '生成中…' : (doing ? '出片中……' : (doneCount > 0 && remain > 0 ? '继续出片（还差 ' + remain + ' 段）' : (remain === 0 ? '全部出好了' : '全部出片（' + rows.length + ' 段）')));
+        btn.disabled = generating || doing || remain === 0;
         if (!btn.disabled) btn.addEventListener('click', () => makeAllVideos(rows));
         const hint = document.createElement('span');
         hint.className = 'shot-hint';
-        hint.textContent = doing
+        hint.textContent = generating
+          ? ((currentDraft.stepText || '后台生成中…') + ' · ' + Math.round(Number(currentDraft.progress) || 0) + '%')
+          : (doing
           ? ('视频模型正在跑，别关窗口；干完弹通知')
           : (doneCount === 0
               ? '点「全部出片」才会调用视频模型；先审分镜，不满意可换画面'
               : (remain > 0
                   ? ('还差 ' + remain + ' 段 · 每段约 3~4 分钟 · 干完弹通知')
-                  : '都出好了，点每段的「看这段」预览'));
+                  : '都出好了，点每段的「看这段」预览')));
         bar.appendChild(btn);
         bar.appendChild(hint);
+        if (generating && currentDraft.jobId) {
+          const stop = document.createElement('button');
+          stop.className = 'ghost';
+          stop.textContent = '停止生成';
+          stop.addEventListener('click', () => void cancelCurrentMediaJob());
+          bar.appendChild(stop);
+        }
         el.appendChild(bar);
       }
 
@@ -2019,88 +2234,88 @@
     }
 
     /* ---------- 分段出真视频（Agnes 异步任务，单段约 3~4 分钟） ---------- */
+    function shotJobPayload(d, i, item) {
+      const shotCount = Array.isArray(d.shots) && d.shots.length > 0 ? d.shots.length : 1;
+      return {
+        index: i,
+        seconds: MEDIA.shotSecondsFor(d.duration, shotCount),
+        prompt: (item.pic ? item.pic + '。' : '') + (item.line || '') + (d.fixNote ? ('。（修改要求：' + d.fixNote + '）') : ''),
+      };
+    }
+
+    async function startVideoJob(d, shots, label) {
+      if (!window.jco || !window.jco.media || !window.jco.media.start) {
+        showToast('当前环境不支持后台出片，请更新桌面应用。');
+        return null;
+      }
+      d.status = 'generating';
+      d.progress = 0;
+      d.stepText = label;
+      d.jobKind = 'video';
+      jcoDraftsSave();
+      renderDrafts();
+      renderShots();
+      const res = await window.jco.media.start({
+        kind: 'video',
+        draftId: d.id,
+        shots: shots,
+        ratio: d.ratio,
+        res: '720P',
+        model: configuredModel('video', ''),
+      });
+      if (res && res.ok && res.job) {
+        attachMediaJob(res.job);
+        showToast('视频任务已转到后台，切页或刷新都不会丢。');
+        return res.job;
+      }
+      const errorText = (res && res.error) || '任务没启动';
+      shots.forEach((shot) => {
+        d.videos[shot.index] = { status: 'failed', error: errorText };
+      });
+      d.status = 'review';
+      d.stepText = '';
+      jcoDraftsSave();
+      renderDrafts();
+      renderShots();
+      showToast('视频任务没启动：' + errorText);
+      return null;
+    }
+
     async function makeShotVideo(i, item) {
       if (!JCO_KERNEL || !currentDraft) {
         showToast('内核还没就绪，等两秒再试。');
         return;
       }
-      const videos = (currentDraft.videos = currentDraft.videos || {});
-      if (videos[i] && videos[i].status === 'doing') return;
-      videos[i] = { status: 'doing' };
-      renderShots();
-      const d = currentDraft;
-      const aspect = d.ratio === '9:16' ? '9:16' : (d.ratio === '16:9' ? '16:9' : '1:1');
-      const shotCount = Array.isArray(d.shots) && d.shots.length > 0 ? d.shots.length : 1;
-      const seconds = MEDIA.shotSecondsFor(d.duration, shotCount);
-      const size = '720P';
-      const videoModel = configuredModel('video', '');
-      const prompt = (item.pic ? item.pic + '。' : '') + (item.line || '') + (currentDraft.fixNote ? ('。（修改要求：' + currentDraft.fixNote + '）') : '');
-      let res = null;
-      for (let attempt = 0; attempt < 4; attempt += 1) {
-        try {
-          res = await JCO_KERNEL.video({
-            prompt: prompt,
-            seconds: seconds,
-            aspect: aspect,
-            size: size,
-            model: videoModel,
-          });
-        } catch (e) {
-          res = { ok: false, error: String((e && e.message) || e) };
-        }
-        if (res && res.ok) break;
-        const msg = String((res && res.error) || '');
-        if (attempt < 3 && /队列已满|rate|429|503|稍后|重试/i.test(msg)) {
-          await new Promise((r) => setTimeout(r, 60000));
-          continue;
-        }
-        break;
-      }
-      if (res && res.ok && res.url) {
-        let src = res.url
-        let savedPath = ''
-        // 视频落盘（平台 URL 会过期；本地文件长期可播）
-        try {
-          const sys = window.jco && window.jco.sys
-          if (sys && sys.saveAsset) {
-            const saved = await sys.saveAsset({ kind: 'video', url: res.url, ext: 'mp4' })
-            if (saved && saved.ok && saved.path) {
-              savedPath = saved.path
-              src = 'file:///' + String(saved.path).replace(/\\/g, '/')
-            }
-          }
-        } catch (e) {}
-        videos[i] = { status: 'done', url: src, path: savedPath, videoId: res.videoId || '' };
-        jcoLogAdd('shot', '出片：第 ' + (i + 1) + ' 段', seconds + ' 秒 · ' + size);
-        jcoNotifyDone('第 ' + (i + 1) + ' 段视频好了', '回做视频页点「看这段」');
-      } else {
-        videos[i] = { status: 'failed', error: (res && res.error) || '未知错误' };
-        showToast('第 ' + (i + 1) + ' 段没出成：' + videos[i].error + '，点「重试」再试。');
-      }
-      jcoDraftsSave();
-      renderDrafts();
-      renderShots();
-    }
-    async function makeAllVideos(rows) {
-      if (!currentDraft) return;
-      if (!JCO_KERNEL) {
-        showToast('内核还没就绪，等两秒再试。');
+      if (!window.jco || !window.jco.media || !window.jco.media.start) {
+        showToast('当前环境不支持后台出片，请更新桌面应用。');
         return;
       }
-      const videos = (currentDraft.videos = currentDraft.videos || {});
-      for (let i = 0; i < rows.length; i++) {
-        if (videos[i] && videos[i].status === 'done') continue;
-        await makeShotVideo(i, rows[i]);
+      const d = currentDraft;
+      const videos = (d.videos = d.videos || {});
+      if (videos[i] && videos[i].status === 'doing') return;
+      videos[i] = { status: 'doing' };
+      await startVideoJob(d, [shotJobPayload(d, i, item)], '准备出片（第 ' + (i + 1) + ' 段）');
+    }
+
+    async function makeAllVideos(rows) {
+      if (!currentDraft || !JCO_KERNEL) return;
+      if (!window.jco || !window.jco.media || !window.jco.media.start) {
+        showToast('当前环境不支持后台出片，请更新桌面应用。');
+        return;
       }
-      const progress = MEDIA.videoProgress(currentDraft);
-      const failed = Math.max(0, rows.length - progress.done);
-      if (progress.complete) {
-        jcoNotifyDone('全部出片完成', '共 ' + rows.length + ' 段，回做视频页过目');
-        showToast('全部出好了：每段点「看这段」预览，不满意的段可以重出。');
-      } else {
-        jcoNotifyDone('出片结束，还有没出成的', '已出 ' + progress.done + ' / ' + rows.length + ' 段');
-        showToast('出片结束：成功 ' + progress.done + ' 段，还有 ' + failed + ' 段没出成，点对应「重试」。');
+      const d = currentDraft;
+      const videos = (d.videos = d.videos || {});
+      const pending = [];
+      rows.forEach((item, i) => {
+        if (videos[i] && videos[i].status === 'done') return;
+        videos[i] = { status: 'doing' };
+        pending.push(shotJobPayload(d, i, item));
+      });
+      if (pending.length === 0) {
+        showToast('这几段都已经出好了。');
+        return;
       }
+      await startVideoJob(d, pending, '准备出片（' + pending.length + ' 段）');
     }
     function playShotVideo(url, i) {
       const pop = document.getElementById('videoPop');
@@ -2183,6 +2398,15 @@
 
     function renderImgBoard() {
       const big = $('ibBig');
+      const ibStop = $('ibStop');
+      if (ibStop) ibStop.hidden = !(currentDraft && currentDraft.status === 'generating');
+      if (currentDraft) {
+        const st = STATUS_META[currentDraft.status] || STATUS_META.review;
+        $('ibStatus').className = 'badge ' + st.cls;
+        $('ibStatus').textContent = currentDraft.status === 'generating'
+          ? ('生成中 ' + Math.round(Number(currentDraft.progress) || 0) + '%')
+          : st.text;
+      }
       const normalized = currentDraft ? MEDIA.normalizeImages(currentDraft.images) : [];
       if (currentDraft) currentDraft.images = normalized;
       const realImgs = normalized.length > 0 ? normalized : null;
@@ -2508,7 +2732,35 @@
       }
     })();
     renderDrafts();
-    void hydrateDraftsStore();
+    if (window.jco && window.jco.media && window.jco.media.onJob) {
+      window.jco.media.onJob(function (job) {
+        if (!job) return;
+        var wasRunning = mediaJobState && mediaJobState.id === job.id && mediaJobState.status === 'running';
+        if (job.status !== 'running' && wasRunning) mediaRefreshing = true;
+        mediaJobState = job;
+        var d = drafts.find(function (draft) { return Number(draft.id) === Number(job.draftId); });
+        if (d) {
+          mediaJobToDraft(d, job);
+          if (job.kind === 'image' && job.status === 'running') scheduleDraftRefresh(job.draftId);
+          if (currentDraft && currentDraft.id === d.id) {
+            renderDrafts();
+            if (d.type === 'image') renderImgBoard();
+            else renderShots();
+          } else {
+            renderDrafts();
+          }
+        }
+        if (job.status !== 'running') {
+          stopMediaPoll();
+          void finishMediaJob(job);
+          if (wasRunning) {
+            jcoNotifyDone('创作任务结束', job.kind === 'video' ? '视频任务已结束，回创作页看结果。' : '图片任务已结束，回创作页看结果。');
+            jcoLogAdd('shot', job.kind === 'video' ? '视频出片结束' : '图片出图结束', job.status === 'done' ? '全部完成' : (job.error || job.status));
+          }
+        }
+      });
+    }
+    void hydrateDraftsStore().then(function () { void hydrateMediaJobs(); });
     void hydrateBrandProfile();
   </script>
   <script>

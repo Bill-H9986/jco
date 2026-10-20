@@ -4,6 +4,7 @@ const fs = require('fs')
 const { execFileSync, spawn } = require('child_process')
 const { pathToFileURL } = require('url')
 const PACKAGE_JSON = require('./package.json')
+const { createMediaJobService } = require('./media-jobs.cjs')
 
 // 界面文件在 J.Co\设计原型 里（和本工程是邻居），整个 J.Co 文件夹搬走也能正常打开
 const UI_DIR = path.join(__dirname, '..', '设计原型')
@@ -501,7 +502,7 @@ ipcMain.handle('sys:pick-folder', async (event) => {
 })
 
 // 生成物落盘（真：图片/视频存进素材文件夹；设置页选过目录就存那儿）
-ipcMain.handle('sys:save-asset', async (_event, payload) => {
+async function saveAssetPayload(payload) {
   try {
     const dir = readSettings().assetsDir || path.join(app.getPath('userData'), 'assets')
     fs.mkdirSync(dir, { recursive: true })
@@ -523,7 +524,8 @@ ipcMain.handle('sys:save-asset', async (_event, payload) => {
   } catch (error) {
     return { ok: false, error: String((error && error.message) || error) }
   }
-})
+}
+ipcMain.handle('sys:save-asset', async (_event, payload) => saveAssetPayload(payload))
 
 // 用系统浏览器打开链接（只放行 https；用于平台登录页等）
 /** 成片目录（素材库）——后期与做视频共用 */
@@ -1344,14 +1346,19 @@ function normalizeDraft(input) {
   if (!input || typeof input !== 'object') return null
   const id = Number(input.id)
   if (!Number.isFinite(id)) return null
-  const status = ['generating', 'review', 'adjusted', 'approved'].includes(input.status)
+  const status = ['generating', 'interrupted', 'review', 'adjusted', 'approved'].includes(input.status)
     ? input.status
     : 'review'
   const shots = Array.isArray(input.shots)
     ? input.shots
         .filter((shot) => shot && typeof shot === 'object')
         .slice(0, 50)
-        .map((shot) => ({ line: String(shot.line || ''), pic: String(shot.pic || '') }))
+        .map((shot) => ({
+          line: String(shot.line || ''),
+          pic: String(shot.pic || ''),
+          picSrc: String(shot.picSrc || ''),
+          picPath: String(shot.picPath || ''),
+        }))
     : []
   const videos = {}
   if (input.videos && typeof input.videos === 'object') {
@@ -1360,7 +1367,7 @@ function normalizeDraft(input) {
       if (!video || typeof video !== 'object') return
       const videoStatus = ['done', 'failed', 'doing'].includes(video.status) ? video.status : 'failed'
       videos[key] = {
-        status: videoStatus === 'doing' ? 'failed' : videoStatus,
+        status: videoStatus,
         url: String(video.url || ''),
         path: String(video.path || ''),
         videoId: String(video.videoId || ''),
@@ -1387,7 +1394,7 @@ function normalizeDraft(input) {
     id,
     idea: String(input.idea || ''),
     title: String(input.title || '').slice(0, 120),
-    status: status === 'generating' ? 'review' : status,
+    status,
     type: input.type === 'image' ? 'image' : 'video',
     ratio: String(input.ratio || '9:16'),
     duration: String(input.duration || '30 秒'),
@@ -1395,6 +1402,10 @@ function normalizeDraft(input) {
     voice: String(input.voice || '标准女声'),
     method: String(input.method || 'assemble'),
     fixNote: String(input.fixNote || ''),
+    progress: Math.max(0, Math.min(100, Number(input.progress) || 0)),
+    stepText: String(input.stepText || '').slice(0, 300),
+    jobId: String(input.jobId || ''),
+    jobKind: input.jobKind === 'image' || input.jobKind === 'video' ? input.jobKind : '',
     shots,
     videos,
     images,
@@ -1424,6 +1435,45 @@ function writeDrafts(data) {
   fs.writeFileSync(temp, JSON.stringify(normalized, null, 2), 'utf8')
   fs.renameSync(temp, DRAFTS_FILE)
   return normalized
+}
+let mediaJobService = null
+function fakeMediaBridge() {
+  const png = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII='
+  const mp4 = Buffer.from('fake-mp4-for-ui-test').toString('base64')
+  return {
+    drawImage: async () => {
+      await new Promise((resolve) => setTimeout(resolve, 700))
+      return { ok: true, dataUrl: 'data:image/png;base64,' + png }
+    },
+    videoGenerate: async () => {
+      await new Promise((resolve) => setTimeout(resolve, 1500))
+      return { ok: true, dataUrl: 'data:video/mp4;base64,' + mp4 }
+    },
+  }
+}
+function getMediaJobService() {
+  if (!mediaJobService) {
+    mediaJobService = createMediaJobService({
+      dir: kernelDataPath('media-jobs'),
+      readDrafts,
+      writeDrafts,
+      getBridge: async () => {
+        if (JCO_TEST_MODE && process.env.JCO_TEST_MEDIA_FAKE === '1') return fakeMediaBridge()
+        return getBridge()
+      },
+      saveAsset: saveAssetPayload,
+      onJob: (job) => {
+        BrowserWindow.getAllWindows().forEach((win) => {
+          try {
+            if (!win.webContents.isDestroyed()) win.webContents.send('media:job', job)
+          } catch (error) {
+            /* 窗口已销毁则忽略 */
+          }
+        })
+      },
+    })
+  }
+  return mediaJobService
 }
 function emptyOps() {
   return { version: 1, report: null, comments: [] }
@@ -1697,6 +1747,35 @@ ipcMain.handle('drafts:migrate', (_event, payload) => {
     const current = readDrafts()
     if (current.items.length > 0) return { ok: true, data: current, migrated: false }
     return { ok: true, data: writeDrafts(payload || {}), migrated: true }
+  } catch (error) {
+    return { ok: false, error: String((error && error.message) || error) }
+  }
+})
+ipcMain.handle('media:job:start', async (_event, payload) => {
+  try {
+    return await getMediaJobService().start(payload || {})
+  } catch (error) {
+    return { ok: false, error: String((error && error.message) || error) }
+  }
+})
+ipcMain.handle('media:job:get', (_event, payload) => {
+  try {
+    const job = getMediaJobService().get(String((payload && payload.id) || ''))
+    return job ? { ok: true, job } : { ok: false, error: '任务不存在' }
+  } catch (error) {
+    return { ok: false, error: String((error && error.message) || error) }
+  }
+})
+ipcMain.handle('media:job:list', (_event, payload) => {
+  try {
+    return { ok: true, jobs: getMediaJobService().list(payload && payload.draftId) }
+  } catch (error) {
+    return { ok: false, error: String((error && error.message) || error), jobs: [] }
+  }
+})
+ipcMain.handle('media:job:cancel', (_event, payload) => {
+  try {
+    return getMediaJobService().cancel(String((payload && payload.id) || ''))
   } catch (error) {
     return { ok: false, error: String((error && error.message) || error) }
   }

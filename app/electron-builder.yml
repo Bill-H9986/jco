@@ -15,6 +15,7 @@ directories:
 files:
   - main.js
   - preload.cjs
+  - media-jobs.cjs
   - settings.json
   - kernel/**
   - "!kernel/model-config.json"
@@ -26,6 +27,7 @@ files:
   - "!kernel/auto-tasks.json"
   - "!kernel/auto-runs.json"
   - "!kernel/task-sessions/**"
+  - "!kernel/media-jobs/**"
   # 后期工具（M9 后期）：patch 与配置由应用启动时生成，不进包
   - "!kernel/edit-tools.json"
   - "!kernel/edit-tools.patch.yml"

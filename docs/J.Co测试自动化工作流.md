@@ -1,6 +1,6 @@
 # J.Co 测试自动化工作流
 
-适用版本：`0.6.0-beta.24` 起
+适用版本：`0.6.0-beta.25` 起
 
 ## 1. 依据
 
@@ -43,7 +43,7 @@ J.Co 不是普通网页，测试必须覆盖四层运行时：
 | L0 静态 | 类型、lint、全项目扫描 | `npm run typecheck`、`npm run lint`、`npm run check:all` | 0 error、0 新增违规 |
 | L1 单元 | 纯函数、数据规范化、更新版本比较、任务状态机 | `npx vitest run` | 全绿 |
 | L2 集成 | 内核 bridge、草稿/任务/知识库读写、IPC 契约 | `tests/unit/kernel-layer.test.mjs`、`ipc-contracts.test.mjs` | 全绿 |
-| L3 E2E | 页面加载、导航、核心流程 | `npx playwright test` | 全绿，无 pageerror |
+| L3 E2E | 页面加载、导航、核心流程、后台任务跨页恢复 | `npx playwright test` | 全绿，无 pageerror；切页/刷新任务不丢 |
 | L4 视觉 | 浅色/深色关键页截图 | `npm run test:visual` | 像素差 ≤ 容差 |
 | L5 契约冒烟 | Agnes 文本/图片/视频真实调用 | `npm run test:ai-smoke`、`npm run test:live-media`（手动/夜间） | 返回结构正确、图片比例正确、视频模型真的出成片 |
 | L6 验收 | 交付清单逐项走查 | `outputs/交付测试进度.md` | 每项有证据 |
@@ -99,6 +99,14 @@ J.Co 不是普通网页，测试必须覆盖四层运行时：
 - 16 个页面浅色基准；
 - 关键页深色抽查：首页、总管、创作、发布、设置；
 - 页头统一断言：`h1` x=32、y=36、字号 22px（后期页为紧凑工具栏，x 对齐）。
+
+### 4.5 创作后台任务恢复（L3/L7）
+
+- 生成中切到首页或其他页面，再回创作页：任务仍在跑，进度继续，最后草稿自动打开；
+- 生成中刷新应用壳：主进程任务不中断，返回后按已完成项收口；
+- 应用重启：未完成任务显示“已中断”，已完成图片/视频保留，失败项可重试；
+- 页面保存不能覆盖后台刚写入的图片/视频结果；
+- 自动化入口：`tests/e2e/m14-create-work-state.spec.mjs`（`JCO_TEST_MEDIA_FAKE=1`，不烧额度）。
 
 ## 5. 执行节奏
 

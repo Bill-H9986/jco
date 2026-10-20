@@ -316,6 +316,39 @@ contextBridge.exposeInMainWorld('jco', {
       items: Array.isArray(data && data.items) ? data.items : [],
     }),
   },
+  media: {
+    start: (payload) => ipcRenderer.invoke('media:job:start', {
+      kind: payload && payload.kind === 'image' ? 'image' : 'video',
+      draftId: Number(payload && payload.draftId),
+      prompts: Array.isArray(payload && payload.prompts) ? payload.prompts.map(String) : [],
+      shots: Array.isArray(payload && payload.shots)
+        ? payload.shots.map((shot) => ({
+          index: Number(shot && shot.index) || 0,
+          prompt: String((shot && shot.prompt) || ''),
+          seconds: Number((shot && shot.seconds) || 5),
+        }))
+        : [],
+      ratio: String((payload && payload.ratio) || '9:16'),
+      res: String((payload && payload.res) || ''),
+      sizePx: String((payload && payload.sizePx) || ''),
+      model: String((payload && payload.model) || ''),
+    }),
+    get: (id) => ipcRenderer.invoke('media:job:get', { id: String(id || '') }),
+    list: (draftId) => ipcRenderer.invoke('media:job:list', {
+      draftId: draftId === undefined || draftId === null ? null : Number(draftId),
+    }),
+    cancel: (id) => ipcRenderer.invoke('media:job:cancel', { id: String(id || '') }),
+    onJob: (callback) => {
+      if (typeof callback !== 'function') return
+      ipcRenderer.on('media:job', (_event, job) => {
+        try {
+          callback(job)
+        } catch (error) {
+          /* 页面回调异常不扩散 */
+        }
+      })
+    },
+  },
   ops: {
     get: () => ipcRenderer.invoke('ops:get'),
     save: (data) => ipcRenderer.invoke('ops:save', {
