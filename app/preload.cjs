@@ -74,12 +74,20 @@ contextBridge.exposeInMainWorld('jco', {
       input: String((payload && payload.input) || ''),
     }),
     /** 真画图：返回 { ok, dataUrl|url } 或 { ok:false, error }（用「画图修图」的配置） */
-    draw: (payload) => ipcRenderer.invoke('kernel:draw', { prompt: String((payload && payload.prompt) || '') }),
+    draw: (payload) => ipcRenderer.invoke('kernel:draw', {
+      prompt: String((payload && payload.prompt) || ''),
+      size: String((payload && payload.size) || ''),
+      sizePx: String((payload && payload.sizePx) || ''),
+      aspect: String((payload && payload.aspect) || ''),
+      model: String((payload && payload.model) || ''),
+    }),
     /** 真出视频：返回 { ok, url, videoId, seconds } 或 { ok:false, error }（用「出片成视频」的配置） */
     video: (payload) => ipcRenderer.invoke('kernel:video', {
       prompt: String((payload && payload.prompt) || ''),
       seconds: (payload && payload.seconds) || 5,
       aspect: String((payload && payload.aspect) || '9:16'),
+      size: String((payload && payload.size) || '720P'),
+      model: String((payload && payload.model) || ''),
     }),
   },
   /** 发布引擎（M2 通用引擎 + 平台适配层）：平台差异由引擎内适配包承担，这里只传事实 */

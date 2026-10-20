@@ -6,7 +6,6 @@
  * 证据写到 outputs/ai-smoke/。
  */
 import fs from 'node:fs'
-import os from 'node:os'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
@@ -72,7 +71,7 @@ const results = []
     }),
   })
   const data = await res.json()
-  const text = data && data.choices && data.choices[0] && data.choices[0].message.content
+  const text = data?.choices?.[0]?.message.content
   fs.writeFileSync(path.join(OUT, 'chat.json'), JSON.stringify(data, null, 2))
   const match = String(text || '').match(/\[[\s\S]*\]/)
   const shots = match ? JSON.parse(match[0]) : null
@@ -91,14 +90,19 @@ const results = []
       prompt:
         '竖版宣传海报主视觉：年轻中国女性讲师小雅，浅蓝西装，站在无人机装配实训台前，蓝白配色，专业可信，无文字。',
       n: 1,
+      size: '1K',
+      aspect_ratio: '3:4',
       response_format: 'b64_json',
     }),
   })
   const data = await res.json()
-  const item = data && data.data && data.data[0]
-  const ok = Boolean(item && item.b64_json)
-  results.push({ kind: 'image', ok, model: c.model })
-  if (ok) fs.writeFileSync(path.join(OUT, 'poster.png'), Buffer.from(item.b64_json, 'base64'))
+  const item = data?.data?.[0]
+  const png = item && item.b64_json ? Buffer.from(item.b64_json, 'base64') : null
+  const width = png && png.length > 24 ? png.readUInt32BE(16) : 0
+  const height = png && png.length > 24 ? png.readUInt32BE(20) : 0
+  const ok = Boolean(png) && Math.abs(width / height - 3 / 4) < 0.01
+  results.push({ kind: 'image', ok, model: c.model, width, height })
+  if (png) fs.writeFileSync(path.join(OUT, 'poster.png'), png)
 }
 
 // 3) 视频：1 段 5 秒

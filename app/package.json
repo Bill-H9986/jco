@@ -1,7 +1,7 @@
 {
   "name": "jco",
   "productName": "J.Co",
-  "version": "0.6.0-beta.23",
+  "version": "0.6.0-beta.24",
   "description": "J.Co · 自媒体管家（桌面版）",
   "author": "Jay",
   "main": "main.js",
@@ -19,6 +19,7 @@
     "test:unit": "vitest run",
     "test:e2e": "playwright test",
     "test:visual": "playwright test -c playwright.visual.config.mjs",
+    "test:live-media": "node scripts/live-media-smoke.mjs",
     "release:package": "node scripts/release-package.mjs",
     "release:github": "node scripts/release-github.mjs",
     "release:atomgit": "node scripts/release-atomgit.mjs",

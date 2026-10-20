@@ -1,6 +1,6 @@
 # J.Co 测试自动化工作流
 
-适用版本：`0.6.0-beta.21` 起
+适用版本：`0.6.0-beta.24` 起
 
 ## 1. 依据
 
@@ -45,7 +45,7 @@ J.Co 不是普通网页，测试必须覆盖四层运行时：
 | L2 集成 | 内核 bridge、草稿/任务/知识库读写、IPC 契约 | `tests/unit/kernel-layer.test.mjs`、`ipc-contracts.test.mjs` | 全绿 |
 | L3 E2E | 页面加载、导航、核心流程 | `npx playwright test` | 全绿，无 pageerror |
 | L4 视觉 | 浅色/深色关键页截图 | `npm run test:visual` | 像素差 ≤ 容差 |
-| L5 契约冒烟 | Agnes 文本/图片/视频真实调用 | `npm run test:ai-smoke`（手动/夜间） | 返回结构正确、限流可重试 |
+| L5 契约冒烟 | Agnes 文本/图片/视频真实调用 | `npm run test:ai-smoke`、`npm run test:live-media`（手动/夜间） | 返回结构正确、图片比例正确、视频模型真的出成片 |
 | L6 验收 | 交付清单逐项走查 | `outputs/交付测试进度.md` | 每项有证据 |
 | L7 安装升级 | NSIS 安装、OTA、回滚 | `release:package`、`qa-packaged`、安装脚本 | 版本正确、数据不丢 |
 
@@ -78,6 +78,12 @@ J.Co 不是普通网页，测试必须覆盖四层运行时：
 3. 调用一次视频模型，生成 1 段 5 秒 720P；
 4. 断言：分镜 JSON 可解析、图片有 b64、视频有 url；
 5. 遇到 429/503 自动等待重试，最多 3 次。
+
+`scripts/live-media-smoke.mjs` 从真实 UI 再走一遍：
+
+1. 做图选 2K、3:4、1 张，断言落盘图片是 3:4 且宽度不低于 1536；
+2. 注入 1 段已过文本分镜的草稿，点“全部出片”，断言视频接口真的返回成片；
+3. 可用 `--image-only` 或 `--video-only` 单独跑。
 
 该层不进 `gate`，只在发版前或夜间跑，避免免费额度被回归测试耗尽。
 
@@ -119,4 +125,5 @@ J.Co 不是普通网页，测试必须覆盖四层运行时：
 - 视觉：`tests/visual/baseline/`；
 - 交付自检：`outputs/交付自检/`；
 - AI 冒烟：`outputs/ai-smoke/`；
+- 真实媒体 UI 冒烟：终端 JSON 输出（图片尺寸、视频状态/路径）；
 - 进度：`outputs/交付测试进度.md`。

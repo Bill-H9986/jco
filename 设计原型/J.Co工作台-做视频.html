@@ -55,6 +55,34 @@
 
 .from .src { color: var(--text-3); font-size: 12px; margin-left: auto; }
 
+.picked-bar {
+    display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+    margin: -4px 0 14px; font-size: 12px; color: var(--text-2);
+  }
+
+.picked-bar[hidden] { display: none; }
+
+.picked-bar .label { color: var(--text-3); }
+
+.picked-list { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+
+.picked-chip {
+    display: inline-flex; align-items: center; gap: 6px; max-width: 240px;
+    padding: 4px 6px 4px 10px; border-radius: 999px;
+    background: var(--card); box-shadow: var(--shadow-card); color: var(--text-1);
+  }
+
+.picked-chip .nm { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.picked-chip .rm {
+    flex: none; width: 20px; height: 20px; border: none; border-radius: 999px;
+    background: transparent; color: var(--text-3); font-size: 13px; cursor: pointer;
+  }
+
+.picked-chip .rm:hover { background: var(--hover); color: var(--text-1); }
+
+.picked-chip .rm:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+
 /* ============ 核心输入卡 ============ */
   .ask {
     position: static; max-width: none; margin: 0 74px 0 0;
@@ -578,6 +606,8 @@
     display: flex; align-items: center; justify-content: center; font-size: 14px;
   }
 
+.shot .pic-thumb.has-img { background-size: cover; background-position: center; color: transparent; }
+
 .shot .mid { flex: 1; min-width: 0; }
 
 .shot .line { display: block; font-size: 13px; color: var(--text-1); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -717,6 +747,11 @@
             <span>手头素材：<b id="handyLine">正在看本机数据……</b></span>
             <span class="src">说一句就行，也可以直接选下面的技能</span>
           </div>
+          <div class="picked-bar" id="pickedBar" hidden>
+            <span class="ti ti-paperclip"></span>
+            <span class="label">已带素材</span>
+            <div class="picked-list" id="pickedList"></div>
+          </div>
 
           <div class="skills" id="skills"></div>
 
@@ -794,7 +829,7 @@
           <textarea id="askInp" rows="2" placeholder="说说你的创作想法，也可以选素材或参考（比如：把稿子做成口播视频，用用户采访画面）"></textarea>
           <div class="ask-bar">
             <div class="left">
-              <button class="tool" onclick="location.href='J.Co工作台-素材.html'"><span class="ti ti-plus"></span>素材</button>
+              <button class="tool" onclick="openMaterialPicker()"><span class="ti ti-plus"></span>素材</button>
               <button class="tool" onclick="location.href='J.Co工作台-创作.html'"><span class="ti ti-at"></span>引用</button>
             </div>
             <div class="right">
@@ -861,6 +896,7 @@
     </div>
   </div>
 
+  <script src="./assets/jco-media.js"></script>
   <script src="./assets/jco-skills.js"></script>
   <script>
     /* ================= 状态 ================= */
@@ -876,6 +912,8 @@
 
     const $ = (id) => document.getElementById(id);
     const toastEl = $('toast');
+    const MEDIA = window.JCO_MEDIA;
+    let pickedMaterials = [];
 
     function showToast(msg) {
       toastEl.textContent = msg;
@@ -883,6 +921,53 @@
       clearTimeout(showToast.timer);
       showToast.timer = setTimeout(() => toastEl.classList.remove('show'), 2800);
     }
+
+    function renderPickedMaterials() {
+      const bar = $('pickedBar');
+      const list = $('pickedList');
+      if (!bar || !list) return;
+      bar.hidden = pickedMaterials.length === 0;
+      list.innerHTML = '';
+      pickedMaterials.forEach((m, index) => {
+        const chip = document.createElement('span');
+        chip.className = 'picked-chip';
+        const icon = m.type === 'video' ? 'ti-video' : (m.type === 'audio' ? 'ti-music' : 'ti-photo');
+        chip.innerHTML = '<span class="ti ' + icon + '"></span><span class="nm"></span><button class="rm" type="button" aria-label="移除素材">×</button>';
+        chip.querySelector('.nm').textContent = m.name || '素材';
+        chip.querySelector('.rm').addEventListener('click', () => {
+          pickedMaterials.splice(index, 1);
+          renderPickedMaterials();
+        });
+        list.appendChild(chip);
+      });
+    }
+
+    function pickedPromptLine() {
+      if (pickedMaterials.length === 0) return '';
+      return '参考素材：' + pickedMaterials.map((m) => m.name).filter(Boolean).join('、');
+    }
+
+    function openMaterialPicker() {
+      try { sessionStorage.setItem('jco-make-input', askInp.value); } catch (e) {}
+      const page = 'J.Co工作台-素材.html?pick=1&return=' + encodeURIComponent('J.Co工作台-做视频.html');
+      if (typeof window.__jcoGo === 'function') window.__jcoGo(page);
+      else location.href = page;
+    }
+
+    (function restorePickedMaterials() {
+      try {
+        const raw = sessionStorage.getItem('jco-picked-materials');
+        if (!raw) return;
+        sessionStorage.removeItem('jco-picked-materials');
+        const data = JSON.parse(raw);
+        const items = data && Array.isArray(data.items) ? data.items : [];
+        pickedMaterials = items.filter((m) => m && m.name).slice(0, 12);
+        renderPickedMaterials();
+        if (pickedMaterials.length > 0) {
+          setTimeout(() => showToast('已带回 ' + pickedMaterials.length + ' 件素材，会作为这次的创作参考。'), 200);
+        }
+      } catch (e) {}
+    })();
     let brandProfile = null;
     function brandLine() {
       if (!brandProfile || typeof brandProfile !== 'object') return '';
@@ -1150,6 +1235,16 @@
 
     function inputChanged() { goBtn.disabled = askInp.value.trim().length === 0; }
 
+    (function restoreMakeInput() {
+      try {
+        const saved = sessionStorage.getItem('jco-make-input');
+        if (!saved) return;
+        sessionStorage.removeItem('jco-make-input');
+        askInp.value = saved;
+        inputChanged();
+      } catch (e) {}
+    })();
+
     askInp.addEventListener('input', () => {
       inputChanged();
       askInp.style.height = 'auto';
@@ -1224,22 +1319,33 @@
         method: d.method || 'assemble',
         fixNote: d.fixNote || '',
         shots: (d.shots || []).slice(0, 50).map(function (s) {
-          return { line: (s && s.line) || '', pic: (s && s.pic) || '' };
+          return {
+            line: (s && s.line) || '',
+            pic: (s && s.pic) || '',
+            picSrc: (s && s.picSrc) || '',
+            picPath: (s && s.picPath) || '',
+          };
         }),
         videos: videos,
-        images: (d.images || []).slice(0, 20).map(function (im) {
+        images: MEDIA.normalizeImages((d.images || []).slice(0, 20).map(function (im) {
           if (!im) return null;
           var src = String(im.src || '');
           var imagePath = String(im.path || '');
-          // 旧版内嵌大图：没有落盘路径时不入 store，避免把 JSON 撑爆
+          // 旧版内嵌大图没有落盘路径，不能作为可用图片继续显示。
           if (src.length > 300000 && !imagePath) {
-            return { src: '', path: '', prompt: (im.prompt || '') + '（旧版大图未入草稿）' };
+            return null;
           }
           return { src: src, path: imagePath, prompt: im.prompt || '' };
-        }).filter(Boolean),
+        }).filter(Boolean)),
         createdAt: Number(d.createdAt) || Date.now(),
         updatedAt: Date.now(),
       };
+    }
+    function normalizeLoadedDraft(d) {
+      if (!d || typeof d !== 'object') return d;
+      d.images = MEDIA.normalizeImages(d.images);
+      d.shots = Array.isArray(d.shots) ? d.shots : [];
+      return d;
     }
     function warnDraftSave(msg) {
       if (draftSaveWarned) return;
@@ -1299,16 +1405,17 @@
       const end = t.lastIndexOf(']');
       if (start >= 0 && end > start) t = t.slice(start, end + 1);
       try {
-        const arr = JSON.parse(t);
+        const parsed = JSON.parse(t);
+        const arr = Array.isArray(parsed) ? parsed : (parsed && typeof parsed === 'object' ? [parsed] : null);
         if (Array.isArray(arr)) {
           const shots = arr
             .map((x) => ({ line: String((x && x.line) || '').trim(), pic: String((x && x.pic) || '').trim() }))
             .filter((x) => x.line !== '');
-          if (shots.length >= 3) return shots;
+          if (shots.length >= 1) return shots;
         }
       } catch (e) {}
       const lines = cleanLines(text);
-      if (lines.length >= 3) {
+      if (lines.length >= 1) {
         return lines
           .map((l) => {
             const parts = l.split(/[|｜]/);
@@ -1345,36 +1452,15 @@
     };
 
     function stepsFor() {
-      const isLongVid = state.type === 'video' && (state.duration === '3 分钟' || state.duration === '5 分钟');
       if (state.type === 'image') {
         return [
           { text: '读懂稿子重点', icon: 'ti-file-text' },
-          { text: '生成 ' + state.ratio + ' 图片（' + state.count + '）', icon: 'ti-photo' },
-        ];
-      }
-      if (isLongVid) {
-        return [
-          { text: '配音中（' + state.voice + '）', icon: 'ti-microphone' },
-          { text: '分段生成画面并拼接', icon: 'ti-movie' },
-          { text: '统一字幕和背景音乐', icon: 'ti-music' },
-        ];
-      }
-      if (state.method === 't2v') {
-        return [
-          { text: '拆解爆款结构', icon: 'ti-repeat' },
-          { text: '按你的内容生成画面（' + state.ratio + ' · ' + state.res + '）', icon: 'ti-sparkles' },
-        ];
-      }
-      if (state.method === 'i2v') {
-        return [
-          { text: '读你选的那张图', icon: 'ti-photo' },
-          { text: '生成动态画面（' + state.duration + ' · ' + state.res + '）', icon: 'ti-photo-video' },
+          { text: '生成 ' + state.ratio + ' 画面方案（' + state.count + '）', icon: 'ti-photo' },
         ];
       }
       return [
-        { text: '配音中（' + state.voice + '）', icon: 'ti-microphone' },
-        { text: '铺画面（3 件素材）', icon: 'ti-photo' },
-        { text: '加字幕和背景音乐', icon: 'ti-music' },
+        { text: '拆解你的想法', icon: 'ti-repeat' },
+        { text: '生成分镜（' + state.ratio + ' · 每段 4~12 秒）', icon: 'ti-file-text' },
       ];
     }
 
@@ -1426,9 +1512,8 @@
         if (d.type === 'image') {
           amount = ((d.images || []).length || (d.status === 'generating' ? 0 : IMG_COUNT)) + ' 张图';
         } else {
-          const nShots = (d.shots || []).length || 8;
-          const nVid = d.videos ? Object.values(d.videos).filter((v) => v && v.status === 'done').length : 0;
-          amount = nShots + ' 段' + (nVid > 0 ? ' · 已出 ' + nVid : '');
+          const progress = MEDIA.videoProgress(d);
+          amount = progress.total + ' 段' + (progress.done > 0 ? ' · 已出 ' + progress.done : '');
         }
         card.innerHTML = '<span class="dcover">' + coverHtml + '<span class="dcorner badge ' + st.cls + '">' + (d.status === 'generating' ? ('生成中 ' + Math.round(d.progress) + '%') : st.text) + '</span></span>' +
           '<span class="dbody"><span class="dname"></span><span class="dsub"><span class="dmeta"></span><span class="dtime"></span></span>' +
@@ -1460,6 +1545,7 @@
       const d = drafts.find((x) => x.id === id);
       if (!d) return;
       currentDraft = d;
+      if (d.type === 'image') d.images = MEDIA.normalizeImages(d.images);
       const done = $('done');
       done.classList.add('show');
       const st = STATUS_META[d.status];
@@ -1476,12 +1562,12 @@
         renderImgBoard();
       } else {
         $('donePhoneTxt').textContent = d.ratio + ' · ' + d.duration;
-        const isLong = d.duration === '3 分钟' || d.duration === '5 分钟';
-        const shotCount = Array.isArray(d.shots) && d.shots.length > 0 ? d.shots.length : 8;
-        const titleText = d.idea && d.idea.length <= 28 ? d.idea : '《把一件事讲清楚，其实就 3 步》' + (isLong ? '（长视频版）' : '');
+        const shotCount = Array.isArray(d.shots) ? d.shots.length : 0;
+        const titleText = d.idea || '未命名草稿';
         $('doneTitle').textContent = titleText;
-        const voiceTxt = d.method === 'assemble' ? (' · AI 配音（' + d.voice + '）') : '';
-        $('doneMeta').textContent = d.ratio + ' · ' + d.res + ' · ' + d.duration + voiceTxt + ' · 共 ' + shotCount + ' 段 · 每一段都能看、能换';
+        const seconds = MEDIA.shotSecondsFor(d.duration, shotCount);
+        const voiceTxt = d.method === 'assemble' ? (' · 配音偏好：' + d.voice + '（成片暂不含配音）') : '';
+        $('doneMeta').textContent = d.ratio + ' · ' + d.res + ' · ' + d.duration + voiceTxt + ' · 共 ' + shotCount + ' 段 · 每段约 ' + seconds + ' 秒';
         renderShots();
       }
       $('approveBtn').textContent = d.status === 'approved' ? '去发布' : '这版可以了';
@@ -1489,10 +1575,29 @@
       done.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
 
+    function draftReady(d) {
+      if (!d) return false;
+      if (d.type === 'image') return MEDIA.normalizeImages(d.images).length > 0;
+      return MEDIA.videoProgress(d).complete;
+    }
+
+    function draftBlockedMessage(d) {
+      if (!d) return '先打开一条草稿。';
+      if (d.type === 'image') return '这版还没有可用图片，先点重画或再出几张。';
+      const progress = MEDIA.videoProgress(d);
+      if (progress.total === 0) return '这条还没有分镜，先点「换一版」重新生成。';
+      return '还有 ' + (progress.total - progress.done) + ' 段没出片。先点「全部出片」或每段「出这段」，视频模型跑完再通过。';
+    }
+
     function approveDraft() {
       if (!currentDraft) return;
       if (currentDraft.status === 'approved') {
+        if (!draftReady(currentDraft)) { showToast(draftBlockedMessage(currentDraft)); return; }
         goPublish(currentDraft);
+        return;
+      }
+      if (!draftReady(currentDraft)) {
+        showToast(draftBlockedMessage(currentDraft));
         return;
       }
       currentDraft.status = 'approved';
@@ -1504,7 +1609,7 @@
       $('approveBtn').textContent = '去发布';
       $('ibApprove').textContent = '去发布';
       renderDrafts();
-      showToast('这版通过了。草稿还在，随时能回来再改。');
+      showToast('这版通过了，可以带成片去发布。草稿还在，随时能回来再改。');
     }
 
     function markAdjusted() {
@@ -1529,11 +1634,23 @@
 
     /** 带着这条成片去「发布」页（交接给下一页） */
     function goPublish(d) {
+      if (!draftReady(d)) {
+        showToast(draftBlockedMessage(d));
+        return;
+      }
+      const doneVideos = d && d.videos
+        ? Object.keys(d.videos)
+            .map((key) => d.videos[key])
+            .filter((item) => item && item.status === 'done')
+        : [];
+      const lastVideo = doneVideos.length ? doneVideos[doneVideos.length - 1] : null;
       try {
         sessionStorage.setItem('jco-publish-draft', JSON.stringify({
           title: draftTitleOf(d),
           ratio: d ? d.ratio : '',
           duration: d ? d.duration : '',
+          videoPath: lastVideo ? (lastVideo.path || '') : '',
+          videoUrl: lastVideo ? (lastVideo.url || '') : '',
         }));
       } catch (e) {}
       location.href = 'J.Co工作台-发布.html';
@@ -1608,13 +1725,15 @@
         d.stepText = list[Math.min(Math.floor(p / stepSpan), list.length - 1)].text;
         renderDrafts();
       }, 240);
-      const isLong = state.duration === '3 分钟' || state.duration === '5 分钟';
+      const targetShots = MEDIA.targetShotCount(d.duration);
+      const refs = pickedPromptLine();
       const input = [
-        '我要做一条' + (isLong ? '长' : '短') + '视频：' + idea,
-        '比例 ' + state.ratio + '，时长目标 ' + state.duration + '，清晰度 ' + state.res + '。',
-        isLong ? '给我 12~16 个镜头的分镜。' : '给我 8~12 个镜头的分镜。',
+        '我要做一条短视频：' + idea,
+        '比例 ' + d.ratio + '，时长目标 ' + d.duration + '，清晰度 ' + d.res + '。',
+        refs ? refs + '（画面和语气要参考这些素材）' : '',
+        '给我 ' + targetShots + ' 个镜头的分镜，每段 4~12 秒，总时长尽量接近目标。',
         '输出一个 JSON 数组（不要 markdown 代码块、不要解释），每个元素形如：{"line":"这一句台词，口语、一句话","pic":"这个镜头的画面描述，简短，比如 用户采访片段·小李"}',
-      ].join('\n');
+      ].filter(Boolean).join('\n');
       const res = await Promise.race([
         JCO_KERNEL.task({
           system: shotSystemPrompt(),
@@ -1624,7 +1743,7 @@
       ]);
       if (genTimer) { clearInterval(genTimer); genTimer = null; }
       const shots = res && res.ok ? parseShots(res.text) : null;
-      if (shots && shots.length >= 3) {
+      if (shots && shots.length >= 1) {
         d.shots = shots;
         d.progress = 100;
         d.status = 'review';
@@ -1633,7 +1752,7 @@
         openDraft(d.id);
         jcoLogAdd('shot', draftTitleOf(d) || '一条分镜', '共 ' + shots.length + ' 段，待你过目');
         jcoNotifyDone('分镜好了', '共 ' + shots.length + ' 段，等你过目');
-        showToast('分镜好了，共 ' + shots.length + ' 段。每段都能换画面、点着改，满意了再点「这版可以了」。');
+        showToast('分镜好了，共 ' + shots.length + ' 段。先审分镜；点「全部出片」或每段「出这段」才会调用视频模型。');
         return;
       }
       // 失败：不留假草稿，如实报错
@@ -1656,19 +1775,23 @@
         d.stepText = list[Math.min(Math.floor(p / stepSpan), list.length - 1)].text;
         renderDrafts();
       }, 240);
-      // 想画几张：读用户选的数量（3 张 / 6 张）
-      const wanted = Math.max(1, Math.min(6, parseInt(state.count, 10) || 3))
-      const ratioWord = state.ratio === '9:16' ? '9:16 竖屏' : (state.ratio === '16:9' ? '16:9 横屏' : '1:1 方形')
+      // 想画几张：读这条草稿创建时选的数量（1 张 / 3 张 / 5 张）
+      const wanted = Math.max(1, Math.min(6, parseInt(d.duration, 10) || 3))
+      const ratioWord = MEDIA.aspectWord(d.ratio)
+      const imageResolution = d.res || '1K'
+      const imageModel = configuredModel('image', '')
+      const refs = pickedPromptLine()
       // 1) 画面方案（wanted 条描述）
       let prompts = []
       try {
         const planRes = await JCO_KERNEL.task({
           system: imageSystemPrompt(),
-          input: '视频想法：' + idea + '\n为这条视频设计 ' + wanted + ' 个镜头的画面（' + ratioWord + '，当前品牌主题），每行一条简短描述，不要序号。',
+          input: '创作想法：' + idea + '\n' + (refs ? refs + '\n' : '') + '为这组图设计 ' + wanted + ' 个不同画面（' + ratioWord + '，当前品牌主题），每行一条简短描述，不要序号。',
         })
         if (planRes && planRes.ok && planRes.text) prompts = cleanLines(planRes.text).filter((l) => l.length > 3).slice(0, wanted)
       } catch (e) {}
       if (prompts.length === 0) prompts = [idea, idea + '（细节特写）', idea + '（场景全景）'].slice(0, wanted)
+      prompts = MEDIA.ensurePromptCount(prompts, wanted, idea)
       // 2) 逐张真画
       const images = []
       let lastError = ''
@@ -1676,7 +1799,13 @@
         d.stepText = '正在画第 ' + (i + 1) + ' 张 / ' + prompts.length;
         d.progress = Math.max(d.progress, 40 + Math.round((i / prompts.length) * 50));
         renderDrafts()
-        const r = await JCO_KERNEL.draw({ prompt: ratioWord + '，' + prompts[i] })
+        const r = await JCO_KERNEL.draw({
+          prompt: ratioWord + '，' + prompts[i],
+          size: imageResolution,
+          sizePx: MEDIA.imageSizeFor(d.ratio, imageResolution),
+          aspect: d.ratio,
+          model: imageModel,
+        })
         if (r && r.ok && (r.dataUrl || r.url)) {
           let src = r.dataUrl || r.url
           let savedPath = ''
@@ -1725,12 +1854,22 @@
       const el = $('shots');
       el.innerHTML = '';
       const real = currentDraft && Array.isArray(currentDraft.shots) && currentDraft.shots.length > 0 ? currentDraft.shots : null;
-      const rows = real || SHOT_LINES.map((line, i) => ({ line: line, pic: PIC_POOL[i % PIC_POOL.length] }));
+      const rows = real || (!JCO_KERNEL ? SHOT_LINES.map((line, i) => ({ line: line, pic: PIC_POOL[i % PIC_POOL.length] })) : []);
+      const shotSeconds = MEDIA.shotSecondsFor(currentDraft ? currentDraft.duration : '', rows.length);
+
+      if (JCO_KERNEL && rows.length === 0) {
+        const empty = document.createElement('div');
+        empty.className = 'shot-hint';
+        empty.textContent = '这条还没有分镜。点「换一版」重新生成，或在下面说一句你的想法。';
+        el.appendChild(empty);
+        return;
+      }
 
       // 真模式：全出片工具行（逐段出真视频，干完系统通知）
       if (JCO_KERNEL && rows.length > 0) {
         const videos = (currentDraft && currentDraft.videos) || {};
-        const doneCount = Object.values(videos).filter((v) => v && v.status === 'done').length;
+        const progress = MEDIA.videoProgress(currentDraft);
+        const doneCount = progress.done;
         const doing = Object.values(videos).some((v) => v && v.status === 'doing');
         const bar = document.createElement('div');
         bar.className = 'shot-bar';
@@ -1742,7 +1881,13 @@
         if (!btn.disabled) btn.addEventListener('click', () => makeAllVideos(rows));
         const hint = document.createElement('span');
         hint.className = 'shot-hint';
-        hint.textContent = remain > 0 ? ('每段约 3~4 分钟 · 全部约 ' + Math.round(remain * 3.5) + ' 分钟 · 干完弹通知') : '都出好了，点每段的「看这段」预览';
+        hint.textContent = doing
+          ? ('视频模型正在跑，别关窗口；干完弹通知')
+          : (doneCount === 0
+              ? '点「全部出片」才会调用视频模型；先审分镜，不满意可换画面'
+              : (remain > 0
+                  ? ('还差 ' + remain + ' 段 · 每段约 3~4 分钟 · 干完弹通知')
+                  : '都出好了，点每段的「看这段」预览'));
         bar.appendChild(btn);
         bar.appendChild(hint);
         el.appendChild(bar);
@@ -1755,22 +1900,38 @@
           <span class="no">${String(i + 1).padStart(2, '0')}</span>
           <span class="pic-thumb ti ti-player-play"></span>
           <span class="mid"><span class="line"></span><span class="pic"></span></span>
-          <span class="dur">${SHOT_DUR[i % SHOT_DUR.length]}</span>
+          <span class="dur">${shotSeconds} 秒</span>
           <button class="swap">换画面</button>`;
         row.querySelector('.line').textContent = item.line;
-        // 真分镜保留模型给的画面描述；点「换画面」在本机备选池里轮换
+
+        const picThumb = row.querySelector('.pic-thumb');
+        if (item.picSrc) {
+          picThumb.classList.add('has-img');
+          picThumb.innerHTML = '';
+          picThumb.style.backgroundImage = 'url("' + String(item.picSrc).replace(/"/g, '%22') + '")';
+        }
+
+        // 真分镜保留模型给的画面描述；浏览器演示模式才用本机备选池轮换。
         let picIdx = -1;
         const picEl = row.querySelector('.pic');
         const paintPic = () => {
           picEl.textContent = '画面：' + (picIdx < 0 ? (item.pic || '现场画面') : PIC_POOL[picIdx % PIC_POOL.length]);
         };
         paintPic();
-        row.querySelector('.swap').addEventListener('click', () => {
-          picIdx = (picIdx + 1) % PIC_POOL.length;
-          paintPic();
-          markAdjusted();
-          showToast('第 ' + (i + 1) + ' 段换成了「' + PIC_POOL[picIdx] + '」。每一段都能这样换。');
-        });
+        const swap = row.querySelector('.swap');
+        if (JCO_KERNEL) {
+          const changing = currentDraft && currentDraft._changingPic === i;
+          swap.textContent = changing ? '换画面中…' : '换画面';
+          swap.disabled = changing;
+          swap.addEventListener('click', () => changeShotPicture(i, item));
+        } else {
+          swap.addEventListener('click', () => {
+            picIdx = (picIdx + 1) % PIC_POOL.length;
+            paintPic();
+            markAdjusted();
+            showToast('第 ' + (i + 1) + ' 段换成了「' + PIC_POOL[picIdx] + '」。每一段都能这样换。');
+          });
+        }
         // 真模式：每段一个出片入口
         if (JCO_KERNEL) {
           const videos = (currentDraft && currentDraft.videos) || {};
@@ -1807,18 +1968,86 @@
       });
     }
 
+    /** 真换画面：调用图片模型重画这一段的静帧，不再用固定演示词轮换。 */
+    async function changeShotPicture(i, item) {
+      if (!JCO_KERNEL || !currentDraft) return;
+      if (currentDraft._changingPic === i) return;
+      const d = currentDraft;
+      d._changingPic = i;
+      renderShots();
+      const ratio = d.ratio || '9:16';
+      const prompt = MEDIA.aspectWord(ratio) + '，' + (item.pic || item.line || '画面') + '；换一个不同构图和景别，保持同一主题和人物';
+      let res = null;
+      try {
+        res = await JCO_KERNEL.draw({
+          prompt: prompt,
+          size: '1K',
+          sizePx: MEDIA.imageSizeFor(ratio, '1K'),
+          aspect: ratio,
+          model: configuredModel('image', ''),
+        });
+      } catch (e) {
+        res = { ok: false, error: String((e && e.message) || e) };
+      }
+      if (res && res.ok && (res.dataUrl || res.url)) {
+        let src = res.dataUrl || res.url;
+        let savedPath = '';
+        try {
+          const sys = window.jco && window.jco.sys;
+          if (sys && sys.saveAsset) {
+            const saved = await sys.saveAsset(res.dataUrl ? { kind: 'image', dataUrl: res.dataUrl } : { kind: 'image', url: res.url });
+            if (saved && saved.ok && saved.path) {
+              savedPath = saved.path;
+              src = 'file:///' + String(saved.path).replace(/\\/g, '/');
+            }
+          }
+        } catch (e) {}
+        item.picSrc = src;
+        item.picPath = savedPath;
+        if (d.videos && d.videos[i]) delete d.videos[i];
+        delete d._changingPic;
+        markAdjusted();
+        jcoDraftsSave();
+        renderDrafts();
+        renderShots();
+        showToast('第 ' + (i + 1) + ' 段画面已重画。已出过的这段需要重新出片。');
+      } else {
+        delete d._changingPic;
+        renderShots();
+        showToast('第 ' + (i + 1) + ' 段没换成：' + ((res && res.error) || '再试一次'));
+      }
+    }
+
     /* ---------- 分段出真视频（Agnes 异步任务，单段约 3~4 分钟） ---------- */
     async function makeShotVideo(i, item) {
-      if (!JCO_KERNEL || !currentDraft) return;
+      if (!JCO_KERNEL || !currentDraft) {
+        showToast('内核还没就绪，等两秒再试。');
+        return;
+      }
       const videos = (currentDraft.videos = currentDraft.videos || {});
       if (videos[i] && videos[i].status === 'doing') return;
       videos[i] = { status: 'doing' };
       renderShots();
-      const aspect = state.ratio === '9:16' ? '9:16' : (state.ratio === '16:9' ? '16:9' : '1:1');
+      const d = currentDraft;
+      const aspect = d.ratio === '9:16' ? '9:16' : (d.ratio === '16:9' ? '16:9' : '1:1');
+      const shotCount = Array.isArray(d.shots) && d.shots.length > 0 ? d.shots.length : 1;
+      const seconds = MEDIA.shotSecondsFor(d.duration, shotCount);
+      const size = '720P';
+      const videoModel = configuredModel('video', '');
       const prompt = (item.pic ? item.pic + '。' : '') + (item.line || '') + (currentDraft.fixNote ? ('。（修改要求：' + currentDraft.fixNote + '）') : '');
       let res = null;
       for (let attempt = 0; attempt < 4; attempt += 1) {
-        res = await JCO_KERNEL.video({ prompt: prompt, seconds: 5, aspect: aspect });
+        try {
+          res = await JCO_KERNEL.video({
+            prompt: prompt,
+            seconds: seconds,
+            aspect: aspect,
+            size: size,
+            model: videoModel,
+          });
+        } catch (e) {
+          res = { ok: false, error: String((e && e.message) || e) };
+        }
         if (res && res.ok) break;
         const msg = String((res && res.error) || '');
         if (attempt < 3 && /队列已满|rate|429|503|稍后|重试/i.test(msg)) {
@@ -1842,10 +2071,11 @@
           }
         } catch (e) {}
         videos[i] = { status: 'done', url: src, path: savedPath, videoId: res.videoId || '' };
-        jcoLogAdd('shot', '出片：第 ' + (i + 1) + ' 段', '5 秒 · 720P');
+        jcoLogAdd('shot', '出片：第 ' + (i + 1) + ' 段', seconds + ' 秒 · ' + size);
         jcoNotifyDone('第 ' + (i + 1) + ' 段视频好了', '回做视频页点「看这段」');
       } else {
         videos[i] = { status: 'failed', error: (res && res.error) || '未知错误' };
+        showToast('第 ' + (i + 1) + ' 段没出成：' + videos[i].error + '，点「重试」再试。');
       }
       jcoDraftsSave();
       renderDrafts();
@@ -1853,19 +2083,32 @@
     }
     async function makeAllVideos(rows) {
       if (!currentDraft) return;
+      if (!JCO_KERNEL) {
+        showToast('内核还没就绪，等两秒再试。');
+        return;
+      }
       const videos = (currentDraft.videos = currentDraft.videos || {});
       for (let i = 0; i < rows.length; i++) {
         if (videos[i] && videos[i].status === 'done') continue;
         await makeShotVideo(i, rows[i]);
       }
-      jcoNotifyDone('全部出片完成', '共 ' + rows.length + ' 段，回做视频页过目');
-      showToast('全部出好了：每段点「看这段」预览，不满意的段可以重出。');
+      const progress = MEDIA.videoProgress(currentDraft);
+      const failed = Math.max(0, rows.length - progress.done);
+      if (progress.complete) {
+        jcoNotifyDone('全部出片完成', '共 ' + rows.length + ' 段，回做视频页过目');
+        showToast('全部出好了：每段点「看这段」预览，不满意的段可以重出。');
+      } else {
+        jcoNotifyDone('出片结束，还有没出成的', '已出 ' + progress.done + ' / ' + rows.length + ' 段');
+        showToast('出片结束：成功 ' + progress.done + ' 段，还有 ' + failed + ' 段没出成，点对应「重试」。');
+      }
     }
     function playShotVideo(url, i) {
       const pop = document.getElementById('videoPop');
       const v = document.getElementById('vpVideo');
       if (!pop || !v || !url) return;
-      document.getElementById('vpTitle').textContent = '第 ' + (i + 1) + ' 段 · 5 秒 · 720P';
+      const shotCount = currentDraft && Array.isArray(currentDraft.shots) && currentDraft.shots.length > 0 ? currentDraft.shots.length : 1;
+      const seconds = MEDIA.shotSecondsFor(currentDraft ? currentDraft.duration : '', shotCount);
+      document.getElementById('vpTitle').textContent = '第 ' + (i + 1) + ' 段 · ' + seconds + ' 秒 · 720P';
       v.src = url;
       pop.hidden = false;
       v.play().catch(() => {});
@@ -1940,7 +2183,9 @@
 
     function renderImgBoard() {
       const big = $('ibBig');
-      const realImgs = (currentDraft && Array.isArray(currentDraft.images) && currentDraft.images.length > 0) ? currentDraft.images : null;
+      const normalized = currentDraft ? MEDIA.normalizeImages(currentDraft.images) : [];
+      if (currentDraft) currentDraft.images = normalized;
+      const realImgs = normalized.length > 0 ? normalized : null;
       const count = realImgs ? realImgs.length : IMG_COUNT;
       if (imgIdx >= count) imgIdx = 0;
       big.className = 'ib-big ' + imgClass(imgIdx);
@@ -1988,15 +2233,45 @@
           return;
         }
         showToast('再画 3 张……');
-        const ratioWord = state.ratio === '9:16' ? '9:16 竖屏' : (state.ratio === '16:9' ? '16:9 横屏' : '1:1 方形');
-        const base = currentDraft.idea || '画面';
+        const d = currentDraft;
+        const ratioWord = MEDIA.aspectWord(d.ratio);
+        const imageResolution = d.res || '1K';
+        const imageModel = configuredModel('image', '');
+        const base = d.idea || '画面';
+        const existing = MEDIA.normalizeImages(d.images);
         const more = [];
         for (let i = 0; i < 3; i++) {
-          const r = await JCO_KERNEL.draw({ prompt: ratioWord + '，' + base + '（第 ' + (currentDraft.images.length + i + 1) + ' 个角度，与已有画面不重复）' });
-          if (r && r.ok && (r.dataUrl || r.url)) more.push({ src: r.dataUrl || r.url, prompt: base });
+          let r = null;
+          try {
+            r = await JCO_KERNEL.draw({
+              prompt: ratioWord + '，' + base + '（第 ' + (existing.length + i + 1) + ' 个角度，与已有画面不重复）',
+              size: imageResolution,
+              sizePx: MEDIA.imageSizeFor(d.ratio, imageResolution),
+              aspect: d.ratio,
+              model: imageModel,
+            });
+          } catch (e) {
+            r = { ok: false, error: String((e && e.message) || e) };
+          }
+          if (r && r.ok && (r.dataUrl || r.url)) {
+            let src = r.dataUrl || r.url;
+            let savedPath = '';
+            try {
+              const sys = window.jco && window.jco.sys;
+              if (sys && sys.saveAsset) {
+                const saved = await sys.saveAsset(r.dataUrl ? { kind: 'image', dataUrl: r.dataUrl } : { kind: 'image', url: r.url });
+                if (saved && saved.ok && saved.path) {
+                  savedPath = saved.path;
+                  src = 'file:///' + String(saved.path).replace(/\\/g, '/');
+                }
+              }
+            } catch (e) {}
+            more.push({ src: src, path: savedPath, prompt: base });
+          }
         }
         if (more.length === 0) { showToast('没画出来，再试一次。'); return; }
-        currentDraft.images = currentDraft.images.concat(more);
+        d.images = existing.concat(more);
+        jcoDraftsSave();
         renderDrafts();
         renderImgBoard();
         jcoLogAdd('material', 'AI 加图', more.length + ' 张');
@@ -2007,7 +2282,8 @@
     }
 
     function ibStep(d) {
-      const realImgs = (currentDraft && Array.isArray(currentDraft.images) && currentDraft.images.length > 0) ? currentDraft.images : null;
+      const normalized = currentDraft ? MEDIA.normalizeImages(currentDraft.images) : [];
+      const realImgs = normalized.length > 0 ? normalized : null;
       const count = realImgs ? realImgs.length : IMG_COUNT;
       imgIdx = (imgIdx + d + count) % count;
       renderImgBoard();
@@ -2071,16 +2347,45 @@
         showToast('这版还没有真图可改：先在底部写要求生成一版图。');
         return;
       }
+      currentDraft.images = MEDIA.normalizeImages(currentDraft.images);
+      if (currentDraft.images.length === 0) {
+        showToast('这版还没有可用图片：先生成一版图。');
+        return;
+      }
       sel.classList.add('working');
       const base = (currentDraft.images[imgIdx] && currentDraft.images[imgIdx].prompt) || currentDraft.idea || '画面';
-      const ratioWord = state.ratio === '9:16' ? '9:16 竖屏' : (state.ratio === '16:9' ? '16:9 横屏' : '1:1 方形');
-      const r = await JCO_KERNEL.draw({ prompt: ratioWord + '，' + base + '；按这个要求调整：' + v + '（整图重绘）' });
+      const ratioWord = MEDIA.aspectWord(currentDraft.ratio);
+      let r = null;
+      try {
+        r = await JCO_KERNEL.draw({
+          prompt: ratioWord + '，' + base + '；按这个要求调整：' + v + '（整图重绘）',
+          size: currentDraft.res || '1K',
+          sizePx: MEDIA.imageSizeFor(currentDraft.ratio, currentDraft.res),
+          aspect: currentDraft.ratio,
+          model: configuredModel('image', ''),
+        });
+      } catch (e) {
+        r = { ok: false, error: String((e && e.message) || e) };
+      }
       sel.classList.remove('working');
       sel.style.display = 'none';
       selRect = null;
       if (r && r.ok && (r.dataUrl || r.url)) {
-        currentDraft.images = currentDraft.images.concat([{ src: r.dataUrl || r.url, prompt: base + '（改：' + v + '）' }]);
+        let src = r.dataUrl || r.url;
+        let savedPath = '';
+        try {
+          const sys = window.jco && window.jco.sys;
+          if (sys && sys.saveAsset) {
+            const saved = await sys.saveAsset(r.dataUrl ? { kind: 'image', dataUrl: r.dataUrl } : { kind: 'image', url: r.url });
+            if (saved && saved.ok && saved.path) {
+              savedPath = saved.path;
+              src = 'file:///' + String(saved.path).replace(/\\/g, '/');
+            }
+          }
+        } catch (e) {}
+        currentDraft.images = currentDraft.images.concat([{ src: src, path: savedPath, prompt: base + '（改：' + v + '）' }]);
         imgIdx = currentDraft.images.length - 1;
+        jcoDraftsSave();
         renderDrafts();
         renderImgBoard();
         markAdjusted();
@@ -2116,6 +2421,7 @@
         if (script && script.topic && Array.isArray(script.lines) && script.lines.length > 0) parts.push('《' + String(script.topic).slice(0, 18) + '》稿子 ' + script.lines.length + ' 句');
         else parts.push('还没有稿子（去「文案」页写一篇）');
         parts.push(mats > 0 ? ('素材 ' + mats + ' 件') : '素材还没导入');
+        if (pickedMaterials.length > 0) parts.push('本轮带素材 ' + pickedMaterials.length + ' 件');
         el.textContent = parts.join(' · ');
       }
       paint();
@@ -2175,6 +2481,7 @@
           }
           drafts.length = 0;
           storeItems.forEach(function (d) {
+            normalizeLoadedDraft(d);
             drafts.push(d);
             draftSeq = Math.max(draftSeq, Number(d.id) || 0);
           });
@@ -2193,6 +2500,7 @@
       var saved = jcoDraftsLoad();
       if (saved.length > 0) {
         saved.forEach(function (d) {
+          normalizeLoadedDraft(d);
           drafts.push(d);
           draftSeq = Math.max(draftSeq, d.id || 0);
         });

@@ -2,6 +2,26 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## 0.6.0-beta.24 (2026-10-20)
+
+### Features
+
+* **create:** 做图参数真正下发：`size` 使用 1K/2K/4K，`aspect_ratio` 使用所选比例；2K 3:4 实测 1728×2304
+* **create:** 做图张数不足时补齐画面方案，空图片占位不再进入草稿、计数和大图板
+* **create:** 做视频按草稿总时长计算每段秒数，并把秒数、720P、视频模型真正传给视频接口
+* **create:** “换画面”改为调用图片模型重画静帧，不再轮换开发期固定演示词
+* **materials:** 素材箱卡片改为 3:4 竖向；从创作页进入选择模式，选中后可带回创作并作为提示词参考
+* **guard:** 视频未出片、图片无可用成图时不能点“这版可以了”，避免空壳草稿进入发布
+
+### Fixes
+
+* **create:** 5 秒视频只需 1 段分镜；分镜解析兼容单个对象并接受 1 段结果，不再误删合法草稿
+* **create:** 出片失败立即提示并保留失败段，全部出片结束后如实汇报成功/失败数量
+* **create:** 去掉真实模式下的演示分镜兜底、假标题和假配音/字幕进度文案；草稿参数按创建时快照执行
+* **testing:** 新增媒体参数单测、素材选择/3:4/空图片/审批门 E2E，以及真实图片+视频模型 UI 冒烟脚本
+
+> 注：0.6.0-beta.5 至 beta.23 的详细变更此前没有逐条写入本文件，历史以 `git log` 为准；本轮同步更新了项目现状、运行手册和发布记录。
+
 ## 0.6.0-beta.4 (2026-10-19)
 
 ### Features

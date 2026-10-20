@@ -48,6 +48,7 @@
     border: none; padding: 0; overflow: hidden; cursor: pointer; text-align: left;
     font-family: inherit; display: flex; flex-direction: column;
     transition: transform 0.16s var(--ease), box-shadow 0.16s var(--ease);
+    user-select: none;
   }
 
 .mat:hover { transform: translateY(-2px); box-shadow: var(--shadow); }
@@ -57,9 +58,9 @@
 .mat:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
 .mat .ph {
-    height: 88px; background: var(--tint); color: var(--text-3);
+    aspect-ratio: 3 / 4; height: auto; background: var(--tint); color: var(--text-3);
     display: flex; align-items: center; justify-content: center; font-size: 26px;
-    position: relative;
+    position: relative; overflow: hidden;
   }
 
 .mat .ph .ph-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; border-radius: 20px 20px 0 0; }
@@ -101,6 +102,35 @@
 
 .mat .src .idea { color: var(--accent); }
 
+.mat .pick-check {
+    position: absolute; top: 10px; right: 10px; z-index: 2;
+    width: 26px; height: 26px; border-radius: 999px;
+    display: none; align-items: center; justify-content: center;
+    color: #ffffff; background: rgba(30, 30, 34, 0.42);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.16);
+    font-size: 15px; pointer-events: none;
+  }
+
+.pick-mode .mat .pick-check { display: flex; }
+
+.mat.picked .pick-check { background: var(--accent); }
+
+.mat .mat-eye {
+    position: absolute; top: 10px; left: 10px; z-index: 2;
+    width: 30px; height: 30px; border: none; border-radius: 999px;
+    display: none; align-items: center; justify-content: center;
+    color: #ffffff; background: rgba(30, 30, 34, 0.42);
+    font-size: 15px; cursor: pointer;
+  }
+
+.pick-mode .mat .mat-eye { display: flex; }
+
+.mat .mat-eye:hover { background: rgba(30, 30, 34, 0.62); }
+
+.mat .mat-eye:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.mat.picked { outline: 2px solid var(--accent); outline-offset: 2px; }
+
 .empty { grid-column: 1 / -1; text-align: center; color: var(--text-3); font-size: 14px; padding: 40px 0; }
 
 /* AI 找画面横条 */
@@ -136,6 +166,20 @@
 
 .pinbar > * { margin-top: 0 !important; max-width: none; margin-left: 0; margin-right: 74px; }
 
+.pick-bar {
+    display: none; align-items: center; gap: 10px;
+    background: var(--card); border-radius: 20px; box-shadow: var(--shadow);
+    padding: 10px 12px 10px 18px;
+  }
+
+.pick-mode .pick-bar { display: flex; margin-top: 8px !important; }
+
+.pick-count { font-size: 13px; color: var(--text-2); white-space: nowrap; }
+
+.pick-bar .spacer { flex: 1; }
+
+.pick-bar .go-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
 /* DSH 规范：正圆与胶囊保持圆弧（其余圆角走超椭圆） */
   .me .ava, .mm-head .ava, .msg.ai .ava, .card .go, .send, .ghost, .ghost-btn, .btn-sm, .act,
   .cp-act, .cp-send, .agent-chip, .badge, .b-role, .s-badge, .stage, .r-dot,
@@ -154,7 +198,7 @@
 
 @media (max-width: 1100px) { .grid { grid-template-columns: repeat(3, 1fr); } }
 
-@media (max-width: 860px) { .sidebar { display: none; } .wrap { padding: 24px 18px 60px; } .grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 860px) { .sidebar { display: none; } .wrap { padding: 24px 18px 60px; } .grid { grid-template-columns: repeat(2, 1fr); } .pick-bar { flex-wrap: wrap; } .pick-bar .spacer { flex-basis: 100%; } }
   </style>
 <script>
   /* 提前恢复侧栏展开状态，避免页面加载时闪一下 */
@@ -248,6 +292,12 @@
             <input id="aiInp" placeholder="缺什么画面说一句，比如：来点教室上课的画面">
             <button class="ghost" onclick="aiFind()">AI 帮你找</button>
           </div>
+        <div class="pick-bar" id="pickBar" aria-live="polite">
+          <span class="pick-count" id="pickCount">已选 0 件</span>
+          <span class="spacer"></span>
+          <button class="ghost" type="button" onclick="cancelPick()">取消</button>
+          <button class="go-btn" id="pickDone" type="button" onclick="confirmPick()" disabled>带回创作</button>
+        </div>
       </div>
     </main>
   </div>
@@ -293,6 +343,64 @@
     const gridEl = document.getElementById('grid');
     const toastEl = document.getElementById('toast');
     const ICON = { video: 'ti-video', photo: 'ti-photo', star: 'ti-star', audio: 'ti-music' };
+    const PICK_PARAMS = new URLSearchParams(location.search || '');
+    const PICK_MODE = PICK_PARAMS.get('pick') === '1';
+    const PICK_RETURN = (function () {
+      var value = String(PICK_PARAMS.get('return') || '');
+      return /^J\.Co[^/\\:]*\.html$/.test(value) ? value : 'J.Co工作台-做视频.html';
+    })();
+    const PICKED = new Set();
+
+    function materialKey(m) {
+      return String((m && (m.path || (m.name + '|' + m.src))) || '');
+    }
+
+    function updatePickBar() {
+      var count = PICKED.size;
+      var countEl = document.getElementById('pickCount');
+      var doneEl = document.getElementById('pickDone');
+      if (countEl) countEl.textContent = '已选 ' + count + ' 件';
+      if (doneEl) doneEl.disabled = count === 0;
+    }
+
+    function togglePick(m, el) {
+      var key = materialKey(m);
+      if (PICKED.has(key)) PICKED.delete(key);
+      else PICKED.add(key);
+      if (el) {
+        el.classList.toggle('picked', PICKED.has(key));
+        el.setAttribute('aria-pressed', PICKED.has(key) ? 'true' : 'false');
+      }
+      updatePickBar();
+    }
+
+    function confirmPick() {
+      var items = MATERIALS.filter(function (m) { return PICKED.has(materialKey(m)); });
+      if (items.length === 0) {
+        showToast('先选至少一件素材，再带回创作。');
+        return;
+      }
+      try {
+        sessionStorage.setItem('jco-picked-materials', JSON.stringify({ items: items, at: Date.now() }));
+      } catch (e) {
+        showToast('这台电脑的临时存储不可用，先别关页面，再试一次。');
+        return;
+      }
+      location.href = PICK_RETURN;
+    }
+
+    function cancelPick() {
+      try { sessionStorage.removeItem('jco-picked-materials'); } catch (e) {}
+      location.href = PICK_RETURN;
+    }
+
+    if (PICK_MODE) {
+      document.body.classList.add('pick-mode');
+      var pickSub = document.querySelector('.page-head .sub');
+      var pickHint = document.querySelector('.sec-head .hint');
+      if (pickSub) pickSub.textContent = '选择要带回创作页的素材，选好后点底部「带回创作」。';
+      if (pickHint) pickHint.textContent = '点卡片选中；点左上角眼睛可先预览。';
+    }
 
     function showToast(msg) {
       toastEl.textContent = msg;
@@ -385,12 +493,16 @@
         if (!res || !res.ok) { showToast('没打开选择框：' + ((res && res.error) || '未知错误')); return; }
         var files = res.files || [];
         if (files.length === 0) return;
+        var added = [];
         files.forEach(function (f) {
           var ext = String(f.name).split('.').pop().toLowerCase();
           var type = ['mp4', 'mov', 'mkv', 'webm'].indexOf(ext) >= 0 ? 'video'
             : (['mp3', 'wav', 'm4a', 'aac'].indexOf(ext) >= 0 ? 'audio' : 'photo');
-          MATERIALS.unshift({ cat: 'mine', type: type, name: f.name, src: '导入 · 本机文件', badge: '', wm: false, imported: true, path: f.path });
+          var item = { cat: 'mine', type: type, name: f.name, src: '导入 · 本机文件', badge: '', wm: false, imported: true, path: f.path };
+          MATERIALS.unshift(item);
+          added.push(item);
         });
+        if (PICK_MODE) added.forEach(function (m) { PICKED.add(materialKey(m)); });
         jcoMaterialsSave();
         document.querySelectorAll('.tab').forEach(function (t) { t.classList.toggle('active', t.dataset.f === 'mine'); });
         render('mine');
@@ -457,12 +569,16 @@
       gridEl.innerHTML = '';
       const list = filter === 'all' ? MATERIALS : MATERIALS.filter((m) => m.cat === filter);
       if (list.length === 0) {
-        gridEl.innerHTML = '<div class="empty">这里还空着。去收集一些吧。</div>';
+        gridEl.innerHTML = '<div class="empty">' + (PICK_MODE ? '这里还空着。点右上「导入素材」把要用的料收进来。' : '这里还空着。去收集一些吧。') + '</div>';
+        updatePickBar();
         return;
       }
       list.forEach((m, i) => {
-        const el = document.createElement('button');
+        const el = document.createElement('div');
         el.className = 'mat anim';
+        el.setAttribute('role', 'button');
+        el.tabIndex = 0;
+        if (PICK_MODE) el.setAttribute('aria-pressed', PICKED.has(materialKey(m)) ? 'true' : 'false');
         el.innerHTML = `
           <div class="ph"><span class="ti ${ICON[m.type]}"></span>${m.badge ? `<span class="badge">${m.badge}</span>` : ''}${m.wm ? '<span class="badge wm">已去水印</span>' : ''}</div>
           <div class="info">
@@ -478,13 +594,44 @@
           img.alt = '';
           el.querySelector('.ph').prepend(img);
         }
-        el.addEventListener('click', () => {
+        const ph = el.querySelector('.ph');
+        const check = document.createElement('span');
+        check.className = 'pick-check';
+        check.setAttribute('aria-hidden', 'true');
+        check.innerHTML = '<span class="ti ti-check"></span>';
+        ph.appendChild(check);
+        if (PICK_MODE && m.path) {
+          const eye = document.createElement('button');
+          eye.className = 'mat-eye';
+          eye.type = 'button';
+          eye.setAttribute('aria-label', '预览 ' + m.name);
+          eye.innerHTML = '<span class="ti ti-eye"></span>';
+          eye.addEventListener('click', function (e) {
+            e.stopPropagation();
+            openPreview(m);
+          });
+          ph.appendChild(eye);
+        }
+        const activate = () => {
+          if (PICK_MODE) {
+            togglePick(m, el);
+            return;
+          }
           if (m.path) { openPreview(m); return; }
           showToast('「' + m.name + '」：' + (m.src || '这条先记着'));
+        };
+        el.addEventListener('click', activate);
+        el.addEventListener('keydown', function (e) {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            activate();
+          }
         });
+        if (PICK_MODE) el.classList.toggle('picked', PICKED.has(materialKey(m)));
         gridEl.appendChild(el);
         setTimeout(() => el.classList.add('in'), 30 + i * 40);
       });
+      updatePickBar();
     }
 
     document.querySelectorAll('.tab').forEach((tab) => {

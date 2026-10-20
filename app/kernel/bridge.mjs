@@ -295,11 +295,22 @@ export async function drawImage(payload) {
     }
     const prompt = String((payload && payload.prompt) || '').trim()
     if (!prompt) return { ok: false, error: '没给画面描述' }
+    const requestedModel = String((payload && payload.model) || '').trim()
+    const size = String((payload && payload.size) || '').trim()
+    const sizePx = String((payload && payload.sizePx) || '').trim()
+    const aspect = String((payload && payload.aspect) || '').trim()
+    if (requestedModel) model = requestedModel
     if (!model) model = 'agnes-image-2.5-flash'
+    const body = { model, prompt, n: 1, response_format: 'b64_json' }
+    // 比例必须落到接口参数上。只在提示词里写“3:4”，平台仍会按默认方形出图。
+    if (size) body.size = size
+    if (aspect) body.aspect_ratio = aspect
+    // 通用 OpenAI 兼容接口通常认像素尺寸；Agnes 认 1K/2K/4K 档位。
+    if (img.src !== 'agnes' && sizePx) body.size = sizePx
     const res = await fetch(baseUrl.replace(/\/+$/, '') + '/images/generations', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + key },
-      body: JSON.stringify({ model, prompt, n: 1, response_format: 'b64_json' }),
+      body: JSON.stringify(body),
       signal: AbortSignal.timeout(180000),
     })
     if (!res.ok) {
@@ -345,6 +356,9 @@ export async function videoGenerate(payload) {
     if (!baseUrl || !key) return { ok: false, error: '还没配「出片成视频」的 Key：去「设置 → AI 大脑 → 出片成视频」填一次。' }
     const prompt = String((payload && payload.prompt) || '').trim()
     if (!prompt) return { ok: false, error: '没给画面描述' }
+    const requestedModel = String((payload && payload.model) || '').trim()
+    const size = String((payload && payload.size) || '720P')
+    if (requestedModel) model = requestedModel
     if (!model) model = 'agnes-video-2.5-flash'
     const seconds = String(Math.max(4, Math.min(12, parseInt(payload && payload.seconds, 10) || 5)))
     const aspect = String((payload && payload.aspect) || '9:16')
@@ -354,7 +368,7 @@ export async function videoGenerate(payload) {
     const createRes = await fetch(base + '/videos', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + key },
-      body: JSON.stringify({ model, prompt, mode: 'text', seconds, size: '720P', aspect_ratio: aspect }),
+      body: JSON.stringify({ model, prompt, mode: 'text', seconds, size, aspect_ratio: aspect }),
       signal: AbortSignal.timeout(120000),
     })
     if (!createRes.ok) {
