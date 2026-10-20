@@ -439,6 +439,11 @@ function isLoginEnabled() {
   }
 }
 ipcMain.handle('sys:login', (_event, enable) => {
+  if (JCO_TEST_MODE) {
+    testLoginEnabled = !!enable
+    writeSettings({ __testLoginEnabled: testLoginEnabled })
+    return { ok: true, enabled: testLoginEnabled }
+  }
   try {
     if (enable) {
       const extra = app.isPackaged ? '' : ' "' + path.resolve(__dirname) + '"'
@@ -457,6 +462,7 @@ ipcMain.handle('sys:login', (_event, enable) => {
   }
 })
 ipcMain.handle('sys:login:get', () => {
+  if (JCO_TEST_MODE) return { ok: true, enabled: testLoginEnabled }
   try { return { ok: true, enabled: isLoginEnabled() } } catch (error) { return { ok: false } }
 })
 
@@ -624,6 +630,7 @@ ipcMain.handle('sys:open-external', (_event, url) => {
 // ---------- 托盘（真：关窗缩到右下角，点图标回来） ----------
 let tray = null
 let trayEnabled = false
+let testLoginEnabled = false
 function makeTrayIcon() {
   const size = 16
   const buf = Buffer.alloc(size * size * 4)
@@ -674,6 +681,7 @@ function destroyTray() {
 ipcMain.handle('sys:tray', (_event, enable) => {
   trayEnabled = !!enable
   writeSettings({ tray: trayEnabled })
+  if (JCO_TEST_MODE) return { ok: true, enabled: trayEnabled }
   if (trayEnabled) createTray()
   else {
     destroyTray()
@@ -2590,7 +2598,7 @@ function createWindow() {
   win.webContents.on('did-finish-load', () => applyThemeToWindow(win))
   // 托盘开启时：关窗口=缩到托盘（不退出）；托盘菜单「退出」才真退出
   win.on('close', (event) => {
-    if (trayEnabled && !app.isQuitting) {
+    if (trayEnabled && !JCO_TEST_MODE && !app.isQuitting) {
       event.preventDefault()
       win.hide()
     }
@@ -2623,10 +2631,11 @@ if (!gotLock) {
   app.whenReady().then(() => {
     restoreModelConfig()
     const saved = readSettings()
+    testLoginEnabled = saved.__testLoginEnabled === true
     if (saved.theme === 'dark' || saved.theme === 'light') nativeTheme.themeSource = saved.theme
     if (saved.tray === true) {
       trayEnabled = true
-      createTray()
+      if (!JCO_TEST_MODE) createTray()
     }
     createWindow()
     initAutoUpdater()
@@ -2669,6 +2678,6 @@ app.on('before-quit', (event) => {
 })
 
 app.on('window-all-closed', () => {
-  if (trayEnabled && !app.isQuitting) return // 托盘模式：关窗只是收起，应用继续活着
+  if (trayEnabled && !JCO_TEST_MODE && !app.isQuitting) return // 托盘模式：关窗只是收起，应用继续活着
   app.quit()
 })

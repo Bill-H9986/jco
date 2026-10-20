@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-10-20",
+  "updatedAt": "2026-10-21",
   "definition": "每个产品功能必须映射到可自动执行或有明确人工边界的验证证据；P0/P1 不允许没有证据。",
   "features": [
     {
@@ -137,8 +137,8 @@
       "surface": "J.Co设置.html",
       "priority": "P0",
       "status": "covered",
-      "risk": "设置未落盘、Key 泄漏、品牌档案不同源、发布确认可关闭",
-      "automated": ["tests/e2e/settings.spec.mjs", "tests/e2e/m11-settings-brand.spec.mjs", "tests/e2e/theme.spec.mjs", "tests/e2e/m23-settings-restart.spec.mjs"]
+      "risk": "设置未落盘、Key 泄漏、品牌档案不同源、发布确认可关闭、系统开关测试污染真实环境",
+      "automated": ["tests/e2e/settings.spec.mjs", "tests/e2e/m11-settings-brand.spec.mjs", "tests/e2e/theme.spec.mjs", "tests/e2e/m23-settings-restart.spec.mjs", "tests/e2e/m26-system-switch-isolation.spec.mjs"]
     },
     {
       "id": "auto-tasks",

@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## 0.6.0-beta.36 (2026-10-21)
+
+### Fixes
+
+* **testing:** `--jco-test` 下开机启动与托盘开关只写受控测试 profile，不再触碰真实 Windows Run 注册表或创建真实托盘
+* **testing:** 测试模式关闭窗口不再被生产托盘逻辑拦截，Playwright 可可靠结束 Electron 主进程
+* **testing:** 新增 M26 E2E，两次真实主进程重启验证开关恢复，并对真实 `J.Co` Run 值做测试前后快照比对
+
 ## 0.6.0-beta.35 (2026-10-20)
 
 ### Fixes
