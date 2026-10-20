@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## 0.6.0-beta.33 (2026-10-20)
+
+### Fixes
+
+* **materials:** 导入图片文件被移动/删除后，素材卡移除坏图并显示“文件不可用”，不再保留破图
+* **materials:** 失效素材预览改为明确降级提示，不再插入加载失败的 img/video/audio
+* **materials:** 选择模式下失效素材不可被选中；已选中的失效项会自动移出
+* **testing:** 新增 M22 失效素材路径 E2E，验证卡片和预览都不出现坏图
+
 ## 0.6.0-beta.32 (2026-10-20)
 
 ### Fixes

@@ -65,6 +65,15 @@
 
 .mat .ph .ph-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; border-radius: 20px 20px 0 0; }
 
+.mat .ph.missing { color: var(--text-2); }
+
+.mat .ph .missing-tag {
+    position: absolute; left: 8px; bottom: 8px; z-index: 2;
+    padding: 3px 7px; border-radius: 999px;
+    background: rgba(120, 120, 128, 0.16); color: var(--text-2);
+    font-size: 11px; font-weight: 600;
+  }
+
 /* 素材预览（导入的本机文件可看） */
   .mat-preview { position: fixed; inset: 0; z-index: 60; display: flex; align-items: center; justify-content: center; background: rgba(20, 20, 24, 0.5); }
 
@@ -85,6 +94,11 @@
 .mp-body { padding: 14px; overflow: auto; display: flex; align-items: center; justify-content: center; }
 
 .mp-body img, .mp-body video { max-width: 100%; max-height: 64vh; border-radius: 12px; }
+
+.preview-missing {
+    width: 100%; padding: 32px 20px; text-align: center;
+    color: var(--text-2); font-size: 13px; line-height: 1.7;
+  }
 
 .mat .badge {
     position: absolute; right: 7px; bottom: 7px;
@@ -523,20 +537,26 @@
       nameEl.textContent = m.name;
       body.innerHTML = '';
       var url = fileUrl(m.path);
+      var showMissing = function () {
+        body.innerHTML = '<div class="preview-missing">文件不可用，可能已经被移动或删除。<br>请重新导入这个素材。</div>';
+      };
       if (m.type === 'video') {
         var v = document.createElement('video');
         v.src = url;
         v.controls = true;
+        v.addEventListener('error', showMissing, { once: true });
         body.appendChild(v);
       } else if (m.type === 'audio') {
         var au = document.createElement('audio');
         au.src = url;
         au.controls = true;
+        au.addEventListener('error', showMissing, { once: true });
         body.appendChild(au);
       } else {
         var img = document.createElement('img');
         img.src = url;
         img.alt = m.name;
+        img.addEventListener('error', showMissing, { once: true });
         body.appendChild(img);
       }
       box.hidden = false;
@@ -569,6 +589,28 @@
       if (ideas > 0) parts.push('AI 找的画面方案 <b>' + ideas + ' 条</b>');
       el.innerHTML = '素材箱里：' + parts.join(' · ') + '。';
     }
+
+    function markMaterialMissing(el, m) {
+      if (!el) return;
+      const ph = el.querySelector('.ph');
+      if (!ph) return;
+      el.dataset.missing = '1';
+      ph.classList.add('missing');
+      const srcEl = el.querySelector('.src');
+      if (srcEl) srcEl.textContent = '文件不可用 · 请重新导入';
+      if (!ph.querySelector('.missing-tag')) {
+        const tag = document.createElement('span');
+        tag.className = 'missing-tag';
+        tag.textContent = '文件不可用';
+        ph.appendChild(tag);
+      }
+      if (PICKED.delete(materialKey(m))) {
+        el.classList.remove('picked');
+        el.setAttribute('aria-pressed', 'false');
+        updatePickBar();
+      }
+    }
+
     function render(filter) {
       renderBoxLine();
       gridEl.innerHTML = '';
@@ -597,6 +639,10 @@
           img.className = 'ph-img';
           img.src = fileUrl(m.path);
           img.alt = '';
+          img.addEventListener('error', function () {
+            img.remove();
+            markMaterialMissing(el, m);
+          }, { once: true });
           el.querySelector('.ph').prepend(img);
         }
         const ph = el.querySelector('.ph');
@@ -618,6 +664,11 @@
           ph.appendChild(eye);
         }
         const activate = () => {
+          if (el.dataset.missing === '1') {
+            if (PICK_MODE) showToast('这个素材文件不可用，先重新导入。');
+            else openPreview(m);
+            return;
+          }
           if (PICK_MODE) {
             togglePick(m, el);
             return;
