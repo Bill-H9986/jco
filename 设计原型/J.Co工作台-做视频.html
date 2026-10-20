@@ -897,6 +897,9 @@
     const toastEl = $('toast');
     const MEDIA = window.JCO_MEDIA;
     let pickedMaterials = [];
+    const PICKED_MATERIALS_KEY = 'jco-make-picked-materials-v1';
+    const PICKED_MATERIALS_MAX_AGE = 7 * 24 * 60 * 60 * 1000;
+    const LAST_DRAFT_KEY = 'jco-make-last-draft-v1';
 
     function showToast(msg) {
       toastEl.textContent = msg;
@@ -905,7 +908,26 @@
       showToast.timer = setTimeout(() => toastEl.classList.remove('show'), 2800);
     }
 
-    function renderPickedMaterials() {
+    function savePickedMaterials() {
+      try {
+        localStorage.setItem(PICKED_MATERIALS_KEY, JSON.stringify({ at: Date.now(), items: pickedMaterials }));
+      } catch (e) {}
+    }
+
+    function normalizePickedMaterials(items) {
+      return (Array.isArray(items) ? items : [])
+        .filter((m) => m && m.name)
+        .slice(0, 12)
+        .map((m) => ({
+          name: String(m.name || ''),
+          type: String(m.type || ''),
+          src: String(m.src || ''),
+          path: String(m.path || ''),
+          cat: String(m.cat || ''),
+        }));
+    }
+
+    function renderPickedMaterials(persist) {
       const bar = $('pickedBar');
       const list = $('pickedList');
       if (!bar || !list) return;
@@ -919,10 +941,11 @@
         chip.querySelector('.nm').textContent = m.name || '素材';
         chip.querySelector('.rm').addEventListener('click', () => {
           pickedMaterials.splice(index, 1);
-          renderPickedMaterials();
+          renderPickedMaterials(true);
         });
         list.appendChild(chip);
       });
+      if (persist) savePickedMaterials();
     }
 
     function pickedPromptLine() {
@@ -951,18 +974,34 @@
     function consumePickedMaterials() {
       try {
         const raw = sessionStorage.getItem('jco-picked-materials');
-        if (!raw) return;
+        if (!raw) return false;
         sessionStorage.removeItem('jco-picked-materials');
         const data = JSON.parse(raw);
-        const items = data && Array.isArray(data.items) ? data.items : [];
-        pickedMaterials = items.filter((m) => m && m.name).slice(0, 12);
-        renderPickedMaterials();
+        pickedMaterials = normalizePickedMaterials(data && data.items);
+        renderPickedMaterials(true);
         if (pickedMaterials.length > 0) {
           setTimeout(() => showToast('已带回 ' + pickedMaterials.length + ' 件素材，会作为这次的创作参考。'), 200);
         }
-      } catch (e) {}
+        return pickedMaterials.length > 0;
+      } catch (e) {
+        return false;
+      }
     }
-    consumePickedMaterials();
+    function restorePickedMaterials() {
+      try {
+        const data = JSON.parse(localStorage.getItem(PICKED_MATERIALS_KEY) || 'null');
+        if (!data || !data.at || Date.now() - Number(data.at) > PICKED_MATERIALS_MAX_AGE) {
+          localStorage.removeItem(PICKED_MATERIALS_KEY);
+          return false;
+        }
+        pickedMaterials = normalizePickedMaterials(data.items);
+        renderPickedMaterials(false);
+        return pickedMaterials.length > 0;
+      } catch (e) {
+        return false;
+      }
+    }
+    if (!consumePickedMaterials()) restorePickedMaterials();
     window.addEventListener('message', function (event) {
       if (event.data && event.data.__jcoPickedMaterials) consumePickedMaterials();
     });
@@ -1573,7 +1612,10 @@
       const d = drafts.find((x) => x.id === id);
       if (!d) return;
       currentDraft = d;
-      try { sessionStorage.setItem('jco-make-last-draft', String(d.id)); } catch (e) {}
+      try {
+        sessionStorage.setItem('jco-make-last-draft', String(d.id));
+        localStorage.setItem(LAST_DRAFT_KEY, String(d.id));
+      } catch (e) {}
       if (d.type === 'image') d.images = MEDIA.normalizeImages(d.images);
       const done = $('done');
       done.classList.add('show');
@@ -1767,6 +1809,9 @@
         renderDrafts();
         let lastId = 0;
         try { lastId = Number(sessionStorage.getItem('jco-make-last-draft')) || 0; } catch (e) {}
+        if (!lastId) {
+          try { lastId = Number(localStorage.getItem(LAST_DRAFT_KEY)) || 0; } catch (e) {}
+        }
         const lastDraft = drafts.find((draft) => Number(draft.id) === lastId) || drafts[0] || null;
         if (lastDraft) openDraft(lastDraft.id, true);
         const active =

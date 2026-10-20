@@ -69,7 +69,7 @@
       "priority": "P1",
       "status": "covered",
       "risk": "导入越界、素材迁移失败、选择回传错误",
-      "automated": ["tests/e2e/m11-materials-store.spec.mjs", "tests/e2e/m9-material.spec.mjs", "tests/e2e/m13-create-media.spec.mjs", "tests/e2e/m18-create-picker-shell.spec.mjs"]
+      "automated": ["tests/e2e/m11-materials-store.spec.mjs", "tests/e2e/m9-material.spec.mjs", "tests/e2e/m13-create-media.spec.mjs", "tests/e2e/m18-create-picker-shell.spec.mjs", "tests/e2e/m20-create-restart-state.spec.mjs"]
     },
     {
       "id": "script-writing",
@@ -90,6 +90,7 @@
         "tests/e2e/m14-create-work-state.spec.mjs",
         "tests/e2e/m18-create-picker-shell.spec.mjs",
         "tests/e2e/m19-cross-page-handoff.spec.mjs",
+        "tests/e2e/m20-create-restart-state.spec.mjs",
         "tests/e2e/m9-video.spec.mjs",
         "tests/e2e/delivery-drone-campaign.spec.mjs"
       ]

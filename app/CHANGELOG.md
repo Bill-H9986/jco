@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## 0.6.0-beta.31 (2026-10-20)
+
+### Fixes
+
+* **create:** 已选素材持久化到本机；切页、页面重载和应用重启后仍恢复，最多保留 12 件，7 天过期
+* **create:** 最后打开的草稿写入本机；sessionStorage 丢失后从 localStorage 恢复，不再退回第一条草稿
+* **testing:** 新增 M20 三条工作态恢复回归：素材重载、最后草稿重载、运行中媒体任务进程重启后中断
+* **testing:** M20 用真实主进程重启验证 `media-jobs` 将旧 PID 的 running 任务标为 interrupted，已完成结果保留
+
 ## 0.6.0-beta.30 (2026-10-20)
 
 ### Features
