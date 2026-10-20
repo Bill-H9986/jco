@@ -16,6 +16,7 @@ function normalizeVideoRes(value) {
 
 function createMediaJobService(deps) {
   const dir = deps.dir
+  const retryDelayMs = Math.max(0, Number(deps.retryDelayMs) || 60000)
   fs.mkdirSync(dir, { recursive: true })
   const jobs = new Map()
 
@@ -176,7 +177,13 @@ function createMediaJobService(deps) {
     if (job.status === 'running') {
       const done = job.items.filter((entry) => entry.ok).length
       job.status = job.total > 0 && done === job.total ? 'done' : done > 0 ? 'partial' : 'failed'
-      if (!job.error && job.status !== 'done') job.error = '部分图片没有生成成功'
+      if (!job.error && job.status !== 'done') {
+        const firstError = job.items.find((entry) => entry.ok !== true && entry.error)?.error
+        job.error =
+          job.status === 'partial'
+            ? '部分图片没有生成成功' + (firstError ? '：' + firstError : '')
+            : firstError || '出图失败'
+      }
       job.progress = 100
       job.stepText =
         job.status === 'done' ? '图片全部出好' : job.status === 'partial' ? '部分图片出好，失败项可重试' : '出图失败'
@@ -237,7 +244,7 @@ function createMediaJobService(deps) {
           if (result && result.ok) break
           const message = String((result && result.error) || '')
           if (attempt < 3 && /队列已满|rate|429|503|稍后|重试/i.test(message)) {
-            await new Promise((resolve) => setTimeout(resolve, 60000))
+            await new Promise((resolve) => setTimeout(resolve, retryDelayMs))
             continue
           }
           break
@@ -288,7 +295,13 @@ function createMediaJobService(deps) {
     if (job.status === 'running') {
       const done = job.items.filter((entry) => entry.status === 'done').length
       job.status = job.total > 0 && done === job.total ? 'done' : done > 0 ? 'partial' : 'failed'
-      if (!job.error && job.status !== 'done') job.error = '部分分镜没有出片'
+      if (!job.error && job.status !== 'done') {
+        const firstError = job.items.find((entry) => entry.status !== 'done' && entry.error)?.error
+        job.error =
+          job.status === 'partial'
+            ? '部分分镜没有出片' + (firstError ? '：' + firstError : '')
+            : firstError || '出片失败'
+      }
       job.progress = 100
       job.stepText =
         job.status === 'done' ? '视频全部出好' : job.status === 'partial' ? '部分视频出好，失败段可重试' : '出片失败'

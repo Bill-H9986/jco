@@ -12,7 +12,9 @@
       "automated": [
         "tests/e2e/m10-shell.spec.mjs",
         "tests/e2e/m15-unified-shell-state.spec.mjs",
-        "tests/e2e/m17-autonomous-ui.spec.mjs"
+        "tests/e2e/m17-autonomous-ui.spec.mjs",
+        "tests/e2e/m27-all-page-work-state.spec.mjs",
+        "tests/e2e/m28-switch-performance.spec.mjs"
       ]
     },
     {
@@ -94,6 +96,7 @@
         "tests/e2e/m21-create-parameter-detail-state.spec.mjs",
         "tests/e2e/m24-create-media-missing-path.spec.mjs",
         "tests/e2e/m25-transient-popup-hide.spec.mjs",
+        "tests/unit/media-jobs.test.mjs",
         "tests/e2e/m9-video.spec.mjs",
         "tests/e2e/delivery-drone-campaign.spec.mjs"
       ]
@@ -182,6 +185,39 @@
         "tests/e2e/m16-ui-contract.spec.mjs",
         "scripts/ui-inventory.mjs",
         "scripts/check-ui-source.mjs"
+      ]
+    },
+    {
+      "id": "page-work-state",
+      "surface": "全站",
+      "priority": "P0",
+      "status": "covered",
+      "risk": "普通输入、滚动、筛选和工作态在切页或外壳重载后丢失",
+      "automated": [
+        "tests/e2e/m15-unified-shell-state.spec.mjs",
+        "tests/e2e/m27-all-page-work-state.spec.mjs"
+      ]
+    },
+    {
+      "id": "switch-performance",
+      "surface": "全站",
+      "priority": "P1",
+      "status": "covered",
+      "risk": "缓存切页卡顿、长任务、页面数量失控和持续内存增长",
+      "automated": [
+        "tests/e2e/m28-switch-performance.spec.mjs",
+        "scripts/soak-ui.mjs"
+      ]
+    },
+    {
+      "id": "transient-overlay-lifecycle",
+      "surface": "全站",
+      "priority": "P0",
+      "status": "covered",
+      "risk": "弹窗、菜单、提词器和浮层切页后残留在隐藏缓存页",
+      "automated": [
+        "tests/e2e/m25-transient-popup-hide.spec.mjs",
+        "tests/e2e/m29-transient-overlay-lifecycle.spec.mjs"
       ]
     },
     {

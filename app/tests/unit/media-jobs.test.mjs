@@ -267,4 +267,211 @@ describe('media jobs 后台任务', () => {
     expect(draftsRef.value.items[0].videos['0'].status).toBe('failed')
     fs.rmSync(dir, { recursive: true, force: true })
   })
+
+  it('图片部分失败时保留成功项并标记为 partial', async () => {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'jco-media-image-partial-'))
+    const draftsRef = {
+      value: {
+        version: 1,
+        items: [{ id: 66, idea: '部分失败', type: 'image', status: 'review', images: [], videos: {}, shots: [] }],
+      },
+    }
+    let calls = 0
+    const service = createMediaJobService({
+      dir,
+      readDrafts: () => JSON.parse(JSON.stringify(draftsRef.value)),
+      writeDrafts: (data) => {
+        draftsRef.value = JSON.parse(JSON.stringify(data))
+      },
+      getBridge: async () => ({
+        drawImage: async () => {
+          calls += 1
+          if (calls === 1) throw new Error('第一张失败')
+          return { ok: true, dataUrl: 'data:image/png;base64,AA==' }
+        },
+        videoGenerate: async () => ({ ok: false }),
+      }),
+      saveAsset: async ({ kind }) => ({ ok: true, path: path.join(dir, `${kind}.png`) }),
+      onJob: () => {},
+    })
+    const started = await service.start({
+      kind: 'image',
+      draftId: 66,
+      prompts: ['失败的一张', '成功的一张'],
+      ratio: '3:4',
+      res: '2K',
+      sizePx: '1536x2048',
+    })
+    const finished = await waitFor(() => {
+      const job = service.get(started.job.id)
+      return job && job.status !== 'running' ? job : null
+    })
+    expect(finished.status).toBe('partial')
+    expect(finished.items.map((item) => item.ok)).toEqual([false, true])
+    expect(draftsRef.value.items[0].images).toHaveLength(1)
+    expect(draftsRef.value.items[0].status).toBe('review')
+    expect(draftsRef.value.items[0].stepText).toContain('部分图片')
+    fs.rmSync(dir, { recursive: true, force: true })
+  })
+
+  it('生成结果落盘失败时不能把任务伪装成完成', async () => {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'jco-media-save-fail-'))
+    const draftsRef = {
+      value: {
+        version: 1,
+        items: [{ id: 77, idea: '落盘失败', type: 'image', status: 'review', images: [], videos: {}, shots: [] }],
+      },
+    }
+    const service = createMediaJobService({
+      dir,
+      readDrafts: () => JSON.parse(JSON.stringify(draftsRef.value)),
+      writeDrafts: (data) => {
+        draftsRef.value = JSON.parse(JSON.stringify(data))
+      },
+      getBridge: async () => ({
+        drawImage: async () => ({ ok: true, dataUrl: 'data:image/png;base64,AA==' }),
+        videoGenerate: async () => ({ ok: false }),
+      }),
+      saveAsset: async () => ({ ok: false, error: '磁盘不可写' }),
+      onJob: () => {},
+    })
+    const started = await service.start({
+      kind: 'image',
+      draftId: 77,
+      prompts: ['一张保存失败的图'],
+      ratio: '3:4',
+      res: '1K',
+      sizePx: '1024x1365',
+    })
+    const finished = await waitFor(() => {
+      const job = service.get(started.job.id)
+      return job && job.status !== 'running' ? job : null
+    })
+    expect(finished.status).toBe('failed')
+    expect(finished.items[0]).toMatchObject({ ok: false, error: '磁盘不可写' })
+    expect(draftsRef.value.items[0].images).toEqual([])
+    expect(draftsRef.value.items[0].status).toBe('review')
+    expect(draftsRef.value.items[0].stepText).toBe('磁盘不可写')
+    fs.rmSync(dir, { recursive: true, force: true })
+  })
+
+  it('视频遇到 429 会等待后重试并最终完成', async () => {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'jco-media-retry-'))
+    const draftsRef = {
+      value: {
+        version: 1,
+        items: [
+          {
+            id: 88,
+            idea: '限流重试',
+            type: 'video',
+            status: 'review',
+            shots: [{ line: '一段', pic: 'A' }],
+            videos: {},
+            images: [],
+          },
+        ],
+      },
+    }
+    let calls = 0
+    const service = createMediaJobService({
+      dir,
+      retryDelayMs: 10,
+      readDrafts: () => JSON.parse(JSON.stringify(draftsRef.value)),
+      writeDrafts: (data) => {
+        draftsRef.value = JSON.parse(JSON.stringify(data))
+      },
+      getBridge: async () => ({
+        drawImage: async () => ({ ok: false }),
+        videoGenerate: async () => {
+          calls += 1
+          if (calls === 1) return { ok: false, error: '429 队列已满' }
+          return { ok: true, dataUrl: 'data:video/mp4;base64,AA==' }
+        },
+      }),
+      saveAsset: async ({ kind }) => ({ ok: true, path: path.join(dir, `${kind}.mp4`) }),
+      onJob: () => {},
+    })
+    const started = await service.start({
+      kind: 'video',
+      draftId: 88,
+      shots: [{ index: 0, prompt: '一段', seconds: 5 }],
+      ratio: '9:16',
+      res: '720P',
+    })
+    const finished = await waitFor(() => {
+      const job = service.get(started.job.id)
+      return job && job.status !== 'running' ? job : null
+    })
+    expect(calls).toBe(2)
+    expect(finished.status).toBe('done')
+    expect(draftsRef.value.items[0].videos['0'].status).toBe('done')
+    fs.rmSync(dir, { recursive: true, force: true })
+  })
+
+  it('重试等待期间取消后不再发起下一次模型调用', async () => {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'jco-media-cancel-retry-'))
+    const draftsRef = {
+      value: {
+        version: 1,
+        items: [
+          {
+            id: 99,
+            idea: '重试取消',
+            type: 'video',
+            status: 'review',
+            shots: [{ line: '一段', pic: 'A' }],
+            videos: {},
+            images: [],
+          },
+        ],
+      },
+    }
+    let calls = 0
+    const service = createMediaJobService({
+      dir,
+      retryDelayMs: 40,
+      readDrafts: () => JSON.parse(JSON.stringify(draftsRef.value)),
+      writeDrafts: (data) => {
+        draftsRef.value = JSON.parse(JSON.stringify(data))
+      },
+      getBridge: async () => ({
+        drawImage: async () => ({ ok: false }),
+        videoGenerate: async () => {
+          calls += 1
+          return { ok: false, error: '503 稍后重试' }
+        },
+      }),
+      saveAsset: async ({ kind }) => ({ ok: true, path: path.join(dir, `${kind}.mp4`) }),
+      onJob: () => {},
+    })
+    const started = await service.start({
+      kind: 'video',
+      draftId: 99,
+      shots: [{ index: 0, prompt: '一段', seconds: 5 }],
+      ratio: '9:16',
+      res: '720P',
+    })
+    await waitFor(() => calls === 1)
+    expect(service.cancel(started.job.id).ok).toBe(true)
+    await delay(100)
+    expect(calls).toBe(1)
+    expect(service.get(started.job.id).status).toBe('canceled')
+    fs.rmSync(dir, { recursive: true, force: true })
+  })
+
+  it('空提示词与空分镜不能创建后台任务', async () => {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'jco-media-empty-'))
+    const draftsRef = { value: { version: 1, items: [] } }
+    const service = makeService(dir, draftsRef)
+    expect(await service.start({ kind: 'image', draftId: 1, prompts: [] })).toMatchObject({
+      ok: false,
+      error: '没有图片提示词',
+    })
+    expect(await service.start({ kind: 'video', draftId: 2, shots: [] })).toMatchObject({
+      ok: false,
+      error: '没有视频分镜',
+    })
+    fs.rmSync(dir, { recursive: true, force: true })
+  })
 })

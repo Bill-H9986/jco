@@ -1,7 +1,7 @@
 {
   "name": "jco",
   "productName": "J.Co",
-  "version": "0.6.0-beta.36",
+  "version": "0.6.0-beta.37",
   "description": "J.Co · 自媒体管家（桌面版）",
   "author": "Jay",
   "main": "main.js",
@@ -24,6 +24,7 @@
     "qa:autonomous": "playwright test tests/e2e/m17-autonomous-ui.spec.mjs",
     "qa:installed-ui": "node scripts/qa-installed-ui.mjs",
     "qa:release": "node scripts/release-certify.mjs",
+    "qa:soak": "node scripts/soak-ui.mjs",
     "test:visual": "playwright test -c playwright.visual.config.mjs",
     "test:live-media": "node scripts/live-media-smoke.mjs",
     "release:package": "node scripts/release-package.mjs",

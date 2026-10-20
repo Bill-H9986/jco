@@ -2,6 +2,24 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## 0.6.0-beta.37 (2026-10-21)
+
+### Features
+
+* **shell:** 新增全站瞬态界面生命周期：切页时统一关闭弹层、菜单、通知面板、提词器和知识编辑弹窗
+* **testing:** 新增 `qa:soak` 无人值守 UI 浸泡，连续多轮执行 14 个业务页切换、输入、筛选和滚动，并输出缓存、长任务与内存报告
+
+### Fixes
+
+* **create:** 图片或视频失败时保留模型/落盘的具体原因；部分失败显示“部分失败：具体原因”，不再用泛化文案覆盖“磁盘不可写”等可操作信息
+
+### Tests
+
+* **testing:** 新增 M27，验证 14 个业务页的输入、筛选和滚动在切页返回与外壳重载后恢复
+* **testing:** 新增 M28，验证 240 次缓存页切换的 P95、最大耗时、长任务、页面数量和稳定后内存增量
+* **testing:** 新增 M29，验证首页菜单/通知、选题、文案、自动任务、设置和账号页浮层切页后统一关闭
+* **testing:** 媒体后台任务新增部分失败、落盘失败、429 重试、重试中取消和空任务拒绝单测
+
 ## 0.6.0-beta.36 (2026-10-21)
 
 ### Fixes

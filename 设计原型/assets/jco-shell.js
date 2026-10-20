@@ -46,11 +46,29 @@
       else root.removeAttribute('data-jco-theme')
     } catch (err) {}
   }
+  function closeTransientSurfaces() {
+    var remove = '.mode-pop, .notif-pop, .convo-menu'
+    Array.prototype.forEach.call(document.querySelectorAll(remove), function (node) {
+      if (node.parentNode) node.parentNode.removeChild(node)
+    })
+    Array.prototype.forEach.call(document.querySelectorAll('.overlay.show'), function (node) {
+      node.classList.remove('show')
+    })
+    var hide = '.prompter:not([hidden]), .kb-modal:not([hidden]), .me-menu:not([hidden])'
+    var hideMenus = '.param-menu:not([hidden]), .model-list:not([hidden]), [role="menu"]:not([hidden])'
+    Array.prototype.forEach.call(document.querySelectorAll(hide + ', ' + hideMenus), function (node) {
+      node.hidden = true
+    })
+  }
+  window.JCO_PAGE_LIFECYCLE = { closeTransients: closeTransientSurfaces }
   // 内容页在 iframe 里收不到主进程对顶层注入的 CSS；由外壳把解析后的主题送进来。
   window.addEventListener('message', function (e) {
     var payload = e.data && e.data.__jcoTheme
     if (payload) setThemeAttr(themeOf(payload))
     if (e.data && e.data.__jcoPageHide) {
+      try {
+        closeTransientSurfaces()
+      } catch (err) {}
       try {
         window.dispatchEvent(new Event('jco:pagehide'))
       } catch (err) {}

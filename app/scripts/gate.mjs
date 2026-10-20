@@ -28,6 +28,7 @@ const steps = [
     args: ['playwright', 'test', '-c', 'playwright.visual.config.mjs'],
   },
   { name: '端到端回归 (Playwright)', cmd: 'npx', args: ['playwright', 'test'] },
+  { name: '无人值守 UI 浸泡 (Soak)', cmd: 'npm', args: ['run', 'qa:soak'] },
 ]
 
 const failed = []
