@@ -487,6 +487,30 @@
       if (inpEl) inpEl.focus();
     }
 
+    /* 应用壳复用同一个总管 iframe 时，通过消息切换会话，不再重载整页。 */
+    window.__jcoShellOpenChat = function (request) {
+      if (request === 'new') {
+        newChat();
+        return;
+      }
+      if (request) switchChat(String(request));
+    };
+    window.__jcoShellStartChat = function (seed) {
+      newChat();
+      var inpEl = document.getElementById('inp');
+      if (!inpEl) return;
+      inpEl.value = String(seed || '');
+      inputChanged();
+      if (inpEl.value.trim()) sendUser();
+    };
+    window.addEventListener('message', function (event) {
+      if (event.source !== window.parent || !event.data) return;
+      if (event.data.__jcoShellChat) window.__jcoShellOpenChat(event.data.__jcoShellChat);
+      if (typeof event.data.__jcoShellStartChat === 'string') {
+        window.__jcoShellStartChat(event.data.__jcoShellStartChat);
+      }
+    });
+
     /* 会话操作：分享 / 重命名 / 删除（总管版：用 switchChat / chatsSave / showToast） */
     var jcoConvMenuEl = null;
     function jcoCloseConvMenu() { if (jcoConvMenuEl) { jcoConvMenuEl.remove(); jcoConvMenuEl = null; } }

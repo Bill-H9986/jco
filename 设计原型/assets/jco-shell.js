@@ -39,21 +39,39 @@
   function initThemeBridge() {
     if (IS_EMBEDDED) return
     if (!window.jco || !window.jco.sys || !window.jco.sys.getTheme) return
-    var frame = document.getElementById('jcoFrame')
     var current = 'system'
+    function allFrames() {
+      return Array.prototype.slice.call(document.querySelectorAll('iframe.jco-frame, #jcoFrame'))
+    }
+    function sendCurrent(node) {
+      if (!node || !node.contentWindow) return
+      try { node.contentWindow.postMessage({ __jcoTheme: current }, '*') } catch (err) {}
+    }
     function apply(payload) {
       current = themeOf(payload)
       setThemeAttr(current)
-      if (frame && frame.contentWindow) {
-        try { frame.contentWindow.postMessage({ __jcoTheme: current }, '*') } catch (err) {}
-      }
+      allFrames().forEach(sendCurrent)
     }
     function sync() {
       window.jco.sys.getTheme().then(function (res) { apply(res) }).catch(function () {})
     }
-    if (frame) frame.addEventListener('load', function () {
-      apply({ theme: current, resolved: current })
-    })
+    function bindFrame(node) {
+      if (!node || node.getAttribute('data-jco-theme-bound') === '1') return
+      node.setAttribute('data-jco-theme-bound', '1')
+      node.addEventListener('load', function () { sendCurrent(node) })
+      sendCurrent(node)
+    }
+    allFrames().forEach(bindFrame)
+    var frameWrap = document.querySelector('.frame-wrap')
+    if (frameWrap && window.MutationObserver) {
+      new MutationObserver(function (records) {
+        records.forEach(function (record) {
+          Array.prototype.forEach.call(record.addedNodes || [], function (node) {
+            if (node.nodeType === 1 && node.tagName === 'IFRAME') bindFrame(node)
+          })
+        })
+      }).observe(frameWrap, { childList: true })
+    }
     if (window.jco.sys.onTheme) window.jco.sys.onTheme(apply)
     sync()
     window.addEventListener('focus', sync)
@@ -688,6 +706,7 @@
     injectSidebarLists()
     decorate()
     initThemeBridge()
+    syncSwitchSemantics()
     var currentPage = pageName()
     document.documentElement.setAttribute('data-jco-page', currentPage)
     if (document.getElementById('jcoFrame')) {
@@ -701,6 +720,33 @@
       } catch (err) {}
     }
     document.documentElement.setAttribute('data-jco-ready', '1')
+  }
+  function syncSwitchSemantics() {
+    function sync(root) {
+      var nodes = root && root.querySelectorAll ? root.querySelectorAll('.tg') : []
+      Array.prototype.forEach.call(nodes, function (node) {
+        node.setAttribute('role', 'switch')
+        node.setAttribute('aria-checked', node.classList.contains('on') ? 'true' : 'false')
+      })
+    }
+    sync(document)
+    if (!window.MutationObserver) return
+    new MutationObserver(function (records) {
+      records.forEach(function (record) {
+        if (record.type === 'childList') {
+          Array.prototype.forEach.call(record.addedNodes || [], function (node) {
+            if (node.nodeType !== 1) return
+            if (node.classList && node.classList.contains('tg')) sync(node.parentNode || node)
+            if (node.querySelectorAll) sync(node)
+          })
+          return
+        }
+        var target = record.target
+        if (!target || !target.classList || !target.classList.contains('tg')) return
+        target.setAttribute('role', 'switch')
+        target.setAttribute('aria-checked', target.classList.contains('on') ? 'true' : 'false')
+      })
+    }).observe(document.documentElement, { subtree: true, childList: true, attributes: true, attributeFilter: ['class'] })
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init)
   else init()
@@ -738,4 +784,117 @@
       }
     }
   } catch (err) {}
+
+  // 全站工作台共用的轻量草稿层：页面重载后恢复输入与滚动位置。
+  // 只处理内容区里的普通文本输入，不碰密码、文件、开关和业务真数据。
+  ;(function pageDraftState() {
+    function start() {
+      var main = document.querySelector('main')
+      if (!main || document.getElementById('jcoFrame')) return
+      var page = pageName()
+      if (!page) return
+      var storageKey = 'jco-page-state-v1:' + page
+      var maxAge = 7 * 24 * 60 * 60 * 1000
+      var saveTimer = null
+      var scrollFrame = 0
+      var allowedTypes = { text: 1, search: 1, url: 1, number: 1, email: 1, tel: 1 }
+
+      function scrollNode() {
+        return main.querySelector(':scope > .scroll') || main.querySelector('#chat') || main
+      }
+      function fields() {
+        return Array.prototype.slice.call(main.querySelectorAll('input, textarea, select'))
+      }
+      function persistable(el) {
+        if (!el || el.disabled || el.readOnly) return false
+        if (el.closest('[data-jco-no-persist]')) return false
+        if (el.tagName === 'TEXTAREA') return true
+        if (el.tagName !== 'INPUT') return false
+        if (String(el.getAttribute('type') || 'text').toLowerCase() === 'text') return true
+        return !!allowedTypes[String(el.getAttribute('type') || '').toLowerCase()]
+      }
+      function fieldKey(el, index) {
+        return el.id ? 'id:' + el.id : el.name ? 'name:' + el.name : 'field:' + index
+      }
+      function readState() {
+        try {
+          var state = JSON.parse(localStorage.getItem(storageKey) || 'null')
+          if (!state || !state.at || Date.now() - state.at > maxAge) return null
+          return state
+        } catch (err) {
+          return null
+        }
+      }
+      function saveNow() {
+        clearTimeout(saveTimer)
+        var values = {}
+        fields().forEach(function (el, index) {
+          if (!persistable(el)) return
+          var value = String(el.value || '')
+          if (value) values[fieldKey(el, index)] = value
+        })
+        var state = { at: Date.now(), values: values, scrollTop: Math.max(0, Math.round(scrollNode().scrollTop || 0)) }
+        try {
+          var serialized = JSON.stringify(state)
+          if (serialized.length > 200000) return
+          localStorage.setItem(storageKey, serialized)
+        } catch (err) {}
+      }
+      function scheduleSave() {
+        clearTimeout(saveTimer)
+        saveTimer = setTimeout(saveNow, 260)
+      }
+      function restoreValues() {
+        var state = readState()
+        if (!state || !state.values) return
+        fields().forEach(function (el, index) {
+          if (!persistable(el)) return
+          var saved = state.values[fieldKey(el, index)]
+          if (typeof saved !== 'string' || !saved) return
+          if (!el.value) {
+            el.value = saved
+            el.dispatchEvent(new Event('input', { bubbles: true }))
+          }
+        })
+      }
+      function restoreScroll() {
+        var state = readState()
+        if (!state || !state.scrollTop) return
+        var node = scrollNode()
+        if ((node.scrollTop || 0) === 0) node.scrollTop = state.scrollTop
+      }
+
+      document.addEventListener('input', function (event) {
+        if (persistable(event.target)) scheduleSave()
+      }, true)
+      document.addEventListener('change', function (event) {
+        if (persistable(event.target)) scheduleSave()
+      }, true)
+      document.addEventListener('focusout', function (event) {
+        if (persistable(event.target)) saveNow()
+      }, true)
+      scrollNode().addEventListener(
+        'scroll',
+        function () {
+          if (scrollFrame) return
+          scrollFrame = requestAnimationFrame(function () {
+            scrollFrame = 0
+            scheduleSave()
+          })
+        },
+        { passive: true }
+      )
+      window.addEventListener('pagehide', saveNow)
+      document.addEventListener('visibilitychange', function () {
+        if (document.hidden) saveNow()
+      })
+      window.JCO_PAGE_STATE = { save: saveNow, restore: restoreValues, key: storageKey }
+      restoreValues()
+      setTimeout(restoreValues, 180)
+      setTimeout(restoreScroll, 0)
+      setTimeout(restoreScroll, 220)
+    }
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start)
+    else start()
+  })()
 })()

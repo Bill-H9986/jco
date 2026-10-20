@@ -71,10 +71,11 @@ test('技能库页：16 项合一（12 + 4）；启停真存回存储', async ()
 
     // 点第一张卡的开关：状态真变、真存
     const firstToggle = win.locator('#skillGrid .skl').first().locator('.sk-toggle')
-    const before = await firstToggle.textContent()
+    const before = await firstToggle.getAttribute('aria-checked')
     await firstToggle.click()
-    const after = await firstToggle.textContent()
+    const after = await firstToggle.getAttribute('aria-checked')
     expect(after).not.toBe(before)
+    await expect(firstToggle).toHaveAttribute('role', 'switch')
     const stored = await win.evaluate(() => window.jco.skills.get())
     expect(Array.isArray(stored.items)).toBe(true)
     expect(stored.items.length).toBe(16)

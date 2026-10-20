@@ -269,6 +269,8 @@
   .sk-name { font-size: 14px; font-weight: 600; }
   .sk-desc { font-size: 13px; color: var(--text-2); line-height: 1.65; flex: 1; }
   .sk-foot { display: flex; align-items: center; justify-content: space-between; margin-top: 4px; }
+
+  .sk-state { margin-left: auto; margin-right: 8px; font-size: 12px; color: var(--text-3); }
   .sk-tag { font-size: 12px; color: var(--text-3); background: var(--tint); border-radius: 999px; padding: 2px 9px; }
 </style>
 </head>
@@ -924,13 +926,15 @@
       shown.forEach(function (s) {
         var el = document.createElement('div')
         el.className = 'skl'
-        el.innerHTML = '<div class="sk-ico ti ' + s.icon + '"></div><div class="sk-name"></div><div class="sk-desc"></div><div class="sk-foot"><span class="sk-tag">' + KIND_LABEL[s.kind] + '</span><button class="ghost-btn sk-toggle" type="button"></button></div>'
+        el.innerHTML = '<div class="sk-ico ti ' + s.icon + '"></div><div class="sk-name"></div><div class="sk-desc"></div><div class="sk-foot"><span class="sk-tag">' + KIND_LABEL[s.kind] + '</span><span class="sk-state"></span><button class="tg sk-toggle" type="button"></button></div>'
         el.querySelector('.sk-name').textContent = s.name
         el.querySelector('.sk-desc').textContent = s.desc
         var btn = el.querySelector('.sk-toggle')
+        var stateEl = el.querySelector('.sk-state')
         function paint() {
-          btn.textContent = s.on ? '已启用' : '启用'
-          btn.style.color = s.on ? 'var(--green)' : ''
+          btn.classList.toggle('on', !!s.on)
+          btn.setAttribute('aria-label', (s.on ? '停用 ' : '启用 ') + s.name)
+          stateEl.textContent = s.on ? '已启用' : '未启用'
         }
         paint()
         btn.addEventListener('click', function () {

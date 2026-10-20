@@ -109,10 +109,10 @@
 
 .ask textarea::placeholder { color: var(--text-3); }
 
-.ask-bar { display: flex; align-items: center; gap: 10px; margin-top: 12px; }
+.ask-bar { display: flex; align-items: center; gap: 8px; margin-top: 12px; flex-wrap: nowrap; }
 
   .ask-bar .left, .ask-bar .right { display: flex; align-items: center; gap: 8px; flex: none; }
-  .ask-bar .right { margin-left: auto; }
+  .ask-bar .right { margin-left: 0; }
 
 .ask-bar .mid { flex: 1; display: flex; justify-content: center; min-width: 0; }
 
@@ -179,10 +179,11 @@
 
 /* 参数小分类：每个只显示当前值，点开选 */
 .ask-params {
-  display: flex; flex-wrap: wrap; align-items: center; gap: 8px;
-  padding: 8px 14px 2px;
+  display: flex; flex: 1 1 auto; min-width: 0; flex-wrap: nowrap; align-items: center; gap: 6px;
+  padding: 0; overflow: visible;
 }
 .ask-params .param { position: relative; }
+.ask-params .param { flex: none; }
 .ask-params .param-chip {
   display: inline-flex; align-items: center; gap: 5px; height: 26px; padding: 0 9px;
   border: 1px solid var(--line); border-radius: 8px; background: transparent;
@@ -833,12 +834,7 @@
               <button class="tool" onclick="openMaterialPicker()"><span class="ti ti-plus"></span>素材</button>
               <button class="tool" onclick="location.href='J.Co工作台-创作.html'"><span class="ti ti-at"></span>引用</button>
             </div>
-            <div class="right">
-              <button class="send-big" id="goBtn" disabled aria-label="开始生成"><span class="ti ti-arrow-up"></span></button>
-            </div>
-          </div>
-
-          <div class="ask-params">
+            <div class="ask-params" role="group" aria-label="视频生成参数">
             <div class="param" data-param="model">
               <button class="param-chip" type="button"><span class="pv">Seedance 2.5</span><span class="ti ti-chevron-down"></span></button>
               <div class="param-menu" hidden><div class="seg" id="segModel"></div></div>
@@ -858,6 +854,10 @@
             <div class="param" data-param="voice" id="voiceRow">
               <button class="param-chip" type="button"><span class="pv">标准女声</span><span class="ti ti-chevron-down"></span></button>
               <div class="param-menu" hidden><div class="seg" id="segVoice"></div></div>
+            </div>
+            </div>
+            <div class="right">
+              <button class="send-big" id="goBtn" disabled aria-label="开始生成"><span class="ti ti-arrow-up"></span></button>
             </div>
           </div>
         </section>

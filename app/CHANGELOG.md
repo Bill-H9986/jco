@@ -2,6 +2,26 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## 0.6.0-beta.26 (2026-10-20)
+
+### Features
+
+* **shell:** 内容页改为最多 16 份的 iframe 页面缓存，复访直接切换可见页，不再重新加载字体、脚本和整份文档
+* **shell:** 总管只加载一次，首页发送、新会话和会话路由改用 `postMessage` 页内切换，未发送输入不再因重载丢失
+* **state:** 共享草稿层自动保存内容区普通输入和滚动位置，页面重载后恢复；排除密码、文件、隐藏和禁用字段
+* **ui:** 内容页页头统一为滚动区 sticky 页头，标题坐标保持 `x=32, y=36`，滚动时固定且各页规格一致
+* **ui:** 创作页素材、引用、模型、比例、时长、清晰度和声音参数合并为一行，减少底部输入台高度
+* **ui:** 设置、自动任务、技能库和知识库开关统一为 44×26 的 `.tg` 标准件，并自动补齐 `role="switch"` 与 `aria-checked`
+* **research:** 新增应用壳缓存、固定页头和全站工作态先例调研，记录 MDN 与 Electron 资料及取舍
+
+### Fixes
+
+* **shell:** 修复切页时整页加载造成的明显卡顿和页面工作态丢失，缓存命中切换不再等待文档重载
+* **ui:** 统一焦点外圈为 1.5px，侧栏整行控件改为内缩焦点圈，缩小按钮上下外扩范围
+* **ui:** 缩小开关圆钮阴影，去掉大范围浮动阴影造成的厚重感
+* **ui:** 补齐设置页知识库输入框的键盘焦点态，移除可见占位符中的长破折号
+* **testing:** 新增 M15 全站统一与页面缓存 E2E；全量 E2E 增至 58 条，视觉基准更新后 4 个视觉测试通过
+
 ## 0.6.0-beta.25 (2026-10-20)
 
 ### Features

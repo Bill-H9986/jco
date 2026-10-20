@@ -69,12 +69,14 @@ test('M11 W1-01：第二个会话独立，A 的内容不被覆盖', async () => 
     await firstFrame.locator('#send').click()
     await win.waitForFunction(() => /^#\/chat\/c/.test(location.hash), undefined, { timeout: 20_000 })
 
+    const firstChatHash = await win.evaluate(() => location.hash)
     await win.locator('#newChatSlot .convo.new-btn').click()
     await win.waitForFunction(
-      () => (document.getElementById('jcoFrame').getAttribute('src') || '').endsWith('J.Co总管.html?new=1'),
-      undefined,
+      (before) => /^#\/chat\/c/.test(location.hash) && location.hash !== before,
+      firstChatHash,
       { timeout: 20_000 },
     )
+    await expect(win.locator('#jcoFrame')).toHaveAttribute('src', 'J.Co总管.html')
     await win.waitForTimeout(900)
     const secondFrame = win.frameLocator('#jcoFrame')
     await expect(secondFrame.locator('#inp')).toBeVisible()

@@ -97,8 +97,8 @@ test('W7-01：侧栏顶部固定，内容页左上角统一', async () => {
       }, selector)
     }
 
-    const video = await contentOrigin('J.Co工作台-做视频.html', '.wrap > .page-head')
-    const topics = await contentOrigin('J.Co工作台-选题.html', '.wrap > .page-head')
+    const video = await contentOrigin('J.Co工作台-做视频.html', '.wrap > .page-head h1')
+    const topics = await contentOrigin('J.Co工作台-选题.html', '.wrap > .page-head h1')
     expect(video).toEqual({ x: 32, y: 36 })
     expect(topics).toEqual(video)
     expect(errors, `JS 错误：\n${errors.join('\n')}`).toEqual([])

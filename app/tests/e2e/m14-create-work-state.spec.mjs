@@ -26,8 +26,12 @@ const VIDEO_DRAFT = {
   images: [],
 }
 
-function contentFrame(win) {
-  return win.frames().find((frame) => frame.name() === 'jcoFrame')
+async function contentFrame(win) {
+  const href = await win.evaluate(() => {
+    const node = document.querySelector('#jcoFrame')
+    return node ? new URL(node.getAttribute('src'), location.href).href : ''
+  })
+  return win.frames().find((frame) => frame.url() === href)
 }
 
 test('创作后台任务：切页继续、返回自动恢复、刷新后仍能收口', async () => {
@@ -47,7 +51,7 @@ test('创作后台任务：切页继续、返回自动恢复、刷新后仍能�
 
     await win.evaluate(() => window.__jcoGo('J.Co工作台-做视频.html'))
     await win.waitForTimeout(1800)
-    let frame = contentFrame(win)
+    let frame = await contentFrame(win)
     await expect(frame.locator('#done.show')).toBeVisible()
 
     await frame.locator('.shot-bar .go-btn').click()
@@ -62,12 +66,12 @@ test('创作后台任务：切页继续、返回自动恢复、刷新后仍能�
       )
       .toBe('running')
 
-    // 切到首页再回来：iframe 已销毁重建，任务必须继续。
+    // 切到首页再回来：复用已加载页面，任务与视图状态都必须继续。
     await win.evaluate(() => window.__jcoGo('J.Co主界面-首页.html'))
     await win.waitForTimeout(1000)
     await win.evaluate(() => window.__jcoGo('J.Co工作台-做视频.html'))
     await win.waitForTimeout(1800)
-    frame = contentFrame(win)
+    frame = await contentFrame(win)
     await expect(frame.locator('#done.show')).toBeVisible()
     await expect(frame.locator('#dStatus')).toContainText(/生成中|待检查/)
 
@@ -94,12 +98,12 @@ test('创作后台任务：切页继续、返回自动恢复、刷新后仍能�
     })
     await win.reload()
     await win.waitForTimeout(1800)
-    frame = contentFrame(win)
+    frame = await contentFrame(win)
     await frame.locator('.shot-bar .go-btn').click()
     await win.waitForTimeout(400)
     await win.reload()
     await win.waitForTimeout(1800)
-    frame = contentFrame(win)
+    frame = await contentFrame(win)
     await expect(frame.locator('#done.show')).toBeVisible()
     await expect
       .poll(
@@ -142,7 +146,7 @@ test('创作后台任务：切页继续、返回自动恢复、刷新后仍能�
     })
     await win.evaluate(() => window.__jcoGo('J.Co工作台-做视频.html'))
     await win.waitForTimeout(1800)
-    frame = contentFrame(win)
+    frame = await contentFrame(win)
     await expect
       .poll(
         async () =>

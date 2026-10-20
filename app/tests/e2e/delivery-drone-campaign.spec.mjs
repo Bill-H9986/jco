@@ -8,6 +8,14 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const APP_DIR = path.resolve(__dirname, '..', '..')
 const ELECTRON_BIN = path.join(APP_DIR, 'node_modules', 'electron', 'dist', 'electron.exe')
 
+async function activeFrame(win) {
+  const href = await win.evaluate(() => {
+    const node = document.querySelector('#jcoFrame')
+    return node ? new URL(node.getAttribute('src'), location.href).href : ''
+  })
+  return win.frames().find((frame) => frame.url() === href)
+}
+
 const SHOTS = [
   { line: '想拿无人机装调检修工等级证，又担心没基础学不会？', pic: '小雅出镜·近景' },
   { line: '人社局牵头的免费就业培训，来啦！', pic: '小雅出镜·中景' },
@@ -59,7 +67,7 @@ test('交付验收：无人机宣传 30 秒 6 段 → 创作页 → 发布页', 
     // 创作页：参数 chip 必须是 5 个，且模型来自设置
     await win.evaluate(() => window.__jcoGo('J.Co工作台-做视频.html'))
     await win.waitForTimeout(2200)
-    const frame = win.frames().find((f) => f.name() === 'jcoFrame')
+    const frame = await activeFrame(win)
     const chips = await frame.locator('.ask-params .param-chip').allTextContents()
     expect(chips.length).toBe(5)
     expect(chips[1]).toBe('9:16')
@@ -68,7 +76,7 @@ test('交付验收：无人机宣传 30 秒 6 段 → 创作页 → 发布页', 
     // 发布页：读到成片、标记已通过、标题可填
     await win.evaluate(() => window.__jcoGo('J.Co工作台-发布.html'))
     await win.waitForTimeout(2400)
-    const pubFrame = win.frames().find((f) => f.name() === 'jcoFrame')
+    const pubFrame = await activeFrame(win)
     await expect(pubFrame.locator('#sourceTitle')).not.toContainText('还没有成片')
     await expect(pubFrame.locator('#sourceBadge')).toContainText('已通过')
     await pubFrame.locator('#titleInp').fill('免费学无人机装调检修，人社局等级证')

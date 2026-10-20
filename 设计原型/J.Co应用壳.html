@@ -11,8 +11,13 @@
     html, body { height: 100%; overflow: hidden; }
     .app { height: 100dvh; display: flex; }
     .frame-wrap { flex: 1; min-width: 0; position: relative; }
-    #jcoFrame { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; background: var(--bg); }
-    .frame-fade { position: absolute; inset: 0; background: var(--bg); pointer-events: none; opacity: 0; transition: opacity 0.16s ease; }
+    .jco-frame {
+      position: absolute; inset: 0; z-index: 1;
+      width: 100%; height: 100%; border: 0; background: var(--bg);
+      visibility: hidden; pointer-events: none;
+    }
+    .jco-frame.is-active { visibility: visible; pointer-events: auto; }
+    .frame-fade { position: absolute; inset: 0; z-index: 2; background: var(--bg); pointer-events: none; opacity: 0; transition: opacity 0.12s ease; }
     .frame-fade.on { opacity: 1; }
     /* 更新提示：侧栏头像上方的小卡片，不再占据内容区顶部 */
     .update-banner {
@@ -98,7 +103,7 @@
       </div>
     </aside>
     <div class="frame-wrap">
-      <iframe id="jcoFrame" src="J.Co主界面-首页.html" title="J.Co 内容区"></iframe>
+      <iframe id="jcoFrame" class="jco-frame is-active" name="jcoFrame" src="J.Co主界面-首页.html" title="J.Co 内容区"></iframe>
       <div class="frame-fade" id="frameFade"></div>
       <section class="task-view" id="jcoTaskView" hidden aria-labelledby="tvTitle">
         <div class="tv-head">
@@ -211,6 +216,118 @@
       var taskPoll = null;
       var currentTask = null;
       var lastTaskStamp = '';
+      var frames = Object.create(null);
+      var frameOrder = [];
+      var currentKey = '';
+      var frameSerial = 0;
+      var MAX_CACHED_FRAMES = 16;
+      var frameStats = window.__jcoFrameStats = { loads: 0, cacheHits: 0, evictions: 0, lastSwitchMs: 0 };
+
+      function keyOf(target) {
+        var text = String(target || '').split('?')[0];
+        try {
+          var url = new URL(text, location.href);
+          return decodeURIComponent(url.pathname.split('/').pop() || '');
+        } catch (err) {
+          return text;
+        }
+      }
+      function activeFrame() {
+        return document.querySelector('.jco-frame.is-active') || frame;
+      }
+      function touchFrame(key) {
+        var at = frameOrder.indexOf(key);
+        if (at !== -1) frameOrder.splice(at, 1);
+        frameOrder.push(key);
+      }
+      function evictFrames() {
+        while (frameOrder.length > MAX_CACHED_FRAMES) {
+          var victim = null;
+          for (var i = 0; i < frameOrder.length; i += 1) {
+            var key = frameOrder[i];
+            if (key !== currentKey && key !== 'J.Co主界面-首页.html' && key !== 'J.Co总管.html') {
+              victim = key;
+              break;
+            }
+          }
+          if (!victim) return;
+          frameOrder.splice(frameOrder.indexOf(victim), 1);
+          var oldFrame = frames[victim];
+          delete frames[victim];
+          if (oldFrame && oldFrame.parentNode) oldFrame.parentNode.removeChild(oldFrame);
+          frameStats.evictions += 1;
+        }
+      }
+      function activateFrame(node) {
+        if (!node) return;
+        var all = document.querySelectorAll('.jco-frame');
+        for (var i = 0; i < all.length; i += 1) {
+          var item = all[i];
+          if (item === node) continue;
+          item.classList.remove('is-active');
+          item.setAttribute('aria-hidden', 'true');
+          if (item.id === 'jcoFrame') item.removeAttribute('id');
+          if (item.getAttribute('name') === 'jcoFrame') item.removeAttribute('name');
+        }
+        node.classList.add('is-active');
+        node.setAttribute('aria-hidden', 'false');
+        node.id = 'jcoFrame';
+        node.setAttribute('name', 'jcoFrame');
+      }
+      function runWaiters(node) {
+        node._jcoReady = true;
+        var waiters = node._jcoWaiters || [];
+        node._jcoWaiters = [];
+        waiters.forEach(function (callback) {
+          try { callback(node.contentWindow); } catch (err) {}
+        });
+      }
+      function registerFrame(node, key, expectedTarget) {
+        node.classList.add('jco-frame');
+        node.setAttribute('data-jco-key', key);
+        node._jcoReady = false;
+        node._jcoWaiters = [];
+        try {
+          node._jcoExpected = expectedTarget ? new URL(expectedTarget, location.href).href : '';
+        } catch (err) {
+          node._jcoExpected = '';
+        }
+        function matchesTarget() {
+          if (!node._jcoExpected) return true;
+          try {
+            return new URL(node.contentWindow.location.href).href === node._jcoExpected;
+          } catch (err) {
+            return false;
+          }
+        }
+        node.addEventListener('load', function () {
+          if (!matchesTarget()) return;
+          runWaiters(node);
+          if (currentKey === key && node.classList.contains('is-active') && fade) {
+            setTimeout(function () { fade.classList.remove('on'); }, 40);
+          }
+        });
+        frames[key] = node;
+        touchFrame(key);
+        try {
+          if (node.contentDocument && node.contentDocument.readyState === 'complete' && matchesTarget()) runWaiters(node);
+        } catch (err) {}
+        evictFrames();
+      }
+      function whenFrameReady(node, callback) {
+        if (!callback) return;
+        if (node._jcoReady) callback(node.contentWindow);
+        else node._jcoWaiters.push(callback);
+      }
+      function isCachedSource(source) {
+        var keys = Object.keys(frames);
+        for (var i = 0; i < keys.length; i += 1) {
+          if (frames[keys[i]] && frames[keys[i]].contentWindow === source) return true;
+        }
+        return false;
+      }
+      registerFrame(frame, keyOf(frame.getAttribute('src')), frame.getAttribute('src'));
+      currentKey = keyOf(frame.getAttribute('src'));
 
       function statusText(status) {
         if (status === 'pending_confirm') return '待确认';
@@ -416,9 +533,7 @@
         if (route.kind === 'home') return 'J.Co主界面-首页.html';
         if (route.kind === 'task') return 'J.Co总管.html?task=' + encodeURIComponent(route.id || '');
         if (route.kind === 'chat') {
-          if (route.id === 'new') return 'J.Co总管.html?new=1';
-          if (!route.id || route.id === 'last') return 'J.Co总管.html';
-          return 'J.Co总管.html?chat=' + encodeURIComponent(route.id);
+          return 'J.Co总管.html';
         }
         if (route.kind === 'page') return String(route.file || 'J.Co主界面-首页.html');
         return 'J.Co主界面-首页.html';
@@ -434,12 +549,58 @@
           history.replaceState(null, '', hashOfRoute(route));
         } catch (err) {}
       }
-      function loadFrame(target) {
-        if (!target || frame.getAttribute('src') === target) return;
-        if (fade) { fade.classList.add('on'); }
-        setTimeout(function () {
-          frame.src = target;
-        }, 90);
+      function loadFrame(target, onReady) {
+        if (!target) return;
+        var started = performance.now();
+        var key = keyOf(target);
+        var node = frames[key];
+        if (node && node._jcoReady) {
+          if (currentKey !== key) activateFrame(node);
+          currentKey = key;
+          touchFrame(key);
+          if (fade) fade.classList.remove('on');
+          frameStats.cacheHits += 1;
+          frameStats.lastSwitchMs = Math.round((performance.now() - started) * 10) / 10;
+          if (onReady) onReady(node.contentWindow);
+          return;
+        }
+        if (node) {
+          currentKey = key;
+          touchFrame(key);
+          whenFrameReady(node, function (win) {
+            activateFrame(node);
+            if (fade) fade.classList.remove('on');
+            if (onReady) onReady(win);
+          });
+          return;
+        }
+        if (fade) fade.classList.add('on');
+        var next = document.createElement('iframe');
+        next.className = 'jco-frame';
+        next.title = 'J.Co 内容区';
+        next.setAttribute('aria-hidden', 'true');
+        frameSerial += 1;
+        next.setAttribute('data-jco-instance', String(frameSerial));
+        registerFrame(next, key, target);
+        currentKey = key;
+        next._jcoWaiters.push(function (win) {
+          if (currentKey !== key) return;
+          activateFrame(next);
+          if (fade) setTimeout(function () { fade.classList.remove('on'); }, 40);
+          frameStats.loads += 1;
+          frameStats.lastSwitchMs = Math.round((performance.now() - started) * 10) / 10;
+          if (onReady) onReady(win);
+        });
+        var wrap = next && frame && frame.parentNode;
+        if (wrap) wrap.insertBefore(next, fade || null);
+        next.src = target;
+      }
+      function openChatRoute(route) {
+        loadFrame('J.Co总管.html', function (win) {
+          if (!win) return;
+          if (route.id === 'new') win.postMessage({ __jcoShellChat: 'new' }, '*');
+          else if (route.id && route.id !== 'last') win.postMessage({ __jcoShellChat: String(route.id) }, '*');
+        });
       }
       function applyRoute(route, remember) {
         if (!route) return;
@@ -450,7 +611,8 @@
           return;
         }
         hideTaskView();
-        loadFrame(targetOfRoute(route));
+        if (route.kind === 'chat') openChatRoute(route);
+        else loadFrame(targetOfRoute(route));
         if (remember) rememberHash(route);
         if (typeof window.__jcoHighlightPage === 'function') {
           window.__jcoHighlightPage(navPageOfRoute(route));
@@ -484,7 +646,9 @@
         var seed = String(text || '').trim();
         if (!seed) return;
         rememberHash({ kind: 'chat', id: 'new' });
-        loadFrame('J.Co总管.html?new=1&seed=' + encodeURIComponent(seed));
+        loadFrame('J.Co总管.html', function (win) {
+          if (win) win.postMessage({ __jcoShellStartChat: seed }, '*');
+        });
         if (typeof window.__jcoHighlightPage === 'function') {
           window.__jcoHighlightPage('J.Co总管.html');
         }
@@ -496,9 +660,6 @@
       var wordmark = document.querySelector('.wordmark');
       if (wordmark) wordmark.addEventListener('click', function () {
         applyRoute({ kind: 'home' }, true);
-      });
-      frame.addEventListener('load', function () {
-        setTimeout(function () { if (fade) fade.classList.remove('on'); }, 60);
       });
       // 新会话：去总管页并触发新会话
       var newBtn = document.querySelector('#newChatSlot .new-btn');
@@ -514,7 +675,7 @@
       });
       // 总管页创建/切换会话后回传 id，地址栏稳定在 #/chat/:id
       window.addEventListener('message', function (event) {
-        if (event.source !== frame.contentWindow) return;
+        if (!isCachedSource(event.source)) return;
         var id = event.data && event.data.__jcoConversation;
         if (id) rememberHash({ kind: 'chat', id: String(id) });
       });
