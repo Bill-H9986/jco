@@ -93,6 +93,7 @@
         "tests/e2e/m20-create-restart-state.spec.mjs",
         "tests/e2e/m21-create-parameter-detail-state.spec.mjs",
         "tests/e2e/m24-create-media-missing-path.spec.mjs",
+        "tests/e2e/m25-transient-popup-hide.spec.mjs",
         "tests/e2e/m9-video.spec.mjs",
         "tests/e2e/delivery-drone-campaign.spec.mjs"
       ]

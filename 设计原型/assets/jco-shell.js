@@ -50,6 +50,11 @@
   window.addEventListener('message', function (e) {
     var payload = e.data && e.data.__jcoTheme
     if (payload) setThemeAttr(themeOf(payload))
+    if (e.data && e.data.__jcoPageHide) {
+      try {
+        window.dispatchEvent(new Event('jco:pagehide'))
+      } catch (err) {}
+    }
   })
   function initThemeBridge() {
     if (IS_EMBEDDED) return

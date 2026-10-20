@@ -2497,6 +2497,7 @@
         });
       document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeVideoPop(); });
     })();
+    window.addEventListener('jco:pagehide', closeVideoPop);
 
     /* ---------- 图片草稿：大图随选随修（框住哪里、修哪里） ---------- */
     let imgIdx = 0;

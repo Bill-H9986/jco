@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## 0.6.0-beta.35 (2026-10-20)
+
+### Fixes
+
+* **shell:** 应用壳切换页面时向即将隐藏的 iframe 发送 `__jcoPageHide`
+* **create:** 创作页收到 pagehide 信号时关闭视频预览，停掉隐藏 iframe 中残留的播放器
+* **materials:** 素材页收到 pagehide 信号时关闭文件预览
+* **testing:** 新增 M25 切页瞬态弹层 E2E，验证视频预览切走后关闭且回来不复活
+
 ## 0.6.0-beta.34 (2026-10-20)
 
 ### Features
