@@ -92,6 +92,7 @@
         "tests/e2e/m19-cross-page-handoff.spec.mjs",
         "tests/e2e/m20-create-restart-state.spec.mjs",
         "tests/e2e/m21-create-parameter-detail-state.spec.mjs",
+        "tests/e2e/m24-create-media-missing-path.spec.mjs",
         "tests/e2e/m9-video.spec.mjs",
         "tests/e2e/delivery-drone-campaign.spec.mjs"
       ]
@@ -136,7 +137,7 @@
       "priority": "P0",
       "status": "covered",
       "risk": "设置未落盘、Key 泄漏、品牌档案不同源、发布确认可关闭",
-      "automated": ["tests/e2e/settings.spec.mjs", "tests/e2e/m11-settings-brand.spec.mjs", "tests/e2e/theme.spec.mjs"]
+      "automated": ["tests/e2e/settings.spec.mjs", "tests/e2e/m11-settings-brand.spec.mjs", "tests/e2e/theme.spec.mjs", "tests/e2e/m23-settings-restart.spec.mjs"]
     },
     {
       "id": "auto-tasks",

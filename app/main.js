@@ -10,9 +10,15 @@ const JCO_TEST_MODE = process.argv.includes('--jco-test')
 // 测试模式必须先切 userData，再初始化发布会话、素材目录和任何依赖用户路径的服务。
 // 名字带随机段：防 pid 复用时读到上一个测试实例残留的 profile。
 if (JCO_TEST_MODE) {
+  const tempRoot = path.resolve(app.getPath('temp'))
+  const requestedProfile = String(process.env.JCO_TEST_PROFILE_DIR || '').trim()
+  const resolvedProfile = requestedProfile ? path.resolve(requestedProfile) : ''
+  if (requestedProfile && (resolvedProfile === tempRoot || !resolvedProfile.startsWith(tempRoot + path.sep))) {
+    throw new Error('JCO_TEST_PROFILE_DIR 必须位于系统临时目录内')
+  }
   app.setPath(
     'userData',
-    path.join(app.getPath('temp'), 'jco-test-' + process.pid + '-' + Date.now().toString(36)),
+    resolvedProfile || path.join(tempRoot, 'jco-test-' + process.pid + '-' + Date.now().toString(36)),
   )
 }
 

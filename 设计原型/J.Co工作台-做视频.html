@@ -587,6 +587,13 @@
 
 .vp-box video { width: 100%; max-height: 70vh; background: #141418; display: block; }
 
+.vp-box video[hidden] { display: none; }
+
+.vp-error {
+  padding: 30px 22px; text-align: center;
+  color: var(--text-2); font-size: 13px; line-height: 1.7;
+}
+
 .shot {
     display: flex; align-items: center; gap: 12px;
     background: var(--tint); border-radius: 12px; padding: 10px 12px;
@@ -876,6 +883,7 @@
     <div class="vp-box">
       <div class="vp-head"><span id="vpTitle">视频预览</span><button class="vp-close" id="vpClose" aria-label="关闭预览"><span class="ti ti-x"></span></button></div>
       <video id="vpVideo" controls playsinline></video>
+      <div class="vp-error" id="vpError" hidden>视频文件不可用，可能已经被移动或删除。请重新生成或选择其他成片。</div>
     </div>
   </div>
 
@@ -2411,10 +2419,13 @@
     function playShotVideo(url, i) {
       const pop = document.getElementById('videoPop');
       const v = document.getElementById('vpVideo');
+      const error = document.getElementById('vpError');
       if (!pop || !v || !url) return;
       const shotCount = currentDraft && Array.isArray(currentDraft.shots) && currentDraft.shots.length > 0 ? currentDraft.shots.length : 1;
       const seconds = MEDIA.shotSecondsFor(currentDraft ? currentDraft.duration : '', shotCount);
       document.getElementById('vpTitle').textContent = '第 ' + (i + 1) + ' 段 · ' + seconds + ' 秒 · 720P';
+      if (error) error.hidden = true;
+      v.hidden = false;
       v.src = url;
       pop.hidden = false;
       v.play().catch(() => {});
@@ -2435,10 +2446,13 @@
     function openWholeVideo() {
       const pop = document.getElementById('videoPop');
       const v = document.getElementById('vpVideo');
+      const error = document.getElementById('vpError');
       if (!pop || !v || wholeQueue.length === 0) return;
       const total = (currentDraft && Array.isArray(currentDraft.shots) && currentDraft.shots.length) || wholeQueue.length;
       document.getElementById('vpTitle').textContent =
         '整片 · 分段连播（' + (wholeIdx + 1) + '/' + wholeQueue.length + ' 段已出片' + (total > wholeQueue.length ? '，共 ' + total + ' 段；未出片的会略过' : '') + '）';
+      if (error) error.hidden = true;
+      v.hidden = false;
       v.src = wholeQueue[wholeIdx];
       pop.hidden = false;
       v.play().catch(() => {});
@@ -2446,10 +2460,17 @@
     function closeVideoPop() {
       const pop = document.getElementById('videoPop');
       const v = document.getElementById('vpVideo');
+      const error = document.getElementById('vpError');
       if (!pop) return;
       pop.hidden = true;
       wholeQueue = [];
-      if (v) { v.pause(); v.removeAttribute('src'); v.load(); }
+      if (error) error.hidden = true;
+      if (v) {
+        v.hidden = false;
+        v.pause();
+        v.removeAttribute('src');
+        v.load();
+      }
     }
     (function bindVideoPop() {
       const pop = document.getElementById('videoPop');
@@ -2457,6 +2478,16 @@
       const v = document.getElementById('vpVideo');
       if (close) close.addEventListener('click', closeVideoPop);
       if (pop) pop.addEventListener('click', (e) => { if (e.target === pop) closeVideoPop(); });
+      if (v)
+        v.addEventListener('error', () => {
+          if (!v.getAttribute('src')) return;
+          v.pause();
+          v.removeAttribute('src');
+          v.load();
+          v.hidden = true;
+          const error = document.getElementById('vpError');
+          if (error) error.hidden = false;
+        });
       if (v)
         v.addEventListener('ended', () => {
           if (!pop || pop.hidden || wholeQueue.length === 0) return;
@@ -2542,6 +2573,14 @@
         img.className = 'ib-img';
         img.src = realImgs[imgIdx].src;
         img.alt = realImgs[imgIdx].prompt || '';
+        img.addEventListener('error', () => {
+          img.remove();
+          big.classList.add('missing-media');
+          if (phIcon) phIcon.style.display = '';
+          const tip = $('ibTip');
+          tip.textContent = '图片文件不可用，可能已经被移动或删除。请重新生成或重新导入。';
+          tip.classList.add('on');
+        }, { once: true });
         big.insertBefore(img, big.firstChild);
       }
       const thumbs = $('ibThumbs');
@@ -2557,6 +2596,13 @@
           const ti = document.createElement('img');
           ti.src = realImgs[i].src;
           ti.alt = '';
+          ti.addEventListener('error', () => {
+            ti.remove();
+            t.classList.add('missing-thumb');
+            const icon = document.createElement('span');
+            icon.className = 'ti ti-photo';
+            t.appendChild(icon);
+          }, { once: true });
           t.appendChild(ti);
         }
         t.addEventListener('click', () => { imgIdx = i; renderImgBoard(); });

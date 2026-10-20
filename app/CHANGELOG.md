@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## 0.6.0-beta.34 (2026-10-20)
+
+### Features
+
+* **testing:** 新增 `JCO_TEST_PROFILE_DIR` 受控测试 profile；仅接受系统临时目录内的路径，用于真实主进程重启测试
+
+### Fixes
+
+* **create:** 图片详情文件失效时移除坏图，恢复占位并提示“图片文件不可用”
+* **create:** 成片预览文件失效时隐藏失败 video，显示“视频文件不可用”，不再黑屏播放器
+* **testing:** 新增 M23 设置跨进程重启，验证主题、模式和通知开关；新增 M24 创作媒体失效路径降级
+
 ## 0.6.0-beta.33 (2026-10-20)
 
 ### Fixes
