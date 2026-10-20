@@ -848,7 +848,10 @@
     })();
 
     /* 按钮 */
-    document.getElementById('btnAccounts').addEventListener('click', () => { location.href = 'J.Co账号中心.html'; });
+    document.getElementById('btnAccounts').addEventListener('click', () => {
+      if (window.jcoGo) window.jcoGo('J.Co账号中心.html');
+      else location.href = 'J.Co账号中心.html';
+    });
     document.getElementById('btnPath').addEventListener('click', () => {
       const sys = (typeof window.jco !== 'undefined' && window.jco && window.jco.sys) ? window.jco.sys : null;
       if (!sys || !sys.pickFolder) {

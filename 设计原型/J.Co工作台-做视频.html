@@ -814,7 +814,7 @@
           <div class="ask-bar">
             <div class="left">
               <button class="tool" onclick="openMaterialPicker()"><span class="ti ti-plus"></span>素材</button>
-              <button class="tool" onclick="location.href='J.Co工作台-创作.html'"><span class="ti ti-at"></span>引用</button>
+              <button class="tool" onclick="jcoGo('J.Co工作台-创作.html')"><span class="ti ti-at"></span>引用</button>
             </div>
             <div class="ask-params" role="group" aria-label="视频生成参数">
             <div class="param" data-param="model">
@@ -1217,10 +1217,10 @@
     const goBtn = $('goBtn');
 
     // 从「选题」带过来的主题：预填想法，确认一下就开做（不自动开始）
-    (function consumeHandoff() {
+    function consumeMakeTopicHandoff() {
       // 注意：这里不能引用后面的 JCO_KERNEL 常量（TDZ），直接现场判断
       var hasKernel = (typeof window.jco !== 'undefined' && window.jco && window.jco.kernel);
-      if (!hasKernel) return;
+      if (!hasKernel) return false;
       let t = null;
       try { t = sessionStorage.getItem('jco-make-topic'); if (t) sessionStorage.removeItem('jco-make-topic'); } catch (e) {}
       if (t) {
@@ -1228,8 +1228,14 @@
         inputChanged();
         askInp.focus();
         showToast('从选题带过来的，确认一下想法就能开做。');
+        return true;
       }
-    })();
+      return false;
+    }
+    consumeMakeTopicHandoff();
+    window.addEventListener('message', function (event) {
+      if (event.data && event.data.__jcoHandoff === 'make-topic') consumeMakeTopicHandoff();
+    });
 
     function inputChanged() { goBtn.disabled = askInp.value.trim().length === 0; }
 
@@ -1867,7 +1873,8 @@
           videoUrl: lastVideo ? (lastVideo.url || '') : '',
         }));
       } catch (e) {}
-      location.href = 'J.Co工作台-发布.html';
+      if (window.jcoGo) window.jcoGo('J.Co工作台-发布.html', 'publish-draft');
+      else location.href = 'J.Co工作台-发布.html';
     }
 
     function startGen() {

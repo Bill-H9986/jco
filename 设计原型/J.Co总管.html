@@ -1196,7 +1196,10 @@
     document.querySelectorAll('.composer .ghost-btn').forEach(function (btn) {
       var t = btn.textContent.trim();
       btn.addEventListener('click', function () {
-        if (t.indexOf('素材') !== -1) { location.href = 'J.Co工作台-素材.html'; }
+        if (t.indexOf('素材') !== -1) {
+          if (window.jcoGo) window.jcoGo('J.Co工作台-素材.html');
+          else location.href = 'J.Co工作台-素材.html';
+        }
       });
     });
 

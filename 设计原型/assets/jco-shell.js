@@ -19,6 +19,21 @@
       if (!window.jco && window.parent && window.parent.jco) window.jco = window.parent.jco
     } catch (err) {}
   }
+  // 页面统一出口：嵌入应用壳时交给壳导航，浏览器直开时才整页跳转。
+  window.jcoGo = function (target, handoff) {
+    var text = String(target || '')
+    if (!text) return false
+    if (IS_EMBEDDED) {
+      try {
+        if (window.parent && window.parent !== window && typeof window.parent.__jcoGo === 'function') {
+          window.parent.__jcoGo(text, handoff ? String(handoff) : '')
+          return true
+        }
+      } catch (err) {}
+    }
+    location.href = text
+    return true
+  }
   function themeOf(payload) {
     if (typeof payload === 'string') return payload
     if (!payload) return 'system'

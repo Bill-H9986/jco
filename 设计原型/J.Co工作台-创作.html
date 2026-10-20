@@ -555,7 +555,8 @@
       if (!saved) return;
       if (JCO_KERNEL) {
         try { sessionStorage.setItem('jco-make-topic', topicText()); } catch (e) {}
-        location.href = 'J.Co工作台-做视频.html';
+        if (window.jcoGo) window.jcoGo('J.Co工作台-做视频.html', 'make-topic');
+        else location.href = 'J.Co工作台-做视频.html';
         return;
       }
       showToast('（原型示意）正式版会带着稿子和素材，直接进入「创作」。');
@@ -793,7 +794,8 @@
     function changeTopic() {
       if (JCO_KERNEL) {
         showToast('去「选题」挑一个，带回来直接开写。');
-        location.href = 'J.Co工作台-选题.html';
+        if (window.jcoGo) window.jcoGo('J.Co工作台-选题.html');
+        else location.href = 'J.Co工作台-选题.html';
         return;
       }
       topicIndex = (topicIndex + 1) % TOPICS.length;
@@ -945,18 +947,21 @@
       }
     }
     let bootPickedTopic = null;
-    (function boot() {
-      if (!JCO_KERNEL) { paint(VERSIONS[0]); scriptReady = true; return; } // 浏览器直开：保留演示预览
+    function consumeTopicHandoff() {
       let picked = null;
       try { picked = sessionStorage.getItem('jco-pick-topic'); if (picked) sessionStorage.removeItem('jco-pick-topic'); } catch (e) {}
+      if (!picked) return false;
       bootPickedTopic = picked;
       const last = restoreScript();
-      if (picked) {
-        setTopic(picked, '主题来自「选题」· 点【重新生成一版】我就开写');
-        if (last && last.lines && last.topic === picked) { xhsMode = !!last.xhs; paint({ lines: last.lines }); }
-        else { emptyScript(); showToast('主题带过来了，点【重新生成一版】我就开写。'); }
-        return;
-      }
+      setTopic(picked, '主题来自「选题」· 点【重新生成一版】我就开写');
+      if (last && last.lines && last.topic === picked) { xhsMode = !!last.xhs; paint({ lines: last.lines }); }
+      else { emptyScript(); showToast('主题带过来了，点【重新生成一版】我就开写。'); }
+      return true;
+    }
+    (function boot() {
+      if (!JCO_KERNEL) { paint(VERSIONS[0]); scriptReady = true; return; } // 浏览器直开：保留演示预览
+      if (consumeTopicHandoff()) return;
+      const last = restoreScript();
       if (last && last.lines && last.lines.length) {
         xhsMode = !!last.xhs;
         setTopic(last.topic || '上次的稿子', '上次写的稿子（点着还能改）');
@@ -968,6 +973,9 @@
       paperTitle.textContent = '还没有主题';
       emptyScript();
     })();
+    window.addEventListener('message', function (event) {
+      if (event.data && event.data.__jcoHandoff === 'topic') consumeTopicHandoff();
+    });
     void hydrateScriptStore();
     void hydrateBrandProfile();
     document.querySelectorAll('.anim').forEach((el, i) => {

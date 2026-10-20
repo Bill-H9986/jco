@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## 0.6.0-beta.30 (2026-10-20)
+
+### Features
+
+* **shell:** 新增页面统一导航出口 `jcoGo()`；嵌入应用壳时交给壳切换缓存页，浏览器直开才整页跳转
+* **shell:** 页面级交接支持 `handoff` 信号，目标页已缓存时直接消费，不再新建第二份页面实例
+
+### Fixes
+
+* **topics:** 选题「拿去开写」「开始做视频」统一走应用壳；切走再回来，主题仍保留在缓存文案/创作页
+* **create:** 文案「去做视频」和做视频「去发布」改为壳内交接；交接标题在切页后仍保留
+* **publish:** 发布页支持缓存状态下的成片标题交接，不再依赖页面重载
+* **navigation:** 首页、总管、后期、发布、设置的主要跨页按钮统一走 `jcoGo()`，避免内容 iframe 自行跳转造成重复实例
+* **testing:** 新增 M19 真实壳内跨页交接 E2E：选题→文案/创作、创作→发布，先复现切页后旧缓存覆盖新交接，再修复
+
 ## 0.6.0-beta.29 (2026-10-20)
 
 ### Fixes

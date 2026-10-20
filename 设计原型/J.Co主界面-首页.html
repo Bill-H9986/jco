@@ -324,7 +324,10 @@
       var go = null;
       if (reviewDrafts > 0) {
         text = '有 ' + reviewDrafts + ' 条分镜草稿等你过目';
-        go = function () { location.href = 'J.Co工作台-做视频.html'; };
+        go = function () {
+          if (window.jcoGo) window.jcoGo('J.Co工作台-做视频.html');
+          else location.href = 'J.Co工作台-做视频.html';
+        };
       } else if (today.length > 0) {
         var nCreate = today.filter(function (x) { return x.kind === 'create'; }).length;
         var nShot = today.filter(function (x) { return x.kind === 'shot'; }).length;
@@ -336,7 +339,10 @@
         if (nShot) parts.push(nShot + ' 条分镜');
         if (nChat) parts.push(nChat + ' 次对话');
         text = parts.length ? '今天已经干了 ' + parts.join('、') + '，点这里接着干' : '今天开工过了，点这里接着干';
-        go = function () { location.href = 'J.Co总管.html'; };
+        go = function () {
+          if (window.jcoGo) window.jcoGo('J.Co总管.html');
+          else location.href = 'J.Co总管.html';
+        };
       } else {
         text = '今天还没开工，说一句话我就动';
         go = function () { fillAndFocus('帮我做一条短视频的口播稿'); };
@@ -387,7 +393,10 @@
       document.querySelectorAll('.bar .ghost').forEach(function (btn) {
         var t = btn.textContent.trim();
         btn.addEventListener('click', function () {
-          if (t.indexOf('素材') !== -1) { location.href = 'J.Co工作台-素材.html'; }
+          if (t.indexOf('素材') !== -1) {
+            if (window.jcoGo) window.jcoGo('J.Co工作台-素材.html');
+            else location.href = 'J.Co工作台-素材.html';
+          }
         });
       });
     })();

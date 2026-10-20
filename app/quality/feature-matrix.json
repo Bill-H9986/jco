@@ -61,7 +61,7 @@
       "priority": "P1",
       "status": "covered",
       "risk": "选题迁移失败、收藏丢失、品牌档案未注入",
-      "automated": ["tests/e2e/m8-topics.spec.mjs", "tests/e2e/m11-topics-store.spec.mjs"]
+      "automated": ["tests/e2e/m8-topics.spec.mjs", "tests/e2e/m11-topics-store.spec.mjs", "tests/e2e/m19-cross-page-handoff.spec.mjs"]
     },
     {
       "id": "materials",
@@ -77,7 +77,7 @@
       "priority": "P1",
       "status": "covered",
       "risk": "旧稿迁移失败、改稿覆盖、跨页不可见",
-      "automated": ["tests/e2e/m11-scripts-store.spec.mjs", "tests/e2e/m8-topics.spec.mjs"]
+      "automated": ["tests/e2e/m11-scripts-store.spec.mjs", "tests/e2e/m8-topics.spec.mjs", "tests/e2e/m19-cross-page-handoff.spec.mjs"]
     },
     {
       "id": "video-creation",
@@ -89,6 +89,7 @@
         "tests/e2e/m13-create-media.spec.mjs",
         "tests/e2e/m14-create-work-state.spec.mjs",
         "tests/e2e/m18-create-picker-shell.spec.mjs",
+        "tests/e2e/m19-cross-page-handoff.spec.mjs",
         "tests/e2e/m9-video.spec.mjs",
         "tests/e2e/delivery-drone-campaign.spec.mjs"
       ]
@@ -108,7 +109,7 @@
       "status": "partial",
       "risk": "误发布、未登录可点、平台页面变化",
       "reason": "任务、审批、页面入口和拒绝路径已自动覆盖；真实平台登录与最终发布按钮由产品负责人亲手操作，平台页面改版需人工冒烟。",
-      "automated": ["tests/e2e/m11-publish-task.spec.mjs", "tests/e2e/publish-entry.spec.mjs"]
+      "automated": ["tests/e2e/m11-publish-task.spec.mjs", "tests/e2e/publish-entry.spec.mjs", "tests/e2e/m19-cross-page-handoff.spec.mjs"]
     },
     {
       "id": "ops",

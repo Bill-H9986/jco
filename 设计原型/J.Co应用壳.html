@@ -561,8 +561,14 @@
           history.replaceState(null, '', hashOfRoute(route));
         } catch (err) {}
       }
-      function loadFrame(target, onReady) {
+      function loadFrame(target, onReady, handoff) {
         if (!target) return;
+        function sendHandoff(win) {
+          if (!handoff || !win) return;
+          try {
+            win.postMessage({ __jcoHandoff: String(handoff) }, '*');
+          } catch (err) {}
+        }
         var started = performance.now();
         var key = keyOf(target);
         var node = frames[key];
@@ -582,6 +588,7 @@
           if (fade) fade.classList.remove('on');
           frameStats.cacheHits += 1;
           frameStats.lastSwitchMs = Math.round((performance.now() - started) * 10) / 10;
+          sendHandoff(node.contentWindow);
           if (onReady) onReady(node.contentWindow);
           return;
         }
@@ -591,6 +598,7 @@
           whenFrameReady(node, function (win) {
             activateFrame(node);
             if (fade) fade.classList.remove('on');
+            sendHandoff(win);
             if (onReady) onReady(win);
           });
           return;
@@ -610,6 +618,7 @@
           if (fade) setTimeout(function () { fade.classList.remove('on'); }, 40);
           frameStats.loads += 1;
           frameStats.lastSwitchMs = Math.round((performance.now() - started) * 10) / 10;
+          sendHandoff(win);
           if (onReady) onReady(win);
         });
         var wrap = next && frame && frame.parentNode;
@@ -623,7 +632,7 @@
           else if (route.id && route.id !== 'last') win.postMessage({ __jcoShellChat: String(route.id) }, '*');
         });
       }
-      function applyRoute(route, remember) {
+      function applyRoute(route, remember, handoff) {
         if (!route) return;
         if (route.kind === 'task') {
           showTaskView(route.id);
@@ -633,13 +642,13 @@
         }
         hideTaskView();
         if (route.kind === 'chat') openChatRoute(route);
-        else loadFrame(targetOfRoute(route));
+        else loadFrame(targetOfRoute(route), null, handoff);
         if (remember) rememberHash(route);
         if (typeof window.__jcoHighlightPage === 'function') {
           window.__jcoHighlightPage(navPageOfRoute(route));
         }
       }
-      window.__jcoGo = function (target) {
+      window.__jcoGo = function (target, handoff) {
         if (!target) return;
         var text = decodeURIComponent(String(target));
         if (text === 'J.Co主界面-首页.html') {
@@ -660,7 +669,7 @@
           }
           return;
         }
-        applyRoute({ kind: 'page', file: text }, true);
+        applyRoute({ kind: 'page', file: text }, true, handoff ? String(handoff) : '');
       };
       // 首页发送：进入 chat/new，seed 由总管页消费；不创建任务、不启动浏览器。
       window.__jcoStartChat = function (text) {

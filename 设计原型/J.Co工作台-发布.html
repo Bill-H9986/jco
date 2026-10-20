@@ -369,7 +369,7 @@
             <div id="execRows"></div>
             <div class="donebar" id="doneBar">
               <span class="dtxt">全部发完了 ✓</span>
-              <button class="ghost" onclick="location.href='J.Co工作台-运营.html'">去「运营」看数据<span class="ti ti-arrow-right"></span></button>
+              <button class="ghost" onclick="jcoGo('J.Co工作台-运营.html')">去「运营」看数据<span class="ti ti-arrow-right"></span></button>
             </div>
           </div>
         </div>
@@ -533,19 +533,25 @@
     });
 
     // 从「做视频」带过来的成片：预填标题（交接消费）
-    (function consumeDraft() {
+    function consumePublishDraftHandoff() {
       let t = null;
       try { t = sessionStorage.getItem('jco-publish-draft'); if (t) sessionStorage.removeItem('jco-publish-draft'); } catch (e) {}
-      if (!t) return;
+      if (!t) return false;
       try {
         const d = JSON.parse(t);
         if (d && d.title) {
           const inp = document.getElementById('titleInp');
           if (inp) inp.value = d.title;
           showToast('这条成片带过来了，检查一下就能发。');
+          return true;
         }
       } catch (e) {}
-    })();
+      return false;
+    }
+    consumePublishDraftHandoff();
+    window.addEventListener('message', function (event) {
+      if (event.data && event.data.__jcoHandoff === 'publish-draft') consumePublishDraftHandoff();
+    });
 
     function showToast(msg) {
       toastEl.textContent = msg;

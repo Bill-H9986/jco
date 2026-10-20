@@ -471,11 +471,13 @@
     /* ---------- 拿去开写（交接给「创作」页） / 开始做视频（交接给「创作」页-做视频） ---------- */
     function goWrite(title) {
       try { sessionStorage.setItem('jco-pick-topic', String(title || '')); } catch (e) {}
-      location.href = 'J.Co工作台-创作.html';
+      if (window.jcoGo) window.jcoGo('J.Co工作台-创作.html', 'topic');
+      else location.href = 'J.Co工作台-创作.html';
     }
     function goMake(title) {
       try { sessionStorage.setItem('jco-make-topic', String(title || '')); } catch (e) {}
-      location.href = 'J.Co工作台-做视频.html';
+      if (window.jcoGo) window.jcoGo('J.Co工作台-做视频.html', 'make-topic');
+      else location.href = 'J.Co工作台-做视频.html';
     }
 
     /* ---------- 爆款拆解：贴入 → AI 拆全（为什么火/结构/我的版本） ---------- */
