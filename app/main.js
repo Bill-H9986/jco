@@ -6,14 +6,24 @@ const { pathToFileURL } = require('url')
 const PACKAGE_JSON = require('./package.json')
 const { createMediaJobService } = require('./media-jobs.cjs')
 
+const JCO_TEST_MODE = process.argv.includes('--jco-test')
+// 测试模式必须先切 userData，再初始化发布会话、素材目录和任何依赖用户路径的服务。
+// 名字带随机段：防 pid 复用时读到上一个测试实例残留的 profile。
+if (JCO_TEST_MODE) {
+  app.setPath(
+    'userData',
+    path.join(app.getPath('temp'), 'jco-test-' + process.pid + '-' + Date.now().toString(36)),
+  )
+}
+
 // 界面文件在 J.Co\设计原型 里（和本工程是邻居），整个 J.Co 文件夹搬走也能正常打开
 const UI_DIR = path.join(__dirname, '..', '设计原型')
 const ENTRY = 'J.Co应用壳.html' // 应用壳（M10 前端一壳化）：侧栏常驻，内容区只换视图
 
 // ---------- 应用级设置（主进程持有：主题偏好等；开机启动由系统记录） ----------
 // 打包版：设置写入用户数据目录（安装目录只读）；开发版：沿用工程内文件
-const SETTINGS_PATH = process.argv.includes('--jco-test')
-  ? path.join(app.getPath('temp'), 'jco-test-kernel-data', 'settings.json')
+const SETTINGS_PATH = JCO_TEST_MODE
+  ? path.join(app.getPath('userData'), 'settings.json')
   : (app.isPackaged ? path.join(app.getPath('userData'), 'settings.json') : path.join(__dirname, 'settings.json'))
 function readSettings() {
   try { return JSON.parse(fs.readFileSync(SETTINGS_PATH, 'utf8')) } catch (e) { return {} }
@@ -700,7 +710,6 @@ function kernelUnpackedPath(p) {
 // 测试模式（--jco-test）：kernel 运行数据（技能库 / 自动任务 / 任务台账）重定向到独立临时目录——
 // 测试永不触碰开发目录的运行时文件（2026-10-17 正本清源；此前靠 E2E 全局护栏兜底恢复）。
 // 固定目录名（测试串行单实例）；E2E / qa 脚本用 os.tmpdir() 下的同一路径预置与读取。
-const JCO_TEST_MODE = process.argv.includes('--jco-test')
 const TEST_KERNEL_DATA_DIR = path.join(app.getPath('temp'), 'jco-test-kernel-data')
 function kernelDataPath(name) {
   return JCO_TEST_MODE ? path.join(TEST_KERNEL_DATA_DIR, name) : kernelUnpackedPath(path.join(__dirname, 'kernel', name))
@@ -2538,12 +2547,6 @@ ipcMain.handle('tasks:session:get', (_event, payload) => {
   if (!rec) return { ok: false, error: '任务不存在' }
   return { ok: true, task: { ...rec, messages: Array.isArray(rec.messages) ? rec.messages.slice(-30) : [], structured: false } }
 })
-
-// 测试模式：用独立的临时数据目录，避免和正在使用的 J.Co 抢单实例锁
-// （名字加随机段：防 pid 复用时读到上一个测试实例残留的 profile——2026-10-16 全量 E2E 偶发"读到旧侧栏状态"的教训）
-if (process.argv.includes('--jco-test')) {
-  app.setPath('userData', path.join(app.getPath('temp'), 'jco-test-' + process.pid + '-' + Date.now().toString(36)))
-}
 
 function createWindow() {
   // 按屏幕可用区域自适应并居中：窗口永远完整落在屏幕里（高缩放/小屏也不会被切）

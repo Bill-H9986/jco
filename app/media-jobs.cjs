@@ -7,6 +7,13 @@ function clone(value) {
   return JSON.parse(JSON.stringify(value))
 }
 
+const VIDEO_RESOLUTIONS = new Set(['720P'])
+
+function normalizeVideoRes(value) {
+  const text = String(value || '').trim()
+  return VIDEO_RESOLUTIONS.has(text) ? text : '720P'
+}
+
 function createMediaJobService(deps) {
   const dir = deps.dir
   fs.mkdirSync(dir, { recursive: true })
@@ -174,10 +181,14 @@ function createMediaJobService(deps) {
       job.stepText =
         job.status === 'done' ? '图片全部出好' : job.status === 'partial' ? '部分图片出好，失败项可重试' : '出图失败'
     }
+    const canceled = job.canceled === true || job.status === 'canceled'
+    const completed = job.items.filter((entry) => entry.ok === true).length
+    const finalProgress = canceled ? Math.round((completed / Math.max(1, job.total)) * 100) : 100
+    if (canceled) job.progress = finalProgress
     updateDraft(job, (draft) => {
       draft.status = 'review'
-      draft.progress = 100
-      draft.stepText = job.status === 'done' ? '' : job.error || ''
+      draft.progress = finalProgress
+      draft.stepText = canceled ? '已停止' : job.status === 'done' ? '' : job.error || ''
       draft.jobId = job.id
       draft.jobKind = 'image'
     })
@@ -217,7 +228,7 @@ function createMediaJobService(deps) {
               prompt: String(shot.prompt || ''),
               seconds: shot.seconds,
               aspect: job.params.ratio,
-              size: '720P',
+              size: normalizeVideoRes(job.params.res),
               model: job.params.model,
             })
           } catch (error) {
@@ -282,10 +293,14 @@ function createMediaJobService(deps) {
       job.stepText =
         job.status === 'done' ? '视频全部出好' : job.status === 'partial' ? '部分视频出好，失败段可重试' : '出片失败'
     }
+    const canceled = job.canceled === true || job.status === 'canceled'
+    const completed = job.items.filter((entry) => entry.status === 'done').length
+    const finalProgress = canceled ? Math.round((completed / Math.max(1, job.total)) * 100) : 100
+    if (canceled) job.progress = finalProgress
     updateDraft(job, (draft) => {
       draft.status = 'review'
-      draft.progress = 100
-      draft.stepText = job.status === 'done' ? '' : job.error || ''
+      draft.progress = finalProgress
+      draft.stepText = canceled ? '已停止' : job.status === 'done' ? '' : job.error || ''
       draft.jobId = job.id
       draft.jobKind = 'video'
     })
@@ -303,6 +318,7 @@ function createMediaJobService(deps) {
     if (existing) return { ok: true, job: clone(existing), existing: true }
 
     const id = 'media-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8)
+    const requestedRes = String((payload && payload.res) || '')
     const job = {
       id,
       appPid: process.pid,
@@ -317,7 +333,7 @@ function createMediaJobService(deps) {
       errors: [],
       params: {
         ratio: String((payload && payload.ratio) || '9:16'),
-        res: String((payload && payload.res) || (kind === 'image' ? '1K' : '720P')),
+        res: kind === 'video' ? normalizeVideoRes(requestedRes) : requestedRes || '1K',
         sizePx: String((payload && payload.sizePx) || ''),
         model: String((payload && payload.model) || ''),
       },

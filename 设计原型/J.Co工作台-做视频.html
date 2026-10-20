@@ -830,7 +830,7 @@
               <div class="param-menu" hidden><div class="seg" id="segDur"></div></div>
             </div>
             <div class="param" data-param="res">
-              <button class="param-chip" type="button"><span class="pv">1080P</span><span class="ti ti-chevron-down"></span></button>
+              <button class="param-chip" type="button"><span class="pv">720P</span><span class="ti ti-chevron-down"></span></button>
               <div class="param-menu" hidden><div class="seg" id="segRes"></div></div>
             </div>
             <div class="param" data-param="voice" id="voiceRow">
@@ -932,12 +932,23 @@
 
     function openMaterialPicker() {
       try { sessionStorage.setItem('jco-make-input', askInp.value); } catch (e) {}
-      const page = 'J.Co工作台-素材.html?pick=1&return=' + encodeURIComponent('J.Co工作台-做视频.html');
+      // 每次打开都换一个选择会话号：避免复用上次仍留在 pick-mode 的 iframe。
+      const page =
+        'J.Co工作台-素材.html?pick=1&return=' +
+        encodeURIComponent('J.Co工作台-做视频.html') +
+        '&pickSession=' +
+        Date.now();
+      if (window.parent && window.parent !== window && typeof window.parent.__jcoGo === 'function') {
+        try {
+          window.parent.__jcoGo(page);
+          return;
+        } catch (e) {}
+      }
       if (typeof window.__jcoGo === 'function') window.__jcoGo(page);
       else location.href = page;
     }
 
-    (function restorePickedMaterials() {
+    function consumePickedMaterials() {
       try {
         const raw = sessionStorage.getItem('jco-picked-materials');
         if (!raw) return;
@@ -950,7 +961,11 @@
           setTimeout(() => showToast('已带回 ' + pickedMaterials.length + ' 件素材，会作为这次的创作参考。'), 200);
         }
       } catch (e) {}
-    })();
+    }
+    consumePickedMaterials();
+    window.addEventListener('message', function (event) {
+      if (event.data && event.data.__jcoPickedMaterials) consumePickedMaterials();
+    });
     let brandProfile = null;
     function brandLine() {
       if (!brandProfile || typeof brandProfile !== 'object') return '';
@@ -1297,7 +1312,7 @@
         type: d.type || 'video',
         ratio: d.ratio || '9:16',
         duration: d.duration || '30 秒',
-        res: d.res || '1080P',
+        res: d.type === 'image' ? (d.res || '1K') : '720P',
         voice: d.voice || '标准女声',
         method: d.method || 'assemble',
         fixNote: d.fixNote || '',
@@ -1330,6 +1345,7 @@
     }
     function normalizeLoadedDraft(d, keepGenerating) {
       if (!d || typeof d !== 'object') return d;
+      d.res = d.type === 'image' ? (d.res || '1K') : '720P';
       d.images = MEDIA.normalizeImages(d.images);
       d.shots = Array.isArray(d.shots) ? d.shots : [];
       d.progress = Number(d.progress) || 0;
@@ -2242,7 +2258,7 @@
         draftId: d.id,
         shots: shots,
         ratio: d.ratio,
-        res: '720P',
+        res: d.res || '720P',
         model: configuredModel('video', ''),
       });
       if (res && res.ok && res.job) {

@@ -16,6 +16,12 @@ test('素材页：空库真横幅 / 注入后渲染与过滤 / 预览 / 方案�
     win.on('pageerror', (e) => errors.push(String(e.message).slice(0, 200)))
     await win.waitForTimeout(2500)
 
+    // 空库用例自己准备空库，不依赖前序测试的清理顺序。
+    await win.evaluate(async () => {
+      await window.jco.materials.save({ items: [] })
+      localStorage.removeItem('jco-materials-v1')
+    })
+
     // 空库（新环境）：横幅与网格都如实
     await win.evaluate(() => {
       window.location.href = 'J.Co工作台-素材.html'
@@ -72,6 +78,12 @@ test('素材页：空库真横幅 / 注入后渲染与过滤 / 预览 / 方案�
     await expect(win.locator('#matPreview')).toBeHidden()
     expect(errors, `JS 错误：\n${errors.join('\n')}`).toEqual([])
   } finally {
+    try {
+      const win = await app.firstWindow()
+      await win.evaluate(async () => {
+        await window.jco.materials.save({ items: [] })
+      })
+    } catch {}
     await app.close()
   }
 })

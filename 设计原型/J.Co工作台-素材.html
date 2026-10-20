@@ -363,6 +363,22 @@
       updatePickBar();
     }
 
+    function leavePicker(hasPicked) {
+      if (window.parent && window.parent !== window && typeof window.parent.__jcoGo === 'function') {
+        try {
+          window.parent.postMessage(
+            {
+              __jcoPickerReturn: PICK_RETURN,
+              __jcoPickedMaterials: Boolean(hasPicked),
+            },
+            '*',
+          );
+          return;
+        } catch (e) {}
+      }
+      location.href = PICK_RETURN;
+    }
+
     function confirmPick() {
       var items = MATERIALS.filter(function (m) { return PICKED.has(materialKey(m)); });
       if (items.length === 0) {
@@ -375,12 +391,12 @@
         showToast('这台电脑的临时存储不可用，先别关页面，再试一次。');
         return;
       }
-      location.href = PICK_RETURN;
+      leavePicker(true);
     }
 
     function cancelPick() {
       try { sessionStorage.removeItem('jco-picked-materials'); } catch (e) {}
-      location.href = PICK_RETURN;
+      leavePicker(false);
     }
 
     if (PICK_MODE) {

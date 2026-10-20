@@ -70,7 +70,8 @@ test('创作素材：3:4 选择回传 / 图片占位清理 / 未出片不能通�
       type: 'video',
       ratio: '9:16',
       duration: '30 秒',
-      res: '720P',
+      // 旧草稿曾存 1080P；Agnes 视频当前只支持 720P，页面必须归一化后展示。
+      res: '1080P',
       voice: '标准女声',
       method: 'assemble',
       shots: [
@@ -106,6 +107,8 @@ test('创作素材：3:4 选择回传 / 图片占位清理 / 未出片不能通�
     await win.reload()
     await win.waitForTimeout(1600)
     await win.locator('.dcard', { hasText: '未出片的视频草稿' }).click()
+    await expect(win.locator('#doneMeta')).toContainText('720P')
+    await expect(win.locator('#doneMeta')).not.toContainText('1080P')
     await win.locator('#approveBtn').click()
     await expect(win.locator('#toast')).toContainText('没出片')
     const status = await win.evaluate(async () => {

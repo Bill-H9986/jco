@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## 0.6.0-beta.29 (2026-10-20)
+
+### Fixes
+
+* **shell:** 缓存命中前校验 iframe 当前 URL，页面自行跳转后不再把素材选择页、跨页交接页当成目标页复用
+* **create:** 创作页素材选择改走父级应用壳导航，选择结果通过消息回传；切页回来不再丢失已选素材和创作输入
+* **create:** 每次打开素材选择都使用新的选择会话号，不继承上一次的 pick-mode 和旧选择
+* **media:** 后台视频任务使用归一化后的清晰度参数，不再把 720P 写死在出片调用里；旧草稿的 1080P 自动归一为 720P
+* **media:** 取消后台视频任务按已完成段数写回进度，不再把未完成草稿伪装成 100%
+* **testing:** 新增 M18 真实应用壳内素材选择 E2E；M13 增加旧草稿清晰度归一化断言；M9 空库用例自己准备空库
+* **testing:** `--jco-test` 在初始化发布会话、素材目录和设置前切换到独立 userData，E2E 不再触碰真实用户目录
+
 ## 0.6.0-beta.28 (2026-10-20)
 
 ### Fixes

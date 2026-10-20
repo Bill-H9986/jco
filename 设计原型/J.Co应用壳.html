@@ -232,6 +232,15 @@
           return text;
         }
       }
+      function frameMatchesTarget(node, target) {
+        if (!node || !node.contentWindow) return false;
+        try {
+          var expected = new URL(target, location.href).href;
+          return new URL(node.contentWindow.location.href).href === expected;
+        } catch (err) {
+          return false;
+        }
+      }
       function activeFrame() {
         return document.querySelector('.jco-frame.is-active') || frame;
       }
@@ -301,7 +310,10 @@
           }
         }
         node.addEventListener('load', function () {
-          if (!matchesTarget()) return;
+          if (!matchesTarget()) {
+            node._jcoReady = false;
+            return;
+          }
           runWaiters(node);
           if (currentKey === key && node.classList.contains('is-active') && fade) {
             setTimeout(function () { fade.classList.remove('on'); }, 40);
@@ -541,7 +553,7 @@
       function navPageOfRoute(route) {
         if (route.kind === 'home') return 'J.Co主界面-首页.html';
         if (route.kind === 'chat' || route.kind === 'task') return 'J.Co总管.html';
-        if (route.kind === 'page') return route.file;
+        if (route.kind === 'page') return String(route.file || '').split('?')[0];
         return 'J.Co主界面-首页.html';
       }
       function rememberHash(route) {
@@ -554,6 +566,15 @@
         var started = performance.now();
         var key = keyOf(target);
         var node = frames[key];
+        // 页面可能自己跳走（例如素材选择、跨页引用）。缓存命中前必须确认
+        // iframe 现在仍在目标 URL；否则会把旧页面当成目标页直接激活。
+        if (node && node._jcoReady && !frameMatchesTarget(node, target)) {
+          delete frames[key];
+          var staleAt = frameOrder.indexOf(key);
+          if (staleAt !== -1) frameOrder.splice(staleAt, 1);
+          if (node.parentNode) node.parentNode.removeChild(node);
+          node = null;
+        }
         if (node && node._jcoReady) {
           if (currentKey !== key) activateFrame(node);
           currentKey = key;
@@ -639,7 +660,7 @@
           }
           return;
         }
-        applyRoute({ kind: 'page', file: text.split('?')[0] }, true);
+        applyRoute({ kind: 'page', file: text }, true);
       };
       // 首页发送：进入 chat/new，seed 由总管页消费；不创建任务、不启动浏览器。
       window.__jcoStartChat = function (text) {
@@ -676,6 +697,20 @@
       // 总管页创建/切换会话后回传 id，地址栏稳定在 #/chat/:id
       window.addEventListener('message', function (event) {
         if (!isCachedSource(event.source)) return;
+        var pickerReturn = event.data && event.data.__jcoPickerReturn;
+        if (pickerReturn) {
+          var target = String(pickerReturn);
+          var picked = event.data.__jcoPickedMaterials === true;
+          loadFrame(target, function (win) {
+            if (!win) return;
+            win.postMessage({ __jcoPickedMaterials: picked }, '*');
+          });
+          rememberHash({ kind: 'page', file: target });
+          if (typeof window.__jcoHighlightPage === 'function') {
+            window.__jcoHighlightPage(target.split('?')[0]);
+          }
+          return;
+        }
         var id = event.data && event.data.__jcoConversation;
         if (id) rememberHash({ kind: 'chat', id: String(id) });
       });
