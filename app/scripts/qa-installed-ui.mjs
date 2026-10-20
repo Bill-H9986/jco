@@ -35,7 +35,7 @@ async function openPage(win, page) {
     page,
     { timeout: 15000 },
   )
-  await win.waitForTimeout(160)
+  await win.waitForTimeout(450)
   return activeFrame(win)
 }
 

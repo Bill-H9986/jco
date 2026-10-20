@@ -29,7 +29,7 @@ async function openPage(win, page) {
       { message: `页面未打开：${page}`, timeout: 15000 },
     )
     .toContain(page)
-  await win.waitForTimeout(180)
+  await win.waitForTimeout(450)
   return activeFrame(win)
 }
 

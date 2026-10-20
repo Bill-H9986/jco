@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## 0.6.0-beta.28 (2026-10-20)
+
+### Fixes
+
+* **ui:** 修复真正的开关形状分叉根因：全局 `corner-shape: superellipse(1.5)` 与页面级 `corner-shape: round` 名单并存，导致同类开关在不同页面分别显示为胶囊和圆角矩形
+* **ui:** 删除 14 个页面里各自维护的重复轮廓名单，轮廓规则统一收进 `jco-ui.css`
+* **ui:** 开关轨道改为实色，统一 44×26、22px 圆钮、无边框、无轨道阴影，开态和关态只允许颜色、圆钮位置不同
+* **ui:** 圆形图标、胶囊标签、圆形头像、进度条、开关统一为真实圆弧；文本按钮、输入框、卡片统一为超椭圆
+* **testing:** UI 契约新增实际 `corner-shape`、圆钮轮廓、开/关轨道颜色和圆钮阴影校验
+* **testing:** 几何审计扩展到 15 页、382 个圆角元素，并检查同名组件跨页面轮廓一致
+* **testing:** 页面样式来源门禁禁止再次写入任何 `corner-shape` 页面覆盖
+
 ## 0.6.0-beta.27 (2026-10-20)
 
 ### Features

@@ -41,7 +41,7 @@ async function openPage(win, page) {
     page,
     { timeout: 15000 },
   )
-  await win.waitForTimeout(200)
+  await win.waitForTimeout(450)
   return activeFrame(win)
 }
 
@@ -68,6 +68,7 @@ try {
   const switches = inventory.flatMap((item) => item.switches)
   const badges = inventory.flatMap((item) => item.badges)
   const forms = inventory.flatMap((item) => item.forms)
+  const rounded = inventory.flatMap((item) => item.rounded)
   const roles = Object.fromEntries(
     [...new Set(controls.map((item) => item.role))].map((role) => [
       role,
@@ -83,6 +84,7 @@ try {
     switches: switches.length,
     badges: badges.length,
     forms: forms.length,
+    roundedElements: rounded.length,
     violations,
     pageErrors: errors,
     inventory,
@@ -93,7 +95,7 @@ try {
 
   console.log(`UI 盘点：${PAGES.length} 页 / ${controls.length} 个操作控件 / ${switches.length} 个开关`)
   console.log(`控件角色：${JSON.stringify(roles)}`)
-  console.log(`其他控件：badge=${badges.length} input=${forms.length}`)
+  console.log(`其他控件：badge=${badges.length} input=${forms.length} 圆角元素=${rounded.length}`)
   console.log(`报告：${output}`)
 
   if (errors.length) {

@@ -64,6 +64,9 @@ for (const file of fs.readdirSync(PRODUCT_DIR).filter((name) => name.endsWith('.
         if (property === 'width' && value !== '100%' && value !== 'auto') {
           violations.push(`${file}: ${selector} 不得改写固定宽度 ${rawValue}`)
         }
+        if (property === 'corner-shape') {
+          violations.push(`${file}: ${selector} 不得在页面内改写全局轮廓规则`)
+        }
         if (selector.includes('.tg') && property === 'box-shadow' && value !== 'none') {
           violations.push(`${file}: .tg 不得增加页面级阴影`)
         }

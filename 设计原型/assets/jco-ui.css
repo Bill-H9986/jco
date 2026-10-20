@@ -416,6 +416,7 @@ html:not(.side-pinned) .side-foot .icon-btn { opacity: 0; pointer-events: none; 
     --jco-switch-w: 44px;
     --jco-switch-h: 26px;
     --jco-switch-knob: 22px;
+    --switch-off: #d1d1d6;
     --bg: #f7f7f7;
     --sidebar: #f5f5f7;
     --card: #ffffff;
@@ -458,6 +459,7 @@ html:not(.side-pinned) .side-foot .icon-btn { opacity: 0; pointer-events: none; 
       --line: rgba(255, 255, 255, 0.1);
       --accent: #0a84ff;
       --accent-strong: #3d9bff;
+      --switch-off: #48484a;
       --hover: rgba(255, 255, 255, 0.07);
       --picked: rgba(255, 255, 255, 0.12);
       --btn-2nd: #3a3a3c;
@@ -488,6 +490,7 @@ html[data-jco-theme="light"] {
   --line: rgba(0, 0, 0, 0.08);
   --accent: #0080ff;
   --accent-strong: #1a8cff;
+  --switch-off: #d1d1d6;
   --on-accent: #ffffff;
   --hover: rgba(15, 15, 15, 0.06);
   --picked: rgba(15, 15, 15, 0.10);
@@ -517,6 +520,7 @@ html[data-jco-theme="dark"] {
   --line: rgba(255, 255, 255, 0.1);
   --accent: #0a84ff;
   --accent-strong: #3d9bff;
+  --switch-off: #48484a;
   --on-accent: #ffffff;
   --hover: rgba(255, 255, 255, 0.07);
   --picked: rgba(255, 255, 255, 0.12);
@@ -817,7 +821,7 @@ html[data-jco-theme="dark"] {
   .tg {
     position: relative; width: var(--jco-switch-w); height: var(--jco-switch-h); flex: none;
     padding: 0; border: none; border-radius: 999px; cursor: pointer;
-    background: rgba(120, 120, 128, 0.3);
+    background: var(--switch-off);
     box-shadow: none;
     transition: background 0.18s ease, opacity 0.18s ease;
   }
@@ -826,7 +830,7 @@ html[data-jco-theme="dark"] {
     content: ""; position: absolute; top: 2px; left: 2px;
     width: var(--jco-switch-knob); height: var(--jco-switch-knob); border-radius: 50%;
     background: #ffffff;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.18), 0 0 0 0.5px rgba(0, 0, 0, 0.04);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.18);
     transition: transform 0.18s var(--ease);
   }
 
@@ -1326,7 +1330,11 @@ body .use-btn,
 body .export-btn,
 body .tbtn,
 body .pf-add,
-body .regen {
+body .regen,
+body .draft .open,
+body .a-btn,
+body .btn-primary,
+body .btn-cancel {
   height: var(--jco-control-h) !important;
   min-height: var(--jco-control-h);
   padding: 0 14px !important;
@@ -1369,7 +1377,8 @@ body .chip,
 body .seg button,
 body .agent-tabs button,
 body .cp-act,
-body .msg .act {
+body .msg .act,
+body .shot .swap {
   height: var(--jco-control-h-compact) !important;
   min-height: var(--jco-control-h-compact);
   padding: 0 10px !important;
@@ -1420,6 +1429,10 @@ body .convo.new-btn {
   font-size: var(--jco-control-font) !important;
 }
 
+body .agent-tabs {
+  border-radius: var(--jco-control-radius) !important;
+}
+
 body .tg {
   width: var(--jco-switch-w) !important;
   height: var(--jco-switch-h) !important;
@@ -1427,6 +1440,124 @@ body .tg {
   border: 0 !important;
   border-radius: 999px !important;
   box-shadow: none !important;
+}
+
+/* 几何契约：正圆与胶囊保持圆弧，其余带圆角组件统一走超椭圆。 */
+body .tg,
+body .tg::after,
+body .me .ava,
+body .mm-head .ava,
+body .msg.ai .ava,
+body .acct .a-ava,
+body .card .go,
+body .send,
+body .send-big,
+body .cp-send,
+body .copilot-btn,
+body .play-btn,
+body .ib-nav,
+body .r-dot,
+body .dot,
+body .postlist .dot,
+body .typing i,
+body .ai-state .dot,
+body .step .dot,
+body .step .no,
+body .pf .pfck,
+body .s-badge::before,
+body .agent-chip,
+body .badge,
+body .b-role,
+body .s-badge,
+body .stage,
+body .tag,
+body .toast,
+body .brain-badge,
+body .conn-badge,
+body .kind-badge,
+body .tk-badge,
+body .sk-tag,
+body .planrow .ps,
+body .ib-count,
+body .acct .a-state,
+body .tv-status,
+body .check,
+body .prog .track,
+body .prog .fill,
+body .prow .pbar,
+body .prow .pf2,
+body .s-pbar,
+body .s-pfill,
+body .draft .dprog,
+body .draft .dprog .dfill,
+body .track,
+body .fill,
+body .playhead::after,
+body .lava {
+  corner-shape: round !important;
+}
+
+body .ghost,
+body .ghost-btn,
+body .btn-ghost,
+body .go-btn,
+body .btn-sm,
+body .use-btn,
+body .export-btn,
+body .tbtn,
+body .pf-add,
+body .regen,
+body .draft .open,
+body .a-btn,
+body .btn-primary,
+body .btn-cancel,
+body .ghost.mini,
+body .tool,
+body .model-pill,
+body .param-chip,
+body .chip,
+body .seg button,
+body .agent-tabs,
+body .agent-tabs button,
+body .cp-act,
+body .msg .act,
+body .shot .swap,
+body .icon-btn,
+body .side-toggle,
+body .board-close,
+body .cp-fold,
+body .f-eye,
+body .msg-actions button,
+body .star,
+body .convo.new-btn,
+body main .card,
+body main .tp,
+body main .dcard,
+body main .draft,
+body main .skill,
+body main .skl,
+body main .ib-thumb,
+body main .ib-add,
+body main .pf,
+body main .staff,
+body main .grp-card,
+body main .recent-item,
+body main .task-card,
+body .board,
+body .copilot,
+body .pill-pop,
+body .mode-pop,
+body .notif-pop,
+body .convo-menu,
+body .me-menu,
+body main .inp,
+body main #titleInp,
+body main #tagInp,
+body main #descInp,
+body main textarea.inp,
+body main .kb-field textarea,
+body main .post-panel textarea {
+  corner-shape: superellipse(1.5) !important;
 }
 
 body main .card,
