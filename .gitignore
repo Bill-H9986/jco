@@ -55,3 +55,6 @@ outputs/
 
 # 开发工作区的临时截图、脚本与对比材料
 /work/
+
+# 自动生成的 UI 盘点、质量矩阵和发布认证报告
+/app/quality/generated/

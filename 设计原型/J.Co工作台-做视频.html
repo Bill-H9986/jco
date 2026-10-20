@@ -118,9 +118,8 @@
 
 .tool {
     display: inline-flex; align-items: center; gap: 6px;
-    height: 34px; padding: 0 13px; border: none; border-radius: 999px;
     background: transparent; color: var(--text-2);
-    font-family: inherit; font-size: 13px; cursor: pointer;
+    font-family: inherit; cursor: pointer;
     transition: background 0.15s ease, color 0.15s ease;
   }
 
@@ -128,13 +127,10 @@
 
 .tool:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
-.tool .ti { font-size: 16px; }
-
 .model-pill {
     display: inline-flex; align-items: center; gap: 8px;
-    height: 36px; padding: 0 15px; border: none; border-radius: 999px;
     background: var(--tint); color: var(--text-1);
-    font-family: inherit; font-size: 13px; cursor: pointer;
+    font-family: inherit; cursor: pointer;
     max-width: 100%; white-space: nowrap; overflow: hidden;
     transition: background 0.15s ease;
   }
@@ -151,7 +147,6 @@
 
 .send-big {
     display: flex; align-items: center; justify-content: center;
-    width: 40px; height: 40px; border: none; border-radius: 50%;
     background: var(--accent); color: #ffffff; font-size: 18px; cursor: pointer;
     transition: background 0.15s ease, transform 0.1s ease, opacity 0.15s ease;
   }
@@ -185,12 +180,12 @@
 .ask-params .param { position: relative; }
 .ask-params .param { flex: none; }
 .ask-params .param-chip {
-  display: inline-flex; align-items: center; gap: 5px; height: 26px; padding: 0 9px;
-  border: 1px solid var(--line); border-radius: 8px; background: transparent;
-  color: var(--text-2); font-family: inherit; font-size: 12px; cursor: pointer;
+  display: inline-flex; align-items: center; gap: 5px;
+  border: 1px solid var(--line); background: transparent;
+  color: var(--text-2); font-family: inherit; cursor: pointer;
 }
 .ask-params .param-chip:hover { border-color: var(--text-3); color: var(--text-1); }
-.ask-params .param-chip .ti { font-size: 12px; color: var(--text-3); }
+.ask-params .param-chip .ti { color: var(--text-3); }
 .ask-params .param-menu {
   position: absolute; bottom: calc(100% + 6px); left: 0; z-index: 40;
   min-width: 120px;
@@ -567,8 +562,6 @@
 
 .shot-bar { display: flex; align-items: center; gap: 10px; margin-top: 14px; flex-wrap: wrap; }
 
-.shot-bar .go-btn { height: 34px; padding: 0 16px; font-size: 13px; border-radius: 999px; }
-
 .shot-bar .go-btn:disabled { opacity: 0.55; cursor: default; }
 
 .shot-hint { font-size: 12px; color: var(--text-3); }
@@ -645,7 +638,7 @@
 
 .fix-bar input::placeholder { color: var(--text-3); }
 
-.fix-bar .ghost { height: 32px; padding: 0 13px; font-size: 13px; background: var(--card); }
+.fix-bar .ghost { background: var(--card); }
 
 /* DSH 规范：正圆与胶囊保持圆弧（其余圆角走超椭圆） */
   .me .ava, .mm-head .ava, .msg.ai .ava, .card .go, .send, .ghost, .ghost-btn, .btn-sm, .act,

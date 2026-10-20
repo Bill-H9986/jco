@@ -1,0 +1,228 @@
+{
+  "version": 1,
+  "updatedAt": "2026-10-20",
+  "definition": "每个产品功能必须映射到可自动执行或有明确人工边界的验证证据；P0/P1 不允许没有证据。",
+  "features": [
+    {
+      "id": "shell-navigation-cache",
+      "surface": "J.Co应用壳.html",
+      "priority": "P0",
+      "status": "covered",
+      "risk": "切页重载、页面状态丢失、缓存泄漏",
+      "automated": [
+        "tests/e2e/m10-shell.spec.mjs",
+        "tests/e2e/m15-unified-shell-state.spec.mjs",
+        "tests/e2e/m17-autonomous-ui.spec.mjs"
+      ]
+    },
+    {
+      "id": "home-new-chat",
+      "surface": "J.Co主界面-首页.html",
+      "priority": "P0",
+      "status": "covered",
+      "risk": "首页发送未建会话、错误派活、整页跳转",
+      "automated": ["tests/e2e/m11-home-route.spec.mjs", "tests/e2e/publish-entry.spec.mjs"]
+    },
+    {
+      "id": "chat-sessions",
+      "surface": "J.Co总管.html",
+      "priority": "P0",
+      "status": "covered",
+      "risk": "会话覆盖、空会话堆积、历史丢失、重命名删除错误",
+      "automated": [
+        "tests/e2e/sessions.spec.mjs",
+        "tests/e2e/m11-home-route.spec.mjs",
+        "tests/e2e/m11-message-history.spec.mjs"
+      ]
+    },
+    {
+      "id": "chat-kernel",
+      "surface": "J.Co总管.html",
+      "priority": "P0",
+      "status": "covered",
+      "risk": "真实内核断线、错误工具挂载、回答截断",
+      "automated": ["tests/e2e/m11-kernel-wiring.spec.mjs", "tests/e2e/session-recover.spec.mjs"]
+    },
+    {
+      "id": "task-confirm-approval",
+      "surface": "J.Co总管.html",
+      "priority": "P0",
+      "status": "covered",
+      "risk": "未确认就执行、审批绕过、任务状态错误",
+      "automated": [
+        "tests/e2e/m11-task-card.spec.mjs",
+        "tests/e2e/m11-team-task-state.spec.mjs",
+        "tests/e2e/m9e-taskbridge.spec.mjs"
+      ]
+    },
+    {
+      "id": "topics",
+      "surface": "J.Co工作台-选题.html",
+      "priority": "P1",
+      "status": "covered",
+      "risk": "选题迁移失败、收藏丢失、品牌档案未注入",
+      "automated": ["tests/e2e/m8-topics.spec.mjs", "tests/e2e/m11-topics-store.spec.mjs"]
+    },
+    {
+      "id": "materials",
+      "surface": "J.Co工作台-素材.html",
+      "priority": "P1",
+      "status": "covered",
+      "risk": "导入越界、素材迁移失败、选择回传错误",
+      "automated": ["tests/e2e/m11-materials-store.spec.mjs", "tests/e2e/m9-material.spec.mjs", "tests/e2e/m13-create-media.spec.mjs"]
+    },
+    {
+      "id": "script-writing",
+      "surface": "J.Co工作台-创作.html",
+      "priority": "P1",
+      "status": "covered",
+      "risk": "旧稿迁移失败、改稿覆盖、跨页不可见",
+      "automated": ["tests/e2e/m11-scripts-store.spec.mjs", "tests/e2e/m8-topics.spec.mjs"]
+    },
+    {
+      "id": "video-creation",
+      "surface": "J.Co工作台-做视频.html",
+      "priority": "P0",
+      "status": "covered",
+      "risk": "参数未下发、素材不生效、生成中断、空草稿通过、审批绕过",
+      "automated": [
+        "tests/e2e/m13-create-media.spec.mjs",
+        "tests/e2e/m14-create-work-state.spec.mjs",
+        "tests/e2e/m9-video.spec.mjs",
+        "tests/e2e/delivery-drone-campaign.spec.mjs"
+      ]
+    },
+    {
+      "id": "post-edit",
+      "surface": "J.Co工作台-后期.html",
+      "priority": "P1",
+      "status": "covered",
+      "risk": "未选片派活、产物登记错误、ffmpeg 无取消",
+      "automated": ["tests/e2e/m11-post-task.spec.mjs", "tests/e2e/m9-post.spec.mjs"]
+    },
+    {
+      "id": "publish-pipeline",
+      "surface": "J.Co工作台-发布.html",
+      "priority": "P0",
+      "status": "partial",
+      "risk": "误发布、未登录可点、平台页面变化",
+      "reason": "任务、审批、页面入口和拒绝路径已自动覆盖；真实平台登录与最终发布按钮由产品负责人亲手操作，平台页面改版需人工冒烟。",
+      "automated": ["tests/e2e/m11-publish-task.spec.mjs", "tests/e2e/publish-entry.spec.mjs"]
+    },
+    {
+      "id": "ops",
+      "surface": "J.Co工作台-运营.html",
+      "priority": "P1",
+      "status": "covered",
+      "risk": "战报空数据、评论绕过审批、线索状态错误",
+      "automated": ["tests/e2e/m11-ops-store.spec.mjs", "tests/e2e/publish-entry.spec.mjs"]
+    },
+    {
+      "id": "accounts",
+      "surface": "J.Co账号中心.html",
+      "priority": "P1",
+      "status": "partial",
+      "risk": "账号状态分叉、登录登记丢失、真实扫码失效",
+      "reason": "统一账号存储与登记回填已自动覆盖；真实平台扫码必须人工完成。",
+      "automated": ["tests/e2e/m11-accounts-store.spec.mjs", "tests/e2e/m9-account.spec.mjs"]
+    },
+    {
+      "id": "settings-brand",
+      "surface": "J.Co设置.html",
+      "priority": "P0",
+      "status": "covered",
+      "risk": "设置未落盘、Key 泄漏、品牌档案不同源、发布确认可关闭",
+      "automated": ["tests/e2e/settings.spec.mjs", "tests/e2e/m11-settings-brand.spec.mjs", "tests/e2e/theme.spec.mjs"]
+    },
+    {
+      "id": "auto-tasks",
+      "surface": "J.Co自动任务.html",
+      "priority": "P1",
+      "status": "covered",
+      "risk": "旧数据迁移错误、重复执行、马上跑绕过台账",
+      "automated": ["tests/e2e/m6-auto.spec.mjs", "tests/e2e/m11-auto-task-unified.spec.mjs"]
+    },
+    {
+      "id": "skills",
+      "surface": "J.Co技能库.html",
+      "priority": "P1",
+      "status": "covered",
+      "risk": "开关状态丢失、技能合并不一致、技能排不更新",
+      "automated": ["tests/e2e/m5-skills.spec.mjs"]
+    },
+    {
+      "id": "team-status",
+      "surface": "J.Co管家团队.html",
+      "priority": "P1",
+      "status": "covered",
+      "risk": "员工状态与任务不一致、取消后不复位",
+      "automated": ["tests/e2e/m5-staff.spec.mjs", "tests/e2e/m11-team-task-state.spec.mjs", "tests/e2e/m6-auto.spec.mjs"]
+    },
+    {
+      "id": "design-system",
+      "surface": "J.Co设计系统.html",
+      "priority": "P2",
+      "status": "covered",
+      "risk": "样例与产品组件不同源",
+      "automated": ["tests/e2e/m11-design-system.spec.mjs", "scripts/audit-frontend.mjs"]
+    },
+    {
+      "id": "ui-control-contract",
+      "surface": "全站",
+      "priority": "P0",
+      "status": "covered",
+      "risk": "同类按钮、开关、输入、卡片规格再次分叉",
+      "automated": [
+        "tests/e2e/m16-ui-contract.spec.mjs",
+        "scripts/ui-inventory.mjs",
+        "scripts/check-ui-source.mjs"
+      ]
+    },
+    {
+      "id": "autonomous-ui-exploration",
+      "surface": "全站",
+      "priority": "P0",
+      "status": "covered",
+      "risk": "测试只验证结构、不操作真实页面；随机导航触发隐藏状态错误",
+      "automated": ["tests/e2e/m17-autonomous-ui.spec.mjs"]
+    },
+    {
+      "id": "visual-regression",
+      "surface": "全站",
+      "priority": "P1",
+      "status": "covered",
+      "risk": "布局、层级、间距和交互状态视觉回退",
+      "automated": ["tests/visual/full-site.visual.spec.mjs", "tests/visual/shell.visual.spec.mjs", "tests/visual/wave1.visual.spec.mjs"]
+    },
+    {
+      "id": "security-boundary",
+      "surface": "全站",
+      "priority": "P0",
+      "status": "covered",
+      "risk": "危险点击、域名跳转、上传越界、发布删除支付绕过",
+      "automated": ["scripts/security-gate.mjs", "tests/unit/publish-tools.test.mjs"]
+    },
+    {
+      "id": "installed-package",
+      "surface": "安装包",
+      "priority": "P0",
+      "status": "covered",
+      "risk": "打包源码与验证源码不一致、安装后内核缺失、用户数据损坏",
+      "automated": [
+        "scripts/qa-packaged.mjs",
+        "scripts/qa-installed-ui.mjs",
+        "scripts/verify-packaged-kernel.mjs",
+        "scripts/release-certify.mjs"
+      ]
+    },
+    {
+      "id": "release-provenance",
+      "surface": "发布链路",
+      "priority": "P1",
+      "status": "partial",
+      "risk": "tag 指向旧提交、feed 与安装包版本漂移",
+      "reason": "问题已记录；按产品负责人要求暂缓改写远程 tag 和 feed。",
+      "automated": ["scripts/release-github.mjs"]
+    }
+  ]
+}

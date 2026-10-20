@@ -57,7 +57,7 @@ test('M11 W4-05：设计系统展示消息、任务卡、任务状态和员工�
       return { background: style.backgroundColor, radius: style.borderRadius, border: style.borderTopWidth }
     })
     expect(computed.background).not.toBe('rgba(0, 0, 0, 0)')
-    expect(computed.radius).toBe('12px')
+    expect(computed.radius).toBe('16px')
     expect(parseFloat(computed.border)).toBeGreaterThan(0)
     expect(parseFloat(computed.border)).toBeLessThanOrEqual(0.67)
     const disabledOpacity = await win

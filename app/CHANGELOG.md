@@ -2,6 +2,25 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## 0.6.0-beta.27 (2026-10-20)
+
+### Features
+
+* **ui:** 建立全站操作控件契约：标准文本按钮 36px、紧凑按钮 30px、圆形图标 40px、方形图标 32px、卡片 16px、开关 44×26
+* **ui:** 归并 `.ghost` `.ghost-btn` `.btn-ghost` `.go-btn` `.btn-sm` `.use-btn` `.export-btn` `.tbtn` `.pf-add` `.regen` 等文本按钮尺寸
+* **ui:** 统一参数、筛选、分段、模型选择、消息操作和图标按钮；开关移除页面级阴影差异
+* **testing:** 新增真实应用 UI 盘点 `ui-inventory.mjs`，覆盖 15 页、188 个操作控件、26 个开关、35 个徽章和 8 个标准输入
+* **testing:** 新增 UI 来源静态检查、P0/P1 功能质量矩阵和 `m16` 全站控件契约 E2E
+* **testing:** 新增 `m17` 无人干预探索：点击安全 tab/segment、检查可访问名称/重复 ID/横向溢出/小控件、48 次随机导航、损坏草稿注入
+* **testing:** 新增安装版 UI 验收和发布候选认证脚本；认证报告落在 `app/quality/generated/`
+* **docs:** 新增《质量保障体系与大厂测试调研》和《前端元素清单与规格》，记录 Codex、Claude Code、DSH、Marvis 的公开实践与取舍
+
+### Fixes
+
+* **post:** 删除后期页残留的重复 `id="panel"`、旧时间轴面板和多余闭合标签；自主探索测试首次运行即发现该真实缺陷
+* **design-system:** 同步任务卡 16px 卡片圆角断言
+* **ui:** 修复控件统一后页面局部样式继续覆盖尺寸的问题，静态门禁禁止再次写死同类控件尺寸/圆角/内边距
+
 ## 0.6.0-beta.26 (2026-10-20)
 
 ### Features

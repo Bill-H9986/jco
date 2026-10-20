@@ -15,6 +15,8 @@ const steps = [
     cmd: 'npx',
     args: ['biome', 'check', 'src', 'tests', 'scripts', 'publish', 'kernel/publish-tools'],
   },
+  { name: 'UI 控件来源检查', cmd: 'node', args: ['scripts/check-ui-source.mjs'] },
+  { name: '功能质量矩阵', cmd: 'node', args: ['scripts/quality-report.mjs', '--check'] },
   { name: '单元测试 (Vitest)', cmd: 'npx', args: ['vitest', 'run'] },
   { name: '全项目扫描门禁 (Project Checks)', cmd: 'node', args: ['scripts/check-all.mjs', '--baseline'] },
   { name: 'OWASP 安全门 (Security Gate)', cmd: 'node', args: ['scripts/security-gate.mjs'] },

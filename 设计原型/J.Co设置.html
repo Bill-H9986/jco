@@ -57,28 +57,6 @@
 
 .r-ctl { flex: none; display: flex; align-items: center; gap: 8px; }
 
-.btn-ghost {
-    display: inline-flex; align-items: center; gap: 7px;
-    height: 34px; padding: 0 15px; border: none; border-radius: 999px;
-    background: var(--btn-2nd); color: var(--text-1);
-    font-family: inherit; font-size: 13px; cursor: pointer; flex: none;
-    transition: background 0.15s ease, transform 0.1s ease;
-  }
-
-.btn-ghost:hover { background: var(--btn-2nd-hover); }
-
-.btn-ghost:active { transform: scale(0.97); }
-
-.btn-ghost:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-
-.btn-ghost .ti { font-size: 14px; color: var(--text-2); }
-
-.btn-ghost.primary { background: var(--accent); color: #ffffff; }
-
-.btn-ghost.primary:hover { background: var(--accent-strong); }
-
-.btn-ghost.primary .ti { color: #ffffff; }
-
 .r-value { font-size: 13px; color: var(--text-3); }
 
 /* ============ AI 大脑配置 ============ */
@@ -296,7 +274,7 @@
 .f-eye {
     position: absolute; right: 5px; top: 50%; transform: translateY(-50%);
     display: flex; align-items: center; justify-content: center;
-    width: 28px; height: 28px; border: none; border-radius: 8px;
+    border: none;
     background: transparent; color: var(--text-3); cursor: pointer; font-size: 14px;
     transition: background 0.15s ease, color 0.15s ease;
   }
