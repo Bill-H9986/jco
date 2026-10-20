@@ -1119,11 +1119,51 @@
 
     /* ================= 渲染 ================= */
     const TYPE_DEFAULT_RATIO = { video: '9:16', image: '3:4' };
+    const MAKE_PARAMS_KEY = 'jco-make-params-v1';
     const HINTS = { video: '说说你想做什么', image: '说说你要什么图' };
     const PLACEHOLDERS = {
       video: '说说你的创作想法，也可以选素材或参考（比如：把稿子做成口播视频，用用户采访画面）',
       image: '比如：给这篇稿子配 3 张小红书风格的图',
     };
+
+    function hasParamOption(options, value) {
+      return Array.isArray(options) && options.some((item) => item.v === value);
+    }
+
+    function saveMakeParams() {
+      try {
+        localStorage.setItem(
+          MAKE_PARAMS_KEY,
+          JSON.stringify({
+            type: state.type,
+            ratio: state.ratio,
+            duration: state.duration,
+            res: state.res,
+            voice: state.voice,
+            count: state.count,
+            method: state.method,
+          }),
+        );
+      } catch (e) {}
+    }
+
+    function restoreMakeParams() {
+      try {
+        const data = JSON.parse(localStorage.getItem(MAKE_PARAMS_KEY) || 'null');
+        if (!data) return;
+        if (data.type === 'video' || data.type === 'image') state.type = data.type;
+        state.ratio = hasParamOption(RATIOS[state.type], data.ratio) ? data.ratio : TYPE_DEFAULT_RATIO[state.type];
+        if (state.type === 'image') {
+          state.count = hasParamOption(COUNTS, data.count) ? data.count : '3 张';
+          state.res = hasParamOption(RES.image, data.res) ? data.res : '2K';
+        } else {
+          state.duration = hasParamOption(VIDEO_DURATIONS, data.duration) ? data.duration : '30 秒';
+          state.res = hasParamOption(RES.video, data.res) ? data.res : '720P';
+          state.voice = VOICES.includes(data.voice) ? data.voice : '标准女声';
+        }
+        if (typeof data.method === 'string' && data.method) state.method = data.method;
+      } catch (e) {}
+    }
 
     function segRender(container, options, current, onPick) {
       container.innerHTML = '';
@@ -1209,6 +1249,7 @@
         b.addEventListener('click', () => onSkill(s));
         el.appendChild(b);
       });
+      saveMakeParams();
     }
 
     function renderTemplates() {
@@ -1629,7 +1670,7 @@
       $('imgBoard').style.display = isImage ? 'flex' : 'none';
       document.querySelector('.done .board').style.display = isImage ? 'none' : 'flex';
       if (isImage) {
-        imgIdx = 0;
+        imgIdx = readImageIndex(d.id);
         renderImgBoard();
       } else {
         $('donePhoneTxt').textContent = d.ratio + ' · ' + d.duration;
@@ -2429,12 +2470,35 @@
     /* ---------- 图片草稿：大图随选随修（框住哪里、修哪里） ---------- */
     let imgIdx = 0;
     const IMG_COUNT = 3;
+    const IMAGE_INDEX_KEY = 'jco-make-image-index-v1';
     let selRect = null;
     let dragOn = false;
     let dragSx = 0;
     let dragSy = 0;
 
     function imgClass(i) { return 'g' + ((i % 3) + 1); }
+
+    function readImageIndex(id) {
+      try {
+        const data = JSON.parse(localStorage.getItem(IMAGE_INDEX_KEY) || 'null');
+        const value = Number(data && data[String(id)]);
+        return Number.isInteger(value) && value >= 0 ? value : 0;
+      } catch (e) {
+        return 0;
+      }
+    }
+
+    function saveImageIndex() {
+      if (!currentDraft || currentDraft.type !== 'image') return;
+      try {
+        const data = JSON.parse(localStorage.getItem(IMAGE_INDEX_KEY) || '{}');
+        data[String(currentDraft.id)] = imgIdx;
+        const keys = Object.keys(data).slice(-30);
+        const pruned = {};
+        keys.forEach((key) => { pruned[key] = data[key]; });
+        localStorage.setItem(IMAGE_INDEX_KEY, JSON.stringify(pruned));
+      } catch (e) {}
+    }
 
     function clearSel() {
       selRect = null;
@@ -2462,6 +2526,7 @@
       const realImgs = normalized.length > 0 ? normalized : null;
       const count = realImgs ? realImgs.length : IMG_COUNT;
       if (imgIdx >= count) imgIdx = 0;
+      saveImageIndex();
       big.className = 'ib-big ' + imgClass(imgIdx);
       $('ibCount').textContent = (imgIdx + 1) + ' / ' + count;
       const anchors = [1, 3, 6];
@@ -2719,6 +2784,7 @@
         }, function () {});
       }
     })();
+    restoreMakeParams();
     render();
     void hydrateSkillsStore();
     renderTemplates();

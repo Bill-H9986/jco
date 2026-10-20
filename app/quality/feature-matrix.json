@@ -91,6 +91,7 @@
         "tests/e2e/m18-create-picker-shell.spec.mjs",
         "tests/e2e/m19-cross-page-handoff.spec.mjs",
         "tests/e2e/m20-create-restart-state.spec.mjs",
+        "tests/e2e/m21-create-parameter-detail-state.spec.mjs",
         "tests/e2e/m9-video.spec.mjs",
         "tests/e2e/delivery-drone-campaign.spec.mjs"
       ]

@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## 0.6.0-beta.32 (2026-10-20)
+
+### Fixes
+
+* **create:** 视频/图片模式、比例、时长/张数、清晰度、声音和技能方法持久化到 `jco-make-params-v1`，页面重载后恢复
+* **create:** 参数恢复时按当前类型校验允许值，旧值或无效值自动回退默认项
+* **create:** 图片详情当前索引按草稿持久化到 `jco-make-image-index-v1`，重载后仍停在原图，最多保留 30 条
+* **testing:** 新增 M21 两条参数/详情索引恢复 E2E；创作受影响回归 14 条通过
+
 ## 0.6.0-beta.31 (2026-10-20)
 
 ### Fixes
