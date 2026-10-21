@@ -43,8 +43,10 @@ test('任务会话桥：总管「任务」分区显示 / 点开看完整过程 /
       window.location.href = 'J.Co总管.html'
     })
     await win.waitForTimeout(1500)
-    // 侧栏默认收起（图标条），先点「固定展开」让任务/会话列表可操作
-    await win.locator('.side-toggle').click()
+    // 任务/会话列表只在展开态可操作；根据实时状态展开，避免绑定历史默认值。
+    if (!(await win.evaluate(() => document.documentElement.classList.contains('side-pinned')))) {
+      await win.locator('.side-toggle').click()
+    }
     await win.waitForTimeout(500)
 
     // 任务分区：列表出现该任务（带 ✓）

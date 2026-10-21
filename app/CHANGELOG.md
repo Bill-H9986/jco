@@ -2,6 +2,30 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## 0.6.0-beta.40 (2026-10-21)
+
+### Features
+
+* **motion:** 建立全站动效令牌，统一按钮按压、菜单、弹窗、通知、侧栏和 iframe 切页曲线；结构移动使用强缓入缓出，浮层使用响应更快的缓出
+* **shell:** 侧栏展开时先移动结构、再淡入文字；收起时先隐藏文字，避免导航、搜索、新会话和账号名在途中被切成半截
+* **accounts:** 底部账户菜单收口到 `jco-shell.js`，主壳与 14 个业务页共用同一套点击、键盘、关闭和定位逻辑
+
+### Fixes
+
+* **shell:** 收起态账户菜单从头像右侧展开，不再覆盖图标栏；侧栏切换时菜单立即关闭并同步 `aria-expanded`
+* **shell:** 浏览器直开页和应用壳统一默认展开行为，删除 14 个页面重复的侧栏与账户菜单内联脚本
+* **a11y:** 账户按钮补齐 `aria-controls`，菜单支持 Enter、Space、方向键、Home、End、Escape 和点击外部关闭
+
+### Tests
+
+* **testing:** M31 验证动效令牌、账户行 `40×40`、头像 `26×26`、两态显隐、切页落定和 reduced-motion
+* **testing:** M31b 先复现收起态菜单 `left=10px` 被内容区穿透，修复后固定从头像右侧 `82px` 展开；两态菜单均不越界
+* **testing:** 全量门禁 199 单测 / 1 skipped、81 条 E2E、4 个视觉测试、17 张基准、5 轮浸泡和全部项目扫描通过
+* **testing:** 20 轮浸泡 280 次交互、0 JS 错误、14 帧、0 淘汰、内存增长 65.5MB，最大长任务 51ms
+* **testing:** 真实图片 `1728×2304`、真实视频 `720×1280 / 5.18s / 24fps / H.264`，Agent Eval 25 通过 / 0 失败 / 4 人工边界
+* **testing:** `beta.40` 打包、安装、发布候选认证、真实内核和卸载 / 回滚 `beta.39` / 再升级均通过；512 个核心数据文件各阶段 0 变化
+* **testing:** 抖音真实扫码登录与真实发布闭环通过；用户亲手批准、用户亲手点发布，作品进入“审核中”，发布前工具未点击不可逆按钮
+
 ## 0.6.0-beta.39 (2026-10-21)
 
 ### Fixes

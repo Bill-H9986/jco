@@ -21,16 +21,21 @@ test('「新会话」按钮：非总管页也在搜索框下方（零数据环�
         window.location.href = p
       }, page)
       const btn = win.locator('#newChatSlot .convo.new-btn')
-      await expect(btn, page + ' 的按钮应在顶部容器里').toBeVisible()
+      await expect(btn, `${page} 的按钮应在顶部容器里`).toBeVisible()
       const afterSearch = await win.evaluate(() => {
         const slot = document.getElementById('newChatSlot')
         const search = document.querySelector('.search')
         return !!(slot && search && search.compareDocumentPosition(slot) & Node.DOCUMENT_POSITION_FOLLOWING)
       })
-      expect(afterSearch, page + ' 的按钮应在搜索框之后').toBe(true)
-      expect(await win.locator('.convos .convo.new-btn').count(), page + ' 列表内不应再有按钮').toBe(0)
+      expect(afterSearch, `${page} 的按钮应在搜索框之后`).toBe(true)
+      expect(await win.locator('.convos .convo.new-btn').count(), `${page} 列表内不应再有按钮`).toBe(0)
     }
-    // 收起态：图标方块（宽度明显小于展开态）
+    // 收起态：先明确写入收起偏好并重载，避免浏览器直开与外壳默认值混淆。
+    await win.evaluate(() => {
+      localStorage.setItem('jco-side-pinned', '0')
+    })
+    await win.reload()
+    await win.waitForTimeout(900)
     const box = await win.locator('#newChatSlot .convo.new-btn').boundingBox()
     expect(box.width, '收起态应为图标方块').toBeLessThan(100)
     const collapsedTextWidth = await win.locator('#newChatSlot .convo.new-btn').evaluate((button) => {

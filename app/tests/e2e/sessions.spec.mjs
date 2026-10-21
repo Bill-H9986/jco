@@ -16,10 +16,10 @@ test('总管页：连点「新会话」不堆积（空会话 ≤ 1）', async ()
     const errors = []
     win.on('pageerror', (e) => errors.push(String(e.message).slice(0, 200)))
     await win.waitForTimeout(2500)
-    // 清场：确保收起态（防任何旧 profile 残留的"固定展开"偏好影响本用例）
+    // 清场：明确写入收起偏好（防任何旧 profile 残留）
     await win.evaluate(() => {
       try {
-        localStorage.removeItem('jco-side-pinned')
+        localStorage.setItem('jco-side-pinned', '0')
       } catch {}
     })
     await win.evaluate(() => {
@@ -63,7 +63,7 @@ test('总管页：侧栏收起态也能开新会话（图标按钮可用，展�
     // 预置一条有内容的旧会话（避免"空对空"探测不到切换）
     await win.evaluate(() => {
       try {
-        localStorage.removeItem('jco-side-pinned') // 确保收起态（防旧 profile 残留干扰）
+        localStorage.setItem('jco-side-pinned', '0') // 确保收起态（防旧 profile 残留干扰）
       } catch {}
       localStorage.setItem(
         'jco-chats-v1',
@@ -91,7 +91,7 @@ test('总管页：侧栏收起态也能开新会话（图标按钮可用，展�
 
     const btn = win.locator('#newChatSlot .convo.new-btn')
     await btn.waitFor()
-    // 收起态（默认未固定）：按钮可见、图标形态、可点
+    // 收起态：按钮可见、图标形态、可点
     await expect(btn).toBeVisible()
     const box = await btn.boundingBox()
     expect(box.width, '收起态应为图标方块').toBeLessThan(100)
@@ -140,15 +140,14 @@ test('总管页：老版本聊天数据兼容（带员工标签会话 + 旧单�
             ],
           }),
         )
-        localStorage.removeItem('jco-side-pinned')
+        localStorage.setItem('jco-side-pinned', '1')
       } catch {}
     })
     await win.evaluate(() => {
       window.location.href = 'J.Co总管.html'
     })
     await win.waitForTimeout(1500)
-    await win.locator('.side-toggle').click()
-    await win.waitForTimeout(400)
+    await expect.poll(() => win.evaluate(() => document.documentElement.classList.contains('side-pinned'))).toBe(true)
     // 老会话：列表在位、点开内容正常（不破坏老数据）
     const names1 = await win.locator('.convos:not(#taskList) .convo .name').allInnerTexts()
     expect(names1.join('｜')).toContain('老派活会话')
@@ -188,7 +187,7 @@ test('总管页：会话 ⋯ 菜单——重命名与删除（二次确认）真
     const errors = []
     win.on('pageerror', (e) => errors.push(String(e.message).slice(0, 200)))
     await win.waitForTimeout(2500)
-    // 预置两条会话（甲为当前）；清侧栏固定展开偏好
+    // 预置两条会话（甲为当前）；明确展开侧栏，保证 ⋯ 菜单可操作
     await win.evaluate(() => {
       try {
         localStorage.setItem(
@@ -212,15 +211,14 @@ test('总管页：会话 ⋯ 菜单——重命名与删除（二次确认）真
             ],
           }),
         )
-        localStorage.removeItem('jco-side-pinned')
+        localStorage.setItem('jco-side-pinned', '1')
       } catch {}
     })
     await win.evaluate(() => {
       window.location.href = 'J.Co总管.html'
     })
     await win.waitForTimeout(1500)
-    await win.locator('.side-toggle').click()
-    await win.waitForTimeout(400)
+    await expect.poll(() => win.evaluate(() => document.documentElement.classList.contains('side-pinned'))).toBe(true)
 
     // 重命名：⋯ → 重命名 → 输入 → 回车
     const jiaConvo = win.locator('.convos:not(#taskList) .convo', { hasText: '会话甲' })

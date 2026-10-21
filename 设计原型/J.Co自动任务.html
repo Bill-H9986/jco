@@ -82,7 +82,7 @@
     border: 1px solid rgba(255, 255, 255, 0.14); border-radius: 12px;
     background: rgba(255, 255, 255, 0.08); color: #ffffff;
     font-family: inherit; font-size: 13px; padding: 11px 14px; outline: none;
-    transition: border-color 0.15s ease, background 0.15s ease;
+    transition: border-color var(--jco-motion-fast) var(--jco-ease-out), background var(--jco-motion-fast) var(--jco-ease-out);
   }
 
 .b-ask input::placeholder { color: rgba(245, 245, 247, 0.45); }
@@ -100,7 +100,7 @@
     display: flex; align-items: center; gap: 13px;
     background: var(--card); border-radius: 20px; box-shadow: var(--shadow-card);
     padding: 13px 18px; text-decoration: none; color: var(--text-1);
-    transition: transform 0.15s ease;
+    transition: transform var(--jco-motion-fast) var(--jco-ease-out);
   }
 
 .todo:hover { transform: translateY(-1px); }
@@ -130,7 +130,7 @@
     display: flex; flex-direction: column;
     background: var(--card); border-radius: 20px; box-shadow: var(--shadow-card);
     padding: 16px; text-decoration: none; color: var(--text-1);
-    transition: transform 0.15s ease;
+    transition: transform var(--jco-motion-fast) var(--jco-ease-out);
   }
 
 .staff:hover { transform: translateY(-2px); }
@@ -297,7 +297,7 @@
         <button class="convo"><span class="name">技能库询价</span></button>
       </div>
       <div class="side-foot">
-        <div class="me" id="meBtn" role="button" tabindex="0" aria-haspopup="menu" aria-expanded="false"><div class="ava">A</div><span>admin</span></div>
+        <div class="me" id="meBtn" role="button" aria-label="账号 admin" tabindex="0" aria-haspopup="menu" aria-controls="meMenu" aria-expanded="false"><div class="ava">A</div><span>admin</span></div>
         <button class="icon-btn" aria-label="通知"><span class="ti ti-bell"></span></button>
       </div>
           </div>
@@ -582,24 +582,6 @@
           }
         }
       })();
-
-      /* ---------- 侧栏（图标栏 + 悬停展开 + 固定展开） ---------- */
-      (function () {
-        var sidebar = document.querySelector('.sidebar');
-        var pinBtn = document.querySelector('.side-toggle');
-        if (!sidebar) return;
-        function setPinned(v) {
-          document.documentElement.classList.toggle('side-pinned', v);
-          if (pinBtn) pinBtn.querySelector('.ti').className = 'ti ' + (v ? 'ti-layout-sidebar-left-collapse' : 'ti-layout-sidebar-left-expand');
-          try { localStorage.setItem('jco-side-pinned', v ? '1' : '0'); } catch (err) {}
-        }
-        if (pinBtn) pinBtn.addEventListener('click', function () {
-          setPinned(!document.documentElement.classList.contains('side-pinned'));
-        });
-        try {
-          if (localStorage.getItem('jco-side-pinned') === '1') setPinned(true);
-        } catch (err) {}
-      })();
       /* ---------- 侧栏分组折叠 ---------- */
       (function () {
         var KEY = 'jco-sidebar-folded-groups';
@@ -643,38 +625,6 @@
         });
       });
     })();
-  
-    /* ---------- 账号菜单（点头像弹出：设置 / 退出登录） ---------- */
-    (function () {
-      var meBtn = document.getElementById('meBtn');
-      var menu = document.getElementById('meMenu');
-      if (!meBtn || !menu) return;
-      function setOpen(open) {
-        menu.hidden = !open;
-        meBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
-      }
-      meBtn.addEventListener('click', function () { setOpen(menu.hidden); });
-      meBtn.addEventListener('keydown', function (e) {
-        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setOpen(menu.hidden); }
-        if (e.key === 'Escape') setOpen(false);
-      });
-      document.addEventListener('click', function (e) {
-        if (!menu.hidden && !menu.contains(e.target) && !meBtn.contains(e.target)) setOpen(false);
-      });
-      document.addEventListener('keydown', function (e) {
-        if (e.key === 'Escape' && !menu.hidden) setOpen(false);
-      });
-      document.getElementById('mmSettings').addEventListener('click', function () {
-        setOpen(false);
-        var here = decodeURIComponent(location.pathname.split('/').pop());
-        if (here !== 'J.Co设置.html') location.href = 'J.Co设置.html';
-      });
-      document.getElementById('mmLogout').addEventListener('click', function () {
-        setOpen(false);
-        showToast('这台电脑上不用单独登录：关掉窗口就是退出，素材和草稿都留着。');
-      });
-    })();
-  
     /* ---------- 通知面板：最近的活动记录（真数据） ---------- */
     function jcoToggleNotif(anchor) {
       var old = document.querySelector('.notif-pop');

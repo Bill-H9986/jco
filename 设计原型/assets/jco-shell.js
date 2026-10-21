@@ -187,7 +187,7 @@
   try {
     var style = document.createElement('style')
     style.textContent =
-      'body{opacity:0;transition:opacity .13s ease}body.shell-ready{opacity:1}body.shell-leaving{opacity:0}' +
+      'body{opacity:0;transition:opacity var(--jco-motion-fast) var(--jco-ease-out)}body.shell-ready{opacity:1}body.shell-leaving{opacity:0}' +
       // 折叠计数徽章：纯 CSS 伪元素（不改变 label.textContent，避免污染折叠逻辑的分组名）
       '.group-label.folded::after{content:attr(data-count);margin-left:6px;font-size:11px;line-height:1;padding:2px 6px;border-radius:999px;background:var(--tint,#eee);color:var(--text-3,#888);font-weight:400}'
     document.head.appendChild(style)
@@ -329,7 +329,7 @@
       el = document.createElement('div')
       el.id = '__jcoShellToast'
       el.style.cssText =
-        'position:fixed;left:50%;bottom:28px;transform:translateX(-50%);z-index:99;padding:9px 14px;border-radius:10px;background:rgba(0,0,0,.82);color:#fff;font-size:13px;pointer-events:none;opacity:0;transition:opacity .18s'
+        'position:fixed;left:50%;bottom:28px;transform:translateX(-50%);z-index:99;padding:9px 14px;border-radius:10px;background:rgba(0,0,0,.82);color:#fff;font-size:13px;pointer-events:none;opacity:0;transition:opacity var(--jco-motion-fast) var(--jco-ease-out)'
       document.body.appendChild(el)
     }
     el.textContent = text
@@ -339,6 +339,7 @@
       el.style.opacity = '0'
     }, 1800)
   }
+  window.jcoToast = window.jcoToast || shellToast
   function readChatStore() {
     try {
       return JSON.parse(localStorage.getItem('jco-chats-v1') || 'null') || { activeId: '', chats: [] }
@@ -651,32 +652,132 @@
       })
     })
   }
-  function initShellChrome() {
+  function initSidebarToggle() {
     var pinBtn = document.querySelector('.side-toggle')
-    if (pinBtn) {
-      pinBtn.addEventListener('click', function () {
-        var v = !document.documentElement.classList.contains('side-pinned')
-        document.documentElement.classList.toggle('side-pinned', v)
-        pinBtn.querySelector('.ti').className = 'ti ' + (v ? 'ti-layout-sidebar-left-collapse' : 'ti-layout-sidebar-left-expand')
-        try {
-          localStorage.setItem('jco-side-pinned', v ? '1' : '0')
-        } catch (err) {}
-      })
+    if (!pinBtn || pinBtn.dataset.jcoBound === '1') return
+    pinBtn.dataset.jcoBound = '1'
+
+    function applyPinned(pinned, persist) {
+      document.documentElement.classList.toggle('side-pinned', pinned)
+      var icon = pinBtn.querySelector('.ti')
+      if (icon) icon.className = 'ti ' + (pinned ? 'ti-layout-sidebar-left-collapse' : 'ti-layout-sidebar-left-expand')
+      if (!persist) return
       try {
-        // 桌面端默认展开，先让人看见导航；用户主动收起后记住选择。
-        var savedPin = localStorage.getItem('jco-side-pinned')
-        var pinned = savedPin === null ? true : savedPin === '1'
-        if (pinned) {
-          document.documentElement.classList.add('side-pinned')
-          pinBtn.querySelector('.ti').className = 'ti ti-layout-sidebar-left-collapse'
-        }
+        localStorage.setItem('jco-side-pinned', pinned ? '1' : '0')
       } catch (err) {}
     }
+
+    pinBtn.addEventListener('click', function () {
+      if (window.JCO_ACCOUNT_MENU) window.JCO_ACCOUNT_MENU.close()
+      applyPinned(!document.documentElement.classList.contains('side-pinned'), true)
+    })
+    try {
+      // 桌面端默认展开，先让人看见导航；用户主动收起后记住选择。
+      var savedPin = localStorage.getItem('jco-side-pinned')
+      applyPinned(savedPin === null ? true : savedPin === '1', false)
+    } catch (err) {
+      applyPinned(true, false)
+    }
+  }
+  function prepareSidebarLabels() {
+    var scope = document.querySelector('.sidebar')
+    if (!scope) return
+    function wrap(node, className) {
+      if (!node || node.querySelector('.' + className)) return
+      Array.prototype.slice.call(node.childNodes).forEach(function (child) {
+        if (child.nodeType !== 3 || !String(child.textContent || '').trim()) return
+        var label = document.createElement('span')
+        label.className = className
+        label.textContent = String(child.textContent || '').trim()
+        node.replaceChild(label, child)
+      })
+    }
+    Array.prototype.forEach.call(scope.querySelectorAll('.nav-item'), function (node) {
+      wrap(node, 'jco-nav-label')
+    })
+    wrap(scope.querySelector('.convo.new-btn'), 'jco-new-label')
+  }
+  function initShellChrome() {
     var frame = document.getElementById('jcoFrame')
     if (frame) {
       try {
         highlight(decodeURIComponent((frame.getAttribute('src') || '').split('?')[0]))
       } catch (err) {}
+    }
+  }
+  function initAccountMenu() {
+    var meBtn = document.getElementById('meBtn')
+    var menu = document.getElementById('meMenu')
+    if (!meBtn || !menu || menu.dataset.jcoBound === '1') return
+    menu.dataset.jcoBound = '1'
+    var items = Array.prototype.slice.call(menu.querySelectorAll('.mm-item'))
+
+    function setOpen(open, focusFirst) {
+      menu.hidden = !open
+      meBtn.setAttribute('aria-expanded', open ? 'true' : 'false')
+      if (open && focusFirst && items[0]) items[0].focus()
+    }
+    function close(restoreFocus) {
+      if (menu.hidden) return
+      setOpen(false)
+      if (restoreFocus) meBtn.focus()
+    }
+    function moveItem(event) {
+      if (!items.length || !['ArrowDown', 'ArrowUp', 'Home', 'End'].includes(event.key)) return
+      event.preventDefault()
+      var current = items.indexOf(document.activeElement)
+      var next = current
+      if (event.key === 'Home') next = 0
+      else if (event.key === 'End') next = items.length - 1
+      else if (event.key === 'ArrowDown') next = current < 0 ? 0 : (current + 1) % items.length
+      else if (event.key === 'ArrowUp') next = current < 0 ? items.length - 1 : (current - 1 + items.length) % items.length
+      items[next].focus()
+    }
+
+    meBtn.addEventListener('click', function () {
+      setOpen(menu.hidden, false)
+    })
+    meBtn.addEventListener('keydown', function (event) {
+      if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault()
+        setOpen(menu.hidden, false)
+      } else if (event.key === 'ArrowDown') {
+        event.preventDefault()
+        setOpen(true, true)
+      } else if (event.key === 'Escape') {
+        close(true)
+      }
+    })
+    document.addEventListener('click', function (event) {
+      if (!menu.hidden && !menu.contains(event.target) && !meBtn.contains(event.target)) close(false)
+    })
+    document.addEventListener('keydown', function (event) {
+      if (event.key === 'Escape' && !menu.hidden) close(true)
+    })
+    menu.addEventListener('keydown', moveItem)
+
+    var settings = document.getElementById('mmSettings')
+    if (settings) {
+      settings.addEventListener('click', function () {
+        close(false)
+        if (typeof window.__jcoGo === 'function') window.__jcoGo('J.Co设置.html')
+        else window.jcoGo('J.Co设置.html')
+      })
+    }
+    var logout = document.getElementById('mmLogout')
+    if (logout) {
+      logout.addEventListener('click', function () {
+        close(false)
+        var message = '这台电脑上不用单独登录：关掉窗口就是退出，素材和草稿都留着。'
+        if (typeof window.showToast === 'function') window.showToast(message)
+        else if (window.jcoToast) window.jcoToast(message)
+      })
+    }
+
+    window.JCO_ACCOUNT_MENU = {
+      close: function () {
+        close(false)
+      },
     }
   }
   // iframe 页面把"当前页"告诉壳（壳据此点亮侧栏）
@@ -745,6 +846,9 @@
     decorate()
     initThemeBridge()
     syncSwitchSemantics()
+    prepareSidebarLabels()
+    initSidebarToggle()
+    initAccountMenu()
     var currentPage = pageName()
     document.documentElement.setAttribute('data-jco-page', currentPage)
     if (document.getElementById('jcoFrame')) {

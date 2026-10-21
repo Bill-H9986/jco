@@ -42,12 +42,18 @@ async function instrument(frame) {
   await frame.evaluate(() => {
     if (window.__jcoSoakLongTasks) return
     window.__jcoSoakLongTasks = []
+    const observedAt = performance.now()
+    window.__jcoSoakObservedAt = observedAt
     try {
       new PerformanceObserver((list) => {
         for (const entry of list.getEntries()) {
-          window.__jcoSoakLongTasks.push(Math.round(entry.duration * 10) / 10)
+          if (entry.startTime < observedAt) continue
+          window.__jcoSoakLongTasks.push({
+            startTime: Math.round(entry.startTime * 10) / 10,
+            duration: Math.round(entry.duration * 10) / 10,
+          })
         }
-      }).observe({ type: 'longtask', buffered: true })
+      }).observe({ type: 'longtask' })
     } catch {}
   })
 }
@@ -96,14 +102,16 @@ async function memoryOf(app) {
 }
 
 async function longTasks(frames) {
-  const values = []
+  const unique = new Map()
   for (const frame of frames) {
     try {
       const items = await frame.evaluate(() => window.__jcoSoakLongTasks || [])
-      values.push(...items)
+      for (const item of items) {
+        unique.set(`${item.startTime}:${item.duration}`, item)
+      }
     } catch {}
   }
-  return values
+  return [...unique.values()].sort((left, right) => left.startTime - right.startTime)
 }
 
 const profileDir = fs.mkdtempSync(path.join(os.tmpdir(), 'jco-ui-soak-'))
@@ -135,7 +143,8 @@ try {
     frames: document.querySelectorAll('.jco-frame').length,
     cache: { ...window.__jcoFrameStats },
   }))
-  const tasks = await longTasks(seenFrames)
+  const taskDetails = await longTasks(seenFrames)
+  const tasks = taskDetails.map((task) => task.duration)
   const maxLongTask = tasks.length ? Math.max(...tasks) : 0
   const memoryGrowthMb = Math.max(0, memorySamples.at(-1) - memorySamples[0])
   const report = {
@@ -149,6 +158,7 @@ try {
     frames: stats.frames,
     cache: stats.cache,
     longTasks: tasks,
+    longTaskDetails: taskDetails,
     maxLongTask,
     passed:
       errors.length === 0 &&

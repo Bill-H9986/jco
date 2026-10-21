@@ -60,7 +60,7 @@
     width: 100%; border: 0.5px solid var(--line); border-radius: 12px;
     background: var(--bg); color: var(--text-1);
     font-family: inherit; font-size: 14px; padding: 11px 13px; outline: none;
-    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    transition: border-color var(--jco-motion-fast) var(--jco-ease-out), box-shadow var(--jco-motion-fast) var(--jco-ease-out);
   }
 
 .sheet input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(0, 128, 255, 0.12); }
@@ -96,7 +96,7 @@
 .script {
     margin-top: 18px; border-top: 0.5px solid var(--line); padding-top: 18px;
     border-radius: 12px; padding-left: 10px; padding-right: 10px; margin-left: -10px; margin-right: -10px;
-    transition: box-shadow 0.2s ease;
+    transition: box-shadow var(--jco-motion-ui) var(--jco-ease-out);
   }
 
 .script:focus { box-shadow: 0 0 0 3px rgba(0, 128, 255, 0.12); }
@@ -162,7 +162,7 @@
     width: 100%; margin-top: 20px;
     background: var(--accent); color: #ffffff; font-family: inherit;
     cursor: pointer;
-    transition: background 0.15s ease, transform 0.1s ease;
+    transition: background var(--jco-motion-fast) var(--jco-ease-out), transform var(--jco-motion-press) var(--jco-ease-out);
   }
 
 .regen:hover { background: var(--accent-strong); }
@@ -180,7 +180,7 @@
 
 .anim { opacity: 0; transform: translateY(10px); }
 
-.anim.in { opacity: 1; transform: none; transition: opacity 0.4s var(--ease), transform 0.4s var(--ease); }
+.anim.in { opacity: 1; transform: none; transition: opacity var(--jco-motion-enter) var(--jco-ease-out), transform var(--jco-motion-enter) var(--jco-ease-out); }
 
 /* Toast */
   /* 提词器（全屏） */
@@ -190,7 +190,7 @@
 
 .pr-view { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; gap: 16px; padding: 80px 40px; overflow-y: auto; }
 
-.pr-line { font-size: 24px; line-height: 1.7; color: rgba(245, 245, 247, 0.32); transition: color 0.2s ease; max-width: 880px; text-align: center; flex: none; }
+.pr-line { font-size: 24px; line-height: 1.7; color: rgba(245, 245, 247, 0.32); transition: color var(--jco-motion-ui) var(--jco-ease-out); max-width: 880px; text-align: center; flex: none; }
 
 .pr-line.past { opacity: 0.4; }
 
@@ -265,7 +265,7 @@
         <button class="convo"><span class="name">技能库询价</span></button>
       </div>
       <div class="side-foot">
-        <div class="me" id="meBtn" role="button" tabindex="0" aria-haspopup="menu" aria-expanded="false"><div class="ava">A</div><span>admin</span></div>
+        <div class="me" id="meBtn" role="button" aria-label="账号 admin" tabindex="0" aria-haspopup="menu" aria-controls="meMenu" aria-expanded="false"><div class="ava">A</div><span>admin</span></div>
         <button class="icon-btn" aria-label="通知"><span class="ti ti-bell"></span></button>
       </div>
           </div>
@@ -1086,23 +1086,6 @@
           inp.style.height = Math.min(inp.scrollHeight, 90) + 'px';
         });
       })();
-      /* ---------- 侧栏（图标栏 + 悬停展开 + 固定展开） ---------- */
-      (function () {
-        var sidebar = document.querySelector('.sidebar');
-        var pinBtn = document.querySelector('.side-toggle');
-        if (!sidebar) return;
-        function setPinned(v) {
-          document.documentElement.classList.toggle('side-pinned', v);
-          if (pinBtn) pinBtn.querySelector('.ti').className = 'ti ' + (v ? 'ti-layout-sidebar-left-collapse' : 'ti-layout-sidebar-left-expand');
-          try { localStorage.setItem('jco-side-pinned', v ? '1' : '0'); } catch (err) {}
-        }
-        if (pinBtn) pinBtn.addEventListener('click', function () {
-          setPinned(!document.documentElement.classList.contains('side-pinned'));
-        });
-        try {
-          if (localStorage.getItem('jco-side-pinned') === '1') setPinned(true);
-        } catch (err) {}
-      })();
       /* ---------- 侧栏分组折叠 ---------- */
       (function () {
         var KEY = 'jco-sidebar-folded-groups';
@@ -1146,38 +1129,6 @@
         });
       });
     })();
-  
-    /* ---------- 账号菜单（点头像弹出：设置 / 退出登录） ---------- */
-    (function () {
-      var meBtn = document.getElementById('meBtn');
-      var menu = document.getElementById('meMenu');
-      if (!meBtn || !menu) return;
-      function setOpen(open) {
-        menu.hidden = !open;
-        meBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
-      }
-      meBtn.addEventListener('click', function () { setOpen(menu.hidden); });
-      meBtn.addEventListener('keydown', function (e) {
-        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setOpen(menu.hidden); }
-        if (e.key === 'Escape') setOpen(false);
-      });
-      document.addEventListener('click', function (e) {
-        if (!menu.hidden && !menu.contains(e.target) && !meBtn.contains(e.target)) setOpen(false);
-      });
-      document.addEventListener('keydown', function (e) {
-        if (e.key === 'Escape' && !menu.hidden) setOpen(false);
-      });
-      document.getElementById('mmSettings').addEventListener('click', function () {
-        setOpen(false);
-        var here = decodeURIComponent(location.pathname.split('/').pop());
-        if (here !== 'J.Co设置.html') location.href = 'J.Co设置.html';
-      });
-      document.getElementById('mmLogout').addEventListener('click', function () {
-        setOpen(false);
-        showToast('这台电脑上不用单独登录：关掉窗口就是退出，素材和草稿都留着。');
-      });
-    })();
-  
     /* ---------- 通知面板：最近的活动记录（真数据） ---------- */
     function jcoToggleNotif(anchor) {
       var old = document.querySelector('.notif-pop');
