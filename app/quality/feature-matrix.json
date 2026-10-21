@@ -144,6 +144,14 @@
       "automated": ["tests/e2e/settings.spec.mjs", "tests/e2e/m11-settings-brand.spec.mjs", "tests/e2e/theme.spec.mjs", "tests/e2e/m23-settings-restart.spec.mjs", "tests/e2e/m26-system-switch-isolation.spec.mjs"]
     },
     {
+      "id": "account-identity",
+      "surface": "全站",
+      "priority": "P1",
+      "status": "covered",
+      "risk": "用户显示名与头像在页面、主壳和账号菜单之间分叉",
+      "automated": ["tests/e2e/m30-account-identity.spec.mjs"]
+    },
+    {
       "id": "auto-tasks",
       "surface": "J.Co自动任务.html",
       "priority": "P1",

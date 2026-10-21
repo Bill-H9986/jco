@@ -33,6 +33,21 @@ test('「新会话」按钮：非总管页也在搜索框下方（零数据环�
     // 收起态：图标方块（宽度明显小于展开态）
     const box = await win.locator('#newChatSlot .convo.new-btn').boundingBox()
     expect(box.width, '收起态应为图标方块').toBeLessThan(100)
+    const collapsedTextWidth = await win.locator('#newChatSlot .convo.new-btn').evaluate((button) => {
+      const walker = document.createTreeWalker(button, NodeFilter.SHOW_TEXT)
+      let textWidth = 0
+      let node = walker.nextNode()
+      while (node) {
+        if (!node.parentElement?.closest('.ti')) {
+          const range = document.createRange()
+          range.selectNodeContents(node)
+          textWidth += range.getBoundingClientRect().width
+        }
+        node = walker.nextNode()
+      }
+      return textWidth
+    })
+    expect(collapsedTextWidth, '收起态图标方块内不能透出“新会话”文字').toBe(0)
 
     // 点击（发布页）→ 跳总管并开新会话
     await win.evaluate(() => {

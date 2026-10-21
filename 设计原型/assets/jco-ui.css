@@ -1211,9 +1211,14 @@ html[data-jco-theme="dark"] {
 /* 空容器不占位（演示模式 / 未创建按钮时不留空隙） */
 .newchat:empty { display: none; }
 
-html:not(.side-pinned) .convo.new-btn { font-size: 0; gap: 0; border-radius: 12px; }
+html:not(.side-pinned) body .convo.new-btn {
+  font-size: 0 !important;
+  gap: 0 !important;
+  padding: 0 !important;
+  border-radius: 12px;
+}
 
-html:not(.side-pinned) .convo.new-btn .ti { font-size: 18px; }
+html:not(.side-pinned) body .convo.new-btn .ti { font-size: 18px !important; }
 
 /* ==== 侧栏分层（W7-01）：标识 / 搜索 / 新会话 / 首页与总管固定，其余列表独立滚动 ==== */
 .sidebar-inner { overflow: hidden; }

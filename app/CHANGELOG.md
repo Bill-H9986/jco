@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## 0.6.0-beta.38 (2026-10-21)
+
+### Fixes
+
+* **shell:** 修正侧栏收起态“新会话”图标方块漏出文字的问题；收起时只显示加号图标
+* **accounts:** 用户显示名统一为 `admin`，用户头像首字母统一为 `A`；品牌名 `J.Co` 保持不变
+
+### Tests
+
+* **testing:** M7 增加收起态按钮文字可见宽度必须为 0 的断言，先复现 13px 文字透出，再修复
+* **testing:** 新增 M30，逐一验证主壳和全部内容页的用户名、头像及账号菜单显示一致
+
 ## 0.6.0-beta.37 (2026-10-21)
 
 ### Features
