@@ -36,6 +36,7 @@ test('M15：页头固定、参数单行、开关同规格、焦点收敛', async
   const app = await electron.launch({ executablePath: ELECTRON_BIN, args: [APP_DIR, '--jco-test'] })
   try {
     const win = await app.firstWindow()
+    await win.setViewportSize({ width: 1440, height: 900 })
     const errors = []
     win.on('pageerror', (error) => errors.push(String(error.message).slice(0, 200)))
     await win.waitForTimeout(2400)

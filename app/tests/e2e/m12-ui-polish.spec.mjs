@@ -12,6 +12,7 @@ test('W7-01：侧栏顶部固定，内容页左上角统一', async () => {
   const app = await electron.launch({ executablePath: ELECTRON_BIN, args: [APP_DIR, '--jco-test'] })
   try {
     const win = await app.firstWindow()
+    await win.setViewportSize({ width: 1440, height: 900 })
     const errors = []
     win.on('pageerror', (error) => errors.push(String(error.message).slice(0, 200)))
     await win.waitForTimeout(2600)

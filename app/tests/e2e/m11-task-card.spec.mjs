@@ -5,6 +5,7 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { expect, test } from '@playwright/test'
 import { _electron as electron } from 'playwright'
+import { saveElectronScreenshot } from '../support/electron-screenshot.mjs'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const APP_DIR = path.resolve(__dirname, '..', '..')
@@ -48,7 +49,7 @@ test('M11 W1-03：任务卡 → 确认 → 独立详情 → 审批门', async ()
     expect(await win.evaluate(async () => ((await window.jco.tasks.sessions()).tasks || []).length)).toBe(
       taskCountBefore + 1,
     )
-    await win.screenshot({ path: path.join(APP_DIR, 'test-results', 'm11-w1-03-task-detail.png') })
+    await saveElectronScreenshot(app, path.join(APP_DIR, 'test-results', 'm11-w1-03-task-detail.png'))
 
     await win.locator('#tvApproval button', { hasText: '确认继续' }).click()
     await expect(win.locator('#tvStatus')).not.toHaveText('等你确认')

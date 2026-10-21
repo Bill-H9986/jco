@@ -6,6 +6,15 @@
   "author": "Jay",
   "main": "main.js",
   "private": true,
+  "packageManager": "npm@11.16.0",
+  "engines": {
+    "node": ">=24.18.0 <25",
+    "npm": ">=11.16.0 <12"
+  },
+  "overrides": {
+    "@modelcontextprotocol/client": "2.3.1",
+    "fflate": "0.8.3"
+  },
   "jco": {
     "updateFeedUrl": "https://github.com/Bill-H9986/jco/releases/latest/download",
     "updateCheckIntervalHours": 4

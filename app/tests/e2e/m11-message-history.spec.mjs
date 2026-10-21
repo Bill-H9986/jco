@@ -3,6 +3,7 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { expect, test } from '@playwright/test'
 import { _electron as electron } from 'playwright'
+import { saveElectronScreenshot } from '../support/electron-screenshot.mjs'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const APP_DIR = path.resolve(__dirname, '..', '..')
@@ -93,7 +94,7 @@ test('M11 W1-02：长消息完整落盘、Markdown 正确渲染、输入框固�
     await win.waitForTimeout(300)
     const toast = await win.locator('#toast').innerText()
     expect(toast.length).toBeGreaterThan(0)
-    await win.screenshot({ path: path.join(APP_DIR, 'test-results', 'm11-w1-02-message.png') })
+    await saveElectronScreenshot(app, path.join(APP_DIR, 'test-results', 'm11-w1-02-message.png'))
     expect(errors, `JS 错误：\n${errors.join('\n')}`).toEqual([])
   } finally {
     await app.close()

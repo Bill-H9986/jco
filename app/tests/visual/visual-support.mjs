@@ -10,7 +10,7 @@ export const APP_DIR = path.resolve(__dirname, '..', '..')
 export const ELECTRON_BIN = path.join(APP_DIR, 'node_modules', 'electron', 'dist', 'electron.exe')
 export const BASELINE_DIR = path.join(__dirname, 'baseline')
 
-export async function captureWindow(app) {
+async function captureWindow(app) {
   const png = await app.evaluate(async ({ BrowserWindow }) => {
     const win = BrowserWindow.getAllWindows().find((item) => item.isVisible()) || BrowserWindow.getAllWindows()[0]
     if (!win) return ''
@@ -61,6 +61,10 @@ export async function settleWindow(win) {
 }
 
 export async function assertVisual(app, name) {
+  const win = await app.firstWindow()
+  // CDP viewport 不受 GitHub runner 的 1024×768 物理屏限制，截图固定为 CSS 1440×900。
+  await win.setViewportSize({ width: 1440, height: 900 })
+  await win.waitForTimeout(180)
   const actual = await captureStableWindow(app)
   const file = path.join(BASELINE_DIR, name)
   if (process.env.JCO_UPDATE_VISUAL === '1') {
