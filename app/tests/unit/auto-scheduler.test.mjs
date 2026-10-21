@@ -20,7 +20,7 @@ function makeDeps(overrides = {}) {
 
 const task = (id, extra = {}) => ({
   id,
-  name: '任务' + id,
+  name: `任务${id}`,
   desc: '干点啥',
   on: true,
   createdAt: 0,

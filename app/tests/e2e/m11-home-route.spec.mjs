@@ -119,7 +119,7 @@ test('M11 W1-01：task 路由仍落到总管的任务视图', async () => {
     expect(proposed.ok).toBe(true)
     await win.evaluate((id) => window.jco.tasks.confirm(id), proposed.task.id)
     await win.evaluate((id) => {
-      location.hash = '#/task/' + id
+      location.hash = `#/task/${id}`
     }, proposed.task.id)
     await expect(win.locator('#jcoTaskView')).toBeVisible({ timeout: 10_000 })
     await expect(win.locator('#tvTitle')).toHaveText('路由测试任务')

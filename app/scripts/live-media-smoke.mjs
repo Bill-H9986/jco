@@ -26,7 +26,7 @@ async function pollDraft(win, type, timeoutMs) {
   let last = null
   while (Date.now() < deadline) {
     last = await win.evaluate(async () => await window.jco.drafts.get())
-    const items = (last && last.data && last.data.items) || []
+    const items = last?.data?.items || []
     const item = items.find((draft) => {
       if (draft.type !== type) return false
       if (type === 'image') return Array.isArray(draft.images) && draft.images.some((image) => image.path)
@@ -35,7 +35,7 @@ async function pollDraft(win, type, timeoutMs) {
     if (item) return item
     await sleep(1000)
   }
-  throw new Error(`${type} 没有落盘：` + JSON.stringify(last || {}).slice(0, 1200))
+  throw new Error(`${type} 没有落盘：${JSON.stringify(last || {}).slice(0, 1200)}`)
 }
 
 const app = await electron.launch({ executablePath: ELECTRON_BIN, args: [APP_DIR, '--jco-test'] })
@@ -122,7 +122,7 @@ try {
         const data = await window.jco.drafts.get()
         return (data.data.items || []).find((item) => item.type === 'video')
       })
-      const videos = Object.values((videoItem && videoItem.videos) || {})
+      const videos = Object.values(videoItem?.videos || {})
       if (videos.some((video) => video && (video.status === 'done' || video.status === 'failed'))) break
       await sleep(2000)
     }
@@ -132,7 +132,7 @@ try {
     console.log(
       JSON.stringify({ kind: 'video', status: video?.status, path: video?.path || '', error: video?.error || '' }),
     )
-    if (!video || video.status !== 'done' || !video.url) {
+    if (video?.status !== 'done' || !video.url) {
       throw new Error(`视频模型没有产出成片：${video?.error || '无详情'}`)
     }
   }

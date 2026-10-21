@@ -85,7 +85,7 @@ async function startBrowser() {
       Object.defineProperty(navigator, 'geolocation', {
         configurable: true,
         get: () => ({
-          getCurrentPosition: (_ok, err) => err && err({ code: 1, message: 'denied' }),
+          getCurrentPosition: (_ok, err) => err?.({ code: 1, message: 'denied' }),
           watchPosition: () => 0,
           clearWatch: () => {},
         }),
@@ -162,7 +162,7 @@ async function dispatch(toolName, args) {
       try {
         await tools.click(page, args.ref)
       } catch (error) {
-        const message = String((error && error.message) || error)
+        const message = String(error?.message || error)
         // 被上层元素遮挡：从错误里找出"真正能点到的"那个编号，直接告诉 AI 改点谁（可行动的错误）
         if (message.includes('intercepts pointer events')) {
           const candidates = [...message.matchAll(/data-jco-ref="(\d+)"/g)]
@@ -233,7 +233,7 @@ async function dispatch(toolName, args) {
     case 'save_report': {
       mkdirSync(dataDir, { recursive: true })
       const metrics = args && typeof args.metrics === 'object' && args.metrics !== null ? args.metrics : {}
-      const payload = { platform: platformId, at: Date.now(), metrics, note: String((args && args.note) || '') }
+      const payload = { platform: platformId, at: Date.now(), metrics, note: String(args?.note || '') }
       writeFileSync(join(dataDir, 'report-latest.json'), JSON.stringify(payload, null, 2), 'utf8')
       log('report saved')
       return '战报数据已保存（运营页可读取）。'
@@ -242,10 +242,10 @@ async function dispatch(toolName, args) {
       mkdirSync(dataDir, { recursive: true })
       const raw = args && Array.isArray(args.items) ? args.items : []
       const items = raw.slice(0, 50).map((x) => ({
-        id: String((x && x.id) || ''),
-        author: String((x && x.author) || ''),
-        text: String((x && x.text) || '').slice(0, 500),
-        draft: String((x && x.draft) || '').slice(0, 500),
+        id: String(x?.id || ''),
+        author: String(x?.author || ''),
+        text: String(x?.text || '').slice(0, 500),
+        draft: String(x?.draft || '').slice(0, 500),
       }))
       writeFileSync(
         join(dataDir, 'comments-latest.json'),
@@ -291,7 +291,7 @@ const server = createServer(async (req, res) => {
     log(`tool ${payload.name} ok`)
     respond(200, { ok: true, result })
   } catch (error) {
-    const message = String((error && error.message) || error)
+    const message = String(error?.message || error)
     log(`tool failed: ${message}`)
     respond(200, { ok: false, error: message })
   }
@@ -322,6 +322,6 @@ async function main() {
 }
 
 main().catch((error) => {
-  log(`启动失败：${String((error && error.message) || error)}`)
+  log(`启动失败：${String(error?.message || error)}`)
   process.exit(1)
 })

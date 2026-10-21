@@ -111,7 +111,7 @@ for (const page of PAGES) {
     const real = page === MATERIAL_PAGE ? missing.filter((m) => m.includes('内联')) : missing
     if (real.length > 0) {
       failed = true
-      missingPerPage.push('  ❌ ' + page + ' 缺少：' + real.join('、'))
+      missingPerPage.push(`  ❌ ${page} 缺少：${real.join('、')}`)
     }
   }
 }
@@ -153,7 +153,7 @@ for (const name of readdirSync(UI)) {
   const full = path.join(UI, name)
   const isDir = statSync(full).isDirectory()
   if (isDir) {
-    if (name !== 'assets') junk.push(name + '/（应只在 assets 下）')
+    if (name !== 'assets') junk.push(`${name}/（应只在 assets 下）`)
     continue
   }
   if (name.startsWith('.') || !name.endsWith('.html')) junk.push(name)
@@ -175,10 +175,10 @@ for (const [label, re] of SHELL_JS_CHECKS) {
 if (shellMissing.length > 0) failed = true
 
 console.log('===== 全站一致性审计（机器门）=====')
-console.log('页面矩阵：' + PAGES.length + ' 页 × ' + (CHECKS.length + 4) + ' 项检查')
+console.log(`页面矩阵：${PAGES.length} 页 × ${CHECKS.length + 4} 项检查`)
 console.log(
   designMissing.length > 0
-    ? '  ❌ 设计系统与产品组件不同源：' + designMissing.join('、')
+    ? `  ❌ 设计系统与产品组件不同源：${designMissing.join('、')}`
     : '  ✅ 设计系统消息 / 任务卡 / 状态 / 表单样例与产品组件同源',
 )
 if (missingPerPage.length > 0) {
@@ -193,13 +193,13 @@ if (missingPerPage.length > 0) {
 }
 if (junk.length > 0) {
   console.log('  ❌ 产品目录不干净（设计原型/ 只许 *.html 与 assets/）：')
-  for (const j of junk) console.log('     · ' + j)
+  for (const j of junk) console.log(`     · ${j}`)
 } else {
   console.log('  ✅ 产品目录干净（设计原型/ 仅页面 + assets/）')
 }
 console.log(
   shellMissing.length > 0
-    ? '  ❌ 应用壳缺少：' + shellMissing.join('、')
+    ? `  ❌ 应用壳缺少：${shellMissing.join('、')}`
     : '  ✅ 应用壳常驻检查通过（iframe / 首页 / 任务会话刷新 / 通知回壳）',
 )
 console.log(failed ? '❌ 审计未通过' : '✅ 审计通过')

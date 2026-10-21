@@ -49,7 +49,7 @@ test('M11 W1-04：马上跑创建同一 Task 台账，不写 auto-runs', async (
         async () =>
           await win.evaluate(async (taskId) => {
             const result = await window.jco.tasks.session(taskId)
-            return result && result.ok ? result.task.status : ''
+            return result?.ok ? result.task.status : ''
           }, started.taskId),
         { timeout: 60_000 },
       )

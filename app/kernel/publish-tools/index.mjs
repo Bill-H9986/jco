@@ -11,7 +11,7 @@ export const inject = ['tools']
 function readSession(config) {
   try {
     const data = JSON.parse(readFileSync(config.sessionFile, 'utf8'))
-    if (data && data.endpoint && data.token) return data
+    if (data?.endpoint && data.token) return data
     return null
   } catch {
     return null
@@ -37,13 +37,13 @@ async function callTool(config, tool, args) {
     if (!data.ok) return `工具执行失败：${data.error || '未知错误'}`
     return typeof data.result === 'string' ? data.result : JSON.stringify(data.result)
   } catch (error) {
-    return `无法连接发布会话服务：${String((error && error.message) || error)}`
+    return `无法连接发布会话服务：${String(error?.message || error)}`
   }
 }
 
 export function apply(ctx, config) {
-  const host = { sessionFile: String((config && config.sessionFile) || '') }
-  const allow = Array.isArray(config && config.allowedTools) ? new Set(config.allowedTools) : null
+  const host = { sessionFile: String(config?.sessionFile || '') }
+  const allow = Array.isArray(config?.allowedTools) ? new Set(config.allowedTools) : null
   const define = (toolName, description, parameters, forwardName) => {
     // profile 工具白名单：未列出的工具不注册，模型看不到也调不到。
     if (allow && !allow.has(toolName)) return

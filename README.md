@@ -1,5 +1,7 @@
 # J.Co
 
+[![Quality Gate](https://github.com/Bill-H9986/jco/actions/workflows/quality.yml/badge.svg?branch=beta%2F0.6.0)](https://github.com/Bill-H9986/jco/actions/workflows/quality.yml)
+
 自媒体工作台 —— 把自媒体人的五环工作流（做视频 → 发布 → 看数据 → 回评论 → 引流私域）做成"看得见、点得动、AI 在干"的操作台。
 
 ## 当前版本
@@ -9,6 +11,7 @@
 | 版本 | **`0.6.0-beta.40`** |
 | 源码提交 | `762724c` |
 | 安装包 | `app/release/J.Co-0.6.0-beta.40.exe` |
+| GitHub Release | [v0.6.0-beta.40（Latest）](https://github.com/Bill-H9986/jco/releases/tag/v0.6.0-beta.40) |
 | 质量门禁 | 199 单测 / 1 skipped、81 E2E、4 视觉测试、17 基准 |
 | 真实平台 | 抖音扫码登录与人工最终发布已通过 |
 | 分发状态 | Beta 候选版；安装包 `NotSigned` |
@@ -25,6 +28,8 @@ npm exec -- install-electron
 npm run build
 npm run test:unit
 ```
+
+当前网络若直连 GitHub Git 协议被重置，优先从 beta.40 Release 下载 `jco-full-history.bundle` 恢复完整历史；日常构建和发布走 GitHub Actions。恢复边界见《发布溯源与标签策略》。
 
 完整开发、测试、安装、回滚和纯净环境重建：
 

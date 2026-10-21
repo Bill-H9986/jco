@@ -2,6 +2,8 @@
 
 - 适用版本：`0.6.0-beta.5` 起
 - 目标：安装版不再靠手动发安装包，统一从 GitHub Releases 检查、下载、安装新版本。
+- 当前仓库：<https://github.com/Bill-H9986/jco>
+- 当前 Latest：<https://github.com/Bill-H9986/jco/releases/tag/v0.6.0-beta.40>
 
 ## 1. 一次性准备
 
@@ -31,6 +33,27 @@ npm run release:github
 2. 以 `https://github.com/<owner/repo>/releases/latest/download` 为更新源打包 NSIS；
 3. 跑 `qa-packaged`；
 4. 用 `gh release create` 上传安装包、blockmap 和 `beta.yml`，并标记为 latest。
+
+### 2.1 GitHub Actions 发布候选
+
+仓库包含 `.github/workflows/release.yml`，只能由人工 `workflow_dispatch` 启动，输入准确的源码 tag。它会依次执行：
+
+1. checkout 指定 tag；
+2. 校验 tag、`package.json`、远端分支和干净工作区；
+3. 跑 Windows 全量 `npm run gate`；
+4. 构建并上传 Release。
+
+Actions 路径不会绕过人工发起，也不会自动把未提交构建冒充可复现发布。
+
+### 2.2 当前网络回退
+
+如果本机 `git fetch/push` 对 `github.com` 连接重置：
+
+- 源码恢复：使用 Release 资产 `jco-full-history.bundle` 或 `J.Co-0.6.0-beta.40-source.zip`；
+- 仓库状态核对：`gh api`；
+- 小范围文档 / workflow 更新：GitHub Contents API / Git Data API；
+- 全量测试与发布：GitHub Actions；
+- 网络恢复后再做常规 `git fetch`，不要把 API wrapper 提交说成普通 fast-forward push。
 
 ## 3. 让已装旧版切到 GitHub OTA
 

@@ -10,6 +10,8 @@ const JCO_TEST_MODE = process.argv.includes('--jco-test')
 // 测试模式必须先切 userData，再初始化发布会话、素材目录和任何依赖用户路径的服务。
 // 名字带随机段：防 pid 复用时读到上一个测试实例残留的 profile。
 if (JCO_TEST_MODE) {
+  // 视觉基准和控件坐标必须跨机器一致：测试窗口固定逻辑分辨率 1440×900、DPR 1。
+  app.commandLine.appendSwitch('force-device-scale-factor', '1')
   const tempRoot = path.resolve(app.getPath('temp'))
   const requestedProfile = String(process.env.JCO_TEST_PROFILE_DIR || '').trim()
   const resolvedProfile = requestedProfile ? path.resolve(requestedProfile) : ''
@@ -2565,12 +2567,13 @@ ipcMain.handle('tasks:session:get', (_event, payload) => {
 function createWindow() {
   // 按屏幕可用区域自适应并居中：窗口永远完整落在屏幕里（高缩放/小屏也不会被切）
   const wa = screen.getPrimaryDisplay().workArea
-  const width = Math.min(1440, wa.width - 32)
-  const height = Math.min(900, wa.height - 32)
+  // 自动化测试固定标准视口；生产窗口仍严格落在用户可用屏幕内。
+  const width = JCO_TEST_MODE ? 1440 : Math.min(1440, wa.width - 32)
+  const height = JCO_TEST_MODE ? 900 : Math.min(900, wa.height - 32)
 
   const win = new BrowserWindow({
-    x: wa.x + Math.round((wa.width - width) / 2),
-    y: wa.y + Math.round((wa.height - height) / 2),
+    x: JCO_TEST_MODE ? wa.x : wa.x + Math.round((wa.width - width) / 2),
+    y: JCO_TEST_MODE ? wa.y : wa.y + Math.round((wa.height - height) / 2),
     width,
     height,
     minWidth: Math.min(980, width),

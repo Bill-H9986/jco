@@ -39,14 +39,14 @@ test('W6-01：后期页创建 edit Task，产物进入统一任务详情', async
     await win.waitForFunction(
       async () => {
         const result = await window.jco.tasks.sessions()
-        return (result.tasks || []).some((task) => task.name && task.name.startsWith('后期：'))
+        return (result.tasks || []).some((task) => task.name?.startsWith('后期：'))
       },
       undefined,
       { timeout: 5000 },
     )
     const postTask = await win.evaluate(async () => {
       const result = await window.jco.tasks.sessions()
-      return (result.tasks || []).find((task) => task.name && task.name.startsWith('后期：'))
+      return (result.tasks || []).find((task) => task.name?.startsWith('后期：'))
     })
     taskId = postTask.id
     const detail = await win.evaluate(async (id) => window.jco.tasks.session(id), taskId)

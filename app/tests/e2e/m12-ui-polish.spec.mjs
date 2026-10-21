@@ -65,7 +65,7 @@ test('W7-01：侧栏顶部固定，内容页左上角统一', async () => {
     const contentFrame = (target) =>
       win.frames().find((item) => {
         try {
-          return decodeURIComponent(new URL(item.url()).pathname).endsWith('/' + target)
+          return decodeURIComponent(new URL(item.url()).pathname).endsWith(`/${target}`)
         } catch {
           return false
         }

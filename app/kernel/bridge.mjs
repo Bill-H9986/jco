@@ -160,6 +160,9 @@ export const AGNES_BUILTIN = {
 }
 /** 未配置任何自接接口时的兜底路由（本机 DSH 凭据） */
 const FALLBACK = { provider: 'deepseek-official', model: 'deepseek-v4-flash', label: 'DeepSeek 官方（默认）' }
+/** CI / 无凭据环境专用：可重复的测试内核，只验证应用接线，不冒充真实模型。 */
+const TEST_ROUTE = { provider: 'jco-test-fake', model: 'jco-test-v1', label: '自动化测试内核', env: {}, patch: null }
+const USE_TEST_KERNEL_FAKE = process.env.JCO_TEST_KERNEL_FAKE === '1'
 
 // 每个岗位一个独立 Harness 进程；同岗位串行、不同岗位可并行。
 let currentRoute = null // 最近一次创建的 Harness 实际使用的路由描述
@@ -183,6 +186,7 @@ function loadUserConfig() {
 
 /** 由设置页配置解析出本次内核启动的路由 */
 function resolveRoute() {
+  if (process.argv.includes('--jco-test') && USE_TEST_KERNEL_FAKE) return { ...TEST_ROUTE }
   // 测试模式（--jco-test）：一律走官方兜底路由（本机 ~/.dsh 凭据）——
   // 不烧 Agnes 配额、结果稳定；只影响开发者测试，用户无感。
   if (process.argv.includes('--jco-test')) return { ...FALLBACK, env: {}, patch: null }
@@ -441,6 +445,20 @@ export async function videoGenerate(payload) {
 function createHarness(profile) {
   const definition = getProfile(profile)
   const route = resolveRoute()
+  if (process.argv.includes('--jco-test') && USE_TEST_KERNEL_FAKE) {
+    currentRoute = route
+    return {
+      async start() {},
+      async run(prompt) {
+        const input = String(prompt || '')
+        const finalResponse = input.includes('只回两个字')
+          ? (input.includes('在的') ? '在的' : '收到')
+          : '自动化测试内核已完成本轮检查。聊天、任务、审批和记录链路均按测试夹具正常返回，真实模型边界仍由本机验收覆盖。'
+        return { finalResponse }
+      },
+      async close() {},
+    }
+  }
   if (route.patch) writePatch(route.patch)
   currentRoute = route
   const patches = [CHAT_PATCH_PATH, writePersonaPatch(profile)]

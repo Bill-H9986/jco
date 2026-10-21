@@ -59,7 +59,8 @@ test('M11 W4-05：设计系统展示消息、任务卡、任务状态和员工�
     expect(computed.background).not.toBe('rgba(0, 0, 0, 0)')
     expect(computed.radius).toBe('16px')
     expect(parseFloat(computed.border)).toBeGreaterThan(0)
-    expect(parseFloat(computed.border)).toBeLessThanOrEqual(0.67)
+    // 0.5 CSS px 在 1x 屏会落到 1 个物理像素；这里约束“发丝边”，不绑定某台机器的 DPR。
+    expect(parseFloat(computed.border)).toBeLessThanOrEqual(1)
     const disabledOpacity = await win
       .locator('#dsTaskDisabled')
       .evaluate((el) => Number.parseFloat(getComputedStyle(el).opacity))

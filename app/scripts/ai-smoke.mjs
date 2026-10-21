@@ -30,7 +30,7 @@ function configPath() {
 
 function loadConfig() {
   const file = configPath()
-  if (!fs.existsSync(file)) throw new Error('找不到模型配置：' + file)
+  if (!fs.existsSync(file)) throw new Error(`找不到模型配置：${file}`)
   return JSON.parse(fs.readFileSync(file, 'utf8'))
 }
 
@@ -40,13 +40,13 @@ async function request(url, options, retries = 3) {
   for (let attempt = 0; attempt <= retries; attempt += 1) {
     const res = await fetch(url, options)
     if (res.status === 429 || res.status === 503) {
-      console.log('  ' + res.status + ' 限流/队列满，等 60 秒重试')
+      console.log(`  ${res.status} 限流/队列满，等 60 秒重试`)
       await sleep(60000)
       continue
     }
     return res
   }
-  throw new Error('重试次数用尽：' + url)
+  throw new Error(`重试次数用尽：${url}`)
 }
 
 const cfg = loadConfig()
@@ -55,9 +55,9 @@ const results = []
 // 1) 文本：生成 6 段分镜 JSON
 {
   const c = cfg.chat
-  const res = await request(c.url.replace(/\/+$/, '') + '/chat/completions', {
+  const res = await request(`${c.url.replace(/\/+$/, '')}/chat/completions`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + c.key },
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${c.key}` },
     body: JSON.stringify({
       model: c.model,
       messages: [
@@ -82,9 +82,9 @@ const results = []
 // 2) 图片：1 张主视觉
 {
   const c = cfg.image
-  const res = await request(c.url.replace(/\/+$/, '') + '/images/generations', {
+  const res = await request(`${c.url.replace(/\/+$/, '')}/images/generations`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + c.key },
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${c.key}` },
     body: JSON.stringify({
       model: c.model,
       prompt:
@@ -97,7 +97,7 @@ const results = []
   })
   const data = await res.json()
   const item = data?.data?.[0]
-  const png = item && item.b64_json ? Buffer.from(item.b64_json, 'base64') : null
+  const png = item?.b64_json ? Buffer.from(item.b64_json, 'base64') : null
   const width = png && png.length > 24 ? png.readUInt32BE(16) : 0
   const height = png && png.length > 24 ? png.readUInt32BE(20) : 0
   const ok = Boolean(png) && Math.abs(width / height - 3 / 4) < 0.01
@@ -109,9 +109,9 @@ const results = []
 {
   const c = cfg.video
   const base = c.url.replace(/\/+$/, '')
-  const create = await request(base + '/videos', {
+  const create = await request(`${base}/videos`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + c.key },
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${c.key}` },
     body: JSON.stringify({
       model: c.model,
       prompt: '竖屏9:16，年轻女讲师小雅在无人机实训台前微笑介绍课程，镜头缓慢推近，明亮培训教室。',
@@ -131,8 +131,8 @@ const results = []
     while (Date.now() < deadline) {
       await sleep(5000)
       const q = await fetch(
-        host + '/agnesapi?video_id=' + encodeURIComponent(id) + '&model_name=' + encodeURIComponent(c.model),
-        { headers: { Authorization: 'Bearer ' + c.key } },
+        `${host}/agnesapi?video_id=${encodeURIComponent(id)}&model_name=${encodeURIComponent(c.model)}`,
+        { headers: { Authorization: `Bearer ${c.key}` } },
       )
       const data = await q.json().catch(() => null)
       if (!data) continue

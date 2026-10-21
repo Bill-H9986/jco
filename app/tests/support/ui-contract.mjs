@@ -156,6 +156,9 @@ export async function inspectPage(frame, page) {
             page: pageName,
             classes: classes.join('.'),
             tag: el.tagName,
+            isInteractive: el.matches(
+              'button, [role="button"], a[href], input, select, textarea, .badge, .tag, .chip, .tg',
+            ),
             radius: style.borderTopLeftRadius,
             cornerShape: style.cornerShape,
             height: Math.round(rect.height * 100) / 100,
@@ -332,7 +335,7 @@ export function validateInventory(inventory) {
       const radius = Number.parseFloat(entry.radius) || 0
       const fullyRounded =
         String(entry.radius).includes('50%') || (entry.height > 0 && radius >= entry.height / 2 - 0.5)
-      if (fullyRounded && entry.cornerShape !== 'superellipse(1)') {
+      if (entry.isInteractive && fullyRounded && entry.cornerShape !== 'superellipse(1)') {
         violations.push(
           `${entry.page}: 全圆/胶囊组件 .${entry.classes} 轮廓为 ${entry.cornerShape}，应为 superellipse(1)`,
         )

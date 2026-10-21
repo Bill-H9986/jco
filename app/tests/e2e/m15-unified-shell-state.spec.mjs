@@ -109,7 +109,8 @@ test('M15：页头固定、参数单行、开关同规格、焦点收敛', async
       const style = getComputedStyle(item)
       return { width: style.outlineWidth, offset: style.outlineOffset }
     })
-    expect(Number.parseFloat(focusRing.width)).toBeGreaterThan(1)
+    // 1.5 CSS px 在 1x 屏会被 Chromium 量化到 1 个物理像素；下限按可感知发丝焦点圈判断。
+    expect(Number.parseFloat(focusRing.width)).toBeGreaterThanOrEqual(1)
     expect(Number.parseFloat(focusRing.width)).toBeLessThanOrEqual(1.5)
     expect(Number.parseFloat(focusRing.offset)).toBeGreaterThanOrEqual(-1.5)
     expect(Number.parseFloat(focusRing.offset)).toBeLessThan(0)

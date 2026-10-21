@@ -50,6 +50,7 @@ jobs:
         run: npm run gate
         env:
           JCO_TEST_MEDIA_FAKE: "1"
+          JCO_TEST_KERNEL_FAKE: "1"
 
       - name: Build and publish GitHub Release
         run: npm run release:github

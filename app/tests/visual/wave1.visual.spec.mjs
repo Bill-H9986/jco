@@ -42,7 +42,7 @@ test('W1 消息阅读面：浅色 1440×900', async () => {
     await win.waitForTimeout(1500)
     await expect(win.locator('#stream .msg')).toHaveCount(2)
     await win.evaluate(async () => {
-      if (document.fonts && document.fonts.ready) await document.fonts.ready
+      if (document.fonts?.ready) await document.fonts.ready
       if (document.activeElement) document.activeElement.blur()
     })
     await win.addStyleTag({ content: '*,*::before,*::after{animation:none!important;transition:none!important}' })

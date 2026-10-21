@@ -48,7 +48,7 @@ test('交付验收：无人机宣传 30 秒 6 段 → 创作页 → 发布页', 
               ratio: '9:16',
               res: '720P',
               shots,
-              videos: { 0: { status: 'done', path: vid, url: 'file:///' + vid } },
+              videos: { 0: { status: 'done', path: vid, url: `file:///${vid}` } },
             },
           ],
         })

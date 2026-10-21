@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "generatedAt": "2026-10-21T15:03:36.4898224+08:00",
   "rule": "tag points to the last commit on beta/0.6.0 that still had the matching app/package.json version",
-  "knownLegacyRemoteTags": "v0.6.0-beta.11 through v0.6.0-beta.23 retain historical refs and are not source-reproducible",
+  "knownLegacyRemoteTags": "v0.6.0-beta.5 through v0.6.0-beta.7 and v0.6.0-beta.11 through v0.6.0-beta.23 retain historical refs and are not source-reproducible",
   "versions": [
     {
       "version": "0.6.0-beta.4",
