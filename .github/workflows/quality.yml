@@ -55,6 +55,7 @@ jobs:
         env:
           JCO_TEST_MEDIA_FAKE: "1"
           JCO_TEST_KERNEL_FAKE: "1"
+          JCO_VISUAL_STRICT: "1"
 
       - name: Upload diagnostics
         if: always()

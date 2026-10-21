@@ -17,12 +17,12 @@ npm run test:visual
 ```
 
 测试模式固定逻辑视口 `1440×900`、`DPR 1`，因此 Windows runner 的屏幕缩放和分辨率不会改变基准尺寸。
-当前测试用 Electron `capturePage()` 截图；全站页用 Sharp 做像素差比对，
-允许 1% 内的抗锯齿噪声；聊天和任务详情继续保留精确 SHA-256 比对。
+当前测试用 Electron `capturePage()` 截图；全站页用 Sharp 做像素差比对。
+`baseline/ci/` 与 `baseline/local/` 两套基准都按各自环境严格允许 1% 内的抗锯齿噪声。
 这样避开 iframe 字体等待导致的 Playwright 截图超时，也不会把字体亚像素差异误报成 UI 回归。
 
-视觉基准的规范生成环境是 GitHub 的 `windows-latest` runner。需要有意更新基准时，手动运行
-`Visual Baseline` 工作流，下载 `app/tests/visual/baseline/` 构建产物后再提交；不要拿另一台
+视觉基准的规范生成环境是 GitHub 的 `windows-latest` runner。需要有意更新 CI 基准时，手动运行
+`Visual Baseline` 工作流，下载 `app/tests/visual/baseline/ci/` 构建产物后再提交；不要拿另一台
 Windows 机器的字体栅格化结果直接覆盖，否则会把环境差异误当成 UI 回归。
 
 ## 命名

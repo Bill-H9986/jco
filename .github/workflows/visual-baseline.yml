@@ -39,6 +39,7 @@ jobs:
         run: npm run test:visual
         env:
           JCO_UPDATE_VISUAL: "1"
+          JCO_VISUAL_STRICT: "1"
 
       - name: Upload visual baselines
         uses: actions/upload-artifact@v7
@@ -46,4 +47,4 @@ jobs:
           name: jco-visual-baseline-${{ github.run_id }}
           if-no-files-found: error
           retention-days: 14
-          path: app/tests/visual/baseline/
+          path: app/tests/visual/baseline/ci/

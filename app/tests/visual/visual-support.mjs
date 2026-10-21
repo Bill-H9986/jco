@@ -66,9 +66,11 @@ export async function assertVisual(app, name) {
   await win.setViewportSize({ width: 1440, height: 900 })
   await win.waitForTimeout(180)
   const actual = await captureStableWindow(app)
-  const file = path.join(BASELINE_DIR, name)
+  const strict = process.env.JCO_VISUAL_STRICT === '1'
+  const baselineDir = path.join(BASELINE_DIR, strict ? 'ci' : 'local')
+  const file = path.join(baselineDir, name)
   if (process.env.JCO_UPDATE_VISUAL === '1') {
-    fs.mkdirSync(BASELINE_DIR, { recursive: true })
+    fs.mkdirSync(baselineDir, { recursive: true })
     fs.writeFileSync(file, actual)
     return
   }
