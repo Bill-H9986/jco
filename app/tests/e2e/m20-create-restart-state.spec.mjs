@@ -9,7 +9,7 @@ import { _electron as electron } from 'playwright'
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const APP_DIR = path.resolve(__dirname, '..', '..')
 const ELECTRON_BIN = path.join(APP_DIR, 'node_modules', 'electron', 'dist', 'electron.exe')
-const FIXTURE = path.join(APP_DIR, 'tests', 'visual', 'baseline', 'materials-light-1440x900.png')
+const FIXTURE = path.join(APP_DIR, 'tests', 'visual', 'baseline', 'local', 'materials-light-1440x900.png')
 const TEST_KERNEL_DIR = path.join(os.tmpdir(), 'jco-test-kernel-data')
 const MEDIA_JOBS_DIR = path.join(TEST_KERNEL_DIR, 'media-jobs')
 

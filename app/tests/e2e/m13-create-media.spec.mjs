@@ -7,7 +7,7 @@ import { _electron as electron } from 'playwright'
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const APP_DIR = path.resolve(__dirname, '..', '..')
 const ELECTRON_BIN = path.join(APP_DIR, 'node_modules', 'electron', 'dist', 'electron.exe')
-const FIXTURE = path.join(APP_DIR, 'tests', 'visual', 'baseline', 'materials-light-1440x900.png')
+const FIXTURE = path.join(APP_DIR, 'tests', 'visual', 'baseline', 'local', 'materials-light-1440x900.png')
 
 test('创作素材：3:4 选择回传 / 图片占位清理 / 未出片不能通过', async () => {
   const app = await electron.launch({ executablePath: ELECTRON_BIN, args: [APP_DIR, '--jco-test'] })

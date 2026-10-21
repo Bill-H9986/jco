@@ -151,15 +151,20 @@ function progressChecks() {
   if (!only || only === 'visual-regression-all') {
     const readme = path.join(VISUAL_DIR, 'README.md')
     const config = path.join(APP, 'playwright.visual.config.mjs')
-    const pngs = existsSync(VISUAL_BASELINE_DIR)
-      ? readdirSync(VISUAL_BASELINE_DIR).filter((name) => name.endsWith('.png'))
-      : []
+    const variants = ['local', 'ci']
+    const pngCounts = Object.fromEntries(
+      variants.map((variant) => {
+        const dir = path.join(VISUAL_BASELINE_DIR, variant)
+        const count = existsSync(dir) ? readdirSync(dir).filter((name) => name.endsWith('.png')).length : 0
+        return [variant, count]
+      }),
+    )
     const skeleton = existsSync(readme) && existsSync(config) && existsSync(VISUAL_BASELINE_DIR)
     checks.push({
       id: 'visual-regression-all',
       title: '全站关键状态视觉基准',
-      ok: skeleton && pngs.length >= 17,
-      detail: skeleton ? `已建立 ${pngs.length} 张基准（目标 17）` : '视觉基准骨架缺失',
+      ok: skeleton && variants.every((variant) => pngCounts[variant] >= 17),
+      detail: skeleton ? `本地 ${pngCounts.local} 张 / CI ${pngCounts.ci} 张（各目标 17）` : '视觉基准骨架缺失',
     })
   }
   return checks

@@ -140,7 +140,7 @@ GitHub Actions 的 Windows 质量门禁没有个人模型凭据，因此显式�
 ## 7. 证据留存
 
 - E2E：`test-results/`、Playwright 报告；
-- 视觉：`tests/visual/baseline/`；
+- 视觉：`tests/visual/baseline/local/` 与 `tests/visual/baseline/ci/`；
 - 交付自检：`outputs/交付自检/`；
 - AI 冒烟：`outputs/ai-smoke/`；
 - 真实媒体 UI 冒烟：终端 JSON 输出（图片尺寸、视频状态/路径）；
