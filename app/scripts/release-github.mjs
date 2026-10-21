@@ -20,11 +20,13 @@ import { fileURLToPath } from 'node:url'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const APP = path.resolve(__dirname, '..')
+const REPO_ROOT = path.resolve(APP, '..')
 const RELEASE = path.join(APP, 'release')
 const PACKAGE = JSON.parse(fs.readFileSync(path.join(APP, 'package.json'), 'utf8'))
 const repo = String(process.env.JCO_GITHUB_REPO || '').trim()
 const version = String(PACKAGE.version || '')
 const tag = `v${version}`
+const provenanceBranch = String(process.env.JCO_RELEASE_BRANCH || 'beta/0.6.0').trim()
 
 if (!repo || !/^[^/\s]+\/[^/\s]+$/.test(repo)) {
   console.error('缺少 JCO_GITHUB_REPO，格式应为 owner/repo。')
@@ -77,6 +79,7 @@ if (!auth.ok) {
   process.exit(1)
 }
 
+run('node', ['scripts/verify-release-provenance.mjs', '--tag', tag, '--require-origin', '--branch', provenanceBranch])
 run('npm', ['run', 'build'])
 run('npx', ['electron-builder', '--win', 'nsis', '--config', 'electron-builder.release.yml', '--publish', 'never'], {
   JCO_UPDATE_FEED_URL: feedUrl,
@@ -121,10 +124,34 @@ if (assets.length < 3) {
   process.exit(1)
 }
 
+const checksumFile = path.join(RELEASE, `SHA256SUMS-${version}.txt`)
+const checksumLines = assets.map((file) => {
+  const hash = spawnSync('certutil', ['-hashfile', file, 'SHA256'], { encoding: 'utf8' })
+  if (hash.status !== 0) {
+    console.error(`无法计算 SHA-256：${file}`)
+    process.exit(1)
+  }
+  const digest = String(hash.stdout || '')
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter((line) => /^[a-f0-9]{64}$/i.test(line))[0]
+  if (!digest) {
+    console.error(`SHA-256 输出无法解析：${file}`)
+    process.exit(1)
+  }
+  return `${digest} *${path.basename(file)}`
+})
+fs.writeFileSync(checksumFile, `${checksumLines.join('\n')}\n`, 'utf8')
+assets.push(checksumFile)
+
+const notesFile = path.join(REPO_ROOT, 'docs', 'releases', `${version}.md`)
+const notesArgs = fs.existsSync(notesFile) ? ['--notes-file', notesFile] : ['--notes', `J.Co ${version}`]
+
 const view = capture('gh', ['release', 'view', tag, '--repo', repo])
 if (view.ok) {
-  console.log(`\n发布 ${tag} 已存在，追加并覆盖资产。`)
+  console.log(`\n发布 ${tag} 已存在，更新说明并覆盖资产。`)
   run('gh', ['release', 'upload', tag, ...assets, '--repo', repo, '--clobber'])
+  run('gh', ['release', 'edit', tag, '--repo', repo, '--title', `J.Co ${version}`, ...notesArgs, '--latest'])
 } else {
   run('gh', [
     'release',
@@ -135,8 +162,7 @@ if (view.ok) {
     repo,
     '--title',
     `J.Co ${version}`,
-    '--notes',
-    `J.Co ${version}：业务档案 + AI 总管自动记忆，支持 GitHub Releases OTA。`,
+    ...notesArgs,
     '--latest',
   ])
 }

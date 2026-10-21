@@ -2,6 +2,50 @@
 
 自媒体工作台 —— 把自媒体人的五环工作流（做视频 → 发布 → 看数据 → 回评论 → 引流私域）做成"看得见、点得动、AI 在干"的操作台。
 
+## 当前版本
+
+| 项 | 状态 |
+| --- | --- |
+| 版本 | **`0.6.0-beta.40`** |
+| 源码提交 | `762724c` |
+| 安装包 | `app/release/J.Co-0.6.0-beta.40.exe` |
+| 质量门禁 | 199 单测 / 1 skipped、81 E2E、4 视觉测试、17 基准 |
+| 真实平台 | 抖音扫码登录与人工最终发布已通过 |
+| 分发状态 | Beta 候选版；安装包 `NotSigned` |
+
+### 快速开始
+
+```powershell
+git clone https://github.com/Bill-H9986/jco.git
+Set-Location jco
+git switch beta/0.6.0
+Set-Location app
+npm ci
+npm exec -- install-electron
+npm run build
+npm run test:unit
+```
+
+完整开发、测试、安装、回滚和纯净环境重建：
+
+- [项目现状与风险清单](docs/项目现状与风险清单.md)
+- [项目认知索引](docs/项目认知索引.md)
+- [开发工作流标准](docs/J.Co软件开发工作流标准.md)
+- [发布溯源与标签策略](docs/发布溯源与标签策略.md)
+- [beta.40 发布说明](docs/releases/0.6.0-beta.40.md)
+
+### 两套恢复线
+
+1. **本地离线线**：Obsidian 项目档案 + 完整 Git bundle + 源码 ZIP + 离线 Electron + 安装包与回滚说明。
+2. **GitHub 远程线**：`beta/0.6.0` 分支、版本 tag、GitHub Release 和 Windows Actions 全量门禁。
+
+### 安全边界
+
+- 密钥、Cookie、浏览器登录 profile 和发布会话 token 不进仓库。
+- 发布、删除、支付和登录确认必须停在人工检查点。
+- 自动化测试使用 `--jco-test` 和隔离 profile。
+- 当前安装包未做 Authenticode 代码签名，不作为正式商业发行版。
+
 **2026-10-15 重新开工**（此前版本已封箱归档至桌面 `J.Co-封箱-2026-10-15.zip`）。
 
 > **2026-10-17 当前状态先看**：[docs\项目现状与风险清单.md](docs/项目现状与风险清单.md)（版本 / 安装态 / 风险 / 后续会话开工顺序；比本 README 更新）；
