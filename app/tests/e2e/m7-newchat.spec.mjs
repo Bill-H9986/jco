@@ -48,6 +48,18 @@ test('「新会话」按钮：非总管页也在搜索框下方（零数据环�
       return textWidth
     })
     expect(collapsedTextWidth, '收起态图标方块内不能透出“新会话”文字').toBe(0)
+    const sidebarOverflow = await win.locator('.side-scroll').evaluate((node) => {
+      const style = getComputedStyle(node)
+      return {
+        overflowX: style.overflowX,
+        scrollWidth: node.scrollWidth,
+        clientWidth: node.clientWidth,
+      }
+    })
+    expect(sidebarOverflow.overflowX, '收起态侧栏不能显示横向滚动条').toBe('hidden')
+    expect(sidebarOverflow.scrollWidth, '收起态侧栏内容不能横向溢出').toBeLessThanOrEqual(
+      sidebarOverflow.clientWidth + 1,
+    )
 
     // 点击（发布页）→ 跳总管并开新会话
     await win.evaluate(() => {

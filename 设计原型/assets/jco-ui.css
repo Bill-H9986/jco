@@ -100,14 +100,32 @@ html:not(.side-pinned) .side-toggle { margin-left: 0; }
 
 html:not(.side-pinned) .search input { opacity: 0; pointer-events: none; }
 
-html:not(.side-pinned) .group-label { max-height: 0; margin-top: 0; margin-bottom: 0; opacity: 0; pointer-events: none; }
+html:not(.side-pinned) .group-label { display: none !important; }
 
-html:not(.side-pinned) .convos { min-height: 0; max-height: 0; opacity: 0; pointer-events: none; }
+html:not(.side-pinned) .convos { display: none !important; }
 
 html:not(.side-pinned) .nav-item { font-size: 0; }
 
 /* 图标栏模式（未固定）下：分组折叠不影响功能页入口，所有图标永远可达 */
-  html:not(.side-pinned) .nav-item { display: flex !important; }
+  html:not(.side-pinned) .nav-item {
+    display: flex !important;
+    justify-content: center;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    padding: 0;
+    gap: 0;
+  }
+
+html:not(.side-pinned) .nav,
+html:not(.side-pinned) .convos,
+html:not(.side-pinned) .group-label {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+}
+
+html:not(.side-pinned) .convos { overflow: hidden; }
 
 html:not(.side-pinned) .side-foot .me span { opacity: 0; pointer-events: none; }
 
@@ -1229,7 +1247,7 @@ html:not(.side-pinned) body .convo.new-btn .ti { font-size: 18px !important; }
   }
 .side-scroll {
     flex: 1 1 auto; min-height: 0;
-    overflow-y: auto; overscroll-behavior: contain;
+    overflow-x: hidden; overflow-y: auto; overscroll-behavior: contain;
     scrollbar-width: thin; scrollbar-color: rgba(0, 0, 0, 0.16) transparent;
     padding-bottom: 2px;
   }

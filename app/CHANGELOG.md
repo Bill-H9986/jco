@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## 0.6.0-beta.39 (2026-10-21)
+
+### Fixes
+
+* **shell:** 修复侧栏收起态底部出现的横向滚动条；图标栏模式彻底隐藏分组标题和会话列表并禁止横向溢出
+* **shell:** 收起态导航项统一为居中图标，移除展开态内边距与间距，避免内容宽度超过 64px 侧栏
+
+### Tests
+
+* **testing:** M7 新增收起态 `overflow-x: hidden`、`scrollWidth <= clientWidth` 断言，先复现 `70px > 44px`，再修复
+
 ## 0.6.0-beta.38 (2026-10-21)
 
 ### Fixes
