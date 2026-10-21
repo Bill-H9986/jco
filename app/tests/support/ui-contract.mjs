@@ -60,7 +60,7 @@ export async function inspectPage(frame, page) {
         round: '.send, .send-big, .cp-send, .copilot-btn, .play-btn, .ib-nav',
         square: '.icon-btn, .side-toggle, .board-close, .cp-fold, .f-eye, .msg-actions button, .star',
         compact:
-          '.ghost.mini, .tool, .model-pill, .param-chip, .chip, .cp-act, .msg .act, .seg button, .agent-tabs button',
+          '.ghost.mini, .tool, .model-pill, .param-chip, .chip, .cp-act, .msg .act, .seg button, .agent-tabs button, .shot .swap',
         regular: '.ghost, .ghost-btn, .btn-ghost, .go-btn, .btn-sm, .use-btn, .export-btn, .tbtn, .pf-add, .regen',
         card: '.card, .tp, .dcard, .draft, .skill, .skl, .ib-thumb, .ib-add, .pf, .staff, .recent-item',
         nav: '.nav-item, .convo, .group-label, .mm-item, .mode-pop button, .me, .convo-more',

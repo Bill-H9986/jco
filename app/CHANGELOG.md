@@ -12,6 +12,7 @@ All notable changes to this project will be documented in this file. See [commit
 ### Tests
 
 * **testing:** M7 新增收起态 `overflow-x: hidden`、`scrollWidth <= clientWidth` 断言，先复现 `70px > 44px`，再修复
+* **testing:** 安装版 UI 契约把动态 `.shot .swap` 归入 compact 控件，避免有草稿时“换画面 / 看这段 / 重出”被误报为未分类
 
 ## 0.6.0-beta.38 (2026-10-21)
 
